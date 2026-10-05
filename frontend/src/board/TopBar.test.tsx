@@ -37,3 +37,10 @@ test('switches to the dark theme from the main menu', async () => {
   expect(document.documentElement.classList.contains('dark')).toBe(true)
   expect(localStorage.getItem('drawhl.theme')).toBe('dark')
 })
+
+test('opens the shortcut list with ?', async () => {
+  renderBar()
+  fireEvent.keyDown(document, { key: '?', code: 'Slash', shiftKey: true })
+  const dialog = await screen.findByRole('dialog', { name: 'Keyboard shortcuts' })
+  expect(dialog).toHaveTextContent('Duplicate')
+})

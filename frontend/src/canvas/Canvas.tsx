@@ -14,15 +14,24 @@ import {
   type OnBeforeDelete,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CanvasContextMenu, type MenuTarget, type PlaceTool } from '@/canvas/CanvasContextMenu'
+import {
+  cloneSnippet,
+  copySelection,
+  getClipboard,
+  setClipboard,
+  snippetOrigin,
+  type Snippet,
+} from '@/canvas/clipboard'
 import { markFresh } from '@/canvas/editing'
 import { framesFirst, releaseChildren, reparent } from '@/canvas/frames'
+import { gridPositions } from '@/canvas/layout'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { StickyNode } from '@/canvas/nodes/StickyNode'
@@ -33,8 +42,11 @@ import { RefreshIndicator } from '@/board/RefreshIndicator'
 import { lastFetched, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
+import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
+import { useInertia } from '@/canvas/useInertia'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
+import { useShortcut } from '@/lib/shortcuts'
 import { useTheme } from '@/lib/theme'
 
 const nodeTypes = { jira_card: JiraCardNode, frame: FrameNode, sticky: StickyNode, text: TextNode }
@@ -43,6 +55,11 @@ const defaultEdgeOptions = { markerEnd: { type: MarkerType.ArrowClosed } }
 // New cards step down by about one card height so several adds in a row stay readable.
 const CASCADE_X = 16
 const CASCADE_Y = 96
+// Duplicates land next to the original; a drag shorter than this places a default-size frame.
+const DUPLICATE_OFFSET = 24
+const MIN_DRAW = 8
+
+const viewportCenter = () => ({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
 const NEW_NODES = {
   frame: { width: 480, height: 320, data: { title: '' } },
@@ -64,37 +81,96 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   )
   const { screenToFlowPosition, deleteElements } = useReactFlow()
   const theme = useTheme().resolved
+  const inertia = useInertia()
   const placing = tool === 'frame' || tool === 'sticky' || tool === 'text'
+  // Last pointer position over the canvas, where pasted items land.
+  const pointer = useRef<XYPosition | null>(null)
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setTool('select')
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  useShortcut('cancel', () => setTool('select'), { preventDefault: false })
 
-  // Without a point the card goes to the viewport center, cascading so repeated adds stay readable.
-  const addCard = useCallback(
-    (task: Task, at?: XYPosition) => {
-      setAdded((current) => ({ ...current, [task.key]: task }))
+  // One card goes to the point or cascades from the viewport center; several form a grid there.
+  const addCards = useCallback(
+    (list: Task[], at?: XYPosition) => {
+      setAdded((current) => ({ ...current, ...Object.fromEntries(list.map((t) => [t.key, t])) }))
       setNodes((current) => {
+        const center = screenToFlowPosition(at ?? viewportCenter())
         const step = current.length % 5
-        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
-        const position = at
-          ? screenToFlowPosition(at)
-          : { x: center.x - 128 + step * CASCADE_X, y: center.y - 200 + step * CASCADE_Y }
-        const node: AppNode = {
+        const positions =
+          list.length > 1
+            ? gridPositions(list.length, center)
+            : [
+                at
+                  ? center
+                  : { x: center.x - 128 + step * CASCADE_X, y: center.y - 200 + step * CASCADE_Y },
+              ]
+        const fresh: AppNode[] = list.map((task, i) => ({
           id: newId(),
           type: 'jira_card',
-          position,
+          position: positions[i],
           data: { key: task.key, collapsed: false },
-        }
-        return reparent([...current, node], [node.id])
+        }))
+        return reparent(
+          [...current, ...fresh],
+          fresh.map((n) => n.id),
+        )
       })
     },
     [screenToFlowPosition, setNodes],
   )
+
+  // A new frame takes in the loose elements under it, as if they had been dropped there.
+  const addFrame = (frame: AppNode) =>
+    setNodes((current) =>
+      reparent(
+        framesFirst([...current, frame]),
+        current.filter((n) => n.type !== 'frame' && !n.parentId).map((n) => n.id),
+      ),
+    )
+
+  const insert = (snippet: Snippet, delta: XYPosition) => {
+    const copy = cloneSnippet(snippet, delta)
+    setAdded((current) => ({ ...current, ...copy.tasks }))
+    setNodes((current) =>
+      reparent(
+        framesFirst([...current.map((n) => ({ ...n, selected: false })), ...copy.nodes]),
+        copy.nodes.filter((n) => !n.parentId).map((n) => n.id),
+      ),
+    )
+    setEdges((current) => [...current.map((e) => ({ ...e, selected: false })), ...copy.edges])
+  }
+
+  // Copy and paste only take over the keys when there is something to copy or paste,
+  // so copying text elsewhere on the page keeps working.
+  useShortcut(
+    'copy',
+    (event) => {
+      const snippet = copySelection(nodes, edges, tasks)
+      if (!snippet) return
+      event.preventDefault()
+      setClipboard(snippet)
+    },
+    { preventDefault: false },
+  )
+  useShortcut(
+    'paste',
+    (event) => {
+      const snippet = getClipboard()
+      if (!snippet) return
+      event.preventDefault()
+      const target = screenToFlowPosition(pointer.current ?? viewportCenter())
+      const origin = snippetOrigin(snippet)
+      insert(snippet, { x: target.x - origin.x, y: target.y - origin.y })
+    },
+    { preventDefault: false },
+  )
+  useShortcut('duplicate', () => {
+    const snippet = copySelection(nodes, edges, tasks)
+    if (snippet) insert(snippet, { x: DUPLICATE_OFFSET, y: DUPLICATE_OFFSET })
+  })
+  useShortcut('selectAll', () => {
+    setNodes((current) => current.map((n) => ({ ...n, selected: true })))
+    setEdges((current) => current.map((e) => ({ ...e, selected: true })))
+  })
 
   const placeAt = (kind: PlaceTool, screen: XYPosition) => {
     const { width, height, data } = NEW_NODES[kind]
@@ -108,15 +184,31 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
       ...(height ? { height } : { initialHeight: 28 }),
       data: { ...data },
     } as AppNode
-    if (kind !== 'frame') markFresh(node.id)
-    setNodes((current) =>
-      kind === 'frame' ? framesFirst([...current, node]) : reparent([...current, node], [node.id]),
-    )
+    if (kind === 'frame') return addFrame(node)
+    markFresh(node.id)
+    setNodes((current) => reparent([...current, node], [node.id]))
   }
 
+  const drawFrame = ({ x, y, width, height }: ScreenRect) => {
+    setTool('select')
+    if (width < MIN_DRAW && height < MIN_DRAW) return placeAt('frame', { x, y })
+    const start = screenToFlowPosition({ x, y })
+    const end = screenToFlowPosition({ x: x + width, y: y + height })
+    addFrame({
+      id: newId(),
+      type: 'frame',
+      position: start,
+      width: end.x - start.x,
+      height: end.y - start.y,
+      data: { title: '' },
+    })
+  }
+  const draw = useDrawRect(tool === 'frame', drawFrame)
+
   // A creation tool places its element where the user clicks, then hands back to Select.
+  // Frames are drawn by dragging instead.
   const place = (event: { clientX: number; clientY: number }) => {
-    if (!placing) return
+    if (!placing || tool === 'frame') return
     placeAt(tool, { x: event.clientX, y: event.clientY })
     setTool('select')
   }
@@ -165,10 +257,19 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
       <CanvasContextMenu
         target={menuTarget}
         onPlace={placeAt}
-        onAddCard={addCard}
+        onAddCards={addCards}
         onDelete={deleteSelection}
       >
-        <div className="absolute inset-0">
+        <div
+          className="absolute inset-0"
+          onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
+          onPointerLeave={() => (pointer.current = null)}
+          onPointerDownCapture={(event) => {
+            inertia.stop()
+            draw.onPointerDownCapture(event)
+          }}
+          onWheelCapture={inertia.stop}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -200,7 +301,11 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             }}
             onSelectionContextMenu={() => setMenuTarget({ kind: 'selection' })}
             onNodeClick={(event) => place(event)}
-            onMoveEnd={(_, viewport) => setViewport(viewport)}
+            onMove={inertia.onMove}
+            onMoveEnd={(event, viewport) => {
+              setViewport(viewport)
+              inertia.onMoveEnd(event)
+            }}
             nodeTypes={nodeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             connectionMode={ConnectionMode.Loose}
@@ -215,6 +320,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             panOnDrag={tool === 'hand' ? true : [1]}
             panOnScroll
             elementsSelectable={!placing}
+            nodesDraggable={!placing}
             className={[
               connecting && 'connecting',
               placing && 'cursor-crosshair',
@@ -226,6 +332,17 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
             <Controls showInteractive={false} position="bottom-right" />
           </ReactFlow>
+          {draw.preview && (
+            <div
+              className="border-primary bg-primary/5 pointer-events-none fixed rounded-sm border border-dashed"
+              style={{
+                left: draw.preview.x,
+                top: draw.preview.y,
+                width: draw.preview.width,
+                height: draw.preview.height,
+              }}
+            />
+          )}
         </div>
       </CanvasContextMenu>
       <RefreshIndicator
@@ -239,7 +356,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           <AlertDescription>Not saved: {saveError}</AlertDescription>
         </Alert>
       )}
-      <Toolbar tool={tool} onTool={setTool} onAddCard={addCard} />
+      <Toolbar tool={tool} onTool={setTool} onAddCards={addCards} />
     </TasksContext.Provider>
   )
 }

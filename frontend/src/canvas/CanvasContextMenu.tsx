@@ -17,7 +17,7 @@ export type PlaceTool = 'frame' | 'sticky' | 'text'
 type Props = {
   target: MenuTarget | null
   onPlace: (tool: PlaceTool, point: XYPosition) => void
-  onAddCard: (task: Task, point: XYPosition) => void
+  onAddCards: (tasks: Task[], point: XYPosition) => void
   onDelete: () => void
   children: ReactNode
 }
@@ -29,7 +29,7 @@ const PLACE: { tool: PlaceTool; label: string; Icon: typeof Frame }[] = [
 ]
 
 /** Right-click menu: add elements at the clicked spot, or delete the selection. */
-export function CanvasContextMenu({ target, onPlace, onAddCard, onDelete, children }: Props) {
+export function CanvasContextMenu({ target, onPlace, onAddCards, onDelete, children }: Props) {
   // Screen point where "Add Jira card" opens its input; the card lands there too.
   const [cardAt, setCardAt] = useState<XYPosition | null>(null)
   // The menu traps focus while open, so the chosen action runs once it has closed;
@@ -80,10 +80,8 @@ export function CanvasContextMenu({ target, onPlace, onAddCard, onDelete, childr
         />
         <PopoverContent align="start" className="w-72 p-2">
           <AddCardForm
-            onAdd={(task) => {
-              if (cardAt) onAddCard(task, cardAt)
-              setCardAt(null)
-            }}
+            onAdd={(tasks) => cardAt && onAddCards(tasks, cardAt)}
+            onDone={() => setCardAt(null)}
           />
         </PopoverContent>
       </Popover>

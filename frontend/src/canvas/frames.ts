@@ -9,7 +9,7 @@ function size(node: AppNode) {
 }
 
 // Frames are never nested, so a child's absolute position is one parent away.
-function absolute(node: AppNode, byId: Map<string, AppNode>): XYPosition {
+export function absolute(node: AppNode, byId: Map<string, AppNode>): XYPosition {
   const parent = node.parentId ? byId.get(node.parentId) : undefined
   if (!parent) return node.position
   return { x: parent.position.x + node.position.x, y: parent.position.y + node.position.y }

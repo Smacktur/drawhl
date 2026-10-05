@@ -130,6 +130,12 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [ ] T065 [P] [US6] Create `frontend/src/lib/theme.ts` (`light | dark | system`, `localStorage`, toggles `.dark` on `<html>`, follows `prefers-color-scheme` for system) and an inline script in `index.html` that applies it before first paint; pass the resolved mode to `ReactFlow` `colorMode` instead of `"system"`
 - [ ] T066 [US6] Create `frontend/src/board/TopBar.tsx` replacing the board panel in `frontend/src/App.tsx`: main menu (Settings opens `SettingsSheet`, Theme submenu) and board name dropdown (switch, "New board" as an inline input in the dropdown); T055 later adds rename and delete here (depends on T065)
 - [ ] T067 [US6] Component tests: toolbar popover adds a card and closes on Escape; theme choice toggles `.dark` and survives remount
+- [ ] T068 [US6] Shortcut registry `frontend/src/lib/shortcuts.ts` on `react-hotkeys-hook` (`useShortcut`, labels for tooltips) and `frontend/src/board/ShortcutsDialog.tsx` opened by `?` and the main menu; tool keys V, H, F, S, T, C
+- [ ] T069 [US6] `frontend/src/canvas/clipboard.ts`: copy, paste at the cursor, duplicate (`mod+c`, `mod+v`, `mod+d`) and select all (`mod+a`); a frame is copied with its contents, edges between copied nodes follow
+- [ ] T070 [US6] Several keys or links at once in `AddCardForm`, laid out by `frontend/src/canvas/layout.ts` in a near-square grid; failed keys stay in the field with their errors
+- [ ] T071 [US6] Draw a frame by dragging (`frontend/src/canvas/useDrawRect.ts`); a new frame takes in the loose elements under it
+- [ ] T072 [US6] Glide after a mouse pan (`frontend/src/canvas/useInertia.ts`)
+- [ ] T073 [US6] Pointer users get no focus ring after closing menus and dialogs (`frontend/src/lib/input-modality.ts`); keyboard users keep focus return
 
 ## Phase 6: Slice 5 `feat/card-details` — collapse and mini-card (US4)
 

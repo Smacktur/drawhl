@@ -1,7 +1,8 @@
-import { ChevronDown, Menu, Monitor, Moon, Plus, Settings, Sun } from 'lucide-react'
+import { ChevronDown, Keyboard, Menu, Monitor, Moon, Plus, Settings, Sun } from 'lucide-react'
 import { useState } from 'react'
 import type { BoardSummary } from '@/api/boards'
 import { NewBoardForm } from '@/board/NewBoardForm'
+import { ShortcutsDialog } from '@/board/ShortcutsDialog'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,11 +11,13 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
 import { SettingsSheet } from '@/settings/SettingsSheet'
 
@@ -34,6 +37,9 @@ export function TopBar({ boards, current, onSelect }: Props) {
   const { theme, setTheme } = useTheme()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+
+  useShortcut('help', () => setShortcutsOpen(true))
 
   return (
     <div className="bg-card absolute top-4 left-4 z-10 flex items-center gap-1 rounded-lg border p-1 shadow-md">
@@ -47,6 +53,11 @@ export function TopBar({ boards, current, onSelect }: Props) {
           <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
             <Settings strokeWidth={1.75} />
             Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setShortcutsOpen(true)}>
+            <Keyboard strokeWidth={1.75} />
+            Keyboard shortcuts
+            <DropdownMenuShortcut>{formatShortcut('help')[0]}</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
@@ -67,6 +78,7 @@ export function TopBar({ boards, current, onSelect }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
       {creating ? (
         <NewBoardForm
