@@ -1,109 +1,108 @@
-# Research — drawhl: open-source холст с живыми карточками Jira Data Center
+# Research: drawhl, an open-source canvas with live Jira Data Center cards
 
-> Дата: 2026-10-05 · Timebox: ~25 мин (4 потока параллельно) · Рекомендация: **go** (как личный инструмент лида, self-hosted, Jira DC)
+> Date: 2026-10-05 · Timebox: ~25 min (4 streams in parallel) · Recommendation: **go** (as a personal tool for a lead, self-hosted, Jira DC)
 
 ## TL;DR
 
-- Карточки Jira на доске уже продают Miro, Lucidspark и Mural, в том числе для Data Center. Atlassian Whiteboards и FigJam работают только с Cloud. Открытого self-hosted решения "холст + живые карточки Jira DC" не нашли.
-- Самая подтверждённая боль — устаревшие карточки. В Miro статус не обновляется сам, приходится вручную нажимать update или пересоздавать карточку. Треды висят годами.
-- Спрос на доски в DC есть (137 голосов за `CONFSERVER-83249`, Atlassian делать не планирует), но речь там о командной работе. Под нашу персону ("мыслю пространственно, канбан не подходит") прямых цитат нет, это гипотеза.
-- Движок: tldraw отпадает из-за лицензии, живых форков эпохи Apache нет. Лучше всего подходит xyflow (React Flow, MIT): карточка как React-узел, группы и стрелки с привязкой есть из коробки. Свободное рисование придётся дописать самим.
-- Первым делом строим карточку Jira DC по ключу через PAT, которая обновляется сама (опрос раз в 30–60 с), плюс frames и перетаскивание.
+- Jira cards on a board are already sold by Miro, Lucidspark and Mural, including for Data Center. Atlassian Whiteboards and FigJam work only with Cloud. We found no open-source self-hosted "canvas + live Jira DC cards" solution.
+- The best-confirmed pain is stale cards. In Miro the status doesn't update on its own; you have to press update manually or recreate the card. The threads have been open for years.
+- There is demand for boards in DC (137 votes for `CONFSERVER-83249`, Atlassian doesn't plan to build it), but it is about team work. For our persona ("I think spatially, kanban doesn't fit") there are no direct quotes; this is a hypothesis.
+- Engine: tldraw is out because of its license, and there are no living forks from the Apache era. xyflow (React Flow, MIT) fits best: a card is a React node, groups and arrows with binding work out of the box. Freehand drawing we'd have to write ourselves.
+- First we build a Jira DC card by key through a PAT that updates itself (polling every 30–60 s), plus frames and dragging.
 
-## Решения и конкуренты
+## Solutions and competitors
 
-| Продукт | Что делает | Модель / цена | Сильное | Слабое (по отзывам) | Ссылка |
+| Product | What it does | Model / price | Strengths | Weaknesses (from reviews) | Link |
 |---|---|---|---|---|---|
-| Miro + Jira Cards | Карточки Jira на доске, Cloud, Server и DC | SaaS, Starter $8, Business $20 за участника в месяц | Ближе всех по функциям, есть DC через OAuth 2.0 и вебхуки | Статус не обновляется сам, нужен ручной update по каждой карточке, просят "Refresh all". Для DC нужен админ. Доска тяжелая и медленная | [Jira Cards](https://help.miro.com/hc/en-us/articles/360017572434-Jira-Cards), [не обновляются](https://community.miro.com/ask-the-community-45/jira-cards-are-not-updating-18974), [идея status update](https://community.miro.com/ideas/important-feature-for-jira-integration-status-update-4403), [цена](https://comparedge.com/tools/miro/pricing) |
-| Lucidspark + Lucid Cards for Jira | Импорт задач Cloud и DC, двусторонняя синхронизация | SaaS, цена не проверена | Двусторонняя синхронизация | Для DC настройку делает админ (OAuth) | [help](https://help.lucid.co/hc/en-us/articles/14943046626964-Integrate-Lucid-Cards-with-Jira), [admin](https://help.lucid.co/hc/en-us/articles/14942710266516-For-admins-Configure-Lucid-Cards-for-Jira) |
-| Mural | Карточки Jira, двусторонняя и массовая синхронизация, есть DC | SaaS, цена не проверена | DC поддерживается | Интеграция с Server в статусе legacy | [Mural Jira](https://www.mural.co/integrations/jira), [Server legacy](https://support.mural.co/s/article/using-the-jira-server-integration) |
-| Confluence Whiteboards | Нативные доски с карточками Jira | Входит в Confluence Cloud | Нативно, стикер превращается в задачу | Только Cloud, для DC не планируется. Карточку нельзя ресайзить или менять стиль | [docs](https://support.atlassian.com/confluence-cloud/docs/link-jira-issues-from-your-whiteboard/), [CONFSERVER-83249](https://jira.atlassian.com/browse/CONFSERVER-83249), [resize](https://community.atlassian.com/forums/Confluence-questions/Resize-or-Stretch-the-Display-Cards-ticket-from-Jira-in/qaq-p/2630727) |
-| FigJam + виджет Jira | Виджет Jira на доске | Входит в Figma | Экосистема дизайнеров | Только Cloud, on-prem не планируется | [widget](https://www.figma.com/community/widget/1094001923188252679/jira), [forum](https://forum.figma.com/suggest-a-feature-11/widget-for-figjam-to-jira-server-integration-27867) |
-| Easy Agile TeamRhythm, StoriesOnBoard | Story map поверх бэклога Jira | Easy Agile $10 в месяц за 10 человек, SoB $9–55 за пользователя | Есть Server и DC | Жесткая сетка, свободного холста нет | [Easy Agile](https://marketplace.atlassian.com/apps/1212078/easy-agile-teamrhythm-user-story-map-retrospectives), [SoB](https://www.capterra.com/p/138042/StoriesOnBoard/) |
-| Obsidian + Jira Issue и Issue Manager | Карточки и синхронизация Jira в заметках | OSS, бесплатно | Локально, есть граф зависимостей | Это заметки, а не пространственная доска. Работу в Canvas подтвердить не удалось | [Jira Issue](https://community.obsidian.md/plugins/obsidian-jira-issue), [jira-graph](https://github.com/marc0l92/obsidian-jira-graph) |
-| Excalidraw, AFFiNE, Penpot | OSS-доски, есть self-host | OSS | Бесплатно, self-host | Интеграции с Jira нет. В Excalidraw запрос закрыт как out of scope | [excalidraw#1189](https://github.com/excalidraw/excalidraw/issues/1189), [AFFiNE](https://affine.pro/blog/best-open-source-miro-alternatives) |
+| Miro + Jira Cards | Jira cards on a board, Cloud, Server and DC | SaaS, Starter $8, Business $20 per member per month | Closest in features, DC via OAuth 2.0 and webhooks | Status doesn't update on its own, manual update needed for each card, users ask for "Refresh all". DC needs an admin. The board is heavy and slow | [Jira Cards](https://help.miro.com/hc/en-us/articles/360017572434-Jira-Cards), [not updating](https://community.miro.com/ask-the-community-45/jira-cards-are-not-updating-18974), [status update idea](https://community.miro.com/ideas/important-feature-for-jira-integration-status-update-4403), [pricing](https://comparedge.com/tools/miro/pricing) |
+| Lucidspark + Lucid Cards for Jira | Import of Cloud and DC tasks, two-way sync | SaaS, price not checked | Two-way sync | For DC an admin does the setup (OAuth) | [help](https://help.lucid.co/hc/en-us/articles/14943046626964-Integrate-Lucid-Cards-with-Jira), [admin](https://help.lucid.co/hc/en-us/articles/14942710266516-For-admins-Configure-Lucid-Cards-for-Jira) |
+| Mural | Jira cards, two-way and bulk sync, DC supported | SaaS, price not checked | DC supported | The Server integration is legacy | [Mural Jira](https://www.mural.co/integrations/jira), [Server legacy](https://support.mural.co/s/article/using-the-jira-server-integration) |
+| Confluence Whiteboards | Native boards with Jira cards | Included in Confluence Cloud | Native, a sticky note turns into a task | Cloud only, not planned for DC. A card can't be resized or restyled | [docs](https://support.atlassian.com/confluence-cloud/docs/link-jira-issues-from-your-whiteboard/), [CONFSERVER-83249](https://jira.atlassian.com/browse/CONFSERVER-83249), [resize](https://community.atlassian.com/forums/Confluence-questions/Resize-or-Stretch-the-Display-Cards-ticket-from-Jira-in/qaq-p/2630727) |
+| FigJam + Jira widget | Jira widget on a board | Included in Figma | Designer ecosystem | Cloud only, on-prem not planned | [widget](https://www.figma.com/community/widget/1094001923188252679/jira), [forum](https://forum.figma.com/suggest-a-feature-11/widget-for-figjam-to-jira-server-integration-27867) |
+| Easy Agile TeamRhythm, StoriesOnBoard | Story map on top of the Jira backlog | Easy Agile $10 per month for 10 people, SoB $9–55 per user | Server and DC supported | Rigid grid, no free canvas | [Easy Agile](https://marketplace.atlassian.com/apps/1212078/easy-agile-teamrhythm-user-story-map-retrospectives), [SoB](https://www.capterra.com/p/138042/StoriesOnBoard/) |
+| Obsidian + Jira Issue and Issue Manager | Jira cards and sync inside notes | OSS, free | Local, has a dependency graph | These are notes, not a spatial board. Could not confirm it works in Canvas | [Jira Issue](https://community.obsidian.md/plugins/obsidian-jira-issue), [jira-graph](https://github.com/marc0l92/obsidian-jira-graph) |
+| Excalidraw, AFFiNE, Penpot | OSS boards, self-host available | OSS | Free, self-host | No Jira integration. In Excalidraw the request was closed as out of scope | [excalidraw#1189](https://github.com/excalidraw/excalidraw/issues/1189), [AFFiNE](https://affine.pro/blog/best-open-source-miro-alternatives) |
 
-Вывод:
+Takeaways:
 
-- Платный SaaS закрывает задачу для команд и мероприятий планирования. Дыра в другом:
-  - нет бесплатного личного self-hosted инструмента;
-  - для DC все требуют OAuth через админа, а PAT не поддерживает никто;
-  - карточки не обновляются сами.
-- Отличаемся тремя вещами: PAT без админа, автообновление с "Refresh all" и компактная карточка как в макросе Confluence.
+- Paid SaaS covers the job for teams and planning sessions. The gap is elsewhere:
+  - no free personal self-hosted tool;
+  - for DC everyone requires OAuth through an admin, and nobody supports a PAT;
+  - cards don't update on their own.
+- We differ in three ways: a PAT without an admin, auto-update with "Refresh all", and a compact card like the Confluence macro.
 
-## Спрос
+## Demand
 
-| Сигнал | Сила | Источник |
+| Signal | Strength | Source |
 |---|---|---|
-| `CONFSERVER-83249` "Confluence whiteboards available for DC/on-prem": 137 голосов, 77 watchers, "Gathering Interest" с 2023-04-21, обновлен 2026-08-14 (проверено через API) | 🟢 | [CONFSERVER-83249](https://jira.atlassian.com/browse/CONFSERVER-83249) |
-| За Jira на доске платят: Miro, Lucid, Mural, приложения Marketplace (191 установка у Advanced Agile Boards, только Cloud) | 🟡 | [Marketplace](https://marketplace.atlassian.com/apps/1224087/advanced-agile-boards-visual-whiteboards-for-jira) |
-| Жалобы на карточки Jira в Cloud Whiteboards: нельзя менять размер, стиль, добавлять поля | 🟡 | [adjust card](https://community.atlassian.com/forums/Confluence-questions/Possibility-of-adjust-the-Jira-Card-in-the-Whiteboard/qaq-p/2868266), [style](https://community.atlassian.com/forums/Confluence-questions/Is-there-a-way-to-change-jira-card-style-in-whiteboards/qaq-p/2890327) |
-| Новые продукты "задачи на холсте" для spatial thinkers и ADHD (Fabric, Forma, Canmark): это предложение, а не голос пользователей | 🟡 | [Fabric](https://fabric.so/comparison/best-adhd-task-management-app), [Forma](https://apps.apple.com/us/app/forma-tasks-notes-on-canvas/id6755406356) |
-| HN "jira whiteboard": 4 поста, по 1–3 очка, 0 комментариев | 🔴 | [HN Algolia](https://hn.algolia.com/api/v1/search?query=jira%20whiteboard&tags=story&hitsPerPage=15) |
-| Прямой запрос на личный self-hosted инструмент с Jira DC через PAT | 🔴 | не нашли |
+| `CONFSERVER-83249` "Confluence whiteboards available for DC/on-prem": 137 votes, 77 watchers, "Gathering Interest" since 2023-04-21, updated 2026-08-14 (checked via API) | 🟢 | [CONFSERVER-83249](https://jira.atlassian.com/browse/CONFSERVER-83249) |
+| People pay for Jira on a board: Miro, Lucid, Mural, Marketplace apps (191 installs for Advanced Agile Boards, Cloud only) | 🟡 | [Marketplace](https://marketplace.atlassian.com/apps/1224087/advanced-agile-boards-visual-whiteboards-for-jira) |
+| Complaints about Jira cards in Cloud Whiteboards: can't change size, style, or add fields | 🟡 | [adjust card](https://community.atlassian.com/forums/Confluence-questions/Possibility-of-adjust-the-Jira-Card-in-the-Whiteboard/qaq-p/2868266), [style](https://community.atlassian.com/forums/Confluence-questions/Is-there-a-way-to-change-jira-card-style-in-whiteboards/qaq-p/2890327) |
+| New "tasks on a canvas" products for spatial thinkers and ADHD (Fabric, Forma, Canmark): this is supply, not user voice | 🟡 | [Fabric](https://fabric.so/comparison/best-adhd-task-management-app), [Forma](https://apps.apple.com/us/app/forma-tasks-notes-on-canvas/id6755406356) |
+| HN "jira whiteboard": 4 posts, 1–3 points each, 0 comments | 🔴 | [HN Algolia](https://hn.algolia.com/api/v1/search?query=jira%20whiteboard&tags=story&hitsPerPage=15) |
+| A direct request for a personal self-hosted tool with Jira DC via PAT | 🔴 | not found |
 
-Вывод: 🟡. Спрос на "доску с Jira в DC и on-prem" подтверждён, за решения в Cloud платят. Сегмент "личный инструмент лида" прямо не подтверждён: держится на гипотезе и на самом основателе.
+Conclusion: 🟡. Demand for a "board with Jira in DC and on-prem" is confirmed, and people pay for Cloud solutions. The "lead's personal tool" segment is not directly confirmed: it rests on a hypothesis and on the founder.
 
-## Голос пользователя
+## Voice of the user
 
-| Боль / желание | Частота | Цитата | Источник |
+| Pain / wish | Frequency | Quote | Source |
 |---|---|---|---|
-| Статус карточки не обновляется | 🟢 | "status never updates in Miro even though I make changes in JIRA" | [Miro Community](https://community.miro.com/ask-the-community-45/jira-cards-bi-directional-sync-updates-made-in-jira-don-t-reflect-in-miro-1076) |
-| Обходной путь — пересоздавать карточку | 🟢 | "replacing the existing miro card with a new card with the latest status, but that beats the whole purpose of the integration" | [там же](https://community.miro.com/ask-the-community-45/jira-cards-bi-directional-sync-updates-made-in-jira-don-t-reflect-in-miro-1076) |
-| Ручная сверка доски с Jira | 🟢 | "we have to manually compare the sprint board with the user storyboard if all stories for the last release are done" | [Miro Ideas](https://community.miro.com/ideas/important-feature-for-jira-integration-status-update-4403) |
-| Инструмент без автообновления не годится | 🟡 | "Miro isn't fit for purpose if it doesn't auto update" | [Miro Community](https://community.miro.com/ask-the-community-45/jira-cards-are-not-updating-18974) |
-| DC за внешним URL не подключается к SaaS | 🟡 | "we use an external URL (different from Base URL) for integration purposes due to security reasons" | [Miro Ideas](https://community.miro.com/ideas/accept-external-jira-urls-for-jira-data-center-miro-integration-9281) |
-| Miro тяжелый и медленный | 🟢 | "The Miro app has gotten significantly slower and slower over the past year." | [Miro Community](https://community.miro.com/ask-the-community-45/miro-has-become-too-slow-9139) |
-| "Мыслю пространственно, канбан не подходит" | 🔴 | не нашли (Reddit и HN через поиск не индексируются) | гипотеза |
+| Card status doesn't update | 🟢 | "status never updates in Miro even though I make changes in JIRA" | [Miro Community](https://community.miro.com/ask-the-community-45/jira-cards-bi-directional-sync-updates-made-in-jira-don-t-reflect-in-miro-1076) |
+| The workaround is to recreate the card | 🟢 | "replacing the existing miro card with a new card with the latest status, but that beats the whole purpose of the integration" | [same thread](https://community.miro.com/ask-the-community-45/jira-cards-bi-directional-sync-updates-made-in-jira-don-t-reflect-in-miro-1076) |
+| Manually reconciling the board with Jira | 🟢 | "we have to manually compare the sprint board with the user storyboard if all stories for the last release are done" | [Miro Ideas](https://community.miro.com/ideas/important-feature-for-jira-integration-status-update-4403) |
+| A tool without auto-update is not fit for use | 🟡 | "Miro isn't fit for purpose if it doesn't auto update" | [Miro Community](https://community.miro.com/ask-the-community-45/jira-cards-are-not-updating-18974) |
+| DC behind an external URL doesn't connect to SaaS | 🟡 | "we use an external URL (different from Base URL) for integration purposes due to security reasons" | [Miro Ideas](https://community.miro.com/ideas/accept-external-jira-urls-for-jira-data-center-miro-integration-9281) |
+| Miro is heavy and slow | 🟢 | "The Miro app has gotten significantly slower and slower over the past year." | [Miro Community](https://community.miro.com/ask-the-community-45/miro-has-become-too-slow-9139) |
+| "I think spatially, kanban doesn't fit" | 🔴 | not found (Reddit and HN are not indexed by search) | hypothesis |
 
-## Движок холста
+## Canvas engine
 
-| Движок | Лицензия | React-карточка | Frames и группы | Стрелки с привязкой | Зрелость | Вердикт |
+| Engine | License | React card | Frames and groups | Arrows with binding | Maturity | Verdict |
 |---|---|---|---|---|---|---|
-| tldraw 4.x и 5.x | проприетарная, ключ в проде | лучший API | да | да | 5.5.2 | ❌ не OSS ([license](https://tldraw.dev/community/license)) |
-| tldraw 2.0 alpha (до `3cf4dae3`) | Apache-2.0 навсегда ([блог](https://tldraw.dev/blog/license-update-for-the-tldraw-sdk)) | да | да | да | код 2023 года, живых форков нет (лучший: [compound](https://github.com/DallasCarraher/compound), 6★, последний коммит 2024-05) | ❌ поддерживать придется самим |
-| **xyflow (React Flow)** | MIT | **да, узел — это React-компонент** | **да, `parentId`, group** ([docs](https://reactflow.dev/learn/layouting/sub-flows)) | **да** | 38.6k★, `@xyflow/react` 12.12.0 от 2026-09-24 | ✅ кандидат №1 |
-| Plait + Drawnix | MIT | не подтверждено | не подтверждено | не подтверждено | Drawnix 14.9k★, Plait 0.x | 🟡 нужен прототип на день |
-| Excalidraw | MIT | нет: custom elements отклонены ([#8184](https://github.com/excalidraw/excalidraw/issues/8184)), остается только iframe | да | да | 133k★ | ❌ для живой карточки не подходит |
-| BlockSuite (AFFiNE) | MPL-2.0 | web components, не React | да | да | последний релиз 2025-07 | ❌ |
+| tldraw 4.x and 5.x | proprietary, key required in production | best API | yes | yes | 5.5.2 | ❌ not OSS ([license](https://tldraw.dev/community/license)) |
+| tldraw 2.0 alpha (up to `3cf4dae3`) | Apache-2.0 forever ([blog](https://tldraw.dev/blog/license-update-for-the-tldraw-sdk)) | yes | yes | yes | 2023 code, no living forks (best: [compound](https://github.com/DallasCarraher/compound), 6★, last commit 2024-05) | ❌ we'd have to maintain it ourselves |
+| **xyflow (React Flow)** | MIT | **yes, a node is a React component** | **yes, `parentId`, group** ([docs](https://reactflow.dev/learn/layouting/sub-flows)) | **yes** | 38.6k★, `@xyflow/react` 12.12.0 from 2026-09-24 | ✅ candidate #1 |
+| Plait + Drawnix | MIT | not confirmed | not confirmed | not confirmed | Drawnix 14.9k★, Plait 0.x | 🟡 needs a one-day prototype |
+| Excalidraw | MIT | no: custom elements were rejected ([#8184](https://github.com/excalidraw/excalidraw/issues/8184)), only an iframe is left | yes | yes | 133k★ | ❌ not suitable for a live card |
+| BlockSuite (AFFiNE) | MPL-2.0 | web components, not React | yes | yes | last release 2025-07 | ❌ |
 
-Главный риск React Flow: это не whiteboard. Свободное рисование есть только в платном Pro-примере, его придётся собрать на `perfect-freehand`. Узлы рендерятся в DOM, на сотнях узлов может тормозить ([whiteboard docs](https://reactflow.dev/learn/advanced-use/whiteboard)).
+The main risk with React Flow: it is not a whiteboard. Freehand drawing exists only in a paid Pro example, so we'd have to build it on `perfect-freehand`. Nodes render in the DOM, which may be slow with hundreds of nodes ([whiteboard docs](https://reactflow.dev/learn/advanced-use/whiteboard)).
 
-## Инсайды
+## Insights
 
-1. Все платные доски синхронизируют карточки Jira по событиям или раз в час. Пользователи годами жалуются на устаревший статус и пересоздают карточки руками. Возможность: сделать главной фичей "статус всегда свежий" — пакетный JQL-опрос `key in (...) AND updated >= -2m` раз в 30–60 с плюс "Refresh all". [Miro Community, Miro Ideas]
-2. Конкуренты подключают DC через OAuth с участием админа, а DC часто стоит за внешним URL и политикой безопасности. Возможность: PAT пользователя и self-host внутри контура. Ставится без админа Jira и без выноса данных в SaaS. [Miro DC OAuth, Miro Ideas external URL, CONFSERVER-83249]
-3. Ниша "доска для DC" у Atlassian стоит в статусе "Gathering Interest" уже 3,5 года (137 голосов). Конкурент из экосистемы её не закроет. [CONFSERVER-83249]
-4. Нам нужна не "доска с карточками", а "карточки с доской". Поэтому основа — графовый движок с React-узлами (xyflow), а whiteboard-фичи (фигуры, рисование от руки) достраиваются поверх. Не наоборот. [Stream D]
+1. All paid boards sync Jira cards on events or once an hour. Users have complained about stale status for years and recreate cards by hand. Opportunity: make "status is always fresh" the main feature, with batched JQL polling `key in (...) AND updated >= -2m` every 30–60 s plus "Refresh all". [Miro Community, Miro Ideas]
+2. Competitors connect DC through OAuth with an admin involved, while DC often sits behind an external URL and a security policy. Opportunity: a user PAT and self-host inside the perimeter. It installs without a Jira admin and without sending data to a SaaS. [Miro DC OAuth, Miro Ideas external URL, CONFSERVER-83249]
+3. The "board for DC" niche has sat at "Gathering Interest" at Atlassian for 3.5 years now (137 votes). A competitor from the ecosystem won't close it. [CONFSERVER-83249]
+4. We don't need a "board with cards" but "cards with a board". So the foundation is a graph engine with React nodes (xyflow), and whiteboard features (shapes, freehand drawing) are built on top, not the other way around. [Stream D]
 
-## Гипотезы (ICE)
+## Hypotheses (ICE)
 
-| # | Гипотеза | I | C | E | ICE | Как проверить в MVP |
+| # | Hypothesis | I | C | E | ICE | How to test in the MVP |
 |---|---|---|---|---|---|---|
-| 1 | Лид с пространственным мышлением будет вести свои задачи Jira DC на холсте drawhl ежедневно, потому что списки и канбан не дают ему обзора. Узнаем по частоте открытий (≥ 4 дня в неделю, 2 недели) | 9 | 4 | 7 | 252 | Self-dogfood основателя и 3–5 лидов из команды. Счётчик сессий и опрос по шкале "организованность, обзор" до и после |
-| 2 | Пользователь доверяет доске, только если статус обновляется сам. Узнаем по тому, что ручной "Refresh" почти не нажимают, а расхождений с Jira ≤ 1 мин | 8 | 8 | 7 | 448 | Опрос раз в 30–60 с, метрика ручных refresh, сравнение статусов |
-| 3 | Тимлиды поставят drawhl сами (`docker compose up` и PAT), без админа Jira. Узнаем по 10–20 установкам в команде и соседних отделах за месяц | 7 | 5 | 6 | 210 | Установка за ≤ 10 мин по README, счётчик активных досок |
-| 4 | Сообщество OSS заметит проект (звёзды, issues) после Show HN и постов в r/jira и r/selfhosted | 5 | 3 | 6 | 90 | После v0.1.0. Это вне MVP |
+| 1 | A spatially minded lead will manage their Jira DC tasks on the drawhl canvas daily because lists and kanban don't give them an overview. We'll know by how often they open it (≥ 4 days a week, 2 weeks) | 9 | 4 | 7 | 252 | Self-dogfooding by the founder and 3–5 leads from the team. Session counter and a survey on an "organization, overview" scale before and after |
+| 2 | A user trusts the board only if the status updates on its own. We'll know by manual "Refresh" being almost unused and the Jira discrepancy staying ≤ 1 min | 8 | 8 | 7 | 448 | Polling every 30–60 s, a manual refresh metric, status comparison |
+| 3 | Team leads will install drawhl themselves (`docker compose up` and a PAT), without a Jira admin. We'll know by 10–20 installs in the team and neighboring departments within a month | 7 | 5 | 6 | 210 | Setup in ≤ 10 min from the README, active board counter |
+| 4 | The OSS community will notice the project (stars, issues) after Show HN and posts in r/jira and r/selfhosted | 5 | 3 | 6 | 90 | After v0.1.0. Outside the MVP |
 
-## Карта MVP
+## MVP map
 
-- **Первым (Must):** холст на xyflow (пан, зум, frames и группы, стрелки, текст и стикер); карточка Jira DC по ключу или URL через PAT (иконка типа, ключ, title, статус, сворачивание до ключа, мини-карточка по клику); автоопрос статусов и "Refresh all"; доски сохраняются на своём бэкенде; один пользователь; `docker compose up`. Проверяет гипотезы #1 и #2.
-- **Вторым (Should):** рисование от руки и простые фигуры (прямоугольник, эллипс) поверх xyflow; вставка JQL, которая раскладывает задачи пачкой.
-- **Не делаем:** совместное редактирование в реальном времени, Jira Cloud, Confluence и Todoist (провайдер в коде за интерфейсом, но только Jira), двусторонняя синхронизация (менять статус с доски), вебхуки, auth и роли, мобильная версия, LLM.
+- **First (Must):** xyflow canvas (pan, zoom, frames and groups, arrows, text and sticky note); a Jira DC card by key or URL through a PAT (type icon, key, title, status, collapse to key, mini-card on click); automatic status polling and "Refresh all"; boards saved on our own backend; a single user; `docker compose up`. Tests hypotheses #1 and #2.
+- **Second (Should):** freehand drawing and simple shapes (rectangle, ellipse) on top of xyflow; JQL paste that lays out tasks in a batch.
+- **Not doing:** real-time collaborative editing, Jira Cloud, Confluence and Todoist (the provider is behind an interface in code, but Jira only), two-way sync (changing status from the board), webhooks, auth and roles, mobile version, LLM.
 
-## Рекомендация
+## Recommendation
 
-**go.** Дыра конкретная и подтверждена: открытого self-hosted холста с живыми карточками Jira DC нет, а главная жалоба на лидера (статус не обновляется) решается техникой, которую мы и так планируем. Главный риск — спрос именно на личный инструмент лида не подтверждён снаружи. MVP проверяем на себе и на команде (10–20 человек) до выхода в сообщество. Движок — xyflow. Plait стоит проверять, только если свободный whiteboard окажется важнее карточек.
+**go.** The gap is concrete and confirmed: there is no open-source self-hosted canvas with live Jira DC cards, and the main complaint about the leader (status doesn't update) is solved by a technique we're planning anyway. The main risk is that demand specifically for a lead's personal tool is not confirmed from outside. We test the MVP on ourselves and on the team (10–20 people) before going to the community. Engine: xyflow. Plait is worth checking only if a free-form whiteboard turns out to matter more than cards.
 
-## Ограничения ресерча
+## Research limitations
 
-- Reddit, HN (кроме одного запроса) и X.com через поиск не читаются. Цитат про "пространственное мышление" нет.
-- Цены Lucid, Mural, FigJam и объёмы установок приложений для DC не проверены.
-- Страница Miro о вебхуках для DC вернула 403. Утверждение "раз в час при OAuth 2.0" взято из пересказа треда в сообществе, напрямую не проверено.
-- Свойства Plait, Excalidraw frames и binding взяты из сводок, документацию не читали.
+- Reddit, HN (except one query) and X.com can't be read through search. There are no quotes about "spatial thinking".
+- Prices for Lucid, Mural and FigJam and install counts for DC apps were not checked.
+- The Miro page about webhooks for DC returned 403. The claim "once an hour with OAuth 2.0" comes from a retelling of a community thread and was not verified directly.
+- Plait properties, Excalidraw frames and binding come from summaries; the documentation was not read.
 
-## Из библиотеки
+## From the library
 
-- Похожих проектов и оценённых инструментов холста в `library/` нет.
-- [[vite-react-ts]] — база фронта шаблона, xyflow ложится сверху.
-- Профиля `oss` в launchpad нет: публикация приватная, `/legal` под SaaS, деплой под Render. Это закрывается отдельной задачей перед scaffold.
+- No similar projects or evaluated canvas tools in the library.
+- `vite-react-ts`: the template's frontend base, xyflow goes on top.

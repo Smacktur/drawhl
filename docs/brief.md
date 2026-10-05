@@ -1,68 +1,68 @@
-# Brief — drawhl
+# Brief: drawhl
 
 > Open-source infinite canvas with live Jira Data Center task cards for leads who think spatially
 
-Заполняется на фазах Intake и Scope (гейт **G1**) на основе [research.md](research.md). Структура — [docs/playbook/01-strategy.md](playbook/01-strategy.md).
+Filled in during Intake and Scope (gate **G1**) from [research.md](research.md). Structure: [docs/playbook/01-strategy.md](playbook/01-strategy.md).
 
-## Гипотеза
+## Hypothesis
 
-Главная гипотеза из ресерча (топ по ICE): лид будет доверять холсту и вести на нем свои задачи, только если статус карточек обновляется сам. Лид с пространственным мышлением будет открывать drawhl каждый день, потому что списки и канбан не дают ему обзора своих задач. Узнаем по частоте открытий и по тому, что ручной refresh почти не нужен.
+The main hypothesis from the research (top by ICE): a lead will trust the canvas and manage their tasks on it only if card statuses update on their own. A spatially minded lead will open drawhl every day because lists and kanban boards don't give them an overview of their tasks. We'll know by how often they open it and by manual refresh being almost unnecessary.
 
-| Поле | Ответ |
+| Field | Answer |
 |---|---|
-| Пользователь | Лид, руководитель или менеджер на Jira Data Center, который контролирует свои задачи и мыслит пространственно |
-| Боль | В списках и канбане нет обзора, задачи нельзя "пощупать" и сгруппировать. В досках с Jira (Miro) статус устаревает, карточки пересоздают руками, для DC нужен OAuth через админа |
-| Сигнал успеха | Основатель и ≥ 3 лида из команды открывают доску ≥ 4 дней в неделю две недели подряд. Статус расходится с Jira ≤ 1 мин. Субъективные оценки "организованность" и "успеваю" выросли по сравнению с опросом до старта |
-| Kill-критерий | Через 2 недели даже основатель вернулся к фильтрам Jira, или опрос DC через PAT не дает свежих статусов без нагрузки, на которую жалуются админы |
-| Канал: как первые 100 пользователей узнают о продукте | Первые 10–20 — своя команда и соседние отделы. Дальше OSS-сообщество: GitHub, Show HN, r/jira, r/selfhosted, Хабр. Аудитории у основателя нет, это риск дистрибуции |
+| User | A lead, head or manager on Jira Data Center who keeps track of their own tasks and thinks spatially |
+| Pain | Lists and kanban boards give no overview; tasks can't be "touched" and grouped. In boards with Jira (Miro) the status goes stale, cards get recreated by hand, and DC needs OAuth through an admin |
+| Success signal | The founder and ≥ 3 leads from the team open the board ≥ 4 days a week for two weeks in a row. Status lags Jira by ≤ 1 min. Self-rated "organization" and "keeping up" scores went up compared with the survey before the start |
+| Kill criterion | After 2 weeks even the founder is back to Jira filters, or polling DC through a PAT can't deliver fresh statuses without a load that admins complain about |
+| Channel: how the first 100 users hear about it | The first 10–20: own team and neighboring departments. Then the OSS community: GitHub, Show HN, r/jira, r/selfhosted, Habr. The founder has no audience, which is a distribution risk |
 
 ## Core scenario
 
-1. Пользователь поднимает drawhl (`docker compose up`), открывает его в браузере и в настройках указывает URL Jira DC и свой PAT.
-2. Создает доску, рисует frames и стикеры, проводит стрелки.
-3. Добавляет задачу инструментом "Jira card" по ключу (`SRE-121`) или вставкой ссылки. На холсте появляется компактная карточка: иконка типа, ключ, title, статус.
-4. Перетаскивает карточки во frames, сворачивает до ключа, по клику раскрывает мини-карточку (исполнитель, приоритет, обновлено, ссылка в Jira).
-5. Меняет статус задачи в Jira. Через ≤ 1 мин карточка на доске показывает новый статус. Закрытая задача зачеркнута. Доска сохраняется и открывается в том же виде.
+1. The user starts drawhl (`docker compose up`), opens it in the browser and enters the Jira DC URL and their PAT in settings.
+2. Creates a board, draws frames and sticky notes, connects them with arrows.
+3. Adds a task with the "Jira card" tool by key (`SRE-121`) or by pasting a link. A compact card appears on the canvas: type icon, key, title, status.
+4. Drags cards into frames, collapses them to the key, and clicks to expand a mini-card (assignee, priority, updated, link to Jira).
+5. Changes the task status in Jira. Within ≤ 1 min the card on the board shows the new status. A closed task is struck through. The board is saved and reopens looking the same.
 
 ## Scope
 
 **Must**
 - Core scenario end-to-end
-- Холст на xyflow: пан, зум, frames (группы), стикеры и текст, стрелки с привязкой, выделение и перетаскивание
-- Карточка Jira DC: добавление по ключу или URL, свернутое и развернутое состояние, мини-карточка по клику
-- Автообновление статусов: пакетный JQL-опрос раз в 30–60 с по карточкам открытой доски, кнопка "Refresh all", индикатор "обновлено N с назад"
-- Провайдер за интерфейсом (`resolve`, `poll`), реализован только Jira DC
-- PAT хранится только на бэкенде в зашифрованном виде, в браузер не попадает
-- Доски сохраняются на бэкенде (SQLite), несколько досок
-- Self-host: `docker compose up`, README с установкой ≤ 10 мин
+- xyflow canvas: pan, zoom, frames (groups), sticky notes and text, arrows with binding, selection and dragging
+- Jira DC card: add by key or URL, collapsed and expanded states, mini-card on click
+- Automatic status updates: batched JQL polling every 30–60 s for the cards on the open board, a "Refresh all" button, an "updated N s ago" indicator
+- Provider behind an interface (`resolve`, `poll`), only Jira DC implemented
+- The PAT is stored only on the backend, encrypted, and never reaches the browser
+- Boards are saved on the backend (SQLite), multiple boards
+- Self-host: `docker compose up`, README with setup in ≤ 10 min
 
-**Should** (максимум 1)
-- Вставка JQL-запроса: задачи раскладываются на холсте пачкой
+**Should** (at most 1)
+- Pasting a JQL query: tasks are laid out on the canvas in a batch
 
 **Won't**
-- Совместное редактирование в реальном времени, шаринг досок
-- Jira Cloud, Confluence, Todoist (только задел в интерфейсе провайдера)
-- Двусторонняя синхронизация: смена статуса и правка задачи с доски
-- Вебхуки Jira
-- Рисование от руки и произвольные фигуры кроме стикера и frame
-- Auth, роли, мультипользовательность (один пользователь на инстанс), платежи, админка
-- i18n: интерфейс только на английском
+- Real-time collaborative editing, board sharing
+- Jira Cloud, Confluence, Todoist (only a hook in the provider interface)
+- Two-way sync: changing status and editing a task from the board
+- Jira webhooks
+- Freehand drawing and arbitrary shapes other than sticky note and frame
+- Auth, roles, multi-user (one user per instance), payments, admin panel
+- i18n: English-only interface
 - LLM
-- Мобильная версия
+- Mobile version
 
-## Стек
+## Stack
 
 - Backend: FastAPI
 - Frontend: React/TS + `@xyflow/react`
-- Профиль: `oss`, лицензия MIT, self-host (`compose.release.yml`)
-- LLM: нет
+- Profile: `oss`, MIT license, self-host (`compose.release.yml`)
+- LLM: none
 
-## Риски
+## Risks
 
-| Риск | План Б |
+| Risk | Plan B |
 |---|---|
-| xyflow не тянет whiteboard-UX (frames, стикеры, выделение), ощущается как редактор графов | Прототип холста первым срезом. Не нравится — прототип на Plait (Drawnix) за день, решение до второго среза |
-| DOM-рендер тормозит на 200+ карточках | Свернутые карточки по умолчанию, `onlyRenderVisibleElements`, замер на доске из 300 узлов |
-| Админы DC против частого опроса или есть rate limit | Один пакетный JQL на доску, `updated >= -2m`, опрос только открытой доски, интервал в настройках |
-| Спрос на личный инструмент не подтвердится за пределами основателя | Проверка на команде до выхода в сообщество. Kill-критерий выше |
-| PAT утечет через логи или бандл | Шифрование на диске, ключ из env, маскирование в логах, тест, что API не отдает токен |
+| xyflow can't deliver whiteboard UX (frames, sticky notes, selection) and feels like a graph editor | Prototype the canvas as the first slice. If it doesn't feel right, build a Plait (Drawnix) prototype in a day and decide before the second slice |
+| DOM rendering slows down on 200+ cards | Collapsed cards by default, `onlyRenderVisibleElements`, benchmark on a 300-node board |
+| DC admins object to frequent polling, or there is a rate limit | One batched JQL per board, `updated >= -2m`, poll only the open board, interval configurable in settings |
+| Demand for a personal tool isn't confirmed beyond the founder | Validate with the team before going to the community. Kill criterion above |
+| The PAT leaks through logs or the bundle | Encryption on disk, key from env, masking in logs, a test that the API never returns the token |

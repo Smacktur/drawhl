@@ -1,63 +1,63 @@
-# Design — drawhl
+# Design: drawhl
 
-## Направление
-Тихий рабочий холст, на котором видны только задачи: плотный, точный, спокойный. Холст нейтральный, цвет несут статусы карточек и frames.
-Анти-референсы: тяжелый и пестрый Miro с панелями повсюду, "игрушечный" рукописный Excalidraw, маркетинговый SaaS с градиентами.
+## Direction
+A quiet working canvas where only the tasks stand out: dense, precise, calm. The canvas is neutral; color is carried by card statuses and frames.
+Anti-references: heavy, colorful Miro with panels everywhere, the "toy-like" hand-drawn Excalidraw, marketing SaaS with gradients.
 
-## Референсы
-- Linear (linear.app) → плотность, тонкие границы, спокойная серая шкала, мелкая типографика без крика.
-- tldraw (tldraw.com) → минимальный тулбар снизу по центру, холст во весь экран, точечная сетка.
-- Jira и Confluence inline issue macro → анатомия карточки: иконка типа, синий ключ, title, lozenge статуса в верхнем регистре, зачеркнутый ключ у закрытой задачи.
-- Miro → frames с заголовком над рамкой и свободная группировка.
-Токены и приемы, без логотипов, иконсетов и копии брендов.
+## References
+- Linear (linear.app) → density, thin borders, a calm gray scale, small type that doesn't shout.
+- tldraw (tldraw.com) → minimal toolbar at the bottom center, full-screen canvas, dot grid.
+- Jira and Confluence inline issue macro → card anatomy: type icon, blue key, title, uppercase status lozenge, struck-through key for a closed task.
+- Miro → frames with the title above the border and free-form grouping.
+Tokens and techniques only, no logos, icon sets or copied branding.
 
-## Цвет
-Светлая тема (по умолчанию):
-- `--background` холст `oklch(0.985 0.002 250)`, точечная сетка `oklch(0.90 0.004 250)`
-- `--card` карточка `oklch(1 0 0)`, `--border` `oklch(0.91 0.005 250)`
+## Color
+Light theme (default):
+- `--background` canvas `oklch(0.985 0.002 250)`, dot grid `oklch(0.90 0.004 250)`
+- `--card` card `oklch(1 0 0)`, `--border` `oklch(0.91 0.005 250)`
 - `--foreground` `oklch(0.24 0.01 260)`, `--muted-foreground` `oklch(0.52 0.012 260)`
-- `--primary` (ключ задачи, выделение, ссылки) `oklch(0.53 0.17 255)`
-- `--accent` (hover, фон выделенного frame) `oklch(0.96 0.012 255)`
+- `--primary` (task key, selection, links) `oklch(0.53 0.17 255)`
+- `--accent` (hover, selected frame background) `oklch(0.96 0.012 255)`
 - `--destructive` `oklch(0.58 0.2 27)`
-- Статусы, по категориям Jira: To Do `oklch(0.93 0.006 260)` на `oklch(0.42 0.01 260)`; In Progress `oklch(0.93 0.04 255)` на `oklch(0.45 0.13 255)`; Done `oklch(0.93 0.06 150)` на `oklch(0.42 0.11 150)`
-- Цвета стикеров и frames: 6 приглушенных оттенков с одной светлотой `L 0.94`, `C 0.05`
+- Statuses, by Jira category: To Do `oklch(0.93 0.006 260)` on `oklch(0.42 0.01 260)`; In Progress `oklch(0.93 0.04 255)` on `oklch(0.45 0.13 255)`; Done `oklch(0.93 0.06 150)` on `oklch(0.42 0.11 150)`
+- Sticky note and frame colors: 6 muted hues with the same lightness `L 0.94`, `C 0.05`
 
-Темная тема:
-- `--background` `oklch(0.18 0.006 260)`, сетка `oklch(0.27 0.006 260)`
+Dark theme:
+- `--background` `oklch(0.18 0.006 260)`, grid `oklch(0.27 0.006 260)`
 - `--card` `oklch(0.22 0.007 260)`, `--border` `oklch(0.30 0.008 260)`
 - `--foreground` `oklch(0.93 0.004 260)`, `--muted-foreground` `oklch(0.68 0.01 260)`
 - `--primary` `oklch(0.70 0.14 255)`, `--accent` `oklch(0.27 0.02 255)`
-- Статусы: те же оттенки, `L` фона 0.30, текста 0.85
+- Statuses: same hues, background `L` 0.30, text 0.85
 
-## Типографика
-- Текст и UI: IBM Plex Sans (`@fontsource-variable/ibm-plex-sans`), 13px основной на холсте, 14px в панелях.
-- Ключи задач и моно: JetBrains Mono (`@fontsource-variable/jetbrains-mono`), 12px, tabular.
-- Шкала: 11 (lozenge, верхний регистр, +0.04em), 12, 13, 14, 16, 20 (заголовок frame). Начертания 400, 500, 600. Межстрочный 1.35 на холсте, 1.5 в панелях.
+## Typography
+- Text and UI: IBM Plex Sans (`@fontsource-variable/ibm-plex-sans`), 13px base on the canvas, 14px in panels.
+- Task keys and monospace: JetBrains Mono (`@fontsource-variable/jetbrains-mono`), 12px, tabular.
+- Scale: 11 (lozenge, uppercase, +0.04em), 12, 13, 14, 16, 20 (frame title). Weights 400, 500, 600. Line height 1.35 on the canvas, 1.5 in panels.
 
-## Форма и ритм
-- `--radius` 6px, у lozenge 3px.
-- Шаг 4px. Карточка: отступ 6×8, высота свернутой 24px, развернутой inline 32–56px.
-- Тени: только у мини-карточки (поповер) и плавающего тулбара, одна мягкая тень. Карточки на холсте плоские, с границей 1px.
+## Shape and rhythm
+- `--radius` 6px, 3px for the lozenge.
+- 4px step. Card: padding 6×8, collapsed height 24px, inline expanded 32–56px.
+- Shadows: only on the mini-card (popover) and the floating toolbar, one soft shadow. Cards on the canvas are flat with a 1px border.
 
-## Компоненты
-- Пресет shadcn по умолчанию, токены выше. Поповер мини-карточки построен на `Popover`, настройки на `Sheet`.
-- Тулбар: плавающий, снизу по центру, иконки 18px. Инструменты: выбор, рука, frame, стикер, текст, стрелка, Jira card.
-- Иконки: lucide, stroke 1.75.
-- Карточка Jira: состояния collapsed (только ключ и lozenge), inline (ключ, title в 1–2 строки, lozenge), expanded (поповер: исполнитель, приоритет, обновлено, ссылка "Open in Jira"). Закрытая задача: ключ зачеркнут, title приглушен.
-- Индикатор синхронизации в углу: "synced 12s ago", при ошибке красная точка и текст причины.
+## Components
+- Default shadcn preset with the tokens above. The mini-card popover is built on `Popover`, settings on `Sheet`.
+- Toolbar: floating, bottom center, 18px icons. Tools: select, hand, frame, sticky note, text, arrow, Jira card.
+- Icons: lucide, stroke 1.75.
+- Jira card: states collapsed (key and lozenge only), inline (key, title on 1–2 lines, lozenge), expanded (popover: assignee, priority, updated, "Open in Jira" link). Closed task: key struck through, title muted.
+- Sync indicator in the corner: "synced 12s ago"; on error, a red dot and the reason text.
 
-## Движение
-- Раскрытие и сворачивание карточки 120ms ease-out, поповер 100ms fade-scale.
-- Смена статуса: lozenge один раз мягко подсвечивается (400ms).
-- Пан и зум без инерционных эффектов сверх стандартных xyflow.
-- `prefers-reduced-motion`: все анимации кроме пана отключаются.
+## Motion
+- Card expand and collapse 120ms ease-out, popover 100ms fade-scale.
+- Status change: the lozenge softly highlights once (400ms).
+- Pan and zoom with no inertia effects beyond the xyflow defaults.
+- `prefers-reduced-motion`: all animations except pan are disabled.
 
-## Тексты
-Английский, коротко и по делу, без восклицаний. Кнопки глаголом: "Add card", "Refresh all", "Connect Jira". Ошибки называют причину и действие: "Jira returned 401. Check your token in Settings."
+## Copy
+English, short and to the point, no exclamation marks. Buttons start with a verb: "Add card", "Refresh all", "Connect Jira". Errors name the cause and the action: "Jira returned 401. Check your token in Settings."
 
-## Нельзя
-- Рукописные шрифты и "скетчевые" линии.
-- Цветной холст и цветные панели: цвет только у статусов, стикеров и frames.
-- Боковые панели, открытые по умолчанию. Холст занимает весь экран.
-- Тени у карточек на холсте.
-- Логотип Jira и иконсеты Atlassian в бандле. Иконка типа задачи — `iconUrl` из ответа Jira пользователя (свой инстанс), запасной вариант — нейтральная lucide-иконка.
+## Don'ts
+- Handwritten fonts and "sketchy" lines.
+- A colored canvas and colored panels: color only on statuses, sticky notes and frames.
+- Side panels open by default. The canvas takes the whole screen.
+- Shadows on cards on the canvas.
+- The Jira logo and Atlassian icon sets in the bundle. The task type icon is the `iconUrl` from the user's Jira response (their own instance), with a neutral lucide icon as a fallback.
