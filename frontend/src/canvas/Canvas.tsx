@@ -10,15 +10,17 @@ import {
   ReactFlowProvider,
   useReactFlow,
   type Connection,
+  type XYPosition,
   type OnBeforeDelete,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CanvasContextMenu, type MenuTarget, type PlaceTool } from '@/canvas/CanvasContextMenu'
 import { markFresh } from '@/canvas/editing'
 import { framesFirst, releaseChildren, reparent } from '@/canvas/frames'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
@@ -54,12 +56,13 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   const [added, setAdded] = useState<Record<string, Task>>({})
   const [tool, setTool] = useState<Tool>('select')
   const [connecting, setConnecting] = useState(false)
+  const [menuTarget, setMenuTarget] = useState<MenuTarget | null>(null)
   const refresh = useRefresh(board.id)
   const tasks = useMemo(
     () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
     [board.tasks, added, refresh.data],
   )
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, deleteElements } = useReactFlow()
   const theme = useTheme().resolved
   const placing = tool === 'frame' || tool === 'sticky' || tool === 'text'
 
@@ -71,19 +74,20 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Without a point the card goes to the viewport center, cascading so repeated adds stay readable.
   const addCard = useCallback(
-    (task: Task) => {
+    (task: Task, at?: XYPosition) => {
       setAdded((current) => ({ ...current, [task.key]: task }))
       setNodes((current) => {
-        const center = screenToFlowPosition({
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2,
-        })
         const step = current.length % 5
+        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+        const position = at
+          ? screenToFlowPosition(at)
+          : { x: center.x - 128 + step * CASCADE_X, y: center.y - 200 + step * CASCADE_Y }
         const node: AppNode = {
           id: newId(),
           type: 'jira_card',
-          position: { x: center.x - 128 + step * CASCADE_X, y: center.y - 200 + step * CASCADE_Y },
+          position,
           data: { key: task.key, collapsed: false },
         }
         return reparent([...current, node], [node.id])
@@ -92,26 +96,42 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     [screenToFlowPosition, setNodes],
   )
 
-  // A creation tool places its element where the user clicks, then hands back to Select.
-  const place = (event: MouseEvent) => {
-    if (!placing) return
-    const { width, height, data } = NEW_NODES[tool]
-    const point = screenToFlowPosition({ x: event.clientX, y: event.clientY })
+  const placeAt = (kind: PlaceTool, screen: XYPosition) => {
+    const { width, height, data } = NEW_NODES[kind]
+    const point = screenToFlowPosition(screen)
     const node = {
       id: newId(),
-      type: tool,
+      type: kind,
       position: { x: point.x - width / 2, y: point.y - (height ?? 0) / 2 },
       width,
       // Text grows with its content; initialHeight shows it before measuring, so the editor can focus.
       ...(height ? { height } : { initialHeight: 28 }),
       data: { ...data },
     } as AppNode
-    if (tool !== 'frame') markFresh(node.id)
+    if (kind !== 'frame') markFresh(node.id)
     setNodes((current) =>
-      tool === 'frame' ? framesFirst([...current, node]) : reparent([...current, node], [node.id]),
+      kind === 'frame' ? framesFirst([...current, node]) : reparent([...current, node], [node.id]),
     )
+  }
+
+  // A creation tool places its element where the user clicks, then hands back to Select.
+  const place = (event: { clientX: number; clientY: number }) => {
+    if (!placing) return
+    placeAt(tool, { x: event.clientX, y: event.clientY })
     setTool('select')
   }
+
+  // Right-clicking an unselected element selects just it, like tldraw.
+  const selectOnly = (id: string, kind: 'node' | 'edge') => {
+    setNodes((current) => current.map((n) => ({ ...n, selected: kind === 'node' && n.id === id })))
+    setEdges((current) => current.map((e) => ({ ...e, selected: kind === 'edge' && e.id === id })))
+  }
+
+  const deleteSelection = () =>
+    void deleteElements({
+      nodes: nodes.filter((n) => n.selected),
+      edges: edges.filter((e) => e.selected),
+    })
 
   const onConnect = useCallback(
     (connection: Connection) =>
@@ -142,51 +162,72 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
 
   return (
     <TasksContext.Provider value={tasks}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onConnectStart={() => setConnecting(true)}
-        onConnectEnd={() => setConnecting(false)}
-        onNodeDragStop={(_, __, dragged) =>
-          setNodes((current) =>
-            reparent(
-              current,
-              dragged.map((n) => n.id),
-            ),
-          )
-        }
-        onBeforeDelete={onBeforeDelete}
-        onPaneClick={place}
-        onNodeClick={(event) => place(event)}
-        onMoveEnd={(_, viewport) => setViewport(viewport)}
-        nodeTypes={nodeTypes}
-        defaultEdgeOptions={defaultEdgeOptions}
-        connectionMode={ConnectionMode.Loose}
-        defaultViewport={board.doc.viewport}
-        onlyRenderVisibleElements
-        colorMode={theme}
-        proOptions={{ hideAttribution: true }}
-        minZoom={0.1}
-        deleteKeyCode={['Backspace', 'Delete']}
-        multiSelectionKeyCode="Shift"
-        selectionOnDrag={tool === 'select'}
-        panOnDrag={tool === 'hand' ? true : [1]}
-        panOnScroll
-        elementsSelectable={!placing}
-        className={[
-          connecting && 'connecting',
-          placing && 'cursor-crosshair',
-          tool === 'hand' && 'cursor-grab',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+      <CanvasContextMenu
+        target={menuTarget}
+        onPlace={placeAt}
+        onAddCard={addCard}
+        onDelete={deleteSelection}
       >
-        <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
-        <Controls showInteractive={false} position="bottom-right" />
-      </ReactFlow>
+        <div className="absolute inset-0">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onConnectStart={() => setConnecting(true)}
+            onConnectEnd={() => setConnecting(false)}
+            onNodeDragStop={(_, __, dragged) =>
+              setNodes((current) =>
+                reparent(
+                  current,
+                  dragged.map((n) => n.id),
+                ),
+              )
+            }
+            onBeforeDelete={onBeforeDelete}
+            onPaneClick={place}
+            onPaneContextMenu={(event) =>
+              setMenuTarget({ kind: 'pane', point: { x: event.clientX, y: event.clientY } })
+            }
+            onNodeContextMenu={(_, node) => {
+              if (!node.selected) selectOnly(node.id, 'node')
+              setMenuTarget({ kind: 'selection' })
+            }}
+            onEdgeContextMenu={(_, edge) => {
+              if (!edge.selected) selectOnly(edge.id, 'edge')
+              setMenuTarget({ kind: 'selection' })
+            }}
+            onSelectionContextMenu={() => setMenuTarget({ kind: 'selection' })}
+            onNodeClick={(event) => place(event)}
+            onMoveEnd={(_, viewport) => setViewport(viewport)}
+            nodeTypes={nodeTypes}
+            defaultEdgeOptions={defaultEdgeOptions}
+            connectionMode={ConnectionMode.Loose}
+            defaultViewport={board.doc.viewport}
+            onlyRenderVisibleElements
+            colorMode={theme}
+            proOptions={{ hideAttribution: true }}
+            minZoom={0.1}
+            deleteKeyCode={['Backspace', 'Delete']}
+            multiSelectionKeyCode="Shift"
+            selectionOnDrag={tool === 'select'}
+            panOnDrag={tool === 'hand' ? true : [1]}
+            panOnScroll
+            elementsSelectable={!placing}
+            className={[
+              connecting && 'connecting',
+              placing && 'cursor-crosshair',
+              tool === 'hand' && 'cursor-grab',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
+            <Controls showInteractive={false} position="bottom-right" />
+          </ReactFlow>
+        </div>
+      </CanvasContextMenu>
       <RefreshIndicator
         syncedAt={refresh.dataUpdatedAt || lastFetched(board.tasks)}
         error={refresh.error}
