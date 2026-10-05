@@ -179,9 +179,9 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 **Independent Test**: drag a card, delete a sticky, Cmd/Ctrl+Z twice restores both; Cmd/Ctrl+Shift+Z twice repeats them; the result is saved.
 
-- [ ] T080 [US8] `frontend/src/canvas/useHistory.ts`: snapshots of persistent nodes and edges, a step recorded once changes settle (not during a drag), undo and redo stacks capped at 100; tests with fake timers
-- [ ] T081 [US8] `undo` and `redo` in the shortcut registry, wired in `Canvas.tsx`; text fields keep their own undo
-- [ ] T082 [US8] `CHANGELOG.md`; live check in the browser
+- [x] T080 [US8] `frontend/src/canvas/useHistory.ts`: snapshots of persistent nodes and edges, a step recorded once changes settle (not during a drag), undo and redo stacks capped at 100; tests with fake timers
+- [x] T081 [US8] `undo` and `redo` in the shortcut registry, wired in `Canvas.tsx`; text fields keep their own undo
+- [x] T082 [US8] `CHANGELOG.md`; live check in the browser
 
 ## Phase 8: Polish (verify and ship phases)
 

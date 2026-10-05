@@ -9,7 +9,8 @@
     "spatial",
     "card-details",
     "boards",
-    "jql-assist"
+    "jql-assist",
+    "undo"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -22,7 +23,8 @@
     "G3_spatial": "approved",
     "G3_card-details": "approved",
     "G3_boards": "approved",
-    "G3_jql-assist": "approved"
+    "G3_jql-assist": "approved",
+    "G3_undo": "approved"
   },
   "notes": []
 }
