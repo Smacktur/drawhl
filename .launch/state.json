@@ -1,0 +1,13 @@
+{
+  "profile": "oss",
+  "phase": "spec",
+  "feature": null,
+  "slices_done": [],
+  "gates": {
+    "G1_scope": "approved",
+    "G2_spec": "pending",
+    "legal": "pending",
+    "G4_ship": "pending"
+  },
+  "notes": []
+}

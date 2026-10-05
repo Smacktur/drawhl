@@ -1,0 +1,18 @@
+# Self-hosting from released images, no source checkout needed:
+#   docker compose -f compose.release.yml up -d
+# Pin a version instead of latest: TAG=0.1.0 docker compose -f compose.release.yml up -d
+services:
+  api:
+    image: ghcr.io/smacktur/drawhl-api:${TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    volumes: ["./data:/app/data"]
+
+  web:
+    image: ghcr.io/smacktur/drawhl-web:${TAG:-latest}
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    depends_on:
+      api: { condition: service_healthy }

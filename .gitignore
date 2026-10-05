@@ -1,0 +1,33 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# agent-local state
+.claude/settings.local.json
+tmp/
+.playwright-mcp/
+**/.impeccable/live/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# local data: SQLite database, raw datasets (document sources in THIRD_PARTY.md)
+data/*
+!data/.gitkeep
+backend/data/

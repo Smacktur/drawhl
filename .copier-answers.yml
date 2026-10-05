@@ -1,0 +1,15 @@
+# Managed by launchpad (`launch update`). Do not edit by hand.
+_commit: v0.10.0-1-gfd9e386
+_src_path: /Users/pgkbuild/Documents/code/project/launchpad
+contact_email: smacktur@gmail.com
+copyright_holder: The drawhl Authors
+description: Open-source infinite canvas with live Jira Data Center task cards for
+    leads who think spatially
+frontend: true
+github_owner: Smacktur
+license: MIT
+llm: false
+profile: oss
+project_name: drawhl
+project_title: drawhl
+ui_lang: en

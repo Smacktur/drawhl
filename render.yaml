@@ -1,0 +1,51 @@
+# Render Blueprint: infrastructure as code for the cloud environments.
+# How it is used and what is manual: docs/playbook/09-deploy.md.
+# Validate: make stage-validate. Spec: https://render.com/docs/blueprint-spec
+projects:
+  - name: drawhl
+    environments:
+      - name: stage
+        services:
+          - type: web
+            name: drawhl-api-stage
+            runtime: docker
+            plan: free
+            region: frankfurt
+            branch: main
+            autoDeployTrigger: checksPass  # deploy only after GitHub CI is green
+            rootDir: backend  # also limits auto-deploys to backend changes
+            healthCheckPath: /health
+            envVars:
+              - key: PORT
+                value: "8000"
+              - key: APP_ENV
+                value: stage
+              - key: LOG_LEVEL
+                value: info
+
+          # Static site instead of the nginx container: free, never sleeps, served from CDN.
+          # Free services cannot receive private network traffic, so /api goes through
+          # a public rewrite to the API service; the browser still sees one origin.
+          - type: web
+            name: drawhl-web-stage
+            runtime: static
+            branch: main
+            autoDeployTrigger: checksPass
+            rootDir: frontend
+            buildCommand: npm ci && npm run build
+            staticPublishPath: dist
+            envVars:
+              - key: NODE_VERSION
+                value: "22"
+              # Read at build time by frontend/scripts/prerender.js; stage stays noindex.
+              - key: SITE_URL
+                value: https://drawhl-web-stage.onrender.com
+              - key: UMAMI_WEBSITE_ID
+                sync: false
+            routes:
+              - type: rewrite
+                source: /api/*
+                destination: https://drawhl-api-stage.onrender.com/api/*
+              - type: rewrite
+                source: /*
+                destination: /index.html

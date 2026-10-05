@@ -1,0 +1,7 @@
+dist
+node_modules
+package-lock.json
+# shadcn-owned: keep upstream formatting so `shadcn add --diff` stays clean
+src/components/ui
+# rendered by copier from project answers; line length depends on the description
+index.html
