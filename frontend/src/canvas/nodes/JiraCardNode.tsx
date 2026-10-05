@@ -30,7 +30,7 @@ export function StatusLozenge({ task }: { task: Task }) {
   return (
     <span
       className={cn(
-        'inline-block max-w-full truncate rounded-[3px] px-1 py-px text-[11px] leading-4 font-semibold tracking-[0.04em] uppercase',
+        'inline-block rounded-[3px] px-1 align-[1px] text-[11px] leading-4 font-semibold tracking-[0.04em] whitespace-nowrap uppercase',
         LOZENGE[task.status_category],
       )}
     >
@@ -39,34 +39,50 @@ export function StatusLozenge({ task }: { task: Task }) {
   )
 }
 
+// Long titles are cut so the status lozenge after them always stays visible.
+const SUMMARY_LIMIT = 120
+
+function clip(text: string) {
+  return text.length > SUMMARY_LIMIT ? `${text.slice(0, SUMMARY_LIMIT).trimEnd()}…` : text
+}
+
 function JiraCardNodeView({ data, selected }: NodeProps<JiraCardNodeType>) {
   const task = useTask(data.key)
   const missing = task?.state === 'not_found'
   const done = task?.status_category === 'done'
 
+  // One inline flow, like Confluence's issue macro: wrapped lines start at the left edge.
   return (
     <div
       className={cn(
-        'bg-card text-card-foreground flex w-64 flex-col gap-1 rounded-md border px-2 py-1.5 text-[13px] leading-[1.35]',
+        'bg-card text-card-foreground w-max max-w-80 rounded-md border px-2 py-1 text-[13px] leading-5',
         selected && 'border-primary ring-primary/30 ring-2',
       )}
     >
-      <div className="text-muted-foreground flex items-center gap-1.5">
-        {task && <TypeIcon typeName={task.type_name} />}
-        <span className={cn('text-primary font-mono text-xs tabular-nums', done && 'line-through')}>
-          {data.key}
+      {task && (
+        <span className="text-muted-foreground mr-1.5 inline-block align-[-2px]">
+          <TypeIcon typeName={task.type_name} />
         </span>
-      </div>
+      )}
+      <a
+        href={task?.url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(
+          'text-primary mr-1.5 font-mono text-xs tabular-nums hover:underline',
+          done && 'line-through',
+        )}
+      >
+        {data.key}
+      </a>
       {!task && <span className="text-muted-foreground">Loading…</span>}
       {missing && <span className="text-muted-foreground">Not found or no access</span>}
       {task && !missing && (
         <>
-          <span className={cn('line-clamp-2', done && 'text-muted-foreground')}>
-            {task.summary}
+          <span className={cn('mr-1.5', done && 'text-muted-foreground')}>
+            {clip(task.summary)}
           </span>
-          <div>
-            <StatusLozenge task={task} />
-          </div>
+          <StatusLozenge task={task} />
         </>
       )}
     </div>

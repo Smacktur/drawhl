@@ -27,7 +27,7 @@ Dark theme:
 - `--card` `oklch(0.22 0.007 260)`, `--border` `oklch(0.30 0.008 260)`
 - `--foreground` `oklch(0.93 0.004 260)`, `--muted-foreground` `oklch(0.68 0.01 260)`
 - `--primary` `oklch(0.70 0.14 255)`, `--accent` `oklch(0.27 0.02 255)`
-- Statuses: same hues, background `L` 0.30, text 0.85
+- Statuses: the same light fills as in the light theme, like Confluence lozenges
 
 ## Typography
 - Text and UI: IBM Plex Sans (`@fontsource-variable/ibm-plex-sans`), 13px base on the canvas, 14px in panels.
@@ -36,14 +36,14 @@ Dark theme:
 
 ## Shape and rhythm
 - `--radius` 6px, 3px for the lozenge.
-- 4px step. Card: padding 6×8, collapsed height 24px, inline expanded 32–56px.
+- 4px step. Card: padding 4×8, width fits the content up to 320px, collapsed height 24px.
 - Shadows: only on the mini-card (popover) and the floating toolbar, one soft shadow. Cards on the canvas are flat with a 1px border.
 
 ## Components
 - Default shadcn preset with the tokens above. The mini-card popover is built on `Popover`, settings on `Sheet`.
 - Toolbar: floating, bottom center, 18px icons. Tools: select, hand, frame, sticky note, text, arrow, Jira card.
 - Icons: lucide, stroke 1.75.
-- Jira card: states collapsed (key and lozenge only), inline (key, title on 1–2 lines, lozenge), expanded (popover: assignee, priority, updated, "Open in Jira" link). Closed task: key struck through, title muted.
+- Jira card: one inline flow like the Confluence issue macro: type icon, key (link to Jira), title, status lozenge. Long titles wrap from the left edge and are cut at 120 characters so the lozenge stays visible. States: collapsed (icon, key, lozenge), inline (with title), expanded (popover: assignee, priority, updated, "Open in Jira" link). Closed task: key struck through, title muted.
 - Sync indicator in the corner: "synced 12s ago"; on error, a red dot and the reason text.
 
 ## Motion
