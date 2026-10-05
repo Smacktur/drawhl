@@ -8,6 +8,12 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 })
 
+// Theme follows the OS; shadcn tokens switch on the .dark class.
+const darkScheme = window.matchMedia('(prefers-color-scheme: dark)')
+const applyScheme = () => document.documentElement.classList.toggle('dark', darkScheme.matches)
+applyScheme()
+darkScheme.addEventListener('change', applyScheme)
+
 const root = document.getElementById('root')!
 const app = (
   <StrictMode>

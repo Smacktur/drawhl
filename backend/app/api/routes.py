@@ -1,15 +1,7 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
 
-from app.domain.greeting import greet
+from app.api import boards, tasks
 
 router = APIRouter(prefix="/api")
-
-
-class GreetingOut(BaseModel):
-    message: str
-
-
-@router.get("/hello")
-def hello(name: str = "world") -> GreetingOut:
-    return GreetingOut(message=greet(name))
+router.include_router(boards.router)
+router.include_router(tasks.router)

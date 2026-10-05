@@ -1,0 +1,70 @@
+import pytest
+from pydantic import ValidationError
+
+from app.domain.boards import BoardDoc, card_keys, check_doc
+from app.domain.errors import ValidationFailed
+
+
+def card(node_id, key, parent=None):
+    node = {"id": node_id, "type": "jira_card", "position": {"x": 0, "y": 0}, "data": {"key": key}}
+    if parent:
+        node["parentId"] = parent
+    return node
+
+
+def frame(node_id, parent=None):
+    node = {"id": node_id, "type": "frame", "position": {"x": 0, "y": 0}, "data": {"title": "F"}}
+    if parent:
+        node["parentId"] = parent
+    return node
+
+
+def doc(nodes, edges=()):
+    return BoardDoc.model_validate({"nodes": nodes, "edges": list(edges)})
+
+
+def test_transient_xyflow_fields_are_dropped():
+    node = card("a", "SRE-1") | {"selected": True, "measured": {"width": 1}}
+    dumped = doc([node]).model_dump(exclude_none=True)["nodes"][0]
+    assert "selected" not in dumped and "measured" not in dumped
+
+
+def test_valid_doc_passes_and_lists_unique_keys():
+    board = doc(
+        [frame("f"), card("a", "SRE-2", parent="f"), card("b", "SRE-1"), card("c", "SRE-2")],
+        [{"id": "e", "source": "a", "target": "b"}],
+    )
+    check_doc(board)
+    assert card_keys(board) == ["SRE-1", "SRE-2"]
+
+
+@pytest.mark.parametrize(
+    ("nodes", "edges"),
+    [
+        ([card("a", "SRE-1"), card("a", "SRE-2")], []),
+        ([card("a", "SRE-1", parent="f"), frame("f")], []),
+        ([card("b", "SRE-1"), card("a", "SRE-1", parent="b")], []),
+        ([frame("f"), frame("g", parent="f")], []),
+        ([card("a", "SRE-1")], [{"id": "e", "source": "a", "target": "zz"}]),
+    ],
+    ids=["duplicate id", "child before parent", "parent not frame", "nested frame", "dangling"],
+)
+def test_invalid_docs_are_rejected(nodes, edges):
+    with pytest.raises(ValidationFailed):
+        check_doc(doc(nodes, edges))
+
+
+def test_schema_limits():
+    with pytest.raises(ValidationError):
+        doc([card("a", "not-a-key")])
+    with pytest.raises(ValidationError):
+        doc(
+            [
+                {
+                    "id": "s",
+                    "type": "sticky",
+                    "position": {"x": 0, "y": 0},
+                    "data": {"text": "x" * 5001},
+                }
+            ]
+        )

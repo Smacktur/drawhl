@@ -28,9 +28,3 @@ export async function fetchJson<T>(path: string, schema: z.ZodType<T>, init?: Re
   }
   return schema.parse(body)
 }
-
-const greetingSchema = z.object({ message: z.string() })
-
-export function getGreeting(name: string) {
-  return fetchJson(`/api/hello?name=${encodeURIComponent(name)}`, greetingSchema)
-}

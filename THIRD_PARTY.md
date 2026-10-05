@@ -14,7 +14,9 @@
 | shadcn/ui, cn | MIT | Components, theme, class merging |
 | Radix UI | MIT | Accessible primitives for shadcn |
 | lucide-react | ISC | Icons |
-| Geist (@fontsource-variable/geist) | OFL-1.1 | Font |
+| React Flow (@xyflow/react) | MIT | Infinite canvas, nodes and edges |
+| IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font |
+| JetBrains Mono (@fontsource-variable/jetbrains-mono) | OFL-1.1 | Monospace font for task keys |
 | class-variance-authority, tw-animate-css | Apache-2.0 / MIT | Component variants, animations |
 | TanStack Query | MIT | Server state |
 | zod | MIT | API response validation |
