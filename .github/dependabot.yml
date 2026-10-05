@@ -13,6 +13,14 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
+    groups:
+      actions: { patterns: ["*"] }
   - package-ecosystem: docker
     directories: [/backend, /frontend]
     schedule: { interval: monthly }
+    groups:
+      images: { patterns: ["*"] }
+    # Node majors follow the LTS line in CI, not the latest release.
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
