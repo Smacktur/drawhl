@@ -20,6 +20,8 @@ export const SHORTCUTS = {
   text: { keys: 't', label: 'Text', group: 'Tools' },
   card: { keys: 'c', label: 'Jira card', group: 'Tools' },
   cancel: { keys: 'escape', label: 'Back to Select', group: 'Tools' },
+  undo: { keys: 'mod+z', label: 'Undo', group: 'Edit' },
+  redo: { keys: 'mod+shift+z, ctrl+y', label: 'Redo', group: 'Edit' },
   copy: { keys: 'mod+c', label: 'Copy', group: 'Edit' },
   paste: { keys: 'mod+v', label: 'Paste at the cursor', group: 'Edit' },
   duplicate: { keys: 'mod+d', label: 'Duplicate', group: 'Edit' },
