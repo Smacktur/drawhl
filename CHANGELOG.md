@@ -12,10 +12,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - Card statuses refresh on their own while a board is open (every 30 s by default, configurable), with one batched Jira request per board, an "updated N s ago" indicator, "Refresh all" and automatic backoff when Jira struggles. Closed tasks are struck through.
 - Frames, sticky notes, free text and arrows. Drop cards and notes into a frame to group them; moving the frame moves everything inside, and deleting it keeps the contents. Box-select or shift-click to move or delete several items.
 - Right-click menu on the canvas: add a Jira card, frame, sticky note or text at the clicked spot, or delete the selection.
-- Keyboard shortcuts for tools (V, H, F, S, T, C), copy and paste at the cursor, duplicate and select all; press ? for the full list.
+- Keyboard shortcuts for tools (V, H, F, N, T, C), copy and paste at the cursor, duplicate and select all; press ? for the full list.
 - Add several Jira cards at once: separate keys or links with commas, and they are laid out in a grid. Keys that fail stay in the field with their errors.
 - Draw a frame by dragging; a new frame takes in the elements under it.
-- The canvas keeps gliding briefly after a quick mouse pan.
 
 ### Changed
 

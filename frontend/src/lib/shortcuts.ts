@@ -16,7 +16,7 @@ export const SHORTCUTS = {
   select: { keys: 'v', label: 'Select', group: 'Tools' },
   hand: { keys: 'h', label: 'Hand', group: 'Tools' },
   frame: { keys: 'f', label: 'Frame', group: 'Tools' },
-  sticky: { keys: 's', label: 'Sticky note', group: 'Tools' },
+  sticky: { keys: 'n', label: 'Sticky note', group: 'Tools' },
   text: { keys: 't', label: 'Text', group: 'Tools' },
   card: { keys: 'c', label: 'Jira card', group: 'Tools' },
   cancel: { keys: 'escape', label: 'Back to Select', group: 'Tools' },

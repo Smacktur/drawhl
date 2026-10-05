@@ -43,7 +43,6 @@ import { lastFetched, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
-import { useInertia } from '@/canvas/useInertia'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { useShortcut } from '@/lib/shortcuts'
@@ -81,7 +80,6 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   )
   const { screenToFlowPosition, deleteElements } = useReactFlow()
   const theme = useTheme().resolved
-  const inertia = useInertia()
   const placing = tool === 'frame' || tool === 'sticky' || tool === 'text'
   // Last pointer position over the canvas, where pasted items land.
   const pointer = useRef<XYPosition | null>(null)
@@ -264,11 +262,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           className="absolute inset-0"
           onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
           onPointerLeave={() => (pointer.current = null)}
-          onPointerDownCapture={(event) => {
-            inertia.stop()
-            draw.onPointerDownCapture(event)
-          }}
-          onWheelCapture={inertia.stop}
+          onPointerDownCapture={draw.onPointerDownCapture}
         >
           <ReactFlow
             nodes={nodes}
@@ -301,11 +295,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             }}
             onSelectionContextMenu={() => setMenuTarget({ kind: 'selection' })}
             onNodeClick={(event) => place(event)}
-            onMove={inertia.onMove}
-            onMoveEnd={(event, viewport) => {
-              setViewport(viewport)
-              inertia.onMoveEnd(event)
-            }}
+            onMoveEnd={(_, viewport) => setViewport(viewport)}
             nodeTypes={nodeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             connectionMode={ConnectionMode.Loose}
