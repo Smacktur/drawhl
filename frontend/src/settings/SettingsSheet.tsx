@@ -35,7 +35,12 @@ function SettingsForm({ settings }: { settings: Settings }) {
   })
 
   const save = useMutation({
-    mutationFn: () => saveSettings({ provider, ...(baseUrl.trim() && { jira: jiraInput() }) }),
+    mutationFn: () =>
+      saveSettings({
+        provider,
+        refresh_interval_s: Number(intervalS),
+        ...(baseUrl.trim() && { jira: jiraInput() }),
+      }),
     onSuccess: (saved) => {
       queryClient.setQueryData(['settings'], saved)
       // Cards resolve through the selected provider, so re-read open boards.

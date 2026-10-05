@@ -18,6 +18,7 @@ import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { TasksContext } from '@/canvas/tasks-context'
 import { Toolbar } from '@/canvas/Toolbar'
 import { RefreshIndicator } from '@/board/RefreshIndicator'
+import { lastFetched, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import type { AppNode } from '@/canvas/types'
@@ -28,18 +29,6 @@ const nodeTypes = { jira_card: JiraCardNode }
 // New cards step down by about one card height so several adds in a row stay readable.
 const CASCADE_X = 16
 const CASCADE_Y = 96
-
-// A card's snapshot can come from the board load, a fresh add or a refresh; the newest wins.
-function newest(sources: Record<string, Task>[]): Record<string, Task> {
-  const merged: Record<string, Task> = {}
-  for (const source of sources) {
-    for (const [key, task] of Object.entries(source)) {
-      const current = merged[key]
-      if (!current || current.fetched_at <= task.fetched_at) merged[key] = task
-    }
-  }
-  return merged
-}
 
 function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => void }) {
   const { nodes, setNodes, onNodesChange, edges, onEdgesChange, setViewport, saveError } =
@@ -92,7 +81,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         <Controls showInteractive={false} position="bottom-right" />
       </ReactFlow>
       <RefreshIndicator
-        syncedAt={refresh.dataUpdatedAt}
+        syncedAt={refresh.dataUpdatedAt || lastFetched(board.tasks)}
         error={refresh.error}
         refreshing={refresh.isFetching}
         onRefresh={() => void refresh.refetch()}

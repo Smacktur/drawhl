@@ -58,12 +58,16 @@ def create_app(
     if key and len(key) < MIN_SECRET_KEY_LENGTH:
         log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
     box = FernetSecretBox(key) if key else NullSecretBox()
+    app.state.refresher = RefreshService()
     service = SettingsService(
-        SqliteSettingsRepo(db), box, secret_key_configured=bool(key), on_token=register_secret
+        SqliteSettingsRepo(db),
+        box,
+        secret_key_configured=bool(key),
+        on_token=register_secret,
+        on_change=app.state.refresher.reset,
     )
     app.state.settings = service
     app.state.demo = DemoTaskProvider()
-    app.state.refresher = RefreshService()
     client = _jira_client(settings, jira_transport)
     app.state.jira = JiraDcProvider(service.jira_credentials, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()

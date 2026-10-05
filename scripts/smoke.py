@@ -81,7 +81,6 @@ try:
         status == 200 and body["tasks"]["DEMO-1"]["status_category"] == "done",
         "refresh shows the new status",
     )
-    call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "In Progress"})
 
     status, other = call("POST", f"{API}/api/boards", {"name": "smoke other"})
     other_doc = {
@@ -94,11 +93,13 @@ try:
             }
         ]
     }
-    call("PUT", f"{API}/api/boards/{other['id']}", {"version": 1, "doc": other_doc})
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 1, "doc": other_doc})
+    check(status == 200, "save second board")
     status, body = call("POST", f"{API}/api/boards/{board['id']}/refresh")
-    check("DEMO-5" not in body["tasks"], "only the open board is refreshed")
+    check(status == 200 and "DEMO-5" not in body["tasks"], "only the open board is refreshed")
 
 finally:
+    call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "In Progress"})
     call("PUT", f"{API}/api/settings", {"provider": settings["provider"]})
 
 status, body = call("GET", f"{API}/api/settings")

@@ -1,6 +1,10 @@
-from fastapi import APIRouter, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.api import deps
+from app.domain.ports import DemoTasks
 from app.domain.tasks import Task
 
 router = APIRouter(prefix="/demo", tags=["demo"])
@@ -15,6 +19,8 @@ class TaskOut(BaseModel):
 
 
 @router.put("/tasks/{key}/status")
-def set_demo_status(key: str, body: StatusIn, request: Request) -> TaskOut:
+def set_demo_status(
+    key: str, body: StatusIn, demo: Annotated[DemoTasks, Depends(deps.demo)]
+) -> TaskOut:
     # Boards see the change on their next refresh, the same way as a real Jira edit.
-    return TaskOut(task=request.app.state.demo.set_status(key.upper(), body.status))
+    return TaskOut(task=demo.set_status(key.upper(), body.status))

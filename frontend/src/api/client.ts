@@ -6,10 +6,13 @@ const apiErrorSchema = z.object({
 
 export class ApiError extends Error {
   readonly code: string
+  /** Seconds from the Retry-After header, when the server sent one. */
+  readonly retryAfter?: number
 
-  constructor(code: string, message: string) {
+  constructor(code: string, message: string, retryAfter?: number) {
     super(message)
     this.code = code
+    this.retryAfter = retryAfter
   }
 }
 
@@ -22,8 +25,9 @@ export async function fetchJson<T>(path: string, schema: z.ZodType<T>, init?: Re
   const body: unknown = await response.json().catch(() => null)
   if (!response.ok) {
     const parsed = apiErrorSchema.safeParse(body)
+    const retryAfter = Number(response.headers.get('retry-after')) || undefined
     throw parsed.success
-      ? new ApiError(parsed.data.error.code, parsed.data.error.message)
+      ? new ApiError(parsed.data.error.code, parsed.data.error.message, retryAfter)
       : new ApiError('http_error', `request failed with status ${response.status}`)
   }
   return schema.parse(body)

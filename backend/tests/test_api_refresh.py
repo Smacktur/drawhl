@@ -58,3 +58,15 @@ def test_unknown_demo_task(client):
 
 def test_refresh_missing_board(client):
     assert client.post("/api/boards/nope/refresh").status_code == 404
+
+
+def test_settings_change_lifts_backoff(jira_client, fake_jira):
+    jira_client.put(
+        "/api/settings",
+        json={"provider": "jira", "jira": {"base_url": "https://jira.example.com", "token": TOKEN}},
+    )
+    board_id = board_with(jira_client, "SRE-1")
+    fake_jira.fail = 503
+    assert jira_client.post(f"/api/boards/{board_id}/refresh").status_code == 503
+    jira_client.put("/api/settings", json={"provider": "demo"})
+    assert jira_client.post(f"/api/boards/{board_id}/refresh").status_code == 200

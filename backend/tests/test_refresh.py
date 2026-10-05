@@ -82,7 +82,14 @@ def test_backoff_doubles_and_resets(repos):
 
     clock.now += 1
     assert service.refresh(board_id, 30, boards, snapshots, provider)
-    assert service.refresh(board_id, 30, boards, snapshots, provider)
+
+    # After a success the next outage starts again from interval × 2.
+    provider.errors.append(JiraUnavailable("down"))
+    with pytest.raises(JiraUnavailable):
+        service.refresh(board_id, 30, boards, snapshots, provider)
+    with pytest.raises(JiraRateLimited) as waiting:
+        service.refresh(board_id, 30, boards, snapshots, provider)
+    assert waiting.value.retry_after == 60
 
 
 def test_retry_after_and_cap(repos):
@@ -121,3 +128,21 @@ def test_missing_board(repos):
     _, boards, snapshots = repos
     with pytest.raises(NotFound):
         RefreshService().refresh("nope", 30, boards, snapshots, Flaky())
+
+
+def test_reset_clears_backoff(repos):
+    board_id, boards, snapshots = repos
+    service = RefreshService(Clock())
+    with pytest.raises(JiraUnavailable):
+        service.refresh(board_id, 30, boards, snapshots, Flaky(JiraUnavailable("down")))
+    service.reset()
+    assert service.refresh(board_id, 30, boards, snapshots, Flaky())
+
+
+def test_empty_board_ignores_backoff(repos):
+    board_id, boards, snapshots = repos
+    service = RefreshService(Clock())
+    empty = boards.create("empty", BoardDoc())
+    with pytest.raises(JiraUnavailable):
+        service.refresh(board_id, 30, boards, snapshots, Flaky(JiraUnavailable("down")))
+    assert service.refresh(empty.id, 30, boards, snapshots, Flaky()) == {}

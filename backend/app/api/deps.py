@@ -1,6 +1,6 @@
 from fastapi import Request
 
-from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
+from app.domain.ports import BoardRepo, DemoTasks, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService
 from app.domain.settings import SettingsService
 from app.domain.tasks import select_provider
@@ -25,3 +25,7 @@ def provider(request: Request) -> TaskProvider:
 
 def refresher(request: Request) -> RefreshService:
     return request.app.state.refresher
+
+
+def demo(request: Request) -> DemoTasks:
+    return request.app.state.demo

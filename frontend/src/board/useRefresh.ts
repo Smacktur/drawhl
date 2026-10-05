@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { refreshBoard } from '@/api/boards'
 import { getSettings } from '@/api/settings'
+import { nextDelayS, userMustAct } from '@/board/refresh-timing'
 
-const MAX_INTERVAL_S = 300
 const DEFAULT_INTERVAL_S = 30
 
 /** Polls the open board; pauses in a background tab, slows down while Jira fails. */
@@ -20,12 +20,11 @@ export function useRefresh(boardId: string) {
         failures.current = 0
         return result
       } catch (error) {
-        failures.current += 1
+        if (!userMustAct(error)) failures.current += 1
         throw error
       }
     },
-    refetchInterval: () => Math.min(MAX_INTERVAL_S, intervalS * 2 ** failures.current) * 1000,
-    refetchOnWindowFocus: true,
+    refetchInterval: (query) => nextDelayS(intervalS, failures.current, query.state.error) * 1000,
     retry: false,
   })
 }
