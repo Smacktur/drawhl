@@ -19,15 +19,30 @@ export function useDrawRect(enabled: boolean, onDraw: (rect: ScreenRect) => void
   const onPointerDownCapture = (event: ReactPointerEvent) => {
     if (!enabled || event.button !== 0) return
     if (!(event.target as Element).closest('.react-flow__pane, .react-flow__node')) return
+    // Capture keeps the release coming even when it happens outside the window.
+    ;(event.target as Element).setPointerCapture(event.pointerId)
     const start = { x: event.clientX, y: event.clientY }
     const move = (e: PointerEvent) => setPreview(between(start, { x: e.clientX, y: e.clientY }))
-    const up = (e: PointerEvent) => {
+    const finish = () => {
       window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', finish)
+      window.removeEventListener('keydown', escape, true)
       setPreview(null)
+    }
+    const up = (e: PointerEvent) => {
+      finish()
       onDraw(between(start, { x: e.clientX, y: e.clientY }))
     }
+    const escape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      finish()
+    }
     window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up, { once: true })
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', finish)
+    window.addEventListener('keydown', escape, true)
   }
 
   return { preview, onPointerDownCapture }

@@ -28,6 +28,9 @@ const PLACE: { tool: PlaceTool; label: string; Icon: typeof Frame }[] = [
   { tool: 'text', label: 'Add text', Icon: Type },
 ]
 
+const CANVAS_TARGETS =
+  '.react-flow__pane, .react-flow__node, .react-flow__edge, .react-flow__nodesselection-rect'
+
 /** Right-click menu: add elements at the clicked spot, or delete the selection. */
 export function CanvasContextMenu({ target, onPlace, onAddCards, onDelete, children }: Props) {
   // Screen point where "Add Jira card" opens its input; the card lands there too.
@@ -42,7 +45,15 @@ export function CanvasContextMenu({ target, onPlace, onAddCards, onDelete, child
   return (
     <>
       <ContextMenu>
-        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuTrigger
+          asChild
+          onContextMenu={(event) => {
+            // Zoom controls and node toolbars set no target; a stale one would act on the old spot.
+            if (!(event.target as Element).closest(CANVAS_TARGETS)) event.preventDefault()
+          }}
+        >
+          {children}
+        </ContextMenuTrigger>
         <ContextMenuContent
           className="w-48"
           onCloseAutoFocus={(event) => {

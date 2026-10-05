@@ -41,7 +41,7 @@ Dark theme:
 
 ## Components
 - Default shadcn preset with the tokens above. The mini-card popover is built on `Popover`, settings on `Sheet`.
-- Toolbar: floating, bottom center, 18px icons. Tools: select, hand, frame, sticky note, text, arrow, Jira card. The Jira card tool opens a `Popover` above the toolbar with the key-or-link input; no input stays on the canvas.
+- Toolbar: floating, bottom center, 18px icons. Tools: select, hand, frame, sticky note, text, Jira card. Arrows are dragged from node handles, not picked as a tool. Each tool button's tooltip shows its shortcut; the full list opens with `?`. The Jira card tool opens a `Popover` above the toolbar with the key-or-link input; no input stays on the canvas.
 - Top bar: floating, top left, one row like tldraw's page bar: main menu button (`DropdownMenu`: Settings, Theme → Light, Dark, System) and the board name with a chevron (`DropdownMenu`: boards, "New board"). Same surface and shadow as the toolbar.
 - Context menu: shadcn `ContextMenu` on right click. Empty spot: "Add Jira card", then the other element tools. Selection: "Delete". Items start with a verb.
 - No canvas library attribution label (`proOptions.hideAttribution`).

@@ -66,7 +66,11 @@ export function withShortcut(id: ShortcutId) {
   return `${SHORTCUTS[id].label} (${formatShortcut(id)[0].join('+')})`
 }
 
-/** Binds a shortcut from the registry; ignored while typing in inputs. */
+// Board shortcuts must not act on the canvas hidden behind Settings or another dialog.
+const dialogOpen = () =>
+  document.querySelector('[data-slot="dialog-content"], [data-slot="sheet-content"]') !== null
+
+/** Binds a shortcut from the registry; ignored while typing in inputs or with a dialog open. */
 export function useShortcut(id: ShortcutId, handler: HotkeyCallback, options?: Options) {
   // The library memoizes the callback; a ref keeps the latest one without dependency lists.
   const latest = useRef(handler)
@@ -75,6 +79,7 @@ export function useShortcut(id: ShortcutId, handler: HotkeyCallback, options?: O
   })
   return useHotkeys(SHORTCUTS[id].keys, (...args) => latest.current(...args), {
     preventDefault: true,
+    ignoreEventWhen: dialogOpen,
     ...options,
   })
 }

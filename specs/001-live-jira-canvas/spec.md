@@ -112,6 +112,11 @@ The canvas takes the whole screen, like tldraw. Tools live in a floating toolbar
 4. **Given** selected elements, **When** the user right-clicks one of them, **Then** the context menu offers "Delete".
 5. **Given** an open board, **When** the user looks at the top-left corner, **Then** they see one compact bar: main menu button and current board name with a dropdown to switch or create boards.
 6. **Given** the main menu, **When** the user picks Theme → Light, Dark or System, **Then** the whole UI (canvas, cards, panels) switches at once and the choice survives reload.
+7. **Given** an open board, **When** the user presses a tool key (V, H, F, N, T, C) or `?`, **Then** the tool is picked or the shortcut list opens; shortcuts do nothing while typing in a field or with a dialog open.
+8. **Given** selected elements, **When** the user copies and pastes (Cmd/Ctrl+C, Cmd/Ctrl+V) or duplicates (Cmd/Ctrl+D), **Then** copies appear at the cursor or next to the originals, a frame is copied with its contents, and copies paste into another board too.
+9. **Given** the card input, **When** the user enters several keys or links separated by commas, **Then** the found tasks are added as a near-square grid and the keys that failed stay in the field with their errors.
+10. **Given** the frame tool, **When** the user drags on the canvas, **Then** a frame of that size appears and takes in the elements under it; a click places a default-size frame.
+11. **Given** a menu or dialog opened with the mouse, **When** the user closes it (Escape or click outside), **Then** no focus ring is left on the button that opened it.
 
 ### Edge Cases
 
@@ -172,10 +177,12 @@ The canvas takes the whole screen, like tldraw. Tools live in a floating toolbar
 **Canvas chrome**
 
 - **FR-026**: The canvas MUST take the whole screen; the card input MUST NOT be permanently visible. Tools MUST live in a floating toolbar at the bottom center; the "Jira card" tool opens the key-or-link input in a popover.
-- **FR-027**: Right-clicking the canvas MUST open a context menu: on an empty spot it offers adding elements at that point (at least "Add Jira card"); on a selection it offers "Delete".
-- **FR-028**: A compact bar at the top left MUST hold the main menu and the current board name with a board switcher; the main menu holds Settings and Theme. Undo, redo and duplicate are not part of the MVP.
+- **FR-027**: Right-clicking the canvas MUST open a context menu: on an empty spot it offers adding elements at that point (at least "Add Jira card"); on a selection it offers "Delete". Right-clicking toolbars or zoom controls MUST NOT open it.
+- **FR-028**: A compact bar at the top left MUST hold the main menu and the current board name with a board switcher; the main menu holds Settings, Keyboard shortcuts and Theme. Undo and redo are not part of the MVP.
 - **FR-029**: Users MUST be able to switch between light, dark and system themes; the choice is stored in the browser and applied before first paint. Light is the default.
 - **FR-030**: The canvas MUST NOT show the canvas library attribution label.
+- **FR-031**: Every keyboard shortcut MUST come from one registry that feeds both the bindings and the shortcut list (`?`); copy, paste, duplicate and select all MUST work on canvas elements, including frames with their contents.
+- **FR-032**: The card input MUST accept several keys or links separated by commas (up to 50) and lay the new cards out in a grid; Jira is called a few keys at a time.
 
 **Out of scope (Won't)**
 

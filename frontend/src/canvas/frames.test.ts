@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { framesFirst, releaseChildren, reparent } from '@/canvas/frames'
+import { framesFirst, releaseChildren, reparent, splitDeletion } from '@/canvas/frames'
 import type { AppNode } from '@/canvas/types'
 
 const frame: AppNode = {
@@ -54,4 +54,29 @@ test('children of a removed frame keep their place on the board', () => {
   const [, released] = releaseChildren([frame, card('a', 50, 50, 'f')], new Set(['f']))
   expect(released.parentId).toBeUndefined()
   expect(released.position).toEqual({ x: 150, y: 150 })
+})
+
+test('deleting a frame alone keeps its children and the edges between them', () => {
+  const doomed = [{ ...frame, selected: true }, card('a', 10, 10, 'f'), card('b', 50, 50, 'f')]
+  const split = splitDeletion(doomed, [{ id: 'ab', source: 'a', target: 'b' }])!
+  expect(split.nodes.map((n) => n.id)).toEqual(['f'])
+  expect(split.edges).toEqual([])
+})
+
+test('a selected child goes with its frame, and so do its edges', () => {
+  const doomed = [
+    { ...frame, selected: true },
+    { ...card('a', 10, 10, 'f'), selected: true },
+    card('b', 50, 50, 'f'),
+  ]
+  const split = splitDeletion(doomed, [
+    { id: 'ab', source: 'a', target: 'b' },
+    { id: 'bx', source: 'b', target: 'x', selected: true },
+  ])!
+  expect(split.nodes.map((n) => n.id)).toEqual(['f', 'a'])
+  expect(split.edges.map((e) => e.id)).toEqual(['ab', 'bx'])
+})
+
+test('without frames the deletion goes through as asked', () => {
+  expect(splitDeletion([{ ...card('a', 0, 0), selected: true }], [])).toBeNull()
 })

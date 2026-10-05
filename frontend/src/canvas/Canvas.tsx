@@ -30,7 +30,7 @@ import {
   type Snippet,
 } from '@/canvas/clipboard'
 import { markFresh } from '@/canvas/editing'
-import { framesFirst, releaseChildren, reparent } from '@/canvas/frames'
+import { framesFirst, releaseChildren, reparent, splitDeletion } from '@/canvas/frames'
 import { gridPositions } from '@/canvas/layout'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
@@ -57,6 +57,8 @@ const CASCADE_Y = 96
 // Duplicates land next to the original; a drag shorter than this places a default-size frame.
 const DUPLICATE_OFFSET = 24
 const MIN_DRAW = 8
+// Same floor as the frame resizer, so a thin drag still makes a usable frame.
+const MIN_FRAME = { width: 160, height: 120 }
 
 const viewportCenter = () => ({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
@@ -189,15 +191,15 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
 
   const drawFrame = ({ x, y, width, height }: ScreenRect) => {
     setTool('select')
-    if (width < MIN_DRAW && height < MIN_DRAW) return placeAt('frame', { x, y })
+    if (width < MIN_DRAW || height < MIN_DRAW) return placeAt('frame', { x, y })
     const start = screenToFlowPosition({ x, y })
     const end = screenToFlowPosition({ x: x + width, y: y + height })
     addFrame({
       id: newId(),
       type: 'frame',
       position: start,
-      width: end.x - start.x,
-      height: end.y - start.y,
+      width: Math.max(end.x - start.x, MIN_FRAME.width),
+      height: Math.max(end.y - start.y, MIN_FRAME.height),
       data: { title: '' },
     })
   }
@@ -232,20 +234,10 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   // Deleting a frame keeps its children: only what the user selected goes away.
   const onBeforeDelete: OnBeforeDelete<AppNode, AppEdge> = useCallback(
     async ({ nodes: doomed, edges: doomedEdges }) => {
-      const kept = doomed.filter(
-        (n) => n.parentId && !n.selected && doomed.some((f) => f.id === n.parentId),
-      )
-      if (kept.length === 0) return true
-      const keptIds = new Set(kept.map((n) => n.id))
-      const removed = doomed.filter((n) => !keptIds.has(n.id))
-      const removedIds = new Set(removed.map((n) => n.id))
-      setNodes((current) => releaseChildren(current, removedIds))
-      return {
-        nodes: removed,
-        edges: doomedEdges.filter(
-          (e) => e.selected || removedIds.has(e.source) || removedIds.has(e.target),
-        ),
-      }
+      const split = splitDeletion(doomed, doomedEdges)
+      if (!split) return true
+      setNodes((current) => releaseChildren(current, new Set(split.nodes.map((n) => n.id))))
+      return split
     },
     [setNodes],
   )

@@ -1,5 +1,5 @@
 import type { XYPosition } from '@xyflow/react'
-import type { AppNode } from '@/canvas/types'
+import type { AppEdge, AppNode } from '@/canvas/types'
 
 function size(node: AppNode) {
   return {
@@ -52,6 +52,26 @@ export function reparent(nodes: AppNode[], droppedIds: string[]): AppNode[] {
     } as AppNode
   })
   return changed ? framesFirst(next) : nodes
+}
+
+/**
+ * What a delete really removes: children of a deleted frame stay unless selected themselves,
+ * and so do their edges, unless selected. Null means delete everything as asked.
+ */
+export function splitDeletion(doomed: AppNode[], doomedEdges: AppEdge[]) {
+  const kept = doomed.filter(
+    (n) => n.parentId && !n.selected && doomed.some((f) => f.id === n.parentId),
+  )
+  if (kept.length === 0) return null
+  const keptIds = new Set(kept.map((n) => n.id))
+  const nodes = doomed.filter((n) => !keptIds.has(n.id))
+  const removedIds = new Set(nodes.map((n) => n.id))
+  return {
+    nodes,
+    edges: doomedEdges.filter(
+      (e) => e.selected || removedIds.has(e.source) || removedIds.has(e.target),
+    ),
+  }
 }
 
 /** Children of removed frames stay on the board at the same place. */

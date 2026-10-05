@@ -114,27 +114,28 @@ description: "Task list for Live Jira Canvas (MVP)"
 
 **Independent Test**: draw two frames, a sticky, a text label, drag three cards into a frame, connect a sticky to a card, move the frame: children and arrow follow; reload identical.
 
-- [ ] T043 [P] [US3] Create `FrameNode` in `frontend/src/canvas/nodes/FrameNode.tsx` (editable title up to 200 chars, `NodeResizer`) and `frontend/src/canvas/useFrameDrop.ts`: on `onNodeDragStop` find the frame under the node center via `getIntersectingNodes`, set or clear `parentId`, convert absolute ↔ relative position, keep frames before children in the node array; no nested frames; no `extent: 'parent'`
-- [ ] T044 [P] [US3] Create `StickyNode` and `TextNode` in `frontend/src/canvas/nodes/StickyNode.tsx` and `frontend/src/canvas/nodes/TextNode.tsx`: inline editing (text up to 5000 chars), sticky colors from `DESIGN.md` tokens, `NodeResizer`
-- [ ] T045 [P] [US3] Add four handles (`t r b l`) to every node type via a shared `frontend/src/canvas/nodes/Handles.tsx`; edges with `connectionMode="loose"`, `markerEnd: ArrowClosed`, `sourceHandle`/`targetHandle` persisted
-- [ ] T046 [US3] Extend `frontend/src/canvas/Toolbar.tsx` and `frontend/src/canvas/Canvas.tsx`: frame, sticky, text tools; box select and shift-click; Delete/Backspace removes selection and its edges (frame deletion keeps children, converting them to absolute) (depends on T043, T044, T045)
-- [ ] T047 [US3] Backend test in `backend/tests/test_api_boards.py`: doc with frame, children, sticky, text and edges round-trips unchanged; child before parent → 422
-- [ ] T048 [US3] Extend `scripts/smoke.py` with the spatial doc round-trip from [quickstart.md](quickstart.md) step 3
-- [ ] T049 [US3] `CHANGELOG.md` `Unreleased`: frames, sticky notes, text, arrows; bottom toolbar, right-click menu, top bar, theme switch
+- [x] T043 [P] [US3] Create `FrameNode` in `frontend/src/canvas/nodes/FrameNode.tsx` (editable title up to 200 chars, `NodeResizer`) and `frontend/src/canvas/useFrameDrop.ts`: on `onNodeDragStop` find the frame under the node center via `getIntersectingNodes`, set or clear `parentId`, convert absolute ↔ relative position, keep frames before children in the node array; no nested frames; no `extent: 'parent'`
+- [x] T044 [P] [US3] Create `StickyNode` and `TextNode` in `frontend/src/canvas/nodes/StickyNode.tsx` and `frontend/src/canvas/nodes/TextNode.tsx`: inline editing (text up to 5000 chars), sticky colors from `DESIGN.md` tokens, `NodeResizer`
+- [x] T045 [P] [US3] Add four handles (`t r b l`) to every node type via a shared `frontend/src/canvas/nodes/Handles.tsx`; edges with `connectionMode="loose"`, `markerEnd: ArrowClosed`, `sourceHandle`/`targetHandle` persisted
+- [x] T046 [US3] Extend `frontend/src/canvas/Toolbar.tsx` and `frontend/src/canvas/Canvas.tsx`: frame, sticky, text tools; box select and shift-click; Delete/Backspace removes selection and its edges (frame deletion keeps children, converting them to absolute) (depends on T043, T044, T045)
+- [x] T047 [US3] Backend test in `backend/tests/test_api_boards.py`: doc with frame, children, sticky, text and edges round-trips unchanged; child before parent → 422
+- [x] T048 [US3] Extend `scripts/smoke.py` with the spatial doc round-trip from [quickstart.md](quickstart.md) step 3
+- [x] T049 [US3] `CHANGELOG.md` `Unreleased`: frames, sticky notes, text, arrows; bottom toolbar, right-click menu, top bar, theme switch
 
 Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
-- [ ] T062 [US6] Add shadcn `popover`, `dropdown-menu`, `context-menu`; rework `frontend/src/canvas/Toolbar.tsx` into the icon toolbar from `DESIGN.md`: the "Jira card" icon opens a `Popover` with the key-or-link input (Enter adds at viewport center, Escape closes, errors inline); no permanent input
-- [ ] T063 [US6] Create `frontend/src/canvas/CanvasContextMenu.tsx` wrapping the canvas: empty spot → "Add Jira card" (input opens there, card placed at `screenToFlowPosition` of the click) plus frame, sticky and text from T046; selection → "Delete" (depends on T062, T046)
-- [ ] T064 [P] [US6] Set `proOptions={{ hideAttribution: true }}` in `frontend/src/canvas/Canvas.tsx`
-- [ ] T065 [P] [US6] Create `frontend/src/lib/theme.ts` (`light | dark | system`, `localStorage`, toggles `.dark` on `<html>`, follows `prefers-color-scheme` for system) and an inline script in `index.html` that applies it before first paint; pass the resolved mode to `ReactFlow` `colorMode` instead of `"system"`
-- [ ] T066 [US6] Create `frontend/src/board/TopBar.tsx` replacing the board panel in `frontend/src/App.tsx`: main menu (Settings opens `SettingsSheet`, Theme submenu) and board name dropdown (switch, "New board" as an inline input in the dropdown); T055 later adds rename and delete here (depends on T065)
-- [ ] T067 [US6] Component tests: toolbar popover adds a card and closes on Escape; theme choice toggles `.dark` and survives remount
-- [ ] T068 [US6] Shortcut registry `frontend/src/lib/shortcuts.ts` on `react-hotkeys-hook` (`useShortcut`, labels for tooltips) and `frontend/src/board/ShortcutsDialog.tsx` opened by `?` and the main menu; tool keys V, H, F, N, T, C
-- [ ] T069 [US6] `frontend/src/canvas/clipboard.ts`: copy, paste at the cursor, duplicate (`mod+c`, `mod+v`, `mod+d`) and select all (`mod+a`); a frame is copied with its contents, edges between copied nodes follow
-- [ ] T070 [US6] Several keys or links at once in `AddCardForm`, laid out by `frontend/src/canvas/layout.ts` in a near-square grid; failed keys stay in the field with their errors
-- [ ] T071 [US6] Draw a frame by dragging (`frontend/src/canvas/useDrawRect.ts`); a new frame takes in the loose elements under it
-- [ ] T073 [US6] Pointer users get no focus ring after closing menus and dialogs (`frontend/src/lib/input-modality.ts`); keyboard users keep focus return
+- [x] T062 [US6] Add shadcn `popover`, `dropdown-menu`, `context-menu`; rework `frontend/src/canvas/Toolbar.tsx` into the icon toolbar from `DESIGN.md`: the "Jira card" icon opens a `Popover` with the key-or-link input (Enter adds at viewport center, Escape closes, errors inline); no permanent input
+- [x] T063 [US6] Create `frontend/src/canvas/CanvasContextMenu.tsx` wrapping the canvas: empty spot → "Add Jira card" (input opens there, card placed at `screenToFlowPosition` of the click) plus frame, sticky and text from T046; selection → "Delete" (depends on T062, T046)
+- [x] T064 [P] [US6] Set `proOptions={{ hideAttribution: true }}` in `frontend/src/canvas/Canvas.tsx`
+- [x] T065 [P] [US6] Create `frontend/src/lib/theme.ts` (`light | dark | system`, `localStorage`, toggles `.dark` on `<html>`, follows `prefers-color-scheme` for system) and an inline script in `index.html` that applies it before first paint; pass the resolved mode to `ReactFlow` `colorMode` instead of `"system"`
+- [x] T066 [US6] Create `frontend/src/board/TopBar.tsx` replacing the board panel in `frontend/src/App.tsx`: main menu (Settings opens `SettingsSheet`, Theme submenu) and board name dropdown (switch, "New board" as an inline input in the dropdown); T055 later adds rename and delete here (depends on T065)
+- [x] T067 [US6] Component tests: toolbar popover adds a card and closes on Escape; theme choice toggles `.dark` and survives remount
+- [x] T068 [US6] Shortcut registry `frontend/src/lib/shortcuts.ts` on `react-hotkeys-hook` (`useShortcut`, labels for tooltips) and `frontend/src/board/ShortcutsDialog.tsx` opened by `?` and the main menu; tool keys V, H, F, N, T, C
+- [x] T069 [US6] `frontend/src/canvas/clipboard.ts`: copy, paste at the cursor, duplicate (`mod+c`, `mod+v`, `mod+d`) and select all (`mod+a`); a frame is copied with its contents, edges between copied nodes follow
+- [x] T070 [US6] Several keys or links at once in `AddCardForm`, laid out by `frontend/src/canvas/layout.ts` in a near-square grid; failed keys stay in the field with their errors
+- [x] T071 [US6] Draw a frame by dragging (`frontend/src/canvas/useDrawRect.ts`); a new frame takes in the loose elements under it
+- T072 dropped: a glide after a mouse pan felt off; trackpad momentum comes from the OS
+- [x] T073 [US6] Pointer users get no focus ring after closing menus and dialogs (`frontend/src/lib/input-modality.ts`); keyboard users keep focus return
 
 ## Phase 6: Slice 5 `feat/card-details` — collapse and mini-card (US4)
 

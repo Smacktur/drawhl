@@ -26,11 +26,24 @@ const TOOLS: { tool: Tool; Icon: LucideIcon }[] = [
 ]
 
 const MAX_REFS = 50
+// Each key is one Jira request; a few at a time stays clear of rate limits.
+const CONCURRENCY = 4
 
 type Resolved = { tasks: Task[]; failed: { ref: string; message: string }[] }
 
 async function resolveAll(refs: string[]): Promise<Resolved> {
-  const results = await Promise.allSettled(refs.map(resolveTask))
+  const results: PromiseSettledResult<Task>[] = []
+  let next = 0
+  const worker = async () => {
+    while (next < refs.length) {
+      const i = next++
+      results[i] = await resolveTask(refs[i]).then(
+        (value) => ({ status: 'fulfilled', value }) as const,
+        (reason: unknown) => ({ status: 'rejected', reason }) as const,
+      )
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, refs.length) }, worker))
   const resolved: Resolved = { tasks: [], failed: [] }
   results.forEach((result, i) => {
     if (result.status === 'fulfilled') resolved.tasks.push(result.value)

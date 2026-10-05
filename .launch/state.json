@@ -5,7 +5,8 @@
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
-    "freshness"
+    "freshness",
+    "spatial"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -14,7 +15,8 @@
     "G4_ship": "pending",
     "G3_card-on-board": "approved",
     "G3_jira-dc-connection": "approved",
-    "G3_freshness": "approved"
+    "G3_freshness": "approved",
+    "G3_spatial": "approved"
   },
   "notes": []
 }
