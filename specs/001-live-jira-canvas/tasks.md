@@ -187,7 +187,7 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 - [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data
 - [x] T060 Update `docs/architecture.md` with the final structure and `THIRD_PARTY.md` completeness check
-- [ ] T061 Run [quickstart.md](quickstart.md) end to end on a clean clone (`make clean-clone`)
+- [x] T061 Run [quickstart.md](quickstart.md) end to end on a clean clone (`make clean-clone`)
 
 ## Dependencies
 

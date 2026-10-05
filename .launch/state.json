@@ -1,6 +1,6 @@
 {
   "profile": "oss",
-  "phase": "build",
+  "phase": "ship",
   "feature": "specs/001-live-jira-canvas",
   "slices_done": [
     "card-on-board",
@@ -15,7 +15,7 @@
   "gates": {
     "G1_scope": "approved",
     "G2_spec": "approved",
-    "legal": "pending",
+    "legal": "approved",
     "G4_ship": "pending",
     "G3_card-on-board": "approved",
     "G3_jira-dc-connection": "approved",
@@ -26,5 +26,7 @@
     "G3_jql-assist": "approved",
     "G3_undo": "approved"
   },
-  "notes": []
+  "notes": [
+    "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo."
+  ]
 }
