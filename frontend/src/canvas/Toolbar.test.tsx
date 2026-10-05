@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { Toolbar } from '@/canvas/Toolbar'
+import { isJql, Toolbar } from '@/canvas/Toolbar'
 
 const task = {
   key: 'DEMO-1',
@@ -30,7 +30,7 @@ function renderToolbar(onAddCards = vi.fn(), onTool = vi.fn()) {
 
 test('has no card input until the Jira card tool is picked', () => {
   renderToolbar()
-  expect(screen.queryByLabelText('Issue keys or links')).toBeNull()
+  expect(screen.queryByLabelText('Issue keys, links or JQL')).toBeNull()
 })
 
 test('adds a card from the popover and closes it', async () => {
@@ -40,20 +40,20 @@ test('adds a card from the popover and closes it', async () => {
   )
   const onAddCards = renderToolbar()
   fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
-  const field = await screen.findByLabelText('Issue keys or links')
+  const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.change(field, { target: { value: 'DEMO-1' } })
   fireEvent.submit(field)
 
   await waitFor(() => expect(onAddCards).toHaveBeenCalledWith([task]))
-  await waitFor(() => expect(screen.queryByLabelText('Issue keys or links')).toBeNull())
+  await waitFor(() => expect(screen.queryByLabelText('Issue keys, links or JQL')).toBeNull())
 })
 
 test('closes the popover on Escape', async () => {
   renderToolbar()
   fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
-  const field = await screen.findByLabelText('Issue keys or links')
+  const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.keyDown(field, { key: 'Escape' })
-  await waitFor(() => expect(screen.queryByLabelText('Issue keys or links')).toBeNull())
+  await waitFor(() => expect(screen.queryByLabelText('Issue keys, links or JQL')).toBeNull())
 })
 
 test('adds several cards at once and keeps the ones that failed in the field', async () => {
@@ -72,13 +72,40 @@ test('adds several cards at once and keeps the ones that failed in the field', a
   )
   const onAddCards = renderToolbar()
   fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
-  const field = await screen.findByLabelText('Issue keys or links')
+  const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.change(field, { target: { value: 'DEMO-1, DEMO-2,NOPE DEMO-1' } })
   fireEvent.submit(field)
 
   await waitFor(() => expect(onAddCards).toHaveBeenCalledWith([task, { ...task, key: 'DEMO-2' }]))
   expect(await screen.findByRole('alert')).toHaveTextContent('NOPE:')
-  expect(screen.getByLabelText('Issue keys or links')).toHaveValue('NOPE')
+  expect(screen.getByLabelText('Issue keys, links or JQL')).toHaveValue('NOPE')
+})
+
+test('tells a JQL query from keys and links', () => {
+  expect(isJql('DEMO-1, DEMO-2')).toBe(false)
+  expect(isJql('https://jira.example.com/browse/DEMO-1')).toBe(false)
+  expect(isJql('NOPE')).toBe(false)
+  expect(isJql('project = SRE AND status != Done')).toBe(true)
+  expect(isJql('key in (DEMO-1, DEMO-2)')).toBe(true)
+})
+
+test('adds the tasks a JQL query finds and keeps the form open when some are left', async () => {
+  const fetch = vi.fn(
+    async () =>
+      new Response(JSON.stringify({ tasks: [task], total: 3 }), {
+        status: 200,
+      }),
+  )
+  vi.stubGlobal('fetch', fetch)
+  const onAddCards = renderToolbar()
+  fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
+  const field = await screen.findByLabelText('Issue keys, links or JQL')
+  fireEvent.change(field, { target: { value: 'project = DEMO' } })
+  fireEvent.submit(field)
+
+  await waitFor(() => expect(onAddCards).toHaveBeenCalledWith([task]))
+  expect(fetch).toHaveBeenCalledWith('/api/tasks/search', expect.anything())
+  expect(await screen.findByRole('alert')).toHaveTextContent('Added 1 of 3.')
 })
 
 test('picks tools from the keyboard', () => {

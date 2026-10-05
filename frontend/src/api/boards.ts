@@ -57,6 +57,17 @@ export function createBoard(name: string) {
   })
 }
 
+export function renameBoard(id: string, name: string) {
+  return fetchJson(`/api/boards/${id}`, summarySchema, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export function deleteBoard(id: string) {
+  return fetchJson(`/api/boards/${id}`, z.null(), { method: 'DELETE' })
+}
+
 export function getBoard(id: string) {
   return fetchJson(`/api/boards/${id}`, boardSchema)
 }

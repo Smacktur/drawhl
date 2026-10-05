@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
 from app.api import deps
@@ -57,6 +57,17 @@ def get_board(board_id: str, boards: Boards, snapshots: Snapshots) -> BoardView:
 @router.put("/{board_id}")
 def save_board(board_id: str, body: SaveIn, boards: Boards) -> SaveOut:
     return SaveOut(version=service.save_board(board_id, body.version, body.doc, boards))
+
+
+@router.patch("/{board_id}")
+def rename_board(board_id: str, body: BoardIn, boards: Boards) -> BoardSummary:
+    return service.rename_board(board_id, body.name, boards)
+
+
+@router.delete("/{board_id}", status_code=204)
+def delete_board(board_id: str, boards: Boards) -> Response:
+    service.delete_board(board_id, boards)
+    return Response(status_code=204)
 
 
 @router.post("/{board_id}/refresh")

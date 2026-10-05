@@ -23,6 +23,10 @@ class TaskProvider(Protocol):
         """Display name of the authenticated user."""
         ...
 
+    def search(self, jql: str, limit: int) -> tuple[list[Task], int]:
+        """Up to `limit` matching tasks and the total match count; raises InvalidJql."""
+        ...
+
 
 class BoardRepo(Protocol):
     def list(self) -> list[BoardSummary]: ...
@@ -33,6 +37,14 @@ class BoardRepo(Protocol):
 
     def save(self, board_id: str, version: int, doc: BoardDoc) -> int:
         """Compare-and-set on version; raises NotFound or VersionConflict, returns new version."""
+        ...
+
+    def rename(self, board_id: str, name: str) -> BoardSummary:
+        """Leaves the doc version alone so open tabs keep saving; raises NotFound."""
+        ...
+
+    def delete(self, board_id: str) -> None:
+        """Raises NotFound."""
         ...
 
 

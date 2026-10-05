@@ -55,5 +55,16 @@ def resolve_task(ref: str, provider: TaskProvider, snapshots: SnapshotRepo) -> T
     return task
 
 
+MAX_SEARCH = 100
+
+
+def search_tasks(
+    jql: str, limit: int, provider: TaskProvider, snapshots: SnapshotRepo
+) -> tuple[list[Task], int]:
+    tasks, total = provider.search(jql.strip(), min(limit, MAX_SEARCH))
+    snapshots.put_many(tasks)
+    return tasks, total
+
+
 def select_provider(provider: str, demo: TaskProvider, jira: TaskProvider) -> TaskProvider:
     return jira if provider == "jira" else demo

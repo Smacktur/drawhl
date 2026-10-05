@@ -1,7 +1,10 @@
-from app.domain.errors import TaskNotFound
+import re
+
+from app.domain.errors import InvalidJql, TaskNotFound
 from app.domain.tasks import StatusCategory, Task, now_iso
 
 DEMO_HOST = "jira.example.com"
+_QUOTED = re.compile(r'"([^"]*)"')
 
 _CATEGORY: dict[str, StatusCategory] = {
     "To Do": "new",
@@ -94,6 +97,23 @@ class DemoTaskProvider:
         self._tasks[key]["status_name"] = status
         self._tasks[key]["updated"] = now_iso()
         return self._task(key)
+
+    def search(self, jql: str, limit: int) -> tuple[list[Task], int]:
+        """Not real JQL: quoted values must each appear in a task's text; no quotes match all."""
+        if jql.count('"') % 2:
+            raise InvalidJql("The query has an unclosed quote.")
+        needles = [value.lower() for value in _QUOTED.findall(jql)]
+        keys = [
+            key
+            for key, fields in self._tasks.items()
+            if all(needle in self._text(key, fields) for needle in needles)
+        ]
+        return [self._task(key) for key in keys[:limit]], len(keys)
+
+    @staticmethod
+    def _text(key: str, fields: dict) -> str:
+        values = [key, fields["summary"], fields["status_name"], fields["type_name"]]
+        return " ".join([*values, fields["assignee_name"] or ""]).lower()
 
     def check(self) -> str:
         return "Demo User"

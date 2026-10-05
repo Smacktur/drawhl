@@ -36,8 +36,11 @@ check(status == 200, "health")
 status, settings = call("GET", f"{API}/api/settings")
 check(status == 200, "read settings")
 call("PUT", f"{API}/api/settings", {"provider": "demo"})
+# Boards made here are deleted at the end, so a run leaves the user's list as it was.
+created: list[str] = []
 try:
     status, board = call("POST", f"{API}/api/boards", {"name": "smoke"})
+    created.append(board["id"])
     check(status == 201, "create board")
 
     status, body = call("POST", f"{API}/api/tasks/resolve", {"ref": "DEMO-1"})
@@ -106,6 +109,7 @@ try:
     )
 
     status, other = call("POST", f"{API}/api/boards", {"name": "smoke other"})
+    created.append(other["id"])
     other_doc = {
         "nodes": [
             {
@@ -121,13 +125,32 @@ try:
     status, body = call("POST", f"{API}/api/boards/{board['id']}/refresh")
     check(status == 200 and "DEMO-5" not in body["tasks"], "only the open board is refreshed")
 
+    status, body = call("POST", f"{API}/api/tasks/search", {"jql": 'status = "Backlog"'})
+    check(
+        status == 200 and {t["key"] for t in body["tasks"]} == {"DEMO-5", "DEMO-12"},
+        "add cards by JQL",
+    )
+
+    status, body = call("PATCH", f"{API}/api/boards/{board['id']}", {"name": "smoke renamed"})
+    check(status == 200 and body["name"] == "smoke renamed", "rename board")
+    status, body = call("PUT", f"{API}/api/boards/{board['id']}", {"version": 2, "doc": doc})
+    check(status == 200, "rename keeps the board saving")
+
+    status, _ = call("DELETE", f"{API}/api/boards/{other['id']}")
+    check(status == 204, "delete board")
+    status, body = call("GET", f"{API}/api/boards")
+    ids = {b["id"] for b in body["boards"]}
+    check(other["id"] not in ids and board["id"] in ids, "deleted board leaves the list")
+
+    status, body = call("GET", f"{WEB}/api/boards")
+    check(status == 200 and any(b["id"] == board["id"] for b in body["boards"]), "ui proxies /api")
+
 finally:
     call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "In Progress"})
     call("PUT", f"{API}/api/settings", {"provider": settings["provider"]})
+    for board_id in created:
+        call("DELETE", f"{API}/api/boards/{board_id}")
 
 status, body = call("GET", f"{API}/api/settings")
 check(status == 200 and set(body["jira"]) == {"base_url", "token_state"}, "settings hide token")
 check(isinstance(body["secret_key_configured"], bool), "secret key state reported")
-
-status, body = call("GET", f"{WEB}/api/boards")
-check(status == 200 and any(b["id"] == board["id"] for b in body["boards"]), "ui proxies /api")

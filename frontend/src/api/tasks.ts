@@ -23,3 +23,14 @@ export function resolveTask(ref: string) {
     body: JSON.stringify({ ref }),
   }).then((body) => body.task)
 }
+
+export function searchTasks(jql: string, limit: number) {
+  return fetchJson(
+    '/api/tasks/search',
+    z.object({ tasks: z.array(taskSchema), total: z.number() }),
+    {
+      method: 'POST',
+      body: JSON.stringify({ jql, limit }),
+    },
+  )
+}

@@ -159,6 +159,14 @@ def get_board(board_id: str, boards: BoardRepo, snapshots: SnapshotRepo) -> Boar
     )
 
 
+def rename_board(board_id: str, name: str, boards: BoardRepo) -> BoardSummary:
+    return boards.rename(board_id, name)
+
+
+def delete_board(board_id: str, boards: BoardRepo) -> None:
+    boards.delete(board_id)
+
+
 def save_board(board_id: str, version: int, doc: BoardDoc, boards: BoardRepo) -> int:
     check_doc(doc)
     return boards.save(board_id, version, doc)

@@ -154,12 +154,12 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 **Independent Test**: create two boards with different content, switch, rename one, delete the other; viewport kept per board.
 
-- [ ] T054 [P] [US5] Add `PATCH /api/boards/{id}` and `DELETE /api/boards/{id}` (204) to `backend/app/api/boards.py` with tests in `backend/tests/test_api_boards.py`
-- [ ] T055 [P] [US5] Create `frontend/src/board/BoardList.tsx` inside the board dropdown of `frontend/src/board/TopBar.tsx`: list, create, rename, delete with confirm, switch; viewport saved in the doc and restored per board
-- [ ] T056 [P] [US5] Create `scripts/bench_board.py`: seed a board with 300 cards across 10 frames via the API on the demo provider (keys cycling `DEMO-1..12`); document the manual pan/zoom and load-time check (target < 3 s) in `specs/001-live-jira-canvas/quickstart.md`
-- [ ] T057 [US5] Extend `scripts/smoke.py`: rename and delete a board
-- [ ] T058 [US5] `CHANGELOG.md` `Unreleased`: board list
-- [ ] T062 [US1] Add cards by JQL: `POST /api/tasks/search` on the existing provider search (capped result count, tests in `backend/tests/`); the Jira card input takes a JQL query and lays the results out in a grid
+- [x] T054 [P] [US5] Add `PATCH /api/boards/{id}` and `DELETE /api/boards/{id}` (204) to `backend/app/api/boards.py` with tests in `backend/tests/test_api_boards.py`
+- [x] T055 [P] [US5] Create `frontend/src/board/BoardList.tsx` inside the board dropdown of `frontend/src/board/TopBar.tsx`: list, create, rename, delete with confirm, switch; viewport saved in the doc and restored per board
+- [x] T056 [P] [US5] Create `scripts/bench_board.py`: seed a board with 300 cards across 10 frames via the API on the demo provider (keys cycling `DEMO-1..12`); document the manual pan/zoom and load-time check (target < 3 s) in `specs/001-live-jira-canvas/quickstart.md`
+- [x] T057 [US5] Extend `scripts/smoke.py`: rename and delete a board
+- [x] T058 [US5] `CHANGELOG.md` `Unreleased`: board list
+- [x] T062 [US1] Add cards by JQL: `POST /api/tasks/search` on the existing provider search (capped result count, tests in `backend/tests/`); the Jira card input takes a JQL query and lays the results out in a grid
 
 ## Phase 8: Polish (verify and ship phases)
 
