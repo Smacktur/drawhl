@@ -1,93 +1,115 @@
-import type { NodeProps } from '@xyflow/react'
-import { Bookmark, Bug, CircleCheck, Layers, ListTree, SquareCheck } from 'lucide-react'
-import { memo } from 'react'
-import type { Task } from '@/api/tasks'
+import { useOnViewportChange, useReactFlow, type NodeProps } from '@xyflow/react'
+import { memo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { useTask } from '@/canvas/tasks-context'
 import type { JiraCardNode as JiraCardNodeType } from '@/canvas/types'
+import { CardDetails } from '@/canvas/nodes/CardDetails'
 import { Handles } from '@/canvas/nodes/Handles'
-
-const TYPE_ICONS = {
-  bug: Bug,
-  story: Bookmark,
-  task: SquareCheck,
-  epic: Layers,
-  'sub-task': ListTree,
-  subtask: ListTree,
-}
-
-function TypeIcon({ typeName }: { typeName: string }) {
-  const Icon = TYPE_ICONS[typeName.toLowerCase() as keyof typeof TYPE_ICONS] ?? CircleCheck
-  return <Icon aria-label={typeName || 'Issue'} className="size-3.5 shrink-0" strokeWidth={1.75} />
-}
-
-const LOZENGE = {
-  new: 'bg-status-new text-status-new-foreground',
-  indeterminate: 'bg-status-progress text-status-progress-foreground',
-  done: 'bg-status-done text-status-done-foreground',
-}
-
-export function StatusLozenge({ task }: { task: Task }) {
-  return (
-    <span
-      className={cn(
-        'inline-block rounded-[3px] px-1 align-[1px] text-[11px] leading-4 font-semibold tracking-[0.04em] whitespace-nowrap uppercase',
-        LOZENGE[task.status_category],
-      )}
-    >
-      {task.status_name}
-    </span>
-  )
-}
+import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
 
 // Long titles are cut so the status lozenge after them always stays visible.
 const SUMMARY_LIMIT = 120
+// A press that moves further than this is a drag, not a click that opens the mini-card.
+const CLICK_SLOP = 4
 
 function clip(text: string) {
   return text.length > SUMMARY_LIMIT ? `${text.slice(0, SUMMARY_LIMIT).trimEnd()}…` : text
 }
 
-function JiraCardNodeView({ data, selected }: NodeProps<JiraCardNodeType>) {
+function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
   const task = useTask(data.key)
+  const { updateNodeData } = useReactFlow()
+  const [open, setOpen] = useState(false)
+  const pressedAt = useRef<{ x: number; y: number } | null>(null)
   const missing = task?.state === 'not_found'
   const done = task?.status_category === 'done'
+  const collapsed = Boolean(data.collapsed)
+
+  // The popover is anchored in screen space and would drift away from a panned card.
+  useOnViewportChange({ onStart: () => setOpen(false) })
+
+  const onPointerDown = (event: PointerEvent) => {
+    pressedAt.current = { x: event.clientX, y: event.clientY }
+  }
+  const onClick = (event: MouseEvent) => {
+    const start = pressedAt.current
+    if (!task || missing || !start) return
+    // Shift-click extends the selection, and the key link goes straight to Jira.
+    if (event.shiftKey || (event.target as Element).closest('a')) return
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP) return
+    setOpen(true)
+  }
 
   // One inline flow, like Confluence's issue macro: wrapped lines start at the left edge.
   return (
-    <div
-      className={cn(
-        'bg-card text-card-foreground w-max max-w-80 rounded-md border px-2 py-1 text-[13px] leading-5',
-        selected && 'border-primary ring-primary/30 ring-2',
-      )}
-    >
-      {task && (
-        <span className="text-muted-foreground mr-1.5 inline-block align-[-2px]">
-          <TypeIcon typeName={task.type_name} />
-        </span>
-      )}
-      <a
-        href={task?.url}
-        target="_blank"
-        rel="noreferrer"
-        className={cn(
-          'text-primary mr-1.5 font-mono text-xs tabular-nums hover:underline',
-          done && 'line-through',
-        )}
-      >
-        {data.key}
-      </a>
-      {!task && <span className="text-muted-foreground">Loading…</span>}
-      {missing && <span className="text-muted-foreground">Not found or no access</span>}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverAnchor asChild>
+        <div
+          onPointerDown={onPointerDown}
+          onClick={onClick}
+          className={cn(
+            'bg-card text-card-foreground w-max max-w-80 rounded-md border px-2 text-[13px] leading-5',
+            collapsed ? 'py-px' : 'py-1',
+            selected && 'border-primary ring-primary/30 ring-2',
+          )}
+        >
+          {task && (
+            <span className="text-muted-foreground mr-1.5 inline-block align-[-2px]">
+              <TypeIcon typeName={task.type_name} />
+            </span>
+          )}
+          {collapsed ? (
+            // Collapsed, the whole card is the click target for the mini-card.
+            <span
+              className={cn(
+                'text-primary mr-1.5 font-mono text-xs tabular-nums',
+                done && 'line-through',
+              )}
+            >
+              {data.key}
+            </span>
+          ) : (
+            <a
+              href={task?.url}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                'text-primary mr-1.5 font-mono text-xs tabular-nums hover:underline',
+                done && 'line-through',
+              )}
+            >
+              {data.key}
+            </a>
+          )}
+          {!task && <span className="text-muted-foreground">Loading…</span>}
+          {missing && <span className="text-muted-foreground">Not found or no access</span>}
+          {task && !missing && (
+            <>
+              {!collapsed && (
+                <span className={cn('mr-1.5', done && 'text-muted-foreground')}>
+                  {clip(task.summary)}
+                </span>
+              )}
+              <StatusLozenge task={task} />
+            </>
+          )}
+          <Handles />
+        </div>
+      </PopoverAnchor>
       {task && !missing && (
-        <>
-          <span className={cn('mr-1.5', done && 'text-muted-foreground')}>
-            {clip(task.summary)}
-          </span>
-          <StatusLozenge task={task} />
-        </>
+        <PopoverContent align="start" className="w-80 p-3">
+          <CardDetails
+            task={task}
+            collapsed={collapsed}
+            onToggleCollapsed={() => {
+              updateNodeData(id, { collapsed: !collapsed })
+              setOpen(false)
+            }}
+          />
+        </PopoverContent>
       )}
-      <Handles />
-    </div>
+    </Popover>
   )
 }
 

@@ -43,10 +43,10 @@ Dark theme:
 - Default shadcn preset with the tokens above. The mini-card popover is built on `Popover`, settings on `Sheet`.
 - Toolbar: floating, bottom center, 18px icons. Tools: select, hand, frame, sticky note, text, Jira card. Arrows are dragged from node handles, not picked as a tool. Each tool button's tooltip shows its shortcut; the full list opens with `?`. The Jira card tool opens a `Popover` above the toolbar with the key-or-link input; no input stays on the canvas.
 - Top bar: floating, top left, one row like tldraw's page bar: main menu button (`DropdownMenu`: Settings, Theme → Light, Dark, System) and the board name with a chevron (`DropdownMenu`: boards, "New board"). Same surface and shadow as the toolbar.
-- Context menu: shadcn `ContextMenu` on right click. Empty spot: "Add Jira card", then the other element tools. Selection: "Delete". Items start with a verb.
+- Context menu: shadcn `ContextMenu` on right click. Empty spot: "Add Jira card", then the other element tools. Selection: "Collapse cards" or "Expand cards" when cards are selected, then "Delete". Items start with a verb.
 - No canvas library attribution label (`proOptions.hideAttribution`).
 - Icons: lucide, stroke 1.75.
-- Jira card: one inline flow like the Confluence issue macro: type icon, key (link to Jira), title, status lozenge. Long titles wrap from the left edge and are cut at 120 characters so the lozenge stays visible. States: collapsed (icon, key, lozenge), inline (with title), expanded (popover: assignee, priority, updated, "Open in Jira" link). Closed task: key struck through, title muted.
+- Jira card: one inline flow like the Confluence issue macro: type icon, key (link to Jira), title, status lozenge. Long titles wrap from the left edge and are cut at 120 characters so the lozenge stays visible. States: collapsed (icon, key, lozenge; the key is plain text so the whole card opens the mini-card), inline (with title), expanded (popover on click: assignee, priority, updated, "Collapse card" and "Open in Jira"). Closed task: key struck through, title muted.
 - Sync indicator in the corner: "synced 12s ago"; on error, a red dot and the reason text.
 
 ## Motion

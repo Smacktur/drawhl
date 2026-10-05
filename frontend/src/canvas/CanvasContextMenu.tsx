@@ -1,4 +1,4 @@
-import { Frame, StickyNote, TicketPlus, Trash2, Type } from 'lucide-react'
+import { Frame, Maximize2, Minimize2, StickyNote, TicketPlus, Trash2, Type } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import type { XYPosition } from '@xyflow/react'
 import type { Task } from '@/api/tasks'
@@ -19,6 +19,9 @@ type Props = {
   onPlace: (tool: PlaceTool, point: XYPosition) => void
   onAddCards: (tasks: Task[], point: XYPosition) => void
   onDelete: () => void
+  /** How many selected cards are expanded and collapsed, for the collapse items. */
+  cards: { expanded: number; collapsed: number }
+  onCollapse: (collapsed: boolean) => void
   children: ReactNode
 }
 
@@ -31,8 +34,16 @@ const PLACE: { tool: PlaceTool; label: string; Icon: typeof Frame }[] = [
 const CANVAS_TARGETS =
   '.react-flow__pane, .react-flow__node, .react-flow__edge, .react-flow__nodesselection-rect'
 
-/** Right-click menu: add elements at the clicked spot, or delete the selection. */
-export function CanvasContextMenu({ target, onPlace, onAddCards, onDelete, children }: Props) {
+/** Right-click menu: add elements at the clicked spot, or act on the selection. */
+export function CanvasContextMenu({
+  target,
+  onPlace,
+  onAddCards,
+  onDelete,
+  cards,
+  onCollapse,
+  children,
+}: Props) {
   // Screen point where "Add Jira card" opens its input; the card lands there too.
   const [cardAt, setCardAt] = useState<XYPosition | null>(null)
   // The menu traps focus while open, so the chosen action runs once it has closed;
@@ -77,10 +88,24 @@ export function CanvasContextMenu({ target, onPlace, onAddCards, onDelete, child
             </>
           )}
           {target?.kind === 'selection' && (
-            <ContextMenuItem variant="destructive" onSelect={later(onDelete)}>
-              <Trash2 strokeWidth={1.75} />
-              Delete
-            </ContextMenuItem>
+            <>
+              {cards.expanded > 0 && (
+                <ContextMenuItem onSelect={() => onCollapse(true)}>
+                  <Minimize2 strokeWidth={1.75} />
+                  {cards.expanded > 1 ? 'Collapse cards' : 'Collapse card'}
+                </ContextMenuItem>
+              )}
+              {cards.collapsed > 0 && (
+                <ContextMenuItem onSelect={() => onCollapse(false)}>
+                  <Maximize2 strokeWidth={1.75} />
+                  {cards.collapsed > 1 ? 'Expand cards' : 'Expand card'}
+                </ContextMenuItem>
+              )}
+              <ContextMenuItem variant="destructive" onSelect={later(onDelete)}>
+                <Trash2 strokeWidth={1.75} />
+                Delete
+              </ContextMenuItem>
+            </>
           )}
         </ContextMenuContent>
       </ContextMenu>
