@@ -118,6 +118,23 @@ The canvas takes the whole screen, like tldraw. Tools live in a floating toolbar
 10. **Given** the frame tool, **When** the user drags on the canvas, **Then** a frame of that size appears and takes in the elements under it; a click places a default-size frame.
 11. **Given** a menu or dialog opened with the mouse, **When** the user closes it (Escape or click outside), **Then** no focus ring is left on the button that opened it.
 
+### User Story 7 - Write JQL with suggestions (Priority: P3)
+
+The lead types a JQL query into the Jira card input and gets suggestions like in Jira's own search: field names, then the operators that field allows, then its values (statuses, people, sprints), then AND, OR or ORDER BY. Tab inserts the suggestion. Before pressing Enter they see how many tasks the query matches.
+
+**Why this priority**: Adding cards by JQL is only fast if the query is right the first time; field names and status spellings differ per Jira instance.
+
+**Independent Test**: Type `sta`, press Tab: `status ` is inserted and the list shows its operators. Pick `=`, type `In`: statuses starting with "In" from Jira are offered. The hint line shows the match count, or Jira's error for a broken query.
+
+**Acceptance Scenarios**:
+
+1. **Given** the Jira card input, **When** the user types the start of a field name, **Then** matching fields from the user's Jira (including custom fields) are offered and Tab inserts the first or highlighted one.
+2. **Given** a field and operator, **When** the user types the start of a value, **Then** values from Jira are offered, quoted where Jira needs quotes.
+3. **Given** a query, **When** the user pauses typing, **Then** the match count or Jira's error is shown before submitting.
+4. **Given** keys or links typed into the same input, **When** nothing matches, **Then** no list appears and adding by key works as before.
+
+---
+
 ### Edge Cases
 
 - Unknown key or a task the token cannot see: the card is not created (or is shown as "not found / no access") with a clear message; nothing else on the board breaks.
@@ -183,6 +200,7 @@ The canvas takes the whole screen, like tldraw. Tools live in a floating toolbar
 - **FR-030**: The canvas MUST NOT show the canvas library attribution label.
 - **FR-031**: Every keyboard shortcut MUST come from one registry that feeds both the bindings and the shortcut list (`?`); copy, paste, duplicate and select all MUST work on canvas elements, including frames with their contents.
 - **FR-032**: The card input MUST accept several keys or links separated by commas (up to 50) and lay the new cards out in a grid; Jira is called a few keys at a time.
+- **FR-033**: The card input MUST offer JQL suggestions from the connected Jira (fields, operators, values, keywords), inserted with Tab, and show the match count or Jira's error before submit. Suggestion labels from Jira MUST be shown as plain text, never as HTML.
 
 **Out of scope (Won't)**
 

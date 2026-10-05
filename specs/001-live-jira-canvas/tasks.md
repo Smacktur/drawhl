@@ -159,7 +159,19 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [x] T056 [P] [US5] Create `scripts/bench_board.py`: seed a board with 300 cards across 10 frames via the API on the demo provider (keys cycling `DEMO-1..12`); document the manual pan/zoom and load-time check (target < 3 s) in `specs/001-live-jira-canvas/quickstart.md`
 - [x] T057 [US5] Extend `scripts/smoke.py`: rename and delete a board
 - [x] T058 [US5] `CHANGELOG.md` `Unreleased`: board list
-- [x] T062 [US1] Add cards by JQL: `POST /api/tasks/search` on the existing provider search (capped result count, tests in `backend/tests/`); the Jira card input takes a JQL query and lays the results out in a grid
+- [x] T074 [US1] Add cards by JQL: `POST /api/tasks/search` on the existing provider search (capped result count, tests in `backend/tests/`); the Jira card input takes a JQL query and lays the results out in a grid
+
+## Phase 7b: Slice 7 `feat/jql-assist` — JQL suggestions while typing (US7)
+
+**Goal**: write a working JQL query without leaving the board or remembering field names.
+
+**Independent Test**: type `sta` → `status` is offered, Tab inserts it; the next suggestions are its operators, then its values from Jira; the hint line shows how many tasks match before Enter, or Jira's error.
+
+- [ ] T075 [US7] Ports `jql_vocabulary()` and `jql_values(field, prefix)` in `backend/app/domain/ports.py` with `backend/app/domain/jql.py` models; Jira DC adapter on `/rest/api/2/jql/autocompletedata` (cached 10 min per base URL, HTML stripped from labels) and `.../suggestions`; demo adapter from the demo tasks; tests with `FakeJira`
+- [ ] T076 [US7] `GET /api/jql/vocabulary`, `GET /api/jql/values?field=&prefix=`; `POST /api/tasks/search` accepts `limit: 0` for a count-only check; contract in `contracts/api.md`
+- [ ] T077 [US7] `frontend/src/lib/jql.ts`: cursor context (field, operator, value, keyword) from a small tokenizer, and applying a suggestion; unit tests
+- [ ] T078 [US7] Suggestion list in the Jira card input (`combobox` + `listbox`): Tab inserts the highlighted item, arrows move, Enter inserts only after arrows were used, Esc closes; values fetched with a 150 ms debounce; live "N tasks match" or Jira's error with a 400 ms debounce
+- [ ] T079 [US7] Extend `scripts/smoke.py` with vocabulary and values; `CHANGELOG.md`; `DESIGN.md` component line
 
 ## Phase 8: Polish (verify and ship phases)
 
@@ -185,4 +197,4 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 - MVP = Setup + Slice 1: a board with demo cards that survives reload, plus the engine verdict. Stop at G3.
 - Slices 2 and 3 complete the core hypothesis (real Jira, fresh statuses); the founder can start the two-week usage test after slice 3.
-- Slices 4–6 complete the Must scope. The Should item (JQL batch layout) is not planned.
+- Slices 4–6 complete the Must scope. The Should item (JQL batch layout) landed in slice 6 (T074); slice 7 adds JQL suggestions on top of it.
