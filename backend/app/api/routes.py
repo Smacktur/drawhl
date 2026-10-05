@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
-from app.api import boards, demo, settings, tasks
+from app.api import boards, demo, jql, settings, tasks
 
 router = APIRouter(prefix="/api")
 router.include_router(boards.router)
 router.include_router(tasks.router)
+router.include_router(jql.router)
 router.include_router(settings.router)
 router.include_router(demo.router)

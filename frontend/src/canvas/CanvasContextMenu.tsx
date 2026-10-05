@@ -9,6 +9,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import { keepOpenWhileSuggesting } from '@/canvas/JqlInput'
 import { AddCardForm } from '@/canvas/Toolbar'
 
 export type MenuTarget = { kind: 'pane'; point: XYPosition } | { kind: 'selection' }
@@ -114,7 +115,11 @@ export function CanvasContextMenu({
           className="fixed size-0"
           style={{ left: cardAt?.x ?? 0, top: cardAt?.y ?? 0 }}
         />
-        <PopoverContent align="start" className="w-72 p-2">
+        <PopoverContent
+          align="start"
+          className="w-96 p-2"
+          onEscapeKeyDown={keepOpenWhileSuggesting}
+        >
           <AddCardForm
             onAdd={(tasks) => cardAt && onAddCards(tasks, cardAt)}
             onDone={() => setCardAt(null)}

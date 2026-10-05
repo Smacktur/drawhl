@@ -1,0 +1,85 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useState } from 'react'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { JqlInput } from '@/canvas/JqlInput'
+
+const vocabulary = {
+  fields: [
+    { name: 'status', label: 'status', operators: ['=', '!=', 'in'] },
+    { name: 'cf[10020]', label: 'Sprint - cf[10020]', operators: ['=', 'in'] },
+  ],
+  functions: ['currentUser()'],
+  keywords: ['AND', 'OR'],
+}
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      if (url.startsWith('/api/jql/vocabulary')) return Response.json(vocabulary)
+      if (url.startsWith('/api/jql/values')) {
+        return Response.json({ values: [{ value: '"In Progress"', label: 'In Progress' }] })
+      }
+      return new Response(null, { status: 404 })
+    }),
+  )
+})
+
+afterEach(() => vi.unstubAllGlobals())
+
+function Field() {
+  const [value, setValue] = useState('')
+  return <JqlInput aria-label="Query" value={value} onValueChange={setValue} />
+}
+
+function renderField() {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <Field />
+    </QueryClientProvider>,
+  )
+  return screen.getByLabelText('Query') as HTMLInputElement
+}
+
+function type(field: HTMLInputElement, value: string) {
+  fireEvent.change(field, { target: { value, selectionStart: value.length } })
+}
+
+test('Tab inserts the first matching field, then operators are offered', async () => {
+  const field = renderField()
+  type(field, 'sta')
+  expect(await screen.findByRole('option', { name: 'status' })).toBeTruthy()
+  fireEvent.keyDown(field, { key: 'Tab' })
+  expect(field.value).toBe('status ')
+  type(field, 'status ')
+  expect(await screen.findByRole('option', { name: '!=' })).toBeTruthy()
+})
+
+test('custom fields match by their label and insert their id', async () => {
+  const field = renderField()
+  type(field, 'spr')
+  const option = await screen.findByRole('option', { name: /Sprint/ })
+  fireEvent.mouseDown(option)
+  expect(field.value).toBe('cf[10020] ')
+})
+
+test('values come from Jira and Enter inserts only after arrows', async () => {
+  const field = renderField()
+  type(field, 'status = In')
+  await screen.findByRole('option', { name: /In Progress/ })
+  fireEvent.keyDown(field, { key: 'ArrowDown' })
+  fireEvent.keyDown(field, { key: 'Enter' })
+  expect(field.value).toBe('status = "In Progress" ')
+})
+
+test('an issue key shows no list and Escape closes it', async () => {
+  const field = renderField()
+  type(field, 'SRE-15')
+  await waitFor(() => expect(fetch).toHaveBeenCalled())
+  expect(screen.queryByRole('listbox')).toBeNull()
+  type(field, 'sta')
+  await screen.findByRole('listbox')
+  fireEvent.keyDown(field, { key: 'Escape' })
+  expect(screen.queryByRole('listbox')).toBeNull()
+})

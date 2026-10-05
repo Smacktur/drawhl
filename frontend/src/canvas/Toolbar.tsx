@@ -11,8 +11,9 @@ import {
 import { useState, type FormEvent } from 'react'
 import { resolveTask, searchTasks, type Task } from '@/api/tasks'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
+import { JqlInput, keepOpenWhileSuggesting, useJqlCount } from '@/canvas/JqlInput'
 import { SHORTCUTS, useShortcut, withShortcut } from '@/lib/shortcuts'
 
 export type Tool = 'select' | 'hand' | 'frame' | 'sticky' | 'text'
@@ -100,6 +101,7 @@ export function AddCardForm({
     },
   })
   const jql = isJql(input)
+  const count = useJqlCount(input, jql && !resolve.isPending)
   const tooMany = !jql && splitRefs(input).length > MAX_REFS
 
   const submit = (event: FormEvent) => {
@@ -123,10 +125,10 @@ export function AddCardForm({
       <label htmlFor="card-ref" className="text-muted-foreground text-[13px]">
         Issue keys, links or JQL
       </label>
-      <Input
+      <JqlInput
         id="card-ref"
         value={input}
-        onChange={(event) => setInput(event.target.value)}
+        onValueChange={setInput}
         placeholder="DEMO-1, DEMO-2"
         className="h-8"
         autoComplete="off"
@@ -141,8 +143,19 @@ export function AddCardForm({
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground text-[13px]">
-          {jql ? `JQL query, up to ${MAX_REFS} tasks.` : 'Separate several with commas.'}
+        <p
+          className={cn(
+            'text-[13px]',
+            count.isError ? 'text-destructive' : 'text-muted-foreground',
+          )}
+        >
+          {!jql
+            ? 'Separate several with commas, or type a JQL query.'
+            : count.isError
+              ? errorMessage(count.error)
+              : count.data !== undefined
+                ? `${count.data} ${count.data === 1 ? 'task matches' : 'tasks match'}${count.data > MAX_REFS ? `, the first ${MAX_REFS} are added` : ''}.`
+                : `JQL query, up to ${MAX_REFS} tasks.`}
         </p>
       )}
     </form>
@@ -191,7 +204,12 @@ export function Toolbar({ tool, onTool, onAddCards }: Props) {
             <TicketPlus className="size-[18px]" strokeWidth={1.75} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent side="top" sideOffset={10} className="w-72 p-2">
+        <PopoverContent
+          side="top"
+          sideOffset={10}
+          className="w-96 p-2"
+          onEscapeKeyDown={keepOpenWhileSuggesting}
+        >
           <AddCardForm onAdd={onAddCards} onDone={() => setOpen(false)} />
         </PopoverContent>
       </Popover>

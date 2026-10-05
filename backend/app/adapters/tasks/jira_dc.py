@@ -1,4 +1,6 @@
+import html
 import re
+import time
 from collections.abc import Callable
 from urllib.parse import quote, urlparse
 
@@ -11,6 +13,7 @@ from app.domain.errors import (
     JiraUnavailable,
     TaskNotFound,
 )
+from app.domain.jql import JqlField, JqlValue, JqlVocabulary
 from app.domain.settings import JiraCredentials
 from app.domain.tasks import StatusCategory, Task, now_iso
 
@@ -18,6 +21,9 @@ FIELDS = ["summary", "status", "issuetype", "assignee", "priority", "updated"]
 SEARCH_CHUNK = 500
 _KEY_IN_ERROR = re.compile(r"'([A-Z][A-Z0-9_]+-\d+)'")
 DEFAULT_RETRY_AFTER_S = 60
+# The vocabulary is a few hundred KB and changes only when an admin adds a field.
+VOCABULARY_TTL_S = 600
+_TAGS = re.compile(r"<[^>]+>")
 
 _CATEGORIES: dict[str, StatusCategory] = {
     "new": "new",
@@ -48,6 +54,11 @@ def to_task(base_url: str, issue: dict) -> Task:
     )
 
 
+def _plain(text: str) -> str:
+    """Suggestion labels come with <b> highlights; the UI shows plain text only."""
+    return html.unescape(_TAGS.sub("", text)).strip()
+
+
 def _json(response: httpx.Response) -> dict:
     # An SSO login page or a wrong base path answers 200 with HTML.
     try:
@@ -72,6 +83,7 @@ class JiraDcProvider:
     def __init__(self, credentials: Callable[[], JiraCredentials], client: httpx.Client) -> None:
         self._credentials = credentials
         self._client = client
+        self._vocabulary: tuple[str, float, JqlVocabulary] | None = None
 
     @property
     def base_host(self) -> str:
@@ -164,6 +176,48 @@ class JiraDcProvider:
         tasks = [_task(base_url, issue) for issue in issues] if isinstance(issues, list) else []
         total = body.get("total")
         return tasks, total if isinstance(total, int) else len(tasks)
+
+    def jql_vocabulary(self) -> JqlVocabulary:
+        base_url = self._credentials().base_url
+        cached = self._vocabulary
+        if cached and cached[0] == base_url and cached[1] > time.monotonic():
+            return cached[2]
+        _, response = self._request("GET", "/rest/api/2/jql/autocompletedata")
+        if response.status_code != 200:
+            raise JiraUnavailable(f"Jira returned {response.status_code}")
+        body = _json(response)
+        fields = [
+            JqlField(
+                name=item["value"],
+                label=_plain(item.get("displayName") or item["value"]),
+                operators=item.get("operators") or [],
+            )
+            for item in body.get("visibleFieldNames") or []
+            if isinstance(item, dict) and item.get("value")
+        ]
+        functions = {
+            item["value"]
+            for item in body.get("visibleFunctionNames") or []
+            if isinstance(item, dict) and item.get("value")
+        }
+        vocabulary = JqlVocabulary(fields=fields, functions=sorted(functions))
+        self._vocabulary = (base_url, time.monotonic() + VOCABULARY_TTL_S, vocabulary)
+        return vocabulary
+
+    def jql_values(self, field: str, prefix: str) -> list[JqlValue]:
+        _, response = self._request(
+            "GET",
+            "/rest/api/2/jql/autocompletedata/suggestions",
+            params={"fieldName": field.strip('"'), "fieldValue": prefix},
+        )
+        # Fields without value suggestions (text, dates) answer with an error, not an empty list.
+        if response.status_code != 200:
+            return []
+        return [
+            JqlValue(value=item["value"], label=_plain(item.get("displayName") or item["value"]))
+            for item in _json(response).get("results") or []
+            if isinstance(item, dict) and item.get("value")
+        ]
 
     def poll(self, keys: list[str]) -> list[Task]:
         found: dict[str, Task] = {}

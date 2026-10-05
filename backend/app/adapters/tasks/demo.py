@@ -1,10 +1,24 @@
 import re
 
 from app.domain.errors import InvalidJql, TaskNotFound
+from app.domain.jql import JqlField, JqlValue, JqlVocabulary
 from app.domain.tasks import StatusCategory, Task, now_iso
 
 DEMO_HOST = "jira.example.com"
 _QUOTED = re.compile(r'"([^"]*)"')
+_EQUALITY = ["=", "!=", "in", "not in", "is", "is not", "was", "was in", "changed"]
+_TEXT = ["~", "!~", "is", "is not"]
+# Demo fields and where their values come from in the seed.
+_FIELDS = {
+    "project": (_EQUALITY, None),
+    "key": (["=", "!=", "in", "not in", "<", ">"], None),
+    "status": (_EQUALITY, "status_name"),
+    "assignee": (_EQUALITY, "assignee_name"),
+    "priority": (_EQUALITY, "priority_name"),
+    "issuetype": (_EQUALITY, "type_name"),
+    "summary": (_TEXT, None),
+    "text": (["~"], None),
+}
 
 _CATEGORY: dict[str, StatusCategory] = {
     "To Do": "new",
@@ -109,6 +123,26 @@ class DemoTaskProvider:
             if all(needle in self._text(key, fields) for needle in needles)
         ]
         return [self._task(key) for key in keys[:limit]], len(keys)
+
+    def jql_vocabulary(self) -> JqlVocabulary:
+        return JqlVocabulary(
+            fields=[
+                JqlField(name=name, label=name, operators=operators)
+                for name, (operators, _) in _FIELDS.items()
+            ],
+            functions=["currentUser()", "now()", "startOfWeek()"],
+        )
+
+    def jql_values(self, field: str, prefix: str) -> list[JqlValue]:
+        source = _FIELDS.get(field.lower(), ([], None))[1]
+        if field.lower() == "project":
+            values = {"DEMO"}
+        elif source:
+            values = {fields[source] for fields in self._tasks.values() if fields[source]}
+        else:
+            return []
+        matches = sorted(v for v in values if v.lower().startswith(prefix.lower().strip('"')))
+        return [JqlValue(value=f'"{v}"' if " " in v else v, label=v) for v in matches]
 
     @staticmethod
     def _text(key: str, fields: dict) -> str:

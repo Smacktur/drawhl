@@ -22,6 +22,17 @@ def issue(key: str, status: str = "In Progress", category: str = "indeterminate"
     }
 
 
+AUTOCOMPLETE = {
+    "visibleFieldNames": [
+        {"value": "status", "displayName": "status", "operators": ["=", "!=", "in"]},
+        {"value": "cf[10020]", "displayName": "Sprint - cf[10020]", "operators": ["=", "in"]},
+        {"displayName": "broken entry without a value"},
+    ],
+    "visibleFunctionNames": [{"value": "currentUser()"}, {"value": "currentUser()"}],
+    "jqlReservedWords": ["and", "or"],
+}
+
+
 class FakeJira:
     """Serves known issues; `fail` forces a status code for every request."""
 
@@ -43,6 +54,24 @@ class FakeJira:
         path = request.url.path
         if self.html:
             return httpx.Response(200, text="<html>Log in</html>")
+        if path.endswith("/jql/autocompletedata"):
+            return httpx.Response(200, json=AUTOCOMPLETE)
+        if path.endswith("/jql/autocompletedata/suggestions"):
+            if request.url.params.get("fieldName") != "status":
+                return httpx.Response(400, json={"errorMessages": ["no suggestions"]})
+            prefix = request.url.params.get("fieldValue", "").lower()
+            results = [
+                {"value": '"In Progress"', "displayName": "<b>In</b> Progress &amp; review"},
+                {"value": "Done", "displayName": "Done"},
+            ]
+            return httpx.Response(
+                200,
+                json={
+                    "results": [
+                        r for r in results if r["value"].strip('"').lower().startswith(prefix)
+                    ]
+                },
+            )
         if path.endswith("/myself"):
             return httpx.Response(200, json={"name": "alex", "displayName": "Alex Rivera"})
         if "/issue/" in path:

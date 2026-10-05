@@ -94,3 +94,23 @@ def test_search_returns_page_and_total():
 def test_search_bad_jql():
     with pytest.raises(InvalidJql, match="Error in the JQL Query"):
         provider(FakeJira()).search("bad query", 10)
+
+
+def test_jql_vocabulary_is_cached():
+    fake = FakeJira()
+    jira = provider(fake)
+    vocabulary = jira.jql_vocabulary()
+    assert [f.name for f in vocabulary.fields] == ["status", "cf[10020]"]
+    assert vocabulary.fields[1].operators == ["=", "in"]
+    assert vocabulary.functions == ["currentUser()"]
+    jira.jql_vocabulary()
+    assert sum(r.url.path.endswith("/autocompletedata") for r in fake.requests) == 1
+
+
+def test_jql_values_are_plain_text():
+    values = provider(FakeJira()).jql_values("status", "in")
+    assert [(v.value, v.label) for v in values] == [('"In Progress"', "In Progress & review")]
+
+
+def test_jql_values_for_a_field_without_suggestions():
+    assert provider(FakeJira()).jql_values("summary", "x") == []

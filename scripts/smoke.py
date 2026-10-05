@@ -131,6 +131,13 @@ try:
         "add cards by JQL",
     )
 
+    status, body = call("GET", f"{API}/api/jql/vocabulary")
+    check(status == 200 and any(f["name"] == "status" for f in body["fields"]), "jql vocabulary")
+    status, body = call("GET", f"{API}/api/jql/values?field=status&prefix=in")
+    check(status == 200 and body["values"][0]["value"] == '"In Progress"', "jql values")
+    status, body = call("POST", f"{API}/api/tasks/search", {"jql": 'status = "Closed"', "limit": 0})
+    check(status == 200 and body["total"] == 1 and body["tasks"] == [], "jql match count")
+
     status, body = call("PATCH", f"{API}/api/boards/{board['id']}", {"name": "smoke renamed"})
     check(status == 200 and body["name"] == "smoke renamed", "rename board")
     status, body = call("PUT", f"{API}/api/boards/{board['id']}", {"version": 2, "doc": doc})
