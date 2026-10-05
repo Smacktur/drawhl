@@ -173,6 +173,16 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [x] T078 [US7] Suggestion list in the Jira card input (`combobox` + `listbox`): Tab inserts the highlighted item, arrows move, Enter inserts only after arrows were used, Esc closes; values fetched with a 150 ms debounce; live "N tasks match" or Jira's error with a 400 ms debounce
 - [x] T079 [US7] Extend `scripts/smoke.py` with vocabulary and values; `CHANGELOG.md`; `DESIGN.md` component line
 
+## Phase 7c: Slice 8 `feat/undo` — undo and redo (US8)
+
+**Goal**: take back a wrong move or delete with one key.
+
+**Independent Test**: drag a card, delete a sticky, Cmd/Ctrl+Z twice restores both; Cmd/Ctrl+Shift+Z twice repeats them; the result is saved.
+
+- [x] T080 [US8] `frontend/src/canvas/useHistory.ts`: snapshots of persistent nodes and edges, a step recorded once changes settle (not during a drag), undo and redo stacks capped at 100; tests with fake timers
+- [x] T081 [US8] `undo` and `redo` in the shortcut registry, wired in `Canvas.tsx`; text fields keep their own undo
+- [x] T082 [US8] `CHANGELOG.md`; live check in the browser
+
 ## Phase 8: Polish (verify and ship phases)
 
 - [ ] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data

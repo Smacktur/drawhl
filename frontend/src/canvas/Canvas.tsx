@@ -43,6 +43,7 @@ import { lastFetched, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
+import { useHistory } from '@/canvas/useHistory'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { useShortcut } from '@/lib/shortcuts'
@@ -87,6 +88,10 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   const pointer = useRef<XYPosition | null>(null)
 
   useShortcut('cancel', () => setTool('select'), { preventDefault: false })
+
+  const history = useHistory(nodes, edges, setNodes, setEdges)
+  useShortcut('undo', history.undo)
+  useShortcut('redo', history.redo)
 
   // One card goes to the point or cascades from the viewport center; several form a grid there.
   const addCards = useCallback(

@@ -135,6 +135,23 @@ The lead types a JQL query into the Jira card input and gets suggestions like in
 
 ---
 
+### User Story 8 - Undo and redo board changes (Priority: P3)
+
+The lead moves, deletes or edits something by mistake and presses Cmd/Ctrl+Z to get the board back as it was; Cmd/Ctrl+Shift+Z (or Ctrl+Y) brings the change back.
+
+**Why this priority**: Without undo, a wrong delete of a frame with its layout costs minutes of manual rebuild, which makes leads careful instead of fast.
+
+**Independent Test**: Drag a card, delete a sticky, press Cmd/Ctrl+Z twice: the sticky is back, then the card returns to its old spot. Cmd/Ctrl+Shift+Z twice repeats both changes. Reload: the board shows the last state.
+
+**Acceptance Scenarios**:
+
+1. **Given** a change to the board (add, move, resize, delete, edit, connect), **When** the user presses Cmd/Ctrl+Z, **Then** the board returns to the state before that change; one drag or one burst of typing is one step.
+2. **Given** an undone change, **When** the user presses Cmd/Ctrl+Shift+Z or Ctrl+Y, **Then** the change is applied again; a new change after undo clears the redo steps.
+3. **Given** the cursor in a text field (sticky, frame title, card input), **When** the user presses Cmd/Ctrl+Z, **Then** the field's own text undo works and the board is not touched.
+4. **Given** undo or redo, **When** the board saves, **Then** the restored state is saved like any other change; panning and zooming are not undo steps.
+
+---
+
 ### Edge Cases
 
 - Unknown key or a task the token cannot see: the card is not created (or is shown as "not found / no access") with a clear message; nothing else on the board breaks.
@@ -195,12 +212,13 @@ The lead types a JQL query into the Jira card input and gets suggestions like in
 
 - **FR-026**: The canvas MUST take the whole screen; the card input MUST NOT be permanently visible. Tools MUST live in a floating toolbar at the bottom center; the "Jira card" tool opens the key-or-link input in a popover.
 - **FR-027**: Right-clicking the canvas MUST open a context menu: on an empty spot it offers adding elements at that point (at least "Add Jira card"); on a selection it offers "Delete". Right-clicking toolbars or zoom controls MUST NOT open it.
-- **FR-028**: A compact bar at the top left MUST hold the main menu and the current board name with a board switcher; the main menu holds Settings, Keyboard shortcuts and Theme. Undo and redo are not part of the MVP.
+- **FR-028**: A compact bar at the top left MUST hold the main menu and the current board name with a board switcher; the main menu holds Settings, Keyboard shortcuts and Theme.
 - **FR-029**: Users MUST be able to switch between light, dark and system themes; the choice is stored in the browser and applied before first paint. Light is the default.
 - **FR-030**: The canvas MUST NOT show the canvas library attribution label.
 - **FR-031**: Every keyboard shortcut MUST come from one registry that feeds both the bindings and the shortcut list (`?`); copy, paste, duplicate and select all MUST work on canvas elements, including frames with their contents.
 - **FR-032**: The card input MUST accept several keys or links separated by commas (up to 50) and lay the new cards out in a grid; Jira is called a few keys at a time.
 - **FR-033**: The card input MUST offer JQL suggestions from the connected Jira (fields, operators, values, keywords), inserted with Tab, and show the match count or Jira's error before submit. Suggestion labels from Jira MUST be shown as plain text, never as HTML.
+- **FR-034**: Cmd/Ctrl+Z MUST undo and Cmd/Ctrl+Shift+Z or Ctrl+Y MUST redo board changes (nodes and edges, not the viewport or selection), at least 100 steps per open board; history is kept in memory only.
 
 **Out of scope (Won't)**
 
