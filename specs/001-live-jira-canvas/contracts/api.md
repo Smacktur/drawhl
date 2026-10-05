@@ -29,7 +29,7 @@ Settings = {
 | `POST /boards` | `{name}` | 201 `BoardSummary` | 422 `invalid_request` |
 | `GET /boards/{id}` | – | `{id, name, version, doc, tasks: {KEY: Task}, updated_at}` | 404 `not_found` |
 | `PUT /boards/{id}` | `{version, doc}` | `{version}` (incremented) | 404, 409 `version_conflict`, 422 `invalid_request` (schema) or `validation_failed` (doc rules) |
-| `PATCH /boards/{id}` | `{name}` | `BoardSummary` | 404, 422 |
+| `PATCH /boards/{id}` | `{name}` | `BoardSummary` (doc version unchanged) | 404, 422 |
 | `DELETE /boards/{id}` | – | 204 | 404 |
 | `POST /boards/{id}/refresh` | – (keys from the saved doc) | `{tasks: {KEY: Task}, fetched_at}` | 404, 400 `jira_not_configured`, 401 `jira_unauthorized`, 429 `jira_rate_limited` + `Retry-After`, 503 `jira_unavailable` |
 
@@ -37,6 +37,7 @@ Settings = {
 
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
+| `POST /tasks/search` | `{jql, limit?}` (limit 1..100, default 50) | `{tasks: Task[], total}` (total counts every match) | 422 `invalid_jql`, 422 `invalid_request`, 400 `jira_not_configured`, 401, 429, 503 |
 | `POST /tasks/resolve` | `{ref}` (key or issue URL) | `{task: Task}` | 422 `invalid_ref`, 422 `host_mismatch`, 404 `task_not_found` (also no access), 400 `jira_not_configured`, 401, 503 |
 
 ## Settings
@@ -52,6 +53,8 @@ Settings = {
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
 | `PUT /demo/tasks/{key}/status` | `{status}` | `{task: Task}` | 404 `task_not_found` |
+
+The demo provider has no JQL parser: every quoted value in the query must appear in a task's key, title, status, type or assignee; a query without quotes matches all demo tasks.
 
 `Done` and `Closed` map to `status_category: "done"`, `In Progress` and `In Review` to `indeterminate`, anything else to `new`.
 

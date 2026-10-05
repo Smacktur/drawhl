@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { TopBar } from '@/board/TopBar'
 
@@ -43,4 +43,42 @@ test('opens the shortcut list with ?', async () => {
   fireEvent.keyDown(document, { key: '?', code: 'Slash', shiftKey: true })
   const dialog = await screen.findByRole('dialog', { name: 'Keyboard shortcuts' })
   expect(dialog).toHaveTextContent('Duplicate')
+})
+
+test('renames the current board inline', async () => {
+  const fetch = vi.fn(
+    async () => new Response(JSON.stringify({ ...boards[0], name: 'Q1 goals' }), { status: 200 }),
+  )
+  vi.stubGlobal('fetch', fetch)
+  renderBar()
+  fireEvent.keyDown(screen.getByRole('button', { name: /Q4 goals/ }), { key: 'Enter' })
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Rename board' }))
+  const field = await screen.findByLabelText('Board name')
+  fireEvent.change(field, { target: { value: 'Q1 goals' } })
+  fireEvent.submit(field)
+  await waitFor(() =>
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/boards/a',
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ name: 'Q1 goals' }) }),
+    ),
+  )
+  vi.unstubAllGlobals()
+})
+
+test('deletes a board only after confirming', async () => {
+  const fetch = vi.fn(async () => new Response(null, { status: 204 }))
+  vi.stubGlobal('fetch', fetch)
+  renderBar()
+  fireEvent.keyDown(screen.getByRole('button', { name: /Q4 goals/ }), { key: 'Enter' })
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete board…' }))
+  expect(await screen.findByText(/"Q4 goals" and everything on it/)).toBeTruthy()
+  expect(fetch).not.toHaveBeenCalledWith('/api/boards/a', expect.anything())
+  fireEvent.click(screen.getByRole('button', { name: 'Delete board' }))
+  await waitFor(() =>
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/boards/a',
+      expect.objectContaining({ method: 'DELETE' }),
+    ),
+  )
+  vi.unstubAllGlobals()
 })

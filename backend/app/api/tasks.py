@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.api import deps
 from app.domain.ports import SnapshotRepo, TaskProvider
-from app.domain.tasks import Task, resolve_task
+from app.domain.tasks import MAX_SEARCH, Task, resolve_task, search_tasks
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -16,6 +16,26 @@ class ResolveIn(BaseModel):
 
 class ResolveOut(BaseModel):
     task: Task
+
+
+class SearchIn(BaseModel):
+    jql: str = Field(min_length=1, max_length=2000)
+    limit: int = Field(default=50, ge=1, le=MAX_SEARCH)
+
+
+class SearchOut(BaseModel):
+    tasks: list[Task]
+    total: int
+
+
+@router.post("/search")
+def search(
+    body: SearchIn,
+    provider: Annotated[TaskProvider, Depends(deps.provider)],
+    snapshots: Annotated[SnapshotRepo, Depends(deps.snapshots)],
+) -> SearchOut:
+    tasks, total = search_tasks(body.jql, body.limit, provider, snapshots)
+    return SearchOut(tasks=tasks, total=total)
 
 
 @router.post("/resolve")

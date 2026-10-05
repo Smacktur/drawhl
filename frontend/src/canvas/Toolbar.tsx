@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { resolveTask, type Task } from '@/api/tasks'
+import { resolveTask, searchTasks, type Task } from '@/api/tasks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -29,7 +29,31 @@ const MAX_REFS = 50
 // Each key is one Jira request; a few at a time stays clear of rate limits.
 const CONCURRENCY = 4
 
-type Resolved = { tasks: Task[]; failed: { ref: string; message: string }[] }
+type Resolved = {
+  tasks: Task[]
+  failed: { ref: string; message: string }[]
+  /** Set for a JQL query: how many tasks matched, including the ones past the limit. */
+  total?: number
+}
+
+// Input with a JQL operator that is not just keys and links is a query; a lone typo stays a key.
+const REF_RE = /^([A-Za-z][A-Za-z0-9_]+-\d+|https?:\/\/\S+)$/
+const JQL_OPERATOR = /[=~<>!]|\b(in|is|was|changed)\b/i
+
+function splitRefs(input: string) {
+  return [...new Set(input.split(/[\s,;]+/).filter(Boolean))]
+}
+
+export function isJql(input: string) {
+  const refs = splitRefs(input)
+  return JQL_OPERATOR.test(input) && !refs.every((ref) => REF_RE.test(ref))
+}
+
+async function addFromInput(input: string): Promise<Resolved> {
+  if (!isJql(input)) return resolveAll(splitRefs(input))
+  const { tasks, total } = await searchTasks(input.trim(), MAX_REFS)
+  return { tasks, failed: [], total }
+}
 
 async function resolveAll(refs: string[]): Promise<Resolved> {
   const results: PromiseSettledResult<Task>[] = []
@@ -56,7 +80,7 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Could not add the card'
 }
 
-/** Takes one or several keys or links; the ones that fail stay in the field with their errors. */
+/** Takes keys, links or a JQL query; keys that fail stay in the field with their errors. */
 export function AddCardForm({
   onAdd,
   onDone,
@@ -66,31 +90,38 @@ export function AddCardForm({
 }) {
   const [input, setInput] = useState('')
   const resolve = useMutation({
-    mutationFn: resolveAll,
-    onSuccess: ({ tasks, failed }) => {
+    mutationFn: addFromInput,
+    onSuccess: ({ tasks, failed, total }) => {
       if (tasks.length > 0) onAdd(tasks)
+      // A query that found nothing or more than fits stays open to be narrowed.
+      if (total !== undefined && (tasks.length === 0 || total > tasks.length)) return
       if (failed.length === 0) onDone()
       else setInput(failed.map((f) => f.ref).join(', '))
     },
   })
-  const refs = [...new Set(input.split(/[\s,;]+/).filter(Boolean))]
-  const tooMany = refs.length > MAX_REFS
+  const jql = isJql(input)
+  const tooMany = !jql && splitRefs(input).length > MAX_REFS
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    if (refs.length > 0 && !tooMany) resolve.mutate(refs)
+    if (input.trim() && !tooMany) resolve.mutate(input)
   }
 
+  const found = resolve.data?.total
   const errors = tooMany
     ? [`Up to ${MAX_REFS} cards at a time.`]
     : resolve.isError
       ? [errorMessage(resolve.error)]
-      : (resolve.data?.failed.map((f) => `${f.ref}: ${f.message}`) ?? [])
+      : found === 0
+        ? ['No tasks match this query.']
+        : found !== undefined && found > (resolve.data?.tasks.length ?? 0)
+          ? [`Added ${resolve.data?.tasks.length} of ${found}. Narrow the query to add the rest.`]
+          : (resolve.data?.failed.map((f) => `${f.ref}: ${f.message}`) ?? [])
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-1.5">
       <label htmlFor="card-ref" className="text-muted-foreground text-[13px]">
-        Issue keys or links
+        Issue keys, links or JQL
       </label>
       <Input
         id="card-ref"
@@ -110,7 +141,9 @@ export function AddCardForm({
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground text-[13px]">Separate several with commas.</p>
+        <p className="text-muted-foreground text-[13px]">
+          {jql ? `JQL query, up to ${MAX_REFS} tasks.` : 'Separate several with commas.'}
+        </p>
       )}
     </form>
   )

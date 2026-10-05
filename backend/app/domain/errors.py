@@ -28,6 +28,10 @@ class InvalidRef(DomainError):
     code = "invalid_ref"
 
 
+class InvalidJql(DomainError):
+    code = "invalid_jql"
+
+
 class HostMismatch(DomainError):
     code = "host_mismatch"
 

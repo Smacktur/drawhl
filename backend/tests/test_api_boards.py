@@ -127,3 +127,28 @@ def test_non_finite_numbers_rejected(client):
     )
     assert response.status_code == 422
     assert client.get(f"/api/boards/{board['id']}").status_code == 200
+
+
+def test_rename_keeps_doc_version(client):
+    board = create(client)
+    renamed = client.patch(f"/api/boards/{board['id']}", json={"name": "  Team SRE "})
+    assert renamed.status_code == 200
+    assert renamed.json()["name"] == "Team SRE"
+    assert (
+        client.put(f"/api/boards/{board['id']}", json={"version": 1, "doc": DOC}).status_code == 200
+    )
+    assert client.get("/api/boards").json()["boards"][0]["name"] == "Team SRE"
+
+
+def test_rename_validates_and_404s(client):
+    board = create(client)
+    assert client.patch(f"/api/boards/{board['id']}", json={"name": " "}).status_code == 422
+    assert client.patch("/api/boards/missing", json={"name": "X"}).status_code == 404
+
+
+def test_delete_board(client):
+    keep, gone = create(client, "Keep"), create(client, "Gone")
+    assert client.delete(f"/api/boards/{gone['id']}").status_code == 204
+    assert [b["id"] for b in client.get("/api/boards").json()["boards"]] == [keep["id"]]
+    assert client.get(f"/api/boards/{gone['id']}").status_code == 404
+    assert client.delete(f"/api/boards/{gone['id']}").status_code == 404

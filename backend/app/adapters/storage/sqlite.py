@@ -107,6 +107,22 @@ class SqliteBoardRepo:
                 raise VersionConflict("board was changed elsewhere; reload it")
         return version + 1
 
+    def rename(self, board_id: str, name: str) -> BoardSummary:
+        now = now_iso()
+        with self._db.transaction() as conn:
+            cursor = conn.execute(
+                "UPDATE boards SET name = ?, updated_at = ? WHERE id = ?", (name, now, board_id)
+            )
+        if cursor.rowcount == 0:
+            raise NotFound("board not found")
+        return BoardSummary(id=board_id, name=name, updated_at=now)
+
+    def delete(self, board_id: str) -> None:
+        with self._db.transaction() as conn:
+            cursor = conn.execute("DELETE FROM boards WHERE id = ?", (board_id,))
+        if cursor.rowcount == 0:
+            raise NotFound("board not found")
+
 
 class SqliteSnapshotRepo:
     def __init__(self, db: Database) -> None:

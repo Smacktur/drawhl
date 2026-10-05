@@ -53,6 +53,8 @@ class FakeJira:
         if path.endswith("/search"):
             body = json.loads(request.content)
             jql = body["jql"]
+            if not jql.startswith("key in ("):
+                return self._query(jql, body.get("maxResults", 50))
             keys = jql[jql.index("(") + 1 : jql.index(")")].split(",")
             missing = [k for k in keys if k not in self.issues]
             if not isinstance(body.get("validateQuery", True), bool):
@@ -65,3 +67,10 @@ class FakeJira:
             found = [self.issues[k] for k in keys if k in self.issues]
             return httpx.Response(200, json={"issues": found, "total": len(found)})
         return httpx.Response(404)
+
+    def _query(self, jql: str, limit: int) -> httpx.Response:
+        """Free JQL: "bad" in the query is a syntax error, anything else matches every issue."""
+        if "bad" in jql:
+            return httpx.Response(400, json={"errorMessages": ["Error in the JQL Query"]})
+        issues = list(self.issues.values())
+        return httpx.Response(200, json={"issues": issues[:limit], "total": len(issues)})

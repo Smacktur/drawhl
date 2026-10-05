@@ -24,6 +24,15 @@ Expected: smoke passes the core scenario on the demo provider ([contract](contra
 
 Open `http://localhost:3000`, create a board, add `DEMO-1` with the Jira card tool, drag it into a frame, reload: same layout. Change its status through the demo endpoint: the card is struck through within 30 s.
 
+## Large board (300 cards)
+
+`docker compose exec -T api python - < scripts/bench_board.py` creates a "bench 300" board: 10 frames, 300 demo cards. Open the printed link and check by hand:
+
+- the board is interactive in under 3 s after a hard reload (DevTools → Performance, or a stopwatch);
+- panning and zooming across all frames stays smooth, and dragging a frame moves its 30 cards together.
+
+Delete the board from the board menu afterwards.
+
 ## With real Jira DC
 
 1. Set `DRAWHL_SECRET_KEY` in `.env` (`openssl rand -base64 32`), restart.

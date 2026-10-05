@@ -3,7 +3,13 @@ import pytest
 from pydantic import SecretStr
 
 from app.adapters.tasks.jira_dc import JiraDcProvider
-from app.domain.errors import JiraRateLimited, JiraUnauthorized, JiraUnavailable, TaskNotFound
+from app.domain.errors import (
+    InvalidJql,
+    JiraRateLimited,
+    JiraUnauthorized,
+    JiraUnavailable,
+    TaskNotFound,
+)
 from app.domain.settings import JiraCredentials
 from tests.jira_fake import TOKEN, FakeJira
 
@@ -77,3 +83,14 @@ def test_html_page_is_unavailable_not_crash():
         provider(fake).resolve("SRE-1")
     with pytest.raises(JiraUnavailable):
         provider(fake).check()
+
+
+def test_search_returns_page_and_total():
+    tasks, total = provider(FakeJira()).search("project = SRE", 1)
+    assert [task.key for task in tasks] == ["SRE-1"]
+    assert total == 2
+
+
+def test_search_bad_jql():
+    with pytest.raises(InvalidJql, match="Error in the JQL Query"):
+        provider(FakeJira()).search("bad query", 10)

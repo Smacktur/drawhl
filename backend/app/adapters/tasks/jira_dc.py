@@ -4,7 +4,13 @@ from urllib.parse import quote, urlparse
 
 import httpx
 
-from app.domain.errors import JiraRateLimited, JiraUnauthorized, JiraUnavailable, TaskNotFound
+from app.domain.errors import (
+    InvalidJql,
+    JiraRateLimited,
+    JiraUnauthorized,
+    JiraUnavailable,
+    TaskNotFound,
+)
 from app.domain.settings import JiraCredentials
 from app.domain.tasks import StatusCategory, Task, now_iso
 
@@ -141,6 +147,23 @@ class JiraDcProvider:
             raise JiraUnavailable(f"Jira returned {response.status_code}")
         issues = _json(response).get("issues", [])
         return base_url, issues if isinstance(issues, list) else []
+
+    def search(self, jql: str, limit: int) -> tuple[list[Task], int]:
+        base_url, response = self._request(
+            "POST",
+            "/rest/api/2/search",
+            json={"jql": jql, "fields": FIELDS, "maxResults": limit},
+        )
+        if response.status_code == 400:
+            messages = _json(response).get("errorMessages") or ["Jira rejected the query."]
+            raise InvalidJql(" ".join(messages))
+        if response.status_code != 200:
+            raise JiraUnavailable(f"Jira returned {response.status_code}")
+        body = _json(response)
+        issues = body.get("issues")
+        tasks = [_task(base_url, issue) for issue in issues] if isinstance(issues, list) else []
+        total = body.get("total")
+        return tasks, total if isinstance(total, int) else len(tasks)
 
     def poll(self, keys: list[str]) -> list[Task]:
         found: dict[str, Task] = {}

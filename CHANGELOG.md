@@ -16,6 +16,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Add several Jira cards at once: separate keys or links with commas, and they are laid out in a grid. Keys that fail stay in the field with their errors.
 - Draw a frame by dragging; a new frame takes in the elements under it.
 - Click a card to open a mini-card with assignee, priority, last update and an "Open in Jira" link. Collapse cards to a single line with key and status from the mini-card or, for the whole selection, from the right-click menu; the state is saved with the board.
+- Rename or delete the current board from the board menu; deleting asks first.
+- Add cards by JQL: type a query such as `project = SRE AND status != Done` into the Jira card input, and up to 50 matching tasks are laid out in a grid. Jira's own error is shown for a broken query.
 - `make backup` saves a timestamped copy of the database to `data/backups/`; `make up` runs it before every rebuild.
 
 ### Changed

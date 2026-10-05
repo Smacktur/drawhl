@@ -1,6 +1,18 @@
-import { ChevronDown, Keyboard, Menu, Monitor, Moon, Plus, Settings, Sun } from 'lucide-react'
+import {
+  ChevronDown,
+  Keyboard,
+  Menu,
+  Monitor,
+  Moon,
+  Pencil,
+  Plus,
+  Settings,
+  Sun,
+  Trash2,
+} from 'lucide-react'
 import { useState } from 'react'
 import type { BoardSummary } from '@/api/boards'
+import { DeleteBoardDialog, RenameBoardForm } from '@/board/BoardActions'
 import { NewBoardForm } from '@/board/NewBoardForm'
 import { ShortcutsDialog } from '@/board/ShortcutsDialog'
 import { Button } from '@/components/ui/button'
@@ -38,6 +50,8 @@ export function TopBar({ boards, current, onSelect }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [renaming, setRenaming] = useState(false)
+  const [deleting, setDeleting] = useState<BoardSummary | null>(null)
 
   useShortcut('help', () => setShortcutsOpen(true))
 
@@ -79,6 +93,7 @@ export function TopBar({ boards, current, onSelect }: Props) {
       </DropdownMenu>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <DeleteBoardDialog board={deleting} onOpenChange={(open) => !open && setDeleting(null)} />
 
       {creating ? (
         <NewBoardForm
@@ -89,6 +104,8 @@ export function TopBar({ boards, current, onSelect }: Props) {
           }}
           onCancel={() => setCreating(false)}
         />
+      ) : renaming && current ? (
+        <RenameBoardForm board={current} onDone={() => setRenaming(false)} />
       ) : (
         current && (
           <DropdownMenu>
@@ -114,6 +131,14 @@ export function TopBar({ boards, current, onSelect }: Props) {
               <DropdownMenuItem onSelect={() => setCreating(true)}>
                 <Plus strokeWidth={1.75} />
                 New board
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setRenaming(true)}>
+                <Pencil strokeWidth={1.75} />
+                Rename board
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(current)}>
+                <Trash2 strokeWidth={1.75} />
+                Delete board…
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
