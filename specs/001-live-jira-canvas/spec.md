@@ -22,7 +22,7 @@ The lead starts drawhl on their machine, opens it in the browser, connects it to
 
 1. **Given** a fresh install, **When** the user opens the app, **Then** they can create a board and use it immediately with demo task data, without entering any credentials.
 2. **Given** the settings screen, **When** the user enters a Jira DC base URL and a personal access token and saves, **Then** the app confirms the connection works (or shows why it failed) and the token is never shown again in the browser.
-3. **Given** an open board, **When** the user picks the "Jira card" tool and enters `SRE-121`, **Then** a compact card appears at the chosen spot showing type icon, key, title and status.
+3. **Given** an open board, **When** the user picks the "Jira card" tool in the bottom toolbar (or "Add Jira card" from the right-click menu) and enters `SRE-121`, **Then** a compact card appears at the chosen spot (viewport center for the toolbar, the clicked point for the right-click menu) showing type icon, key, title and status.
 4. **Given** an open board, **When** the user pastes a Jira issue link (e.g. `https://jira.example.com/browse/SRE-121`), **Then** the key is extracted and the same card appears.
 5. **Given** a board with cards, **When** the user reloads the page or restarts the app, **Then** the board reopens with every element in the same place and state.
 
@@ -94,6 +94,30 @@ The lead keeps separate boards (e.g. "Q4 goals", "Team SRE") and switches betwee
 1. **Given** the board list, **When** the user creates, renames or deletes a board, **Then** the list updates and the change persists.
 2. **Given** two boards, **When** the user switches between them, **Then** each shows its own content and viewport.
 
+---
+
+### User Story 6 - Canvas-first chrome (Priority: P2)
+
+The canvas takes the whole screen, like tldraw. Tools live in a floating toolbar at the bottom center, actions on a spot live in the right-click menu, and the board name, main menu and theme live in a compact bar at the top left. There is no always-open input on the canvas.
+
+**Why this priority**: The always-visible add-card input and the board panel cover the canvas and make the tool feel like a form. Dark theme matters for leads who keep the board open all day.
+
+**Independent Test**: Open a board: no input field is visible, only the top-left bar and the bottom toolbar; no "React Flow" label in the corner. Add a card from the toolbar and another from the right-click menu. Switch to dark theme from the main menu, reload: the theme is kept.
+
+**Acceptance Scenarios**:
+
+1. **Given** an open board, **When** the user looks at it, **Then** no card input is shown until they pick the "Jira card" tool, and no library attribution label is shown.
+2. **Given** an open board, **When** the user clicks the "Jira card" icon in the bottom toolbar, **Then** a small popover with the key-or-link input opens above it; Enter adds the card, Escape closes the popover.
+3. **Given** an open board, **When** the user right-clicks an empty spot, **Then** a context menu offers "Add Jira card" (and the other element tools as they exist); choosing it opens the same input and places the card at that spot.
+4. **Given** selected elements, **When** the user right-clicks one of them, **Then** the context menu offers "Delete".
+5. **Given** an open board, **When** the user looks at the top-left corner, **Then** they see one compact bar: main menu button and current board name with a dropdown to switch or create boards.
+6. **Given** the main menu, **When** the user picks Theme → Light, Dark or System, **Then** the whole UI (canvas, cards, panels) switches at once and the choice survives reload.
+7. **Given** an open board, **When** the user presses a tool key (V, H, F, N, T, C) or `?`, **Then** the tool is picked or the shortcut list opens; shortcuts do nothing while typing in a field or with a dialog open.
+8. **Given** selected elements, **When** the user copies and pastes (Cmd/Ctrl+C, Cmd/Ctrl+V) or duplicates (Cmd/Ctrl+D), **Then** copies appear at the cursor or next to the originals, a frame is copied with its contents, and copies paste into another board too.
+9. **Given** the card input, **When** the user enters several keys or links separated by commas, **Then** the found tasks are added as a near-square grid and the keys that failed stay in the field with their errors.
+10. **Given** the frame tool, **When** the user drags on the canvas, **Then** a frame of that size appears and takes in the elements under it; a click places a default-size frame.
+11. **Given** a menu or dialog opened with the mouse, **When** the user closes it (Escape or click outside), **Then** no focus ring is left on the button that opened it.
+
 ### Edge Cases
 
 - Unknown key or a task the token cannot see: the card is not created (or is shown as "not found / no access") with a clear message; nothing else on the board breaks.
@@ -149,6 +173,16 @@ The lead keeps separate boards (e.g. "Q4 goals", "Team SRE") and switches betwee
 - **FR-023**: Task data MUST come through a provider boundary with two operations, look up one task and refresh a set of tasks; only Jira Data Center and the demo source are provided.
 - **FR-024**: The whole product MUST start with one command on a clean machine and be configurable only through environment variables documented in the README.
 - **FR-025**: All user data MUST live in one data directory so that upgrading the app keeps boards and settings.
+
+**Canvas chrome**
+
+- **FR-026**: The canvas MUST take the whole screen; the card input MUST NOT be permanently visible. Tools MUST live in a floating toolbar at the bottom center; the "Jira card" tool opens the key-or-link input in a popover.
+- **FR-027**: Right-clicking the canvas MUST open a context menu: on an empty spot it offers adding elements at that point (at least "Add Jira card"); on a selection it offers "Delete". Right-clicking toolbars or zoom controls MUST NOT open it.
+- **FR-028**: A compact bar at the top left MUST hold the main menu and the current board name with a board switcher; the main menu holds Settings, Keyboard shortcuts and Theme. Undo and redo are not part of the MVP.
+- **FR-029**: Users MUST be able to switch between light, dark and system themes; the choice is stored in the browser and applied before first paint. Light is the default.
+- **FR-030**: The canvas MUST NOT show the canvas library attribution label.
+- **FR-031**: Every keyboard shortcut MUST come from one registry that feeds both the bindings and the shortcut list (`?`); copy, paste, duplicate and select all MUST work on canvas elements, including frames with their contents.
+- **FR-032**: The card input MUST accept several keys or links separated by commas (up to 50) and lay the new cards out in a grid; Jira is called a few keys at a time.
 
 **Out of scope (Won't)**
 

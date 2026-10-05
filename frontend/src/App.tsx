@@ -1,12 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState, useSyncExternalStore, type FormEvent } from 'react'
-import { createBoard, listBoards } from '@/api/boards'
+import { useQuery } from '@tanstack/react-query'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
+import { listBoards } from '@/api/boards'
+import { NewBoardForm } from '@/board/NewBoardForm'
+import { TopBar } from '@/board/TopBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { SettingsSheet } from '@/settings/SettingsSheet'
 
 // xyflow needs the DOM, so the canvas is loaded only in the browser, never in prerender.
 const Canvas = lazy(() => import('@/canvas/Canvas'))
@@ -27,52 +25,6 @@ function rememberBoard(id: string) {
   url.searchParams.set('board', id)
   window.history.replaceState(null, '', url)
   localStorage.setItem(LAST_BOARD, id)
-}
-
-function NewBoardForm({
-  onCreated,
-  autoFocus,
-}: {
-  onCreated: (id: string) => void
-  autoFocus?: boolean
-}) {
-  const queryClient = useQueryClient()
-  const [name, setName] = useState('')
-  const create = useMutation({
-    mutationFn: createBoard,
-    onSuccess: (board) => {
-      void queryClient.invalidateQueries({ queryKey: ['boards'] })
-      setName('')
-      onCreated(board.id)
-    },
-  })
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    if (name.trim()) create.mutate(name.trim())
-  }
-  return (
-    <form onSubmit={submit} className="flex flex-col gap-2">
-      <div className="flex gap-1.5">
-        <label htmlFor="board-name" className="sr-only">
-          Board name
-        </label>
-        <Input
-          id="board-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Board name"
-          className="h-8"
-          maxLength={100}
-          autoFocus={autoFocus}
-        />
-        <Button type="submit" size="sm" disabled={create.isPending || !name.trim()}>
-          <Plus strokeWidth={1.75} />
-          New board
-        </Button>
-      </div>
-      {create.isError && <p className="text-destructive text-sm">{create.error.message}</p>}
-    </form>
-  )
 }
 
 export default function App() {
@@ -108,34 +60,12 @@ export default function App() {
           <NewBoardForm onCreated={setBoardId} autoFocus />
         </div>
       )}
-      {current && boards.data && (
-        <>
-          <Suspense fallback={<Skeleton className="absolute inset-0 rounded-none" />}>
-            <Canvas key={current.id} boardId={current.id} />
-          </Suspense>
-          <div className="bg-card absolute top-4 left-4 z-10 flex flex-col gap-2 rounded-lg border p-2 shadow-md">
-            <label htmlFor="board-picker" className="sr-only">
-              Board
-            </label>
-            <div className="flex items-center gap-1.5">
-              <select
-                id="board-picker"
-                value={current.id}
-                onChange={(event) => setBoardId(event.target.value)}
-                className="border-input bg-background h-8 min-w-0 flex-1 rounded-md border px-2 text-[14px]"
-              >
-                {boards.data.map((board) => (
-                  <option key={board.id} value={board.id}>
-                    {board.name}
-                  </option>
-                ))}
-              </select>
-              <SettingsSheet />
-            </div>
-            <NewBoardForm onCreated={setBoardId} />
-          </div>
-        </>
+      {current && (
+        <Suspense fallback={<Skeleton className="absolute inset-0 rounded-none" />}>
+          <Canvas key={current.id} boardId={current.id} />
+        </Suspense>
       )}
+      {boards.data && <TopBar boards={boards.data} current={current} onSelect={setBoardId} />}
     </main>
   )
 }

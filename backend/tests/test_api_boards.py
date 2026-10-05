@@ -21,8 +21,27 @@ DOC = {
             "position": {"x": 600, "y": 40},
             "data": {"key": "DEMO-2", "collapsed": True},
         },
+        {
+            "id": "s",
+            "type": "sticky",
+            "position": {"x": 200, "y": 40},
+            "width": 200,
+            "height": 200,
+            "parentId": "f",
+            "data": {"text": "Rotate certs", "color": "blue"},
+        },
+        {
+            "id": "t",
+            "type": "text",
+            "position": {"x": 600, "y": -80},
+            "width": 240,
+            "data": {"text": "Q4 risks"},
+        },
     ],
-    "edges": [{"id": "e", "source": "a", "target": "b", "sourceHandle": "r", "targetHandle": "l"}],
+    "edges": [
+        {"id": "e", "source": "a", "target": "b", "sourceHandle": "r", "targetHandle": "l"},
+        {"id": "e2", "source": "s", "target": "t", "sourceHandle": "t", "targetHandle": "b"},
+    ],
     "viewport": {"x": 10.0, "y": -5.0, "zoom": 1.25},
 }
 
@@ -62,6 +81,14 @@ def test_invalid_doc_rejected(client):
     response = client.put(f"/api/boards/{board['id']}", json={"version": 1, "doc": nested})
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_failed"
+
+
+def test_child_before_its_frame_rejected(client):
+    board = create(client)
+    frame, card = DOC["nodes"][0], DOC["nodes"][1]
+    doc = {"nodes": [card, frame]}
+    response = client.put(f"/api/boards/{board['id']}", json={"version": 1, "doc": doc})
+    assert response.status_code == 422
 
 
 def test_blank_name_rejected(client):

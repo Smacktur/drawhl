@@ -2,17 +2,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import App from './App.tsx'
+import { trackInputModality } from '@/lib/input-modality'
+import { initTheme } from '@/lib/theme'
 import './index.css'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
 })
 
-// Theme follows the OS; shadcn tokens switch on the .dark class.
-const darkScheme = window.matchMedia('(prefers-color-scheme: dark)')
-const applyScheme = () => document.documentElement.classList.toggle('dark', darkScheme.matches)
-applyScheme()
-darkScheme.addEventListener('change', applyScheme)
+initTheme()
+trackInputModality()
 
 const root = document.getElementById('root')!
 const app = (

@@ -51,27 +51,50 @@ try:
     doc = {
         "nodes": [
             {
+                "id": "f",
+                "type": "frame",
+                "position": {"x": -40, "y": -40},
+                "width": 400,
+                "height": 300,
+                "data": {"title": "Now"},
+            },
+            {
                 "id": "a",
                 "type": "jira_card",
-                "position": {"x": 0, "y": 0},
-                "data": {"key": "DEMO-1"},
+                "position": {"x": 40, "y": 40},
+                "parentId": "f",
+                "data": {"key": "DEMO-1", "collapsed": False},
             },
             {
                 "id": "b",
                 "type": "jira_card",
                 "position": {"x": 300, "y": 0},
-                "data": {"key": "DEMO-2"},
+                "data": {"key": "DEMO-2", "collapsed": False},
+            },
+            {
+                "id": "s",
+                "type": "sticky",
+                "position": {"x": 600, "y": 0},
+                "width": 200,
+                "height": 200,
+                "data": {"text": "Ask about certs", "color": "yellow"},
+            },
+            {
+                "id": "t",
+                "type": "text",
+                "position": {"x": 600, "y": -60},
+                "width": 240,
+                "data": {"text": "Risks"},
             },
         ],
-        "edges": [],
+        "edges": [{"id": "e", "source": "s", "target": "b", "sourceHandle": "l", "targetHandle": "r"}],
         "viewport": {"x": 0, "y": 0, "zoom": 1},
     }
     status, body = call("PUT", f"{API}/api/boards/{board['id']}", {"version": 1, "doc": doc})
     check(status == 200 and body["version"] == 2, "save board")
 
     status, body = call("GET", f"{API}/api/boards/{board['id']}")
-    positions = [n["position"] for n in body["doc"]["nodes"]]
-    check(positions == [{"x": 0, "y": 0}, {"x": 300, "y": 0}], "board reopens unchanged")
+    check(body["doc"] == doc, "board with frame, sticky, text and arrow reopens unchanged")
     check(set(body["tasks"]) == {"DEMO-1", "DEMO-2"}, "board carries task snapshots")
 
     status, body = call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "Done"})

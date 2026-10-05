@@ -5,6 +5,7 @@ import type { Task } from '@/api/tasks'
 import { cn } from '@/lib/utils'
 import { useTask } from '@/canvas/tasks-context'
 import type { JiraCardNode as JiraCardNodeType } from '@/canvas/types'
+import { Handles } from '@/canvas/nodes/Handles'
 
 const TYPE_ICONS = {
   bug: Bug,
@@ -85,6 +86,7 @@ function JiraCardNodeView({ data, selected }: NodeProps<JiraCardNodeType>) {
           <StatusLozenge task={task} />
         </>
       )}
+      <Handles />
     </div>
   )
 }

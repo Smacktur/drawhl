@@ -161,15 +161,24 @@ function SettingsForm({ settings }: { settings: Settings }) {
   )
 }
 
-export function SettingsSheet() {
+// Without `open` it renders its own button; with it the caller opens it (e.g. from a menu).
+export function SettingsSheet({
+  open,
+  onOpenChange,
+}: {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
   const settings = useQuery({ queryKey: ['settings'], queryFn: getSettings })
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Settings">
-          <SettingsIcon strokeWidth={1.75} />
-        </Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {open === undefined && (
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Settings">
+            <SettingsIcon strokeWidth={1.75} />
+          </Button>
+        </SheetTrigger>
+      )}
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Settings</SheetTitle>

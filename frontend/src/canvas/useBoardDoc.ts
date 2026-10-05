@@ -35,7 +35,7 @@ export function toDoc(nodes: AppNode[], edges: AppEdge[], viewport: Viewport): B
 /** Board state with debounced compare-and-set saves; calls onConflict on a 409. */
 export function useBoardDoc(board: Board, onConflict: () => void) {
   const [nodes, setNodes, onNodesChange] = useNodesState(board.doc.nodes as AppNode[])
-  const [edges, , onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
+  const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
   const [viewport, setViewport] = useState<Viewport>(board.doc.viewport)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -111,5 +111,14 @@ export function useBoardDoc(board: Board, onConflict: () => void) {
     }
   }, [])
 
-  return { nodes, setNodes, onNodesChange, edges, onEdgesChange, setViewport, saveError }
+  return {
+    nodes,
+    setNodes,
+    onNodesChange,
+    edges,
+    setEdges,
+    onEdgesChange,
+    setViewport,
+    saveError,
+  }
 }
