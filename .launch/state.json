@@ -6,7 +6,8 @@
     "card-on-board",
     "jira-dc-connection",
     "freshness",
-    "spatial"
+    "spatial",
+    "card-details"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -16,7 +17,8 @@
     "G3_card-on-board": "approved",
     "G3_jira-dc-connection": "approved",
     "G3_freshness": "approved",
-    "G3_spatial": "approved"
+    "G3_spatial": "approved",
+    "G3_card-details": "approved"
   },
   "notes": []
 }
