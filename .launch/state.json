@@ -1,11 +1,11 @@
 {
   "profile": "oss",
-  "phase": "spec",
-  "feature": null,
+  "phase": "build",
+  "feature": "specs/001-live-jira-canvas",
   "slices_done": [],
   "gates": {
     "G1_scope": "approved",
-    "G2_spec": "pending",
+    "G2_spec": "approved",
     "legal": "pending",
     "G4_ship": "pending"
   },
