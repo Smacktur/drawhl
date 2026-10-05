@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "cn"
+import { restoreFocusForKeyboard } from "@/lib/input-modality"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 function Popover({
@@ -24,6 +25,7 @@ function PopoverContent({
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        onCloseAutoFocus={restoreFocusForKeyboard}
         align={align}
         sideOffset={sideOffset}
         className={cn(
