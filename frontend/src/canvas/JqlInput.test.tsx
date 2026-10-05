@@ -39,10 +39,10 @@ function renderField() {
       <Field />
     </QueryClientProvider>,
   )
-  return screen.getByLabelText('Query') as HTMLInputElement
+  return screen.getByLabelText('Query') as HTMLTextAreaElement
 }
 
-function type(field: HTMLInputElement, value: string) {
+function type(field: HTMLTextAreaElement, value: string) {
   fireEvent.change(field, { target: { value, selectionStart: value.length } })
 }
 
@@ -82,4 +82,29 @@ test('an issue key shows no list and Escape closes it', async () => {
   await screen.findByRole('listbox')
   fireEvent.keyDown(field, { key: 'Escape' })
   expect(screen.queryByRole('listbox')).toBeNull()
+})
+
+test('a multi-line query keeps its lines and Enter submits it', async () => {
+  const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault())
+  function Form() {
+    const [value, setValue] = useState('')
+    return (
+      <form onSubmit={onSubmit}>
+        <JqlInput aria-label="Query" value={value} onValueChange={setValue} />
+      </form>
+    )
+  }
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <Form />
+    </QueryClientProvider>,
+  )
+  const field = screen.getByLabelText('Query') as HTMLTextAreaElement
+  const query = '(\n  key in (DEMO-1)\n  OR "Epic Link" in (DEMO-1)\n)\nAND status != Done'
+  type(field, query)
+  fireEvent.keyDown(field, { key: 'Enter', shiftKey: true })
+  expect(onSubmit).not.toHaveBeenCalled()
+  fireEvent.keyDown(field, { key: 'Enter' })
+  expect(onSubmit).toHaveBeenCalledOnce()
+  expect(field.value).toBe(query)
 })
