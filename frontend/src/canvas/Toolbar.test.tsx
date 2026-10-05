@@ -22,7 +22,7 @@ afterEach(() => vi.unstubAllGlobals())
 function renderToolbar(onAddCard = vi.fn()) {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <Toolbar onAddCard={onAddCard} />
+      <Toolbar tool="select" onTool={vi.fn()} onAddCard={onAddCard} />
     </QueryClientProvider>,
   )
   return onAddCard

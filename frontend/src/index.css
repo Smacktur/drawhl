@@ -83,6 +83,14 @@
   --status-progress-foreground: oklch(0.45 0.13 255);
   --status-done: oklch(0.93 0.06 150);
   --status-done-foreground: oklch(0.42 0.11 150);
+  /* Sticky notes keep the same light fills in both themes, like status lozenges. */
+  --sticky-yellow: oklch(0.94 0.05 95);
+  --sticky-orange: oklch(0.94 0.05 60);
+  --sticky-pink: oklch(0.94 0.05 0);
+  --sticky-violet: oklch(0.94 0.05 300);
+  --sticky-blue: oklch(0.94 0.05 240);
+  --sticky-green: oklch(0.94 0.05 150);
+  --sticky-foreground: oklch(0.24 0.01 260);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -191,4 +199,29 @@
   --xy-controls-button-color-hover: var(--foreground);
   --xy-controls-button-border-color: var(--border);
   --xy-attribution-background-color: transparent;
+  --xy-edge-stroke: var(--muted-foreground);
+  --xy-edge-stroke-selected: var(--primary);
+  --xy-connectionline-stroke: var(--primary);
+  --xy-handle-background-color: var(--card);
+  --xy-handle-border-color: var(--primary);
+  --xy-resize-background-color: var(--primary);
+}
+
+/* Handles show on hover and selection only, so the board stays quiet. */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle,
+.react-flow.connecting .react-flow__handle {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__handle {
+    transition: none;
+  }
 }
