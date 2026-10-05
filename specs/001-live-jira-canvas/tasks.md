@@ -143,10 +143,10 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 **Independent Test**: collapse a card → icon, key and status lozenge only; click → mini-card with assignee, priority, updated, Jira link; reload keeps collapsed state.
 
-- [ ] T050 [P] [US4] Add shadcn `popover`; create `frontend/src/canvas/nodes/CardDetails.tsx`: assignee, priority, relative updated time, "Open in Jira" link (`target="_blank" rel="noreferrer"`)
-- [ ] T051 [US4] Collapse toggle in `frontend/src/canvas/nodes/JiraCardNode.tsx` storing `data.collapsed`; collapsed view shows type icon, key and status lozenge in one line (no title), key struck through when done; click opens `CardDetails` (depends on T050)
-- [ ] T052 [US4] Component test in `frontend/src/canvas/nodes/JiraCardNode.test.tsx`: collapsed and expanded render, done strikethrough, not-found state
-- [ ] T053 [US4] `CHANGELOG.md` `Unreleased`: collapsible cards and mini-card
+- [x] T050 [P] [US4] Add shadcn `popover`; create `frontend/src/canvas/nodes/CardDetails.tsx`: assignee, priority, relative updated time, "Open in Jira" link (`target="_blank" rel="noreferrer"`)
+- [x] T051 [US4] Collapse toggle in `frontend/src/canvas/nodes/JiraCardNode.tsx` storing `data.collapsed`; collapsed view shows type icon, key and status lozenge in one line (no title), key struck through when done; click opens `CardDetails` (depends on T050)
+- [x] T052 [US4] Component test in `frontend/src/canvas/nodes/JiraCardNode.test.tsx`: collapsed and expanded render, done strikethrough, not-found state
+- [x] T053 [US4] `CHANGELOG.md` `Unreleased`: collapsible cards and mini-card
 
 ## Phase 7: Slice 6 `feat/boards` — several boards (US5)
 
@@ -159,6 +159,7 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [ ] T056 [P] [US5] Create `scripts/bench_board.py`: seed a board with 300 cards across 10 frames via the API on the demo provider (keys cycling `DEMO-1..12`); document the manual pan/zoom and load-time check (target < 3 s) in `specs/001-live-jira-canvas/quickstart.md`
 - [ ] T057 [US5] Extend `scripts/smoke.py`: rename and delete a board
 - [ ] T058 [US5] `CHANGELOG.md` `Unreleased`: board list
+- [ ] T062 [US1] Add cards by JQL: `POST /api/tasks/search` on the existing provider search (capped result count, tests in `backend/tests/`); the Jira card input takes a JQL query and lays the results out in a grid
 
 ## Phase 8: Polish (verify and ship phases)
 

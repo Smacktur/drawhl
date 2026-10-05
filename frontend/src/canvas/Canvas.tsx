@@ -43,7 +43,7 @@ import { lastFetched, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
-import type { AppEdge, AppNode } from '@/canvas/types'
+import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { useShortcut } from '@/lib/shortcuts'
 import { useTheme } from '@/lib/theme'
@@ -219,6 +219,21 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setEdges((current) => current.map((e) => ({ ...e, selected: kind === 'edge' && e.id === id })))
   }
 
+  const selectedCards = nodes.filter(
+    (n): n is JiraCardNodeType => n.selected === true && n.type === 'jira_card',
+  )
+  const collapsedCount = selectedCards.filter((n) => n.data.collapsed).length
+  const cardCounts = {
+    collapsed: collapsedCount,
+    expanded: selectedCards.length - collapsedCount,
+  }
+  const setCollapsed = (collapsed: boolean) =>
+    setNodes((current) =>
+      current.map((n) =>
+        n.selected && n.type === 'jira_card' ? { ...n, data: { ...n.data, collapsed } } : n,
+      ),
+    )
+
   const deleteSelection = () =>
     void deleteElements({
       nodes: nodes.filter((n) => n.selected),
@@ -249,6 +264,8 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         onPlace={placeAt}
         onAddCards={addCards}
         onDelete={deleteSelection}
+        cards={cardCounts}
+        onCollapse={setCollapsed}
       >
         <div
           className="absolute inset-0"
