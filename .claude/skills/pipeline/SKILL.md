@@ -13,6 +13,8 @@ Drive this project from its current phase to the next gate. Methodology: `docs/p
 2. Tell the user in 2–3 lines: current phase, what this step produces, which gate ends it.
 3. If `docs/brief.md` still has TODO in Hypothesis or Core scenario, stop: scope is not done. Help fill it (phase 1) and ask for G1 approval before anything else.
 
+Profile `oss` (`.copier-answers.yml`): everything written into the repository is in English — specs, docs, `docs/decisions.md`, commits, PRs, UI text. Talk to the user in their language.
+
 After every phase or gate, update `.launch/state.json` (`phase`, `gates`, `slices_done`, `feature`) and commit it together with the phase output.
 
 ## Phase: spec (ends with G2)

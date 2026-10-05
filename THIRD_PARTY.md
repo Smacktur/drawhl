@@ -1,51 +1,51 @@
 # Third-party components & AI usage
 
-## Open-source библиотеки
+## Open-source libraries
 
-| Компонент | Лицензия | Зачем |
+| Component | License | Purpose |
 |---|---|---|
 | FastAPI | MIT | HTTP API |
-| Pydantic / pydantic-settings | MIT | Валидация, конфиг из ENV |
-| uvicorn | BSD-3 | ASGI-сервер |
-| prometheus-client | Apache-2.0 | Метрики |
+| Pydantic / pydantic-settings | MIT | Validation, config from ENV |
+| uvicorn | BSD-3 | ASGI server |
+| prometheus-client | Apache-2.0 | Metrics |
 | React | MIT | UI |
-| Vite | MIT | Сборка |
-| Tailwind CSS | MIT | Стили |
-| shadcn/ui, cn | MIT | Компоненты, тема, слияние классов |
-| Radix UI | MIT | Доступные примитивы под shadcn |
-| lucide-react | ISC | Иконки |
-| Geist (@fontsource-variable/geist) | OFL-1.1 | Шрифт |
-| class-variance-authority, tw-animate-css | Apache-2.0 / MIT | Варианты компонентов, анимации |
-| TanStack Query | MIT | Серверное состояние |
-| zod | MIT | Валидация ответов API |
-| marked | MIT | Markdown → HTML для легал-страниц при сборке |
-| pip-licenses | MIT | Проверка лицензий Python-зависимостей (`make licenses`) |
-| license-checker-rseidelsohn | BSD-3-Clause | Проверка лицензий npm-зависимостей (`make licenses`) |
+| Vite | MIT | Build |
+| Tailwind CSS | MIT | Styles |
+| shadcn/ui, cn | MIT | Components, theme, class merging |
+| Radix UI | MIT | Accessible primitives for shadcn |
+| lucide-react | ISC | Icons |
+| Geist (@fontsource-variable/geist) | OFL-1.1 | Font |
+| class-variance-authority, tw-animate-css | Apache-2.0 / MIT | Component variants, animations |
+| TanStack Query | MIT | Server state |
+| zod | MIT | API response validation |
+| marked | MIT | Markdown → HTML for legal pages at build time |
+| pip-licenses | MIT | Python dependency license check (`make licenses`) |
+| license-checker-rseidelsohn | BSD-3-Clause | npm dependency license check (`make licenses`) |
 
-Полный список с версиями — в lock-файлах (`backend/uv.lock`, `frontend/package-lock.json`).
+Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.json`).
 
-## Модели и внешние API
+## Models and external APIs
 
-| Модель / API | Провайдер | Как используется |
+| Model / API | Provider | How it is used |
 |---|---|---|
 
-## Данные
+## Data
 
-| Датасет | Источник | Лицензия | Примечание |
+| Dataset | Source | License | Note |
 |---|---|---|---|
 
-## Шаблоны
+## Templates
 
-- Скелет проекта и методология — [launchpad](https://github.com/Smacktur/launchpad).
+- Project skeleton and methodology — [launchpad](https://github.com/Smacktur/launchpad).
 
-## AI-инструменты разработки
+## AI development tools
 
-| Инструмент | Для чего |
+| Tool | Used for |
 |---|---|
-| Claude Code | Генерация кода, отладка, документация |
-| OpenAI Codex | Параллельная разработка, кросс-ревью |
-| GitHub spec-kit | Спецификация, план, задачи (`specs/`) |
-| gstack | Ревью scope/архитектуры, QA, security |
+| Claude Code | Code generation, debugging, docs |
+| OpenAI Codex | Parallel development, cross-review |
+| GitHub spec-kit | Spec, plan, tasks (`specs/`) |
+| gstack | Scope and architecture review, QA, security |
 | context7 MCP | Актуальная документация библиотек |
 | marketingskills (MIT, Corey Haines) | Маркетинговые скиллы для `/grow`: контекст продукта, кастдев, тексты, блогеры, рефералки, сообщества, каталоги (`.claude/skills/`) |
 | Hallmark (MIT), Impeccable (Apache-2.0) | Дизайн-скиллы: генерация и критика UI (`.claude/skills/`) |

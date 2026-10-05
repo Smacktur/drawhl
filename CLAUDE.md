@@ -1,8 +1,8 @@
 @AGENTS.md
 
-## Claude Code — специфика
+## Claude Code specifics
 
-- Продолжить работу по пайплайну — `/pipeline` (читает `.launch/state.json`).
-- Скиллы по фазам — `docs/playbook/05-tooling.md`. Ревью gstack — с timebox 10 минут.
-- Документация библиотек — context7, не память.
-- Методологию (`docs/playbook/`, `AGENTS.md`, этот файл) правим в launchpad и подтягиваем `launch update`.
+- Continue along the pipeline with `/pipeline` (reads `.launch/state.json`).
+- Skills per phase: `docs/playbook/05-tooling.md`. gstack reviews are timeboxed to 10 minutes.
+- Library docs come from context7, not memory.
+- Methodology (`docs/playbook/`, `AGENTS.md`, this file) is edited in launchpad and pulled in with `launch update`.

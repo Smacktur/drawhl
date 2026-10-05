@@ -1,6 +1,6 @@
 # Architecture
 
-## Сейчас
+## Now
 
 ```mermaid
 flowchart LR
@@ -9,8 +9,8 @@ flowchart LR
   API --> D[Domain]
 ```
 
-Слои: `api → domain ← adapters`, wiring в `backend/app/main.py`. Подробно — [playbook/03-architecture.md](playbook/03-architecture.md).
+Layers: `api → domain ← adapters`, wiring in `backend/app/main.py`. Details: [playbook/03-architecture.md](playbook/03-architecture.md).
 
-## Если взлетит
+## If it takes off
 
-TODO: что меняется при росте нагрузки (реплики API, Postgres, очередь, кеш) — показываем, а не строим.
+TODO: what changes as load grows (API replicas, Postgres, queue, cache) — shown here, not built.

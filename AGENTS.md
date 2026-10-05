@@ -1,79 +1,80 @@
-# AGENTS.md — правила для AI-агентов (Claude Code, Codex)
+# AGENTS.md — rules for AI agents (Claude Code, Codex)
 
 **drawhl** — Open-source infinite canvas with live Jira Data Center task cards for leads who think spatially
-Профиль: **oss** ([стратегия](docs/playbook/01-strategy.md)). Ресерч: [docs/research.md](docs/research.md). Идея и scope: [docs/brief.md](docs/brief.md). Полный свод: [docs/playbook/](docs/playbook/README.md).
+Profile: **oss** ([strategy](docs/playbook/01-strategy.md)). Research: [docs/research.md](docs/research.md). Idea and scope: [docs/brief.md](docs/brief.md). Full playbook: [docs/playbook/](docs/playbook/README.md).
 
-## Жёсткие правила
+## Hard rules
 
-1. **Main всегда запускается.** Незавершённое — в ветках `feat/<slice>`. Перед мержем — `make check`.
-2. **Один срез за раз, end-to-end** (UI → API → domain). Не горизонтальные слои.
-3. **Гейт = стоп.** На гейтах G1–G4 (см. стратегию) остановись и жди решения человека.
-4. **Запуск одной командой** `docker compose up --build` на чистой машине по README.
-5. **Без ключей тоже работает.** Всё внешнее — за портом с mock-реализацией. Секреты — только в ENV.
-6. **Стороннее раскрываем** в `THIRD_PARTY.md` (библиотеки, модели, датасеты).
-7. Никаких `git push --force`, `reset --hard`, удаления веток/тегов без явной просьбы человека.
-8. **Репозиторий станет публичным вместе со всей историей.** Никаких токенов, внутренних URL, имён коллег, данных и скриншотов рабочих систем в коммитах, тестах и фикстурах — только выдуманные данные.
-9. **Лицензии.** Новая зависимость — совместима с MIT (`make licenses`), без проприетарных SDK с ключом. Пользовательское изменение — строка в `CHANGELOG.md` (`Unreleased`).
-10. **Публичные тексты на английском**: README, CONTRIBUTING, CHANGELOG, шаблоны issue и PR, тексты UI.
+1. **Main always runs.** Unfinished work lives in `feat/<slice>` branches. `make check` before every merge.
+2. **One slice at a time, end to end** (UI → API → domain). No horizontal layers.
+3. **A gate is a stop.** At gates G1–G4 (see the strategy) stop and wait for the human's decision.
+4. **One command to run:** `docker compose up --build` on a clean machine, following the README.
+5. **Works without keys.** Everything external sits behind a port with a mock implementation. Secrets live only in ENV.
+6. **Disclose third-party code** in `THIRD_PARTY.md` (libraries, models, datasets).
+7. No `git push --force`, `reset --hard`, or deleting branches and tags unless the human explicitly asks.
+8. **The repository goes public with its whole history.** No tokens, internal URLs, colleagues' names, real data or screenshots of work systems in commits, tests or fixtures — only made-up data.
+9. **Licenses.** A new dependency must be compatible with MIT (`make licenses`); no proprietary SDKs that need a production key. A user-visible change gets a line in `CHANGELOG.md` (`Unreleased`).
+10. **Everything in the repository is in English**: code, docs, specs, commits, PRs, UI text.
 
-## Принципы
+## Principles
 
-- **Думай до кода.** Проговаривай допущения. Не ясно — спроси, не угадывай.
-- **Простота.** Минимум кода под задачу. Никаких фич и абстракций «на будущее». Won't из brief — не делаем.
-- **Точечные изменения.** Правь только нужное, в стиле окружающего кода.
-- **Цель с проверкой.** У каждой задачи — проверяемый критерий (тест, curl, скрин). Докажи результат выводом.
-- **Contract-first.** Контракт API (`specs/*/contracts/`) меняется только осознанно и с уведомлением.
-- **Оставайся в своей зоне** при параллельной работе.
+- **Think before coding.** State your assumptions. If something is unclear, ask instead of guessing.
+- **Simplicity.** Minimum code for the task. No features or abstractions "for later". Won't items from the brief are not built.
+- **Surgical changes.** Touch only what is needed, in the style of the surrounding code.
+- **Verifiable goals.** Every task has a checkable done criterion (test, curl, screenshot). Prove the result with output.
+- **Contract-first.** The API contract (`specs/*/contracts/`) changes only deliberately and with notice.
+- **Stay in your zone** when working in parallel.
 ## UI
 
-Перед UI-работой — [DESIGN.md](DESIGN.md) (нет файла — создать по [10-design.md](docs/playbook/10-design.md)). Компоненты — shadcn из `frontend/src/components/ui/`, цвета — токены темы. Новый экран — `/hallmark`, доводка — `/impeccable`, проверка среза — `/ui-review`.
+Before UI work read [DESIGN.md](DESIGN.md) (missing → create it per [10-design.md](docs/playbook/10-design.md)). Components come from shadcn in `frontend/src/components/ui/`, colors from theme tokens. New screen — `/hallmark`, polish — `/impeccable`, slice check — `/ui-review`.
 
-## Стандарты кода
+## Coding standards
 
-Полностью: [docs/playbook/04-coding-standards.md](docs/playbook/04-coding-standards.md). Коротко:
+In full: [docs/playbook/04-coding-standards.md](docs/playbook/04-coding-standards.md). In short:
 
-- Код, идентификаторы, комментарии, логи, коммиты — **на английском**.
-- Комментарий объясняет *почему*, а не *что*. Обычно одна строка. Docstring — только у публичного API, одной строкой.
-- Никакого закомментированного кода и декоративных баннеров.
-- Формат и линт — инструментом (`make fmt`), не руками.
+- A comment explains *why*, not *what*. Usually one line. Docstrings only on public API, one line.
+- No commented-out code or decorative banners.
+- Formatting and linting by tools (`make fmt`), not by hand.
 
-## Архитектура
+## Architecture
 
-Подробно: [docs/playbook/03-architecture.md](docs/playbook/03-architecture.md).
+In detail: [docs/playbook/03-architecture.md](docs/playbook/03-architecture.md).
 
 ```text
-backend/app/api/       HTTP: роуты, схемы, маппинг ошибок
-backend/app/domain/    бизнес-логика, порты, доменные ошибки — тесты здесь
-backend/app/adapters/  реализации портов (включая mock)
-backend/app/config.py  ENV, одна точка
-frontend/src/          React/TS: api/ (zod), components/ui/ (shadcn), lib/, index.css (тема)
+backend/app/api/       HTTP: routes, schemas, error mapping
+backend/app/domain/    business logic, ports, domain errors — tests live here
+backend/app/adapters/  port implementations (including mock)
+backend/app/config.py  ENV, single entry point
+frontend/src/          React/TS: api/ (zod), components/ui/ (shadcn), lib/, index.css (theme)
 ```
 
-Зависимости: `api → domain ← adapters`. Domain не импортирует FastAPI и SDK провайдеров.
+Dependencies: `api → domain ← adapters`. The domain does not import FastAPI or provider SDKs.
 
-## Команды
+## Commands
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `make check` | lint + тесты — гейт перед мержем |
-| `make up` / `make down` | поднять / остановить compose |
-| `make smoke` | core scenario против поднятого стека |
-| `make dev-api` / `make dev-web` | локально с hot reload |
-| `make fmt` | автоформат |
+| `make check` | lint + tests — the gate before merge |
+| `make licenses` | dependency licenses compatible with MIT |
+| `make up` / `make down` | start / stop compose |
+| `make smoke` | core scenario against the running stack |
+| `make dev-api` / `make dev-web` | local run with hot reload |
+| `make fmt` | auto-format |
 
-## Пайплайн
+## Pipeline
 
-Фаза — в `.launch/state.json`. Продолжение работы — скилл `/pipeline` (Claude) или вручную по таблице в [docs/playbook/README.md](docs/playbook/README.md). Спеки — spec-kit в `specs/`, принципы — `.specify/memory/constitution.md`.
+The phase is in `.launch/state.json`. Continue with the `/pipeline` skill (Claude) or by hand following the table in [docs/playbook/README.md](docs/playbook/README.md). Specs: spec-kit in `specs/`, principles: `.specify/memory/constitution.md`.
 
-## Опыт
+## Experience
 
-Библиотека опыта — `library/` в launchpad (путь: `launch home`). Перед выбором инструмента или при странной ошибке — поиск там (`rg -il '<ключ>' "$(launch home)/library"`). Новые грабли и находки — `/lib-add`, итоги проекта — `/retro`.
+The experience library is `library/` in launchpad (path: `launch home`). Before choosing a tool or when an error looks strange, search it (`rg -il '<key>' "$(launch home)/library"`). New pitfalls and findings — `/lib-add`, project results — `/retro`.
 
-## Definition of Done для задачи
+## Definition of Done for a task
 
-- [ ] Критерий готовности выполнен и показан (вывод теста / curl / скрин)
-- [ ] `make check` зелёный
-- [ ] Main запускается
-- [ ] Новые ENV — в `.env.example` и README
-- [ ] Новые зависимости — в `THIRD_PARTY.md`
-- [ ] Коммит с conventional-сообщением
+- [ ] Done criterion met and shown (test output / curl / screenshot)
+- [ ] `make check` green
+- [ ] Main runs
+- [ ] New ENV variables in `.env.example` and README
+- [ ] New dependencies in `THIRD_PARTY.md`, `make licenses` green
+- [ ] User-visible change in `CHANGELOG.md`
+- [ ] Conventional commit message
