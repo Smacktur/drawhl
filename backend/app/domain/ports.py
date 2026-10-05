@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
+    from app.domain.jql import JqlValue, JqlVocabulary
     from app.domain.tasks import Task
 
 
@@ -26,6 +27,12 @@ class TaskProvider(Protocol):
     def search(self, jql: str, limit: int) -> tuple[list[Task], int]:
         """Up to `limit` matching tasks and the total match count; raises InvalidJql."""
         ...
+
+    def jql_vocabulary(self) -> JqlVocabulary:
+        """Fields the user can search, with their operators, and JQL functions."""
+        ...
+
+    def jql_values(self, field: str, prefix: str) -> list[JqlValue]: ...
 
 
 class BoardRepo(Protocol):

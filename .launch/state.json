@@ -8,7 +8,8 @@
     "freshness",
     "spatial",
     "card-details",
-    "boards"
+    "boards",
+    "jql-assist"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -20,7 +21,8 @@
     "G3_freshness": "approved",
     "G3_spatial": "approved",
     "G3_card-details": "approved",
-    "G3_boards": "approved"
+    "G3_boards": "approved",
+    "G3_jql-assist": "approved"
   },
   "notes": []
 }

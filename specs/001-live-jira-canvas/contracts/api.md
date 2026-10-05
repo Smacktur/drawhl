@@ -37,8 +37,15 @@ Settings = {
 
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
-| `POST /tasks/search` | `{jql, limit?}` (limit 1..100, default 50) | `{tasks: Task[], total}` (total counts every match) | 422 `invalid_jql`, 422 `invalid_request`, 400 `jira_not_configured`, 401, 429, 503 |
+| `POST /tasks/search` | `{jql, limit?}` (limit 0..100, default 50; 0 returns only `total`, a validity and count check) | `{tasks: Task[], total}` (total counts every match) | 422 `invalid_jql`, 422 `invalid_request`, 400 `jira_not_configured`, 401, 429, 503 |
 | `POST /tasks/resolve` | `{ref}` (key or issue URL) | `{task: Task}` | 422 `invalid_ref`, 422 `host_mismatch`, 404 `task_not_found` (also no access), 400 `jira_not_configured`, 401, 503 |
+
+## JQL suggestions
+
+| Method, path | Request | Response | Errors |
+|---|---|---|---|
+| `GET /jql/vocabulary` | – | `{fields: [{name, label, operators}], functions: string[], keywords: string[]}` (cached 10 min per Jira) | 400 `jira_not_configured`, 401, 429, 503 |
+| `GET /jql/values?field=&prefix=` | – | `{values: [{value, label}]}` (`value` is quoted where Jira needs it, `label` is plain text; empty for fields without suggestions) | 400, 401, 429, 503 |
 
 ## Settings
 

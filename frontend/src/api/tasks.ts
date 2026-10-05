@@ -34,3 +34,25 @@ export function searchTasks(jql: string, limit: number) {
     },
   )
 }
+
+const vocabularySchema = z.object({
+  fields: z.array(
+    z.object({ name: z.string(), label: z.string(), operators: z.array(z.string()) }),
+  ),
+  functions: z.array(z.string()),
+  keywords: z.array(z.string()),
+})
+
+export type JqlVocabulary = z.infer<typeof vocabularySchema>
+
+export function getJqlVocabulary() {
+  return fetchJson('/api/jql/vocabulary', vocabularySchema)
+}
+
+export function getJqlValues(field: string, prefix: string) {
+  const params = new URLSearchParams({ field, prefix })
+  return fetchJson(
+    `/api/jql/values?${params}`,
+    z.object({ values: z.array(z.object({ value: z.string(), label: z.string() })) }),
+  ).then((body) => body.values)
+}

@@ -20,7 +20,8 @@ class ResolveOut(BaseModel):
 
 class SearchIn(BaseModel):
     jql: str = Field(min_length=1, max_length=2000)
-    limit: int = Field(default=50, ge=1, le=MAX_SEARCH)
+    # 0 asks only for the match count, which also validates the query.
+    limit: int = Field(default=50, ge=0, le=MAX_SEARCH)
 
 
 class SearchOut(BaseModel):
