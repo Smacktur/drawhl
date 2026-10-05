@@ -1,32 +1,32 @@
-# 08. Модели по фазам
+# 08. Models by phase
 
-Модель выбирается по **когнитивной сложности фазы**, а не по важности проекта. Дорогие модели — там, где нужно думать; дешёвые — там, где нужно искать и выполнять.
+Choose the model by the **cognitive complexity of the phase**, not by the importance of the project. Expensive models go where thinking is needed; cheap ones where searching and executing are needed.
 
-## Таблица
+## Table
 
-| Фаза | Кто выполняет | Модель / effort | Почему |
+| Phase | Who runs it | Model / effort | Why |
 |---|---|---|---|
-| Intake, scope, гейты, синтез ресерча | основная сессия | **Opus 5.5** (дефолт) | Диалог, суждения, решения |
-| Research: 3 потока поиска | субагент `researcher` | **Sonnet / medium** | Поиск и извлечение, много токенов веба |
-| Spec: specify, tasks | основная сессия | Opus 5.5 | Формулировки и нарезка срезов |
-| **Архитектура**: срезы, контракт, данные, решения | субагент `architect` | **Fable / high** | Главные решения проекта, дорого ошибиться |
-| Build | основная сессия | Opus 5.5 | Код по готовому плану |
-| Build, параллельно | воркеры Orca | L: Sonnet / low · M: Sonnet / medium · H: Opus / high | См. `07-orchestration.md` |
-| Ревью кода (G3, Verify) | субагент `reviewer` + `/gstack-codex` | **Opus / high** + второй провайдер | Ловить баги, а не стиль |
-| QA, рутина, доки | основная сессия или воркер L | Sonnet | Механика |
-| `/lib-add` | frontmatter скилла | Sonnet / low | Один ход, простая запись |
-| `/retro`, `/lib-insights` | основная сессия | Opus 5.5 | Выводы из опыта |
+| Intake, scope, gates, research synthesis | main session | **Opus 5.5** (default) | Dialogue, judgment, decisions |
+| Research: 3 search streams | `researcher` subagent | **Sonnet / medium** | Search and extraction, lots of web tokens |
+| Spec: specify, tasks | main session | Opus 5.5 | Wording and slicing |
+| **Architecture**: slices, contract, data, decisions | `architect` subagent | **Fable / high** | The project's key decisions, expensive to get wrong |
+| Build | main session | Opus 5.5 | Code from a ready plan |
+| Build, parallel | Orca workers | L: Sonnet / low · M: Sonnet / medium · H: Opus / high | See `07-orchestration.md` |
+| Code review (G3, Verify) | `reviewer` subagent + `/gstack-codex` | **Opus / high** + second provider | Catch bugs, not style |
+| QA, routine, docs | main session or L worker | Sonnet | Mechanical work |
+| `/lib-add` | skill frontmatter | Sonnet / low | Single turn, simple entry |
+| `/retro`, `/lib-insights` | main session | Opus 5.5 | Conclusions from experience |
 
-## Как это устроено
+## How it works
 
-- **Основная сессия** — модель по умолчанию (Opus 5.5). Скилл не может переключить её надолго; меняется только вручную через `/model`.
-- **Субагенты** (`.claude/agents/*.md`) — модель и effort зашиты во frontmatter и действуют всегда, независимо от сессии. Поэтому фазы с особой моделью вынесены в субагентов: `researcher`, `architect`, `reviewer`.
-- **`model:` во frontmatter скилла** действует только на один ход, где вызван скилл. Годится для однократных скиллов (`/lib-add`), не для многоходовых с гейтами.
-- **Воркеры Orca** — `--model` / `--effort` явно при каждом `worker-start`.
+- **The main session** uses the default model (Opus 5.5). A skill cannot switch it for long; it changes only manually via `/model`.
+- **Subagents** (`.claude/agents/*.md`) have the model and effort fixed in frontmatter, and these always apply, regardless of the session. That is why phases with a special model are moved into subagents: `researcher`, `architect`, `reviewer`.
+- **`model:` in skill frontmatter** applies only to the single turn where the skill is invoked. It suits one-shot skills (`/lib-add`), not multi-turn ones with gates.
+- **Orca workers**: pass `--model` / `--effort` explicitly on every `worker-start`.
 
-## Правила
+## Rules
 
-- Архитектор **не пишет файлы**: отдаёт решения, основная сессия оформляет `plan.md` и контракты. Дорогая модель тратится на мысль, а не на форматирование.
-- Fable — только в `architect`. `xhigh` / `max` — по явному решению человека для действительно нетривиальной архитектуры.
-- Ревьюер — на модели или провайдере, отличном от автора кода, когда это возможно.
-- Сменить модель фазы — правка frontmatter агента **в launchpad** и `launch update`, не в проекте.
+- The architect **does not write files**: it hands over decisions, and the main session produces `plan.md` and the contracts. The expensive model is spent on thinking, not on formatting.
+- Fable only in `architect`. `xhigh` / `max` only by explicit human decision for genuinely non-trivial architecture.
+- The reviewer runs on a different model or provider than the code author, when possible.
+- To change a phase's model, edit the agent frontmatter **in launchpad** and run `launch update`, not in the project.

@@ -1,54 +1,54 @@
-# 06. Качество и README
+# 06. Quality and README
 
-## Перед каждым мержем в main (G3)
+## Before every merge into main (G3)
 
-- [ ] `make check` зелёный (lint + тесты)
-- [ ] Сценарий среза показан: вывод curl / теста / скрин
-- [ ] Есть UI → `/ui-review` пройден, таблица приложена (рекомендация: вкус не блокирует, сломанный сценарий и ошибки в консоли — блокируют)
-- [ ] `make up && make smoke` — если менялись API, compose или Dockerfile
-- [ ] Новые ENV — в `.env.example` и таблице README
-- [ ] Новые зависимости — в `THIRD_PARTY.md`
-- [ ] Ревью диффа: `/gstack-review` (для крупных срезов — `/gstack-codex`)
+- [ ] `make check` is green (lint + tests)
+- [ ] The slice scenario is shown: curl / test output or a screenshot
+- [ ] There is a UI → `/ui-review` passed, table attached (recommendation: taste does not block, a broken scenario and console errors do)
+- [ ] `make up && make smoke`: if the API, compose or Dockerfile changed
+- [ ] New ENV variables are in `.env.example` and the README table
+- [ ] New dependencies are in `THIRD_PARTY.md`
+- [ ] Diff review: `/gstack-review` (for large slices, `/gstack-codex`)
 
-## README — обязательные разделы
+## README: required sections
 
-| Раздел | Чем закрыть |
+| Section | How to cover it |
 |---|---|
-| Что это | Одна строка + проблема → решение → для кого |
-| Быстрый старт | **Одна команда**: `docker compose up --build` |
-| Архитектура | Mermaid + ссылка на `docs/architecture.md` |
-| Технологии | Таблица: слой → технология → зачем |
-| Переменные окружения | Таблица: переменная → назначение → дефолт |
-| Проверка core scenario | Пошагово: открыть URL → сделать X → увидеть Y. Плюс curl и `make smoke` |
-| Разработка | `make dev-api`, `make dev-web`, `make check` |
-| Ограничения и дальше | Что осознанно не сделано (Won't из brief) |
+| What it is | One line + problem → solution → for whom |
+| Quick start | **One command**: `docker compose up --build` |
+| Architecture | Mermaid + a link to `docs/architecture.md` |
+| Technologies | Table: layer → technology → why |
+| Environment variables | Table: variable → purpose → default |
+| Core scenario check | Step by step: open URL → do X → see Y. Plus curl and `make smoke` |
+| Development | `make dev-api`, `make dev-web`, `make check` |
+| Limitations and next | What was deliberately not done (Won't from the brief) |
 
-## Проверка на чистом клоне (G4)
+## Clean clone check (G4)
 
 ```bash
-make clean-clone     # клонирует origin/main во временную папку и поднимает по README
+make clean-clone     # clones origin/main into a temp folder and brings it up per the README
 ```
 
-Плюс отдельный агент: «Склонируй репо в пустую папку и выполни README **буквально**, ничего не додумывая. Сообщи каждое место, где споткнулся». Всё, где споткнулся, — чиним в README.
+Plus a separate agent: "Clone the repo into an empty folder and follow the README **literally**, assuming nothing. Report every place where you stumbled." Everything it stumbled on gets fixed in the README.
 
-- [ ] Работает без `.env` и ключей (mock-режим)
-- [ ] Порты указаны
-- [ ] Seed-данные подтягиваются сами
-- [ ] Нет абсолютных путей и зависимостей от машины разработчика
-- [ ] От клона до работающего сценария ≤ 5 минут
+- [ ] Works without `.env` and keys (mock mode)
+- [ ] Ports are stated
+- [ ] Seed data loads by itself
+- [ ] No absolute paths or dependence on the developer's machine
+- [ ] From clone to a working scenario in ≤ 5 minutes
 
-## Evals (если есть LLM / ML)
+## Evals (if there is LLM / ML)
 
-- 10–30 кейсов в `evals/cases.*`, сгенерированные помечены.
-- Метрика качества, латентность p50/p95, стоимость запроса, провайдер/модель.
-- Таблица — в README. Цифры > слова.
+- 10–30 cases in `evals/cases.*`, generated ones are marked.
+- Quality metric, latency p50/p95, cost per request, provider/model.
+- The table goes in the README. Numbers over words.
 
-## Финальный чеклист MVP
+## Final MVP checklist
 
-- [ ] Все срезы Must смержены, main зелёный
-- [ ] `make check`, `make smoke`, `make clean-clone` проходят
-- [ ] README по разделам выше, ограничения записаны
-- [ ] `THIRD_PARTY.md` полный
-- [ ] `docs/architecture.md` актуальна
-- [ ] Нет секретов (`gitleaks detect`)
-- [ ] Тег `v0.1.0`
+- [ ] All Must slices are merged, main is green
+- [ ] `make check`, `make smoke`, `make clean-clone` pass
+- [ ] README has the sections above, limitations are recorded
+- [ ] `THIRD_PARTY.md` is complete
+- [ ] `docs/architecture.md` is up to date
+- [ ] No secrets (`gitleaks detect`)
+- [ ] Tag `v0.1.0`

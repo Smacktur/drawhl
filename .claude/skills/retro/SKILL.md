@@ -31,7 +31,7 @@ Update or create `library/projects/<slug>.md` per the README's project template:
 Turn every lesson into an action, one of:
 - **KEDB entry** for a non-obvious error (use the `/lib-add` format), linked as `[[slug]]`;
 - **tool/skill verdict change** with evidence (e.g. `trial` → `adopt` after it worked on a real project, → `hold` with the reason);
-- **methodology proposal** — a concrete change to `template/docs/playbook/*`, `AGENTS.md.jinja` or a skill, written as a checklist item in the retro. **Do not edit launchpad methodology from here**; the user applies it (or `/lib-insights` picks it up).
+- **methodology proposal** — a concrete change to `template/docs/{% if profile != 'oss' %}playbook{% endif %}/*`, `AGENTS.md.jinja` or a skill, written as a checklist item in the retro. **Do not edit launchpad methodology from here**; the user applies it (or `/lib-insights` picks it up).
 
 ## 4. Index and commit in launchpad
 

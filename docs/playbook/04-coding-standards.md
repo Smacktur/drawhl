@@ -1,27 +1,27 @@
 # 04. Coding standards
 
-Стандарт кода для людей и агентов. Ориентир — зрелые OSS-проекты (Go stdlib, Kubernetes, FastAPI, React): код читается сам, комментарии редкие и точные.
+Code standard for humans and agents. The reference is mature OSS projects (Go stdlib, Kubernetes, FastAPI, React): code reads by itself, comments are rare and precise.
 
-## Язык
+## Language
 
-- **Всё в коде — на английском:** идентификаторы, комментарии, docstrings, сообщения логов и ошибок, коммиты, названия веток.
-- UI-тексты — на языке пользователя (RU / KZ / EN), вынесены в одно место, не размазаны по коду.
-- Доки для людей (`README`, `docs/`) — можно по-русски, но единообразно в пределах проекта.
+- **Everything in code is in English:** identifiers, comments, docstrings, log and error messages, commits, branch names.
+- UI texts are in the user's language (RU / KZ / EN), kept in one place, not scattered across the code.
+- Docs for humans (`README`, `docs/`) are in English too: the repository is public.
 
-## Комментарии
+## Comments
 
-**Главное правило: комментарий объясняет *почему*, а не *что*.** Что делает код — должно быть видно из имён.
+**Main rule: a comment explains *why*, not *what*.** What the code does must be visible from the names.
 
-| ✅ Пишем | ❌ Не пишем |
+| ✅ Write | ❌ Do not write |
 |---|---|
-| Неочевидная причина решения | Пересказ строки кода |
-| Ограничение внешней системы, workaround с ссылкой | Комментарий к каждой строке / каждому блоку |
-| Инвариант, который легко сломать | Поэмы, «This function is responsible for…» |
-| Единица измерения / формат, если не видно из типа | Историю изменений (для этого git) |
-| Docstring публичного API: одна строка, что возвращает и когда падает | Закомментированный код |
-| `TODO(owner): action` — конкретно | Декоративные баннеры `# ====== SECTION ======` |
+| A non-obvious reason for a decision | A retelling of the line of code |
+| An external system limitation, a workaround with a link | A comment on every line / every block |
+| An invariant that is easy to break | Poems, "This function is responsible for…" |
+| Unit / format, if not visible from the type | Change history (that is what git is for) |
+| Public API docstring: one line, what it returns and when it fails | Commented-out code |
+| `TODO(owner): action`: specific | Decorative banners `# ====== SECTION ======` |
 
-Длина: **одна строка** в большинстве случаев, максимум 2–3 для сложного инварианта. Если нужно больше — переименуй или разбей код.
+Length: **one line** in most cases, at most 2–3 for a complex invariant. If you need more, rename or split the code.
 
 ```python
 # ❌
@@ -50,85 +50,85 @@ limiter := rate.NewLimiter(8, 1)
 export function maskPii(text: string): string { ... }
 ```
 
-## Именование
+## Naming
 
-- Имена говорят о смысле: `risk_score`, `fetchInvoices`, `ParseReceipt` — не `data`, `tmp`, `handle2`, `doStuff`.
-- Булевы — вопросом: `is_valid`, `hasAccess`, `shouldRetry`.
-- Единицы в имени, если тип их не несёт: `timeout_ms`, `size_bytes`.
-- Идиомы языка: `snake_case` (Python), `camelCase`/`PascalCase` (TS), `MixedCaps` + короткие имена в узком скоупе (Go).
-- Никаких сокращений, кроме общепринятых (`id`, `url`, `ctx`, `db`, `cfg`).
+- Names convey meaning: `risk_score`, `fetchInvoices`, `ParseReceipt`, not `data`, `tmp`, `handle2`, `doStuff`.
+- Booleans as a question: `is_valid`, `hasAccess`, `shouldRetry`.
+- Units in the name if the type does not carry them: `timeout_ms`, `size_bytes`.
+- Language idioms: `snake_case` (Python), `camelCase`/`PascalCase` (TS), `MixedCaps` + short names in a narrow scope (Go).
+- No abbreviations except common ones (`id`, `url`, `ctx`, `db`, `cfg`).
 
-## Функции и модули
+## Functions and modules
 
-- Функция делает одно дело. Ориентир — до ~40 строк; длиннее — повод разбить.
-- Ранний выход вместо вложенных `if`.
-- Чистые функции в `domain/`, побочные эффекты — в `adapters/`.
-- Файл — одна тема. Ориентир — до ~300 строк.
-- Нет циклических импортов; зависимости идут по `api → domain ← adapters`.
-- Никаких «utils»-свалок; хелпер живёт рядом с тем, кто его использует.
+- A function does one thing. Guideline: up to ~40 lines; longer is a reason to split.
+- Early return instead of nested `if`.
+- Pure functions in `domain/`, side effects in `adapters/`.
+- A file covers one topic. Guideline: up to ~300 lines.
+- No circular imports; dependencies go `api → domain ← adapters`.
+- No "utils" dumping grounds; a helper lives next to whoever uses it.
 
-## Ошибки
+## Errors
 
-- Не глотать ошибки. Либо обработать, либо пробросить с контекстом.
-- Go: `fmt.Errorf("fetch invoice %s: %w", id, err)`. Python: свои исключения домена, маппинг в HTTP-ответ — только в `api/`. TS: типизированный результат или `Error` с `cause`.
-- Наружу (HTTP) — единый формат ошибки без стектрейсов: `{"error": {"code": "...", "message": "..."}}`.
-- Сообщения ошибок и логов: строчными, без точки в конце, с контекстом (`"parse receipt: missing total"`).
+- Do not swallow errors. Either handle them or propagate with context.
+- Go: `fmt.Errorf("fetch invoice %s: %w", id, err)`. Python: own domain exceptions, mapping to an HTTP response only in `api/`. TS: a typed result or `Error` with `cause`.
+- Outward (HTTP): a single error format without stack traces: `{"error": {"code": "...", "message": "..."}}`.
+- Error and log messages: lowercase, no trailing period, with context (`"parse receipt: missing total"`).
 
-## Логи
+## Logs
 
-- Структурные (JSON), ключ-значение, не конкатенация строк.
-- Уровни: `debug` — детали, `info` — бизнес-события, `warn` — деградация (фоллбэк сработал), `error` — нужен человек.
-- Никогда не логировать секреты и ПДн (маскирование до лога).
+- Structured (JSON), key-value, not string concatenation.
+- Levels: `debug` for details, `info` for business events, `warn` for degradation (a fallback kicked in), `error` when a human is needed.
+- Never log secrets or PII (mask before logging).
 
-## Типы и валидация
+## Types and validation
 
-- Python: type hints везде в публичных функциях, Pydantic на границах (API, LLM structured output).
-- TS: `strict: true`, `zod` на границах, без `any` (исключение — с комментарием почему).
-- Go: явные структуры, валидация на входе хендлера.
+- Python: type hints everywhere in public functions, Pydantic at the boundaries (API, LLM structured output).
+- TS: `strict: true`, `zod` at the boundaries, no `any` (an exception needs a comment saying why).
+- Go: explicit structs, validation at the handler input.
 
-## Форматирование и линтеры (без споров о стиле)
+## Formatting and linters (no style debates)
 
-| Язык | Формат | Линт | Тесты |
+| Language | Format | Lint | Tests |
 |---|---|---|---|
 | Python | `ruff format` | `ruff check` | `pytest` |
-| TS/JS | `prettier` | `eslint` | `vitest`, Playwright для e2e |
-| Go | `gofmt` / `goimports` | `golangci-lint` (или `go vet`) | `go test ./...` |
+| TS/JS | `prettier` | `eslint` | `vitest`, Playwright for e2e |
+| Go | `gofmt` / `goimports` | `golangci-lint` (or `go vet`) | `go test ./...` |
 
-Коммит не делается, если формат/линт красный (pre-commit).
+No commit if format/lint is red (pre-commit).
 
-## Тесты
+## Tests
 
-- Имя теста описывает поведение: `test_masks_iin_in_free_text`, `TestScore_ReturnsZeroForEmptyHistory`.
-- Arrange / Act / Assert, без логики в тестах.
-- Тестируем поведение через публичный интерфейс, не приватные детали.
-- Моки только на границе (adapters), domain тестируется на реальных объектах.
+- The test name describes behavior: `test_masks_iin_in_free_text`, `TestScore_ReturnsZeroForEmptyHistory`.
+- Arrange / Act / Assert, no logic in tests.
+- Test behavior through the public interface, not private details.
+- Mocks only at the boundary (adapters), domain is tested on real objects.
 
-## Зависимости
+## Dependencies
 
-- Новая зависимость — только если экономит > 30 минут или это стандарт де-факто.
-- Сразу в `THIRD_PARTY.md`.
-- Версии фиксируются lock-файлом.
+- A new dependency only if it saves > 30 minutes or is the de facto standard.
+- Add it to `THIRD_PARTY.md` right away.
+- Versions are pinned by the lock file.
 
 ## Git
 
-- Conventional commits на английском, повелительное наклонение: `feat(api): add receipt upload endpoint`.
-- Subject ≤ 72 символов, body — только если «почему» неочевидно.
-- Один коммит — одно логическое изменение.
-- Ветки: `feat/<area>-<short>`, `fix/...`, `docs/...`, `chore/...`.
+- Conventional commits in English, imperative mood: `feat(api): add receipt upload endpoint`.
+- Subject ≤ 72 characters, body only if the "why" is not obvious.
+- One commit, one logical change.
+- Branches: `feat/<area>-<short>`, `fix/...`, `docs/...`, `chore/...`.
 
-## Фронтенд
+## Frontend
 
-- Компонент — одна ответственность; > ~150 строк — разбить.
-- UI собираем из `@/components/ui` (shadcn); своё — композиция поверх них, без дизайн-системы «на будущее».
-- Цвета, радиусы, шрифты — токены темы из `index.css`, не сырые классы палитры (`gray-500`, `red-600`).
-- Состояние сервера — TanStack Query (или server components в Next), не ручные `useEffect`-загрузки.
-- Состояния загрузки, пустоты и ошибки — у каждого экрана с данными.
-- Доступность: семантичные теги, `label` у инпутов, фокус с клавиатуры.
+- A component has one responsibility; > ~150 lines, split it.
+- Build UI from `@/components/ui` (shadcn); your own is composition on top of them, no "just in case" design system.
+- Colors, radii, fonts are theme tokens from `index.css`, not raw palette classes (`gray-500`, `red-600`).
+- Server state: TanStack Query (or server components in Next), not hand-written `useEffect` loads.
+- Loading, empty and error states on every screen with data.
+- Accessibility: semantic tags, `label` on inputs, keyboard focus.
 
-## Что агент проверяет перед «готово»
+## What the agent checks before "done"
 
-- [ ] Нет комментариев-пересказов и закомментированного кода
-- [ ] Имена говорят о смысле
-- [ ] Формат + линт + тесты зелёные
-- [ ] Ошибки не проглочены, логи без секретов/ПДн
-- [ ] Изменения только в своей зоне
+- [ ] No retelling comments or commented-out code
+- [ ] Names convey meaning
+- [ ] Format + lint + tests are green
+- [ ] Errors are not swallowed, logs contain no secrets/PII
+- [ ] Changes only in its own area

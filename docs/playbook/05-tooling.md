@@ -1,48 +1,48 @@
-# 05. Инструменты
+# 05. Tooling
 
-Правило: **один инструмент на одну роль.** Сотни скиллов съедают контекст и конфликтуют.
+Rule: **one tool per role.** Hundreds of skills eat context and conflict.
 
-## Фаза → инструмент
+## Phase → tool
 
-| Фаза | Инструмент | Зачем |
+| Phase | Tool | Why |
 |---|---|---|
-| Intake (идея размыта) | gstack `/gstack-office-hours` | Переформулировать проблему |
-| Scope (G1) | gstack `/gstack-plan-ceo-review` | Ценность и границы глазами бизнеса |
-| Spec | **spec-kit**: `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` | Спека, контракт, срезы с `[P]` |
-| Архитектура (G2) | gstack `/gstack-plan-eng-review`, `codebase-design` | Для нетривиальных решений |
-| Документация библиотек | **context7** MCP | Актуальные API, меньше галлюцинаций |
-| Build | Claude Code; Orca при ≥ 3 `[P]` (`07-orchestration.md`) | Код |
-| Ревью | gstack `/gstack-review`, `/gstack-codex` (второй провайдер) | Качество диффа |
-| Дизайн UI (если есть UI) | `/hallmark` (новые экраны, стиль по референсу), `/impeccable` (критика, доводка), shadcn CLI / MCP | По `DESIGN.md`, см. `10-design.md` |
-| Проверка UI среза | `/ui-review`: Playwright MCP, Chrome DevTools MCP (`.mcp.json`) | Скриншоты, консоль, guidelines, вкус |
-| QA в браузере | gstack `/gstack-qa` | UI-сценарий глазами пользователя |
-| Безопасность | gstack `/gstack-cso`, gitleaks | Если есть ПДн, деньги, внешний доступ |
-| Легал (перед ship) | `/legal` | Privacy Policy и Terms под реальные данные проекта: база + регионы US, EU, RU, KZ, чек-лист действий вне текста |
-| SEO и скорость (если есть UI) | `make audit`, Chrome DevTools MCP | PageSpeed + что видят боты без JS, см. `11-seo.md` |
-| Отладка | `diagnosing-bugs`, `/gstack-investigate` | Воспроизвести → гипотеза → фикс |
-| README / запуск | `/gstack-plan-devex-review`, `make clean-clone` | Запускается с нуля по README |
-| Продвижение (после ship) | `/grow` + `/product-marketing`, `/customer-research`, `/copywriting`, `/influencer-marketing`, `/referrals`, `/community-marketing`, `/directory-submissions`, `/launch-strategy`, `/ai-seo` | Стратегия под проект, материалы, метрики; см. `12-growth.md` |
-| Опыт | `/lib-add` (находка, ошибка), `/retro` (итоги проекта) | Библиотека launchpad: KEDB, вердикты инструментов, ретро |
+| Intake (idea is vague) | gstack `/gstack-office-hours` | Reformulate the problem |
+| Scope (G1) | gstack `/gstack-plan-ceo-review` | Value and boundaries through a business lens |
+| Spec | **spec-kit**: `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` | Spec, contract, slices with `[P]` |
+| Architecture (G2) | gstack `/gstack-plan-eng-review`, `codebase-design` | For non-trivial decisions |
+| Library documentation | **context7** MCP | Current APIs, fewer hallucinations |
+| Build | Claude Code; Orca with ≥ 3 `[P]` (`07-orchestration.md`) | Code |
+| Review | gstack `/gstack-review`, `/gstack-codex` (second provider) | Diff quality |
+| UI design (if there is a UI) | `/hallmark` (new screens, style from a reference), `/impeccable` (critique, polish), shadcn CLI / MCP | Per `DESIGN.md`, see `10-design.md` |
+| UI slice verification | `/ui-review`: Playwright MCP, Chrome DevTools MCP (`.mcp.json`) | Screenshots, console, guidelines, taste |
+| Browser QA | gstack `/gstack-qa` | UI scenario through the user's eyes |
+| Security | gstack `/gstack-cso`, gitleaks | If there is PII, money, external access |
+| Legal (before ship) | `/legal` | Privacy Policy and Terms for the project's real data: base + US, EU, RU, KZ regions, checklist of actions outside the text |
+| SEO and speed (if there is a UI) | `make audit`, Chrome DevTools MCP | PageSpeed + what bots see without JS, see `11-seo.md` |
+| Debugging | `diagnosing-bugs`, `/gstack-investigate` | Reproduce → hypothesis → fix |
+| README / launch | `/gstack-plan-devex-review`, `make clean-clone` | Runs from scratch per the README |
+| Promotion (after ship) | `/grow` + `/product-marketing`, `/customer-research`, `/copywriting`, `/influencer-marketing`, `/referrals`, `/community-marketing`, `/directory-submissions`, `/launch-strategy`, `/ai-seo` | Strategy for the project, materials, metrics; see `12-growth.md` |
+| Experience | `/lib-add` (finding, error), `/retro` (project results) | launchpad library: KEDB, tool verdicts, retros |
 
-## spec-kit: урезанный цикл
+## spec-kit: trimmed cycle
 
-| Шаг | Команда | Результат |
+| Step | Command | Result |
 |---|---|---|
-| 0 | constitution | ✅ уже в `.specify/memory/constitution.md` |
-| 1 | `/speckit-specify <core scenario из brief.md>` | `spec.md` |
-| 2 | `/speckit-plan <стек из 02 + структура из 03>` | `plan.md`, `contracts/`, `data-model.md`, `quickstart.md` |
-| 3 | `/speckit-tasks` | `tasks.md`: срезы, `[P]` для параллельного |
-| 4 | реализация по срезам (`/pipeline`) | код |
-| опц. | `/speckit-clarify` | если spec.md содержит `[NEEDS CLARIFICATION]` |
-| опц. | `/speckit-analyze` | сверка spec ↔ plan ↔ tasks перед G2 на крупных фичах |
+| 0 | constitution | ✅ already in `.specify/memory/constitution.md` |
+| 1 | `/speckit-specify <core scenario from brief.md>` | `spec.md` |
+| 2 | `/speckit-plan <stack from 02 + structure from 03>` | `plan.md`, `contracts/`, `data-model.md`, `quickstart.md` |
+| 3 | `/speckit-tasks` | `tasks.md`: slices, `[P]` for parallel |
+| 4 | implementation by slices (`/pipeline`) | code |
+| opt. | `/speckit-clarify` | if spec.md contains `[NEEDS CLARIFICATION]` |
+| opt. | `/speckit-analyze` | spec ↔ plan ↔ tasks cross-check before G2 on large features |
 
 ## Git
 
 - Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`, `test:`, `refactor:`.
-- Мелкие коммиты, одно логическое изменение на коммит.
-- Никаких `push --force` в main и `reset --hard` без явной просьбы.
-- `.env` в `.gitignore`; хуки ставит `launch new` (вручную — `pre-commit install`): на commit gitleaks + ruff, на push `make check`.
+- Small commits, one logical change per commit.
+- No `push --force` to main and no `reset --hard` without an explicit request.
+- `.env` in `.gitignore`; hooks are installed by `launch new` (manually: `pre-commit install`): gitleaks + ruff on commit, `make check` on push.
 
-## Установка инструментов
+## Installing the tools
 
-Проверка: `launch doctor` (в launchpad). Команды установки — в README launchpad.
+Check: `launch doctor` (in launchpad). Install commands are in the launchpad README.

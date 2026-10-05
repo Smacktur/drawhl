@@ -46,7 +46,7 @@ Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.j
 | OpenAI Codex | Parallel development, cross-review |
 | GitHub spec-kit | Spec, plan, tasks (`specs/`) |
 | gstack | Scope and architecture review, QA, security |
-| context7 MCP | Актуальная документация библиотек |
-| marketingskills (MIT, Corey Haines) | Маркетинговые скиллы для `/grow`: контекст продукта, кастдев, тексты, блогеры, рефералки, сообщества, каталоги (`.claude/skills/`) |
-| Hallmark (MIT), Impeccable (Apache-2.0) | Дизайн-скиллы: генерация и критика UI (`.claude/skills/`) |
-| Playwright MCP, Chrome DevTools MCP, shadcn MCP | Проверка UI в браузере, компоненты |
+| context7 MCP | Up-to-date library docs |
+| marketingskills (MIT, Corey Haines) | Marketing skills for `/grow`: product context, customer research, copy, creators, referrals, communities, directories (`.claude/skills/`) |
+| Hallmark (MIT), Impeccable (Apache-2.0) | Design skills: UI generation and critique (`.claude/skills/`) |
+| Playwright MCP, Chrome DevTools MCP, shadcn MCP | UI checks in the browser, components |

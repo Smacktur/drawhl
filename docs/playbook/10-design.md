@@ -1,87 +1,87 @@
-# 10. Дизайн UI
+# 10. UI design
 
-Без явного направления агент рисует статистическое среднее: Inter/Geist, фиолетовый градиент, hero и три карточки. Лечится тремя вещами: **цель** (`DESIGN.md`), **скиллы вкуса** (Hallmark, Impeccable) и **взгляд на результат** (браузер, скриншоты, `/ui-review`).
+Without explicit direction an agent draws the statistical average: Inter/Geist, a purple gradient, a hero and three cards. Three things fix this: a **target** (`DESIGN.md`), **taste skills** (Hallmark, Impeccable) and **a look at the result** (browser, screenshots, `/ui-review`).
 
-## Источник правды
+## Source of truth
 
-| Что | Где | Кто читает |
+| What | Where | Who reads it |
 |---|---|---|
-| Направление, палитра, типографика, тон | `DESIGN.md` в корне | агенты, Hallmark, Impeccable |
-| Тема в коде | `frontend/src/index.css`: CSS-переменные shadcn в `:root` и `.dark` | компоненты через токены (`bg-primary`) |
-| Компоненты | `frontend/src/components/ui/` (shadcn) | весь UI |
+| Direction, palette, typography, tone | `DESIGN.md` in the root | agents, Hallmark, Impeccable |
+| Theme in code | `frontend/src/index.css`: shadcn CSS variables in `:root` and `.dark` | components via tokens (`bg-primary`) |
+| Components | `frontend/src/components/ui/` (shadcn) | all UI |
 
-`DESIGN.md` и `index.css` не расходятся: поменял палитру в одном — поменяй в другом.
+`DESIGN.md` and `index.css` must not diverge: change the palette in one, change it in the other.
 
-## Формат DESIGN.md
+## DESIGN.md format
 
 ```markdown
-# Design — <проект>
+# Design: <project>
 
-## Направление
-Одна фраза + 3 прилагательных (например: «спокойный рабочий инструмент — плотный, тёплый, без украшений»).
-Анти-референсы: на что не должно быть похоже.
+## Direction
+One phrase + 3 adjectives (for example: "a calm work tool: dense, warm, no decoration").
+Anti-references: what it must not look like.
 
-## Референсы
-1–3 сайта: URL → что берём (сетка, типографика, ритм, тон). Ассеты и тексты не берём.
+## References
+1–3 sites: URL → what we take (grid, typography, rhythm, tone). We do not take assets or copy.
 
-## Цвет
-Фон, текст, primary, accent, destructive, border — значения в oklch и имя токена shadcn. Светлая и тёмная тема.
+## Color
+Background, text, primary, accent, destructive, border: values in oklch and the shadcn token name. Light and dark theme.
 
-## Типографика
-Шрифты (заголовки / текст / моно), шкала размеров, начертания, межстрочный.
+## Typography
+Fonts (headings / text / mono), size scale, weights, line height.
 
-## Форма и ритм
-Радиус (`--radius`), шаг отступов, плотность, тени (есть / нет и где).
+## Shape and rhythm
+Radius (`--radius`), spacing step, density, shadows (yes / no and where).
 
-## Компоненты
-Пресет shadcn, отклонения от стандартных компонентов, иконки (lucide, толщина).
+## Components
+shadcn preset, deviations from standard components, icons (lucide, stroke width).
 
-## Движение
-Где анимация есть, длительность, `prefers-reduced-motion`.
+## Motion
+Where animation exists, duration, `prefers-reduced-motion`.
 
-## Тексты
-Тон интерфейса, язык, как пишем кнопки и ошибки.
+## Copy
+Interface tone, language, how we write buttons and errors.
 
-## Нельзя
-Конкретные запреты проекта сверх общих (см. «Признаки AI-slop» ниже).
+## Don'ts
+Project-specific bans beyond the general ones (see "AI-slop signs" below).
 ```
 
-## Как получить DESIGN.md
+## How to get DESIGN.md
 
-1. **На `/launch`** (фаза Scope) — черновик по ответам про аудиторию, тон и референсы, в проект попадает через `launch new --design`.
-2. **Нет файла** → до первой UI-задачи: создать по формату выше одним из способов:
-   - есть сайт-референс → токены `npx dembrandt <url> --dtcg` и/или `/hallmark study <url>`;
-   - нравится стиль известного продукта → стартовый файл из [awesome-design-md](https://github.com/VoltAgent/awesome-design-md);
-   - ничего нет → `/hallmark` предложит тему, или быстрый старт пресетом `npx shadcn@latest apply <nova|vega|maia|lyra|mira|luma|sera|rhea>`.
-3. Перенести цвета, радиус и шрифт в `frontend/src/index.css`; шрифт — пакет `@fontsource-variable/<font>` вместо Geist.
+1. **At `/launch`** (Scope phase): a draft from the answers about audience, tone and references; it enters the project through `launch new --design`.
+2. **No file** → before the first UI task: create one using the format above in one of these ways:
+   - there is a reference site → tokens with `npx dembrandt <url> --dtcg` and/or `/hallmark study <url>`;
+   - you like the style of a known product → a starter file from [awesome-design-md](https://github.com/VoltAgent/awesome-design-md);
+   - nothing at all → `/hallmark` proposes a theme, or a quick start with a preset: `npx shadcn@latest apply <nova|vega|maia|lyra|mira|luma|sera|rhea>`.
+3. Move colors, radius and font into `frontend/src/index.css`; for the font use the `@fontsource-variable/<font>` package instead of Geist.
 
-**Проект обновлён с launchpad < v0.6.0** (экраны на сырых классах, `components/ui/` не используется): миграция на токены и shadcn — отдельная задача после `DESIGN.md`, не попутно в срезе. Начать с `/hallmark audit` — он даёт план редизайна.
+**Project updated from launchpad < v0.6.0** (screens on raw classes, `components/ui/` unused): migrating to tokens and shadcn is a separate task after `DESIGN.md`, not something done in passing within a slice. Start with `/hallmark audit`: it gives a redesign plan.
 
-**Можно** брать токены и приёмы (палитра-направление, шкала, иерархия, паттерны). **Нельзя** брать логотипы, иллюстрации, тексты, иконсеты бренда и делать узнаваемую копию чужого бренда.
+**You may** take tokens and techniques (palette direction, scale, hierarchy, patterns). **You may not** take logos, illustrations, copy, brand icon sets, or make a recognizable copy of another brand.
 
-## Инструменты по ролям
+## Tools by role
 
-| Роль | Инструмент |
+| Role | Tool |
 |---|---|
-| Новый экран или страница с нуля, стиль по референсу | `/hallmark` (режимы `study <url>`, `redesign`) |
-| Критика и доводка готового UI | `/impeccable` (`critique`, `audit`, `polish`, `bolder`, `quieter`, `distill`, `harden`) |
-| Проверка среза перед ревью | `/ui-review` (рекомендация, не блокирует G3) |
-| Компоненты | `npx shadcn@latest add / search / docs`, shadcn MCP |
-| Глаза агента | Playwright MCP (сценарий, скриншоты), Chrome DevTools MCP (консоль, сеть, performance) — в `.mcp.json` |
-| Токены чужого сайта | `npx dembrandt <url> --dtcg` |
+| New screen or page from scratch, style from a reference | `/hallmark` (modes `study <url>`, `redesign`) |
+| Critique and polish of finished UI | `/impeccable` (`critique`, `audit`, `polish`, `bolder`, `quieter`, `distill`, `harden`) |
+| Check a slice before review | `/ui-review` (recommendation, does not block G3) |
+| Components | `npx shadcn@latest add / search / docs`, shadcn MCP |
+| The agent's eyes | Playwright MCP (scenario, screenshots), Chrome DevTools MCP (console, network, performance) in `.mcp.json` |
+| Tokens of someone else's site | `npx dembrandt <url> --dtcg` |
 
-Hallmark и Impeccable лежат в `.claude/skills/` (копии из launchpad, обновление — `launch update`). Impeccable при первом запуске скачивает свой движок в `~/.impeccable/bin/`; без сети работает по инструкции из самого скилла.
+Hallmark and Impeccable live in `.claude/skills/` (copies from launchpad, updated with `launch update`). On first run Impeccable downloads its engine to `~/.impeccable/bin/`; without network it works from the instructions in the skill itself.
 
-## UI-гейт среза (рекомендация)
+## Slice UI gate (recommendation)
 
-Перед ревью среза с UI — `/ui-review`:
+Before reviewing a slice with UI, run `/ui-review`:
 
-- [ ] сценарий среза пройден в браузере, console без ошибок
-- [ ] скриншоты: desktop 1280 и mobile 390, светлая и тёмная тема
-- [ ] Web Interface Guidelines: focus виден, hit target ≥ 24px (44px на мобиле), input ≥ 16px на мобиле, клавиатура, submit по Enter
-- [ ] loading / error / empty выглядят как часть продукта
-- [ ] критика `/impeccable critique` против `DESIGN.md`: нет расхождений с направлением
+- [ ] the slice scenario passes in the browser, no console errors
+- [ ] screenshots: desktop 1280 and mobile 390, light and dark theme
+- [ ] Web Interface Guidelines: focus is visible, hit target ≥ 24px (44px on mobile), input ≥ 16px on mobile, keyboard, submit on Enter
+- [ ] loading / error / empty look like part of the product
+- [ ] `/impeccable critique` against `DESIGN.md`: no deviations from the direction
 
-## Признаки AI-slop
+## AI-slop signs
 
-Фиолетово-индиго градиенты · один шрифт на всё без иерархии · hero + три карточки фич · эмодзи вместо иконок · glassmorphism и тени «для красоты» · всё по центру · одинаковые отступы без ритма · сырые цвета палитры (`gray-500`) вместо токенов · декоративные анимации на каждом элементе.
+Purple-indigo gradients · one font for everything with no hierarchy · hero + three feature cards · emoji instead of icons · glassmorphism and shadows "for beauty" · everything centered · identical spacing with no rhythm · raw palette colors (`gray-500`) instead of tokens · decorative animation on every element.

@@ -1,64 +1,64 @@
-# 07. Orca: параллельные агенты
+# 07. Orca: parallel agents
 
-Orca (`orca` CLI) даёт управляемые worktree, терминалы и **supervised-оркестрацию**: координатор (Claude) раздаёт задачи воркерам (Claude / Codex), ждёт `worker_done`, отвечает на вопросы.
+Orca (`orca` CLI) provides managed worktrees, terminals and **supervised orchestration**: a coordinator (Claude) hands out tasks to workers (Claude / Codex), waits for `worker_done` and answers questions.
 
-Скиллы `orca-cli` и `orchestration` ставятся глобально. Актуальный гайд — из бинарника: `orca skills get orchestration`.
+The `orca-cli` and `orchestration` skills are installed globally. The current guide comes from the binary: `orca skills get orchestration`.
 
-## Когда что
+## When to use what
 
-| Ситуация | Инструмент |
+| Situation | Tool |
 |---|---|
-| Одна последовательная задача / срез | Обычная сессия Claude, без оркестрации |
-| ≥ 3 независимых задач `[P]`, контракт зафиксирован | `orchestration` (координатор + воркеры) |
-| Отдать задачу в отдельный worktree без контроля | `orca-cli` handoff |
-| Проверить UI в браузере | `orca` browser или `/gstack-qa` |
+| One sequential task / slice | Regular Claude session, no orchestration |
+| ≥ 3 independent `[P]` tasks, contract fixed | `orchestration` (coordinator + workers) |
+| Hand a task to a separate worktree without supervision | `orca-cli` handoff |
+| Check the UI in a browser | `orca` browser or `/gstack-qa` |
 
-## Предусловия
+## Preconditions
 
-1. **Контракт и скелет есть.** Пока нет `contracts/` — работает один агент.
-2. **Все правила закоммичены.** Worktree = только закоммиченное: без коммита `AGENTS.md`/`docs/` воркер работает без правил.
-3. **Одна зона — один воркер.** Зоны не пересекаются:
+1. **Contract and skeleton exist.** Until `contracts/` exists, a single agent works.
+2. **All rules are committed.** A worktree contains only committed files: without a commit of `AGENTS.md`/`docs/`, the worker runs without the rules.
+3. **One zone, one worker.** Zones do not overlap:
 
-| Поток | Зона |
+| Stream | Zone |
 |---|---|
 | Backend domain + api | `backend/app/{domain,api}/`, `backend/tests/` |
-| Adapters / данные / evals | `backend/app/adapters/`, `data/`, `evals/` |
+| Adapters / data / evals | `backend/app/adapters/`, `data/`, `evals/` |
 | Frontend | `frontend/` |
-| Доки / ревью | `README.md`, `docs/` |
+| Docs / review | `README.md`, `docs/` |
 
-Не больше **3 воркеров** — дальше не успеваешь проверять результат.
+No more than **3 workers**: beyond that you cannot keep up with checking results.
 
-## Цикл координатора
+## Coordinator loop
 
 ```text
 orca status --json
-orca orchestration run-create --objective "<цель волны>" --json
-# ветку и worktree создаём сами — имя по нашим правилам, не по префиксу Orca
+orca orchestration run-create --objective "<wave goal>" --json
+# create the branch and worktree ourselves: name by our rules, not by the Orca prefix
 git worktree add -b feat/<area>-a ~/orca/workspaces/<repo>/feat-<area>-a main
-orca orchestration worker-start --spec "<задача>" --worktree path:$HOME/orca/workspaces/<repo>/feat-<area>-a --agent claude --model sonnet --effort medium --json
+orca orchestration worker-start --spec "<task>" --worktree path:$HOME/orca/workspaces/<repo>/feat-<area>-a --agent claude --model sonnet --effort medium --json
 orca orchestration check --wait --types "worker_done,escalation,question" --timeout-ms 900000 --json
-# на каждое сообщение: reply на question / проверить результат сам → worker-release → check --ack <id> --wait ...
+# for each message: reply to a question / verify the result yourself → worker-release → check --ack <id> --wait ...
 ```
 
-`--worktree new-child|new-top-level` генерит ветку `<github-login>/<name>`, флага `--branch` нет. Поэтому ветку создаёт координатор через `git worktree add -b`, а Orca получает готовый worktree селектором `path:`. Уборка — `orca worktree rm --worktree path:<path> --force` (удаляет и ветку).
+`--worktree new-child|new-top-level` generates a branch named `<github-login>/<name>`, and there is no `--branch` flag. So the coordinator creates the branch with `git worktree add -b`, and Orca receives the ready worktree through the `path:` selector. Cleanup: `orca worktree rm --worktree path:<path> --force` (removes the branch too).
 
-## Модель и effort — всегда явно
+## Model and effort: always explicit
 
-Без `--model` воркер берёт самую мощную модель провайдера и быстро сжигает лимит. Уровень — по когнитивной сложности задачи (общая таблица моделей по фазам — `08-models.md`):
+Without `--model`, the worker takes the provider's most powerful model and burns through the limit fast. Pick the level by the cognitive complexity of the task (the shared model-per-phase table is in `08-models.md`):
 
-| Уровень | Задачи | Claude | Codex |
+| Level | Tasks | Claude | Codex |
 |---|---|---|---|
-| **L** | boilerplate, seed-данные, доки, простые тесты по готовому коду | `sonnet` / `low` (механика — `haiku` / `low`) | лёгкая модель / `low` |
-| **M** (дефолт) | фича по готовой спеке, эндпоинт, адаптер, UI-компонент | `sonnet` / `medium` | стандартная / `medium` |
-| **H** | архитектура, контракт, неясный баг, интеграция, ревью критичного диффа | `opus` / `high` | топовая / `high` |
+| **L** | boilerplate, seed data, docs, simple tests for existing code | `sonnet` / `low` (mechanical work: `haiku` / `low`) | light model / `low` |
+| **M** (default) | feature from a ready spec, endpoint, adapter, UI component | `sonnet` / `medium` | standard / `medium` |
+| **H** | architecture, contract, unclear bug, integration, review of a critical diff | `opus` / `high` | top model / `high` |
 
-- Координатор — дефолтная модель Claude, effort `medium`.
-- Не уверен — M. Застрял на M → повтор той же задачи уровнем H (`--retry-of`).
-- Ревьюер — на другом провайдере, чем автор кода.
-- Слаги Codex: `codex debug models`.
-- Фактическая модель — по статус-строке терминала воркера (`worker-read --source terminal`), а не по `launch.effective` и не по самоотчёту модели.
+- Coordinator: default Claude model, effort `medium`.
+- Unsure: M. Stuck on M: retry the same task at level H (`--retry-of`).
+- The reviewer runs on a different provider than the code author.
+- Codex slugs: `codex debug models`.
+- The actual model comes from the status line of the worker terminal (`worker-read --source terminal`), not from `launch.effective` and not from the model's self-report.
 
-## Шаблон спеки задачи
+## Task spec template
 
 ```text
 Target: backend/app/adapters/llm/ (only)
@@ -69,23 +69,23 @@ Observable acceptance: `cd backend && uv run pytest -q` green; commit on your br
 Report: plain text in worker_done summary, no backticks.
 ```
 
-## Промпт координатору
+## Coordinator prompt
 
 ```text
-Будь координатором Orca (скилл orchestration). Возьми задачи с [P] из specs/<feature>/tasks.md
-для текущего среза. Запусти до 3 воркеров в отдельных worktree по шаблону спеки
-из docs/playbook/07-orchestration.md, у каждого своя зона. Каждому передавай --model и --effort
-по уровню L/M/H. Ветку и worktree создавай сам через git worktree add -b feat/<area>-<short>,
-воркеру передавай --worktree path:<path>. Результат проверяй сам (тест/запуск), не по summary.
-После успеха мержи ветку в main и запускай make check. Отчитайся по каждой задаче.
+Be an Orca coordinator (orchestration skill). Take the [P] tasks from specs/<feature>/tasks.md
+for the current slice. Start up to 3 workers in separate worktrees using the spec template
+from docs/playbook/07-orchestration.md, each with its own zone. Pass --model and --effort
+to each by level L/M/H. Create the branch and worktree yourself via git worktree add -b feat/<area>-<short>,
+and pass --worktree path:<path> to the worker. Verify results yourself (test/run), not by the summary.
+After success, merge the branch into main and run make check. Report on each task.
 ```
 
-## Грабли
+## Pitfalls
 
-- Воркеры в одном worktree трогают одни файлы → конфликт.
-- Контракт меняется посреди волны → остановить волну, обновить `contracts/`, разослать.
-- `check --wait` вернул пусто — это чекпоинт, не ошибка; после 3 пустых — `worker-list`.
-- Summary Codex может быть битым: backticks в `worker_done` исполняются шеллом. Результат проверяй сам.
-- `worker-release` → `retained`, `reason: user_takeover` — ты печатал в терминале воркера; уборка через `orca worktree rm`.
-- Codex при старте может показать промо-окно новой модели: Enter из промпта Orca выбирает её и переписывает `~/.codex/config.toml`. Один раз запусти `codex` руками и закрой окна.
-- Воркер завис без `worker_done` → `worker-read --source terminal`; висит на меню — `worker-stop`, `worker-release`, перезапуск.
+- Workers in the same worktree touch the same files → conflict.
+- The contract changes mid-wave → stop the wave, update `contracts/`, redistribute.
+- `check --wait` returned empty: that is a checkpoint, not an error; after 3 empty results, run `worker-list`.
+- Codex summaries can be broken: backticks in `worker_done` are executed by the shell. Verify the result yourself.
+- `worker-release` → `retained`, `reason: user_takeover`: you typed in the worker terminal; clean up with `orca worktree rm`.
+- On startup Codex may show a promo window for a new model: Enter from the Orca prompt selects it and rewrites `~/.codex/config.toml`. Run `codex` by hand once and close the windows.
+- Worker hung without `worker_done` → `worker-read --source terminal`; if it is stuck on a menu: `worker-stop`, `worker-release`, restart.

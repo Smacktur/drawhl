@@ -1,54 +1,54 @@
-# Playbook — drawhl
+# Playbook: drawhl
 
-Свод правил работы над проектом: что делать, в каком порядке, каким инструментом. Приходит из [launchpad](https://github.com/Smacktur/launchpad) и обновляется командой `launch update`, поэтому **правки методологии вносим в launchpad, а не здесь**.
+The set of rules for working on the project: what to do, in what order, with which tool. It comes from [launchpad](https://github.com/Smacktur/launchpad) and is updated by the `launch update` command, so **make methodology changes in launchpad, not here**.
 
-Профиль: **oss**. Агенты (Claude Code, Codex) читают это через `AGENTS.md` / `CLAUDE.md`.
+Profile: **oss**. Agents (Claude Code, Codex) read this through `AGENTS.md` / `CLAUDE.md`.
 
-## Карта документов
+## Document map
 
-| # | Документ | Когда открывать |
+| # | Document | When to open |
 |---|---|---|
-| 01 | [Стратегия (oss)](01-strategy.md) | Всегда. Scope, срезы, гейты, DoD |
-| 02 | [Стек](02-stack.md) | Выбор технологий и новых зависимостей |
-| 03 | [Архитектура](03-architecture.md) | Структура кода, порты, production-feel |
-| 04 | [Coding standards](04-coding-standards.md) | Всегда при написании и ревью кода |
-| 05 | [Инструменты](05-tooling.md) | Какой скилл / инструмент на каком шаге |
-| 06 | [Качество и README](06-quality.md) | Перед мержем и перед релизом |
-| 07 | [Orca: параллельные агенты](07-orchestration.md) | Если задач `[P]` ≥ 3 |
-| 08 | [Модели по фазам](08-models.md) | Какая модель и effort на какой фазе |
-| 09 | [Деплой](09-deploy.md) | dev → stage (Render free) → prod |
-| 10 | [Дизайн UI](10-design.md) | Перед первой UI-задачей и при ревью UI |
-| 11 | [SEO, AI-поиск, аналитика](11-seo.md) | Публичные страницы, перед stage и prod, `make audit` |
-| — | [`DESIGN.md`](../../DESIGN.md) | Визуальное направление проекта |
-| 12 | [Продвижение](12-growth.md) | После ship: стратегия каналов, материалы, метрики, кастдев |
-| — | [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) | Принципы для spec-kit |
-| — | [`docs/research.md`](../research.md) | Конкуренты, спрос, боли, инсайды, гипотезы |
-| — | [`docs/brief.md`](../brief.md) | Идея, гипотеза, scope |
+| 01 | [Strategy (oss)](01-strategy.md) | Always. Scope, slices, gates, DoD |
+| 02 | [Stack](02-stack.md) | Choosing technologies and new dependencies |
+| 03 | [Architecture](03-architecture.md) | Code structure, ports, production feel |
+| 04 | [Coding standards](04-coding-standards.md) | Always when writing and reviewing code |
+| 05 | [Tooling](05-tooling.md) | Which skill / tool for which step |
+| 06 | [Quality and README](06-quality.md) | Before merging and before a release |
+| 07 | [Orca: parallel agents](07-orchestration.md) | If there are ≥ 3 `[P]` tasks |
+| 08 | [Models by phase](08-models.md) | Which model and effort for which phase |
+| 09 | [Deploy](09-deploy.md) | dev → stage (Render free) → prod |
+| 10 | [UI design](10-design.md) | Before the first UI task and when reviewing UI |
+| 11 | [SEO, AI search, analytics](11-seo.md) | Public pages, before stage and prod, `make audit` |
+| - | [`DESIGN.md`](../../DESIGN.md) | The project's visual direction |
+| 12 | [Growth](12-growth.md) | After ship: channel strategy, materials, metrics, customer development |
+| - | [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md) | Principles for spec-kit |
+| - | [`docs/research.md`](../research.md) | Competitors, demand, pains, insights, hypotheses |
+| - | [`docs/brief.md`](../brief.md) | Idea, hypothesis, scope |
 
-## Пайплайн
+## Pipeline
 
-Состояние — в `.launch/state.json`, ведёт скилл `/pipeline`.
+State lives in `.launch/state.json`, maintained by the `/pipeline` skill.
 
-| # | Фаза | Где | Результат | Гейт |
+| # | Phase | Where | Result | Gate |
 |---|---|---|---|---|
-| 0 | Intake | launchpad `/launch` | уточнённая идея | — |
+| 0 | Intake | launchpad `/launch` | refined idea | - |
 | 1 | Research | launchpad `/launch` | `docs/research.md`: go / pivot / kill | **G0** |
 | 2 | Scope | launchpad `/launch` | `docs/brief.md` | **G1** |
-| 3 | Stack | launchpad `/launch` | выбор frontend / llm | — |
-| 4 | Scaffold | `launch new` | этот репозиторий, `make check` зелёный | — |
+| 3 | Stack | launchpad `/launch` | frontend / llm choice | - |
+| 4 | Scaffold | `launch new` | this repository, `make check` green | - |
 | 5 | Spec | `/pipeline` → spec-kit | `specs/NNN-*/{spec,plan,tasks}.md`, `contracts/` | **G2** |
-| 6 | Build | `/pipeline` | срезы из `tasks.md`, по одному | **G3** на срез |
-| 7 | Verify | `/pipeline` | ревью, QA, безопасность | — |
-| 7b | Legal | `/pipeline` → `/legal` | Privacy Policy, Terms, согласие РФ/КЗ; регионы US, EU, RU, KZ; `docs/legal/README.md` | стоп |
-| 8 | Ship | `/pipeline` | README, чистый клон, stage на Render, тег `v0.1.0`, `/retro` | **G4** |
-| 9 | Grow | `/grow` | `docs/growth/`: стратегия, материалы, журнал экспериментов | **G5** каналы, **G6** материалы |
+| 6 | Build | `/pipeline` | slices from `tasks.md`, one at a time | **G3** per slice |
+| 7 | Verify | `/pipeline` | review, QA, security | - |
+| 7b | Legal | `/pipeline` → `/legal` | Privacy Policy, Terms, RU/KZ consent; US, EU, RU, KZ regions; `docs/legal/README.md` | stop |
+| 8 | Ship | `/pipeline` | README, clean clone, stage on Render, tag `v0.1.0`, `/retro` | **G4** |
+| 9 | Grow | `/grow` | `docs/growth/`: strategy, materials, experiment log | **G5** channels, **G6** materials |
 
-## Золотые правила
+## Golden rules
 
-1. **Main всегда запускается.** Сломал — чинишь или откатываешь.
-2. **Один срез за раз, end-to-end.** Не горизонтальные слои.
-3. **Гейт = стоп.** Агент ждёт решения человека.
-4. **Без ключей тоже работает.** Mock-режим для всего внешнего.
-5. **Scope режем, качество минимума — нет.**
-6. **Один инструмент на одну роль.** Спеки — только spec-kit.
-7. **Опыт — в библиотеку.** Грабли, находки и ретро — в `library/` launchpad (`/retro`, `/lib-add`).
+1. **Main always runs.** If you break it, fix it or roll back.
+2. **One slice at a time, end-to-end.** No horizontal layers.
+3. **Gate = stop.** The agent waits for a human decision.
+4. **Works without keys too.** Mock mode for everything external.
+5. **Cut scope, not the minimum quality.**
+6. **One tool per role.** Specs only in spec-kit.
+7. **Experience goes to the library.** Pitfalls, findings and retros go to launchpad's `library/` (`/retro`, `/lib-add`).

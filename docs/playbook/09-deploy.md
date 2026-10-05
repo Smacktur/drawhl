@@ -1,54 +1,54 @@
-# 09. Деплой: dev → stage → prod
+# 09. Deploy: dev → stage → prod
 
-Три среды, один конфиг. Провайдер облака — **Render**: постоянный free tier для веб-сервисов и инфраструктура как код в `render.yaml`.
+Three environments, one config. The cloud provider is **Render**: a permanent free tier for web services and infrastructure as code in `render.yaml`.
 
-| Среда | Где | Кто создаёт | Стоимость |
+| Environment | Where | Who creates it | Cost |
 |---|---|---|---|
-| **dev** | ноутбук | `make up` / `make dev-*` | 0 |
-| **stage** | Render, окружение `stage` | `render.yaml` + автодеплой из `main` | 0 (free) |
-| **prod** | Render, окружение `production` | тот же `render.yaml`, полуручной запуск | платно |
+| **dev** | laptop | `make up` / `make dev-*` | 0 |
+| **stage** | Render, `stage` environment | `render.yaml` + autodeploy from `main` | 0 (free) |
+| **prod** | Render, `production` environment | the same `render.yaml`, semi-manual launch | paid |
 
 ## dev
 
-`make up` сам запускает Docker Desktop / OrbStack, если демон не отвечает (`scripts/ensure-docker.sh`), и поднимает compose. Без Docker — `make dev-api` + `make dev-web`.
+`make up` starts Docker Desktop / OrbStack by itself if the daemon does not respond (`scripts/ensure-docker.sh`), and brings up compose. Without Docker: `make dev-api` + `make dev-web`.
 
 ## stage
 
-### Как устроено
+### How it works
 
-- `api` — Docker-сервис из `backend/Dockerfile`, план `free`. Засыпает через 15 минут без трафика, просыпается до минуты.
-- `web` — static site из `frontend/`: бесплатный, не засыпает, раздаётся с CDN. Запросы `/api/*` уходят rewrite-правилом на публичный URL `api`, поэтому браузер видит один origin и CORS не нужен. Nginx-контейнер на Render не используем: бесплатные сервисы не принимают трафик из private network.
-- Деплой — на каждый push в `main`, **только после зелёного CI** (`autoDeployTrigger: checksPass`). Сервис пересобирается, только если менялась его папка (`rootDir`), и Render судит по **последнему коммиту пуша**: если он трогает только `.launch/state.json` или доки, деплоя не будет, даже если коммиты ниже меняли код. Поэтому state среза коммитится в merge-коммите. Пропустил — `render deploys create <service-id> --commit <sha>`.
-- Секреты (`sync: false` в `render.yaml`) берутся из локального `.env` (он в `.gitignore`): `make stage-env` заливает в Render изменившиеся и передеплоивает эти сервисы. Руками в дашборд за ENV не ходим. Обычные значения (`value:`) Render подтягивает сам автосинком Blueprint при push в `main`. Новый секрет: ключ с `sync: false` в `render.yaml` + значение в `.env` → `make stage-env`.
+- `api`: a Docker service from `backend/Dockerfile`, plan `free`. It sleeps after 15 minutes without traffic and takes up to a minute to wake.
+- `web`: a static site from `frontend/`: free, never sleeps, served from a CDN. Requests to `/api/*` go through a rewrite rule to the public URL of `api`, so the browser sees a single origin and CORS is not needed. We do not use an Nginx container on Render: free services do not accept traffic from the private network.
+- Deploy happens on every push to `main`, **only after green CI** (`autoDeployTrigger: checksPass`). A service is rebuilt only if its folder changed (`rootDir`), and Render judges by the **last commit of the push**: if it touches only `.launch/state.json` or docs, there is no deploy, even if earlier commits changed code. That is why the slice state is committed in the merge commit. If you missed it: `render deploys create <service-id> --commit <sha>`.
+- Secrets (`sync: false` in `render.yaml`) come from the local `.env` (it is in `.gitignore`): `make stage-env` uploads the changed ones to Render and redeploys those services. We do not go to the dashboard by hand for ENV. Regular values (`value:`) are picked up by Render itself through Blueprint autosync on push to `main`. New secret: a key with `sync: false` in `render.yaml` + a value in `.env` → `make stage-env`.
 
-### Ограничения free tier
+### Free tier limits
 
-- **Диск эфемерный.** SQLite в `data/` обнуляется при каждом деплое и засыпании. Для stage это нормально. Нужны данные между деплоями — внешний Postgres (Neon free без срока; Render free Postgres удаляется через 30 дней).
-- Холодный старт `api` до минуты — первый запрос после паузы медленный.
-- Лимиты на build-минуты и трафик в месяц. Без привязанной карты при превышении сервисы приостанавливаются, а не списывают деньги.
+- **Ephemeral disk.** SQLite in `data/` is wiped on every deploy and sleep. Fine for stage. If you need data across deploys, use an external Postgres (Neon free has no time limit; Render free Postgres is deleted after 30 days).
+- `api` cold start takes up to a minute: the first request after a pause is slow.
+- Monthly limits on build minutes and traffic. Without a linked card, services are suspended on overrun instead of charging money.
 
-### Первый запуск (один раз на проект)
+### First launch (once per project)
 
-Ручные шаги — человек, остальное — агент.
+Manual steps are for the human, the rest for the agent.
 
-1. Репозиторий на GitHub уже создан `launch new` (иначе `launch publish`).
-2. **Человек:** аккаунт Render, *New → Blueprint*. Первый раз — *Configure account* у GitHub и дать Render доступ к репозиторию (или ко всем). Затем выбрать репозиторий. Render прочитает `render.yaml` и создаст проект, окружение `stage` и оба сервиса. Создать Blueprint можно только из дашборда: ни CLI, ни MCP этого не умеют. Поля секретов при создании можно оставить пустыми.
-3. **Человек:** если имя сервиса занято, Render добавит к поддомену суффикс. Тогда поправить URL в `render.yaml` (rewrite) и `STAGE_*_URL` в `Makefile`.
-4. **Агент:** `make stage-env` — секреты из `.env` в Render; затем `make stage-smoke` — будит `api` и прогоняет smoke против stage.
+1. The GitHub repository has already been created by `launch new` (otherwise `launch publish`).
+2. **Human:** Render account, *New → Blueprint*. The first time, click *Configure account* at GitHub and give Render access to the repository (or to all). Then pick the repository. Render reads `render.yaml` and creates the project, the `stage` environment and both services. A Blueprint can only be created from the dashboard: neither the CLI nor MCP can do it. Secret fields can be left empty at creation.
+3. **Human:** if the service name is taken, Render appends a suffix to the subdomain. Then fix the URL in `render.yaml` (rewrite) and `STAGE_*_URL` in `Makefile`.
+4. **Agent:** `make stage-env` pushes secrets from `.env` to Render; then `make stage-smoke` wakes `api` and runs the smoke test against stage.
 
-### Дальше
+### Afterwards
 
-Push в `main` → CI → деплой. Проверка — `make stage-smoke`. Логи и статус деплоев — Render CLI (`render services`, `render logs`) или Render MCP.
+Push to `main` → CI → deploy. Check with `make stage-smoke`. Logs and deploy status: Render CLI (`render services`, `render logs`) or Render MCP.
 
-Доступ агента к Render: API-ключ в переменной окружения `RENDER_API_KEY` (Account Settings → API Keys). Ключ хранится в менеджере паролей / профиле шелла, **не в репозитории и не в чате**. CLI: `brew install render`.
+Agent access to Render: an API key in the `RENDER_API_KEY` environment variable (Account Settings → API Keys). Keep the key in a password manager or shell profile, **not in the repository and not in chat**. CLI: `brew install render`.
 
 ## prod
 
-Полуручной формат: решения с деньгами и доменом принимает человек.
+Semi-manual format: the human makes decisions involving money and the domain.
 
-1. **Человек:** stage проверен, G4 пройден, легал-документы опубликованы (`/legal`).
-2. **Агент:** в `render.yaml` добавить окружение `production` — копия `stage` с суффиксом `-prod` в именах, `plan: starter` (или выше) для `api`, `domains:` со своим доменом, `permissions: protection: enabled`. У web-сервиса — `SITE_URL=https://<домен>` и `ALLOW_INDEXING=true`: без них prod закрыт от поисковиков (`11-seo.md`). Данные SQLite должны переживать деплой — `disk: {name: data, mountPath: /app/data, sizeGB: 1}` у `api` (диск только на платных планах; с диском нет zero-downtime деплоя) или внешний Postgres в `databases:`. PR, ревью, мерж.
-3. **Человек:** купить домен, привязать карту в Render, в дашборде синхронизировать Blueprint (секреты `sync: false` — там же), прописать DNS-записи, которые покажет Render (TLS выпускается сам).
-4. **Агент:** `make stage-smoke STAGE_API_URL=<URL prod api> STAGE_WEB_URL=https://<домен>`, затем `make audit URL=https://<домен>` (если есть UI).
+1. **Human:** stage is verified, G4 is passed, legal documents are published (`/legal`).
+2. **Agent:** add a `production` environment to `render.yaml`: a copy of `stage` with a `-prod` suffix in names, `plan: starter` (or higher) for `api`, `domains:` with the own domain, `permissions: protection: enabled`. On the web service: `SITE_URL=https://<domain>` and `ALLOW_INDEXING=true`; without them prod is closed to search engines (`11-seo.md`). SQLite data must survive deploys: `disk: {name: data, mountPath: /app/data, sizeGB: 1}` on `api` (disks exist only on paid plans; with a disk there are no zero-downtime deploys) or an external Postgres in `databases:`. PR, review, merge.
+3. **Human:** buy the domain, link a card in Render, sync the Blueprint in the dashboard (`sync: false` secrets go there too), add the DNS records Render shows (TLS is issued automatically).
+4. **Agent:** `make stage-smoke STAGE_API_URL=<prod api URL> STAGE_WEB_URL=https://<domain>`, then `make audit URL=https://<domain>` (if there is a UI).
 
-В `production` ставим `autoDeployTrigger: off`: деплой только по явной команде человека, `render deploys create <service-id> --commit <sha тега>`.
+In `production` set `autoDeployTrigger: off`: deploy only on an explicit human command, `render deploys create <service-id> --commit <tag sha>`.

@@ -1,47 +1,47 @@
-# 12. Продвижение: от релиза к первым пользователям
+# 12. Growth: from release to first users
 
-Продукт в проде ≠ продукт используют. Дистрибуция — такая же часть работы, как код, и думать о ней начинаем ещё на intake (строка «Канал» в `docs/brief.md`). Ведёт скилл `/grow`, результаты — в `docs/growth/`.
+A product in prod does not mean the product is used. Distribution is as much a part of the work as code, and we start thinking about it at intake (the "Channel" line in `docs/brief.md`). The `/grow` skill drives it, results go to `docs/growth/`.
 
-## Цикл
+## Cycle
 
-| Шаг | Что | Артефакт | Стоп |
+| Step | What | Artifact | Stop |
 |---|---|---|---|
-| 1. Контекст | позиционирование, ICP, слова пользователей, рынки и языки | `.agents/product-marketing.md` | правки автора |
-| 2. Готовность | URL, `make audit`, события Umami, легал, UTM, реф-механика | чек-лист | только блокеры |
-| 3. Стратегия | интервью автора → 3 ресерчера (аудитория, блогеры, аналоги) → Bullseye → 3 эксперимента | `docs/growth/gtm.md` | **G5** |
-| 4. Материалы | бриф для блогеров (story engine), партнёрский пакет, тексты, посты, сообщения, трекинг | `docs/growth/kit/<эксперимент>/` | **G6** |
-| 5. Замеры | цифры по экспериментам, решение удвоить / доработать / закрыть; кастдевы | `docs/growth/log.md`, `interviews.md` | еженедельно |
+| 1. Context | positioning, ICP, user wording, markets and languages | `.agents/product-marketing.md` | author edits |
+| 2. Readiness | URL, `make audit`, Umami events, legal, UTM, referral mechanics | checklist | blockers only |
+| 3. Strategy | author interview → 3 researchers (audience, bloggers, analogues) → Bullseye → 3 experiments | `docs/growth/gtm.md` | **G5** |
+| 4. Materials | blogger brief (story engine), partner package, copy, posts, messages, tracking | `docs/growth/kit/<experiment>/` | **G6** |
+| 5. Measurement | numbers per experiment, decision to double down / rework / close; customer interviews | `docs/growth/log.md`, `interviews.md` | weekly |
 
-## Принципы
+## Principles
 
-- **Стратегия под проект, а не общие советы.** Вход — ресерч проекта, ответы автора (бюджет, время, доступы, идеи, красные линии) и свежий поиск по его рынкам. Каждый канал в плане — со ссылками на конкретные сообщества, блогеров, кейсы аналогов.
-- **Эксперимент, а не «попробуем».** У каждого: гипотеза, действие, бюджет, метрика, порог успеха, порог закрытия, срок (обычно 14 дней). Три канала параллельно, дальше — в тот, что сработал (Bullseye).
-- **Считаем активацию, а не охват.** Успех — дошедшие до конца core scenario (событие Umami) по UTM или реф-коду канала. Лайки и показы — не метрика.
-- **Блогеры рассказывают свою историю.** Даём метод (story engine: архетипы, вопросы для точки входа, шесть битов поста, правила), а не скрипт. Блогер сначала сам проходит продукт; в посте — артефакт из его сессии и честная оговорка. У пересекающихся аудиторий — разные архетипы.
-- **Агент готовит — человек отправляет.** Посты, письма, сделки и публикации делает автор.
-- **Честность — условие работы канала.** Раскрытие рекламы везде; в РФ — «Реклама» + ERID через ОРД до публикации. Никаких накруток, фейковых отзывов, аккаунтов-марионеток.
+- **A strategy for this project, not generic advice.** Input: the project research, the author's answers (budget, time, access, ideas, red lines) and fresh search across its markets. Every channel in the plan comes with links to specific communities, bloggers and analogue case studies.
+- **An experiment, not "let's try".** Each has: hypothesis, action, budget, metric, success threshold, close threshold, deadline (usually 14 days). Three channels in parallel, then double down on the one that worked (Bullseye).
+- **Count activation, not reach.** Success means users who reach the end of the core scenario (Umami event), by the channel's UTM or referral code. Likes and impressions are not a metric.
+- **Bloggers tell their own story.** Give them a method (story engine: archetypes, entry-point questions, six beats of a post, rules), not a script. The blogger goes through the product first; the post contains an artifact from their session and an honest caveat. Overlapping audiences get different archetypes.
+- **The agent prepares, the human sends.** Posts, emails, deals and publications are done by the author.
+- **Honesty is a condition for a channel to work.** Disclose advertising everywhere; in Russia: "Reklama" ad label + ERID via an ORD before publication. No inflated numbers, fake reviews or sockpuppet accounts.
 
-## Код для продвижения
+## Code for growth
 
-Что требует кода — реф-ссылки и выплаты за пользователя, лендинги под сегмент или блогера, промокоды, новые события — идёт срезом через `/pipeline`, со спекой и тестами. `/grow` только формулирует требование.
+Anything that needs code (referral links and payouts per user, landing pages per segment or blogger, promo codes, new events) goes as a slice through `/pipeline`, with a spec and tests. `/grow` only formulates the requirement.
 
-## Open-source проект (профиль `oss`)
+## Open-source project (profile `oss`)
 
-Цикл тот же, другие каналы и метрики:
+Same cycle, different channels and metrics:
 
-- **Каналы:** README как лендинг (скриншот или GIF в первом экране, quick start в 2 команды), topics репозитория, awesome-списки ниши, Show HN, профильные сабреддиты и форумы, Хабр, dev.to, сообщества вокруг интегрируемых продуктов (форумы Atlassian, Obsidian и т.п.), релиз-ноты как повод для поста.
-- **Активация:** не звёзды, а установка и возврат — pulls образов GHCR, issues и discussions от незнакомых людей, повторные упоминания. Телеметрии в продукте нет, поэтому опрос первых пользователей и issue-шаблон "How do you use it?" заменяют аналитику.
-- **Сообщество:** ответ на первый issue за сутки, метка `good first issue` на 3–5 задачах, CONTRIBUTING без барьеров. Первый внешний PR важнее сотни звёзд.
-- **Не делаем:** накрутку звёзд, рассылку по чужим issues, посты "мы лучше X" без сравнения по фактам.
+- **Channels:** README as a landing page (screenshot or GIF above the fold, quick start in 2 commands), repository topics, awesome lists of the niche, Show HN, relevant subreddits and forums, Habr, dev.to, communities around integrated products (Atlassian forums, Obsidian, etc.), release notes as a reason to post.
+- **Activation:** not stars but installs and return visits: GHCR image pulls, issues and discussions from strangers, repeat mentions. The product has no telemetry, so a survey of first users and an issue template "How do you use it?" replace analytics.
+- **Community:** reply to the first issue within a day, a `good first issue` label on 3–5 tasks, CONTRIBUTING without barriers. The first external PR matters more than a hundred stars.
+- **We do not:** inflate stars, spam other people's issues, or write "we are better than X" posts without a fact-based comparison.
 
-## Кастдев
+## Customer development
 
-The Mom Test: спрашиваем о прошлом поведении, а не о мнении про идею. Каждые 5 интервью — синтез в боли, слова, возражения; выводы — в brief (продукт) или в `.agents/product-marketing.md` (сообщения).
+The Mom Test: ask about past behavior, not opinions about the idea. Every 5 interviews, synthesize pains, wording and objections; put conclusions in the brief (product) or in `.agents/product-marketing.md` (messaging).
 
-## Скиллы
+## Skills
 
-`/grow` — дирижёр. Узкие задачи — вендоренные скиллы [marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT): `/product-marketing`, `/customer-research`, `/copywriting`, `/influencer-marketing`, `/referrals`, `/community-marketing`, `/directory-submissions`, `/launch-strategy` (план запуска, Product Hunt; upstream-скилл `launch`, переименован, чтобы не путать с `/launch` launchpad), `/ai-seo` (если есть UI). Все читают `.agents/product-marketing.md` — поэтому шаг 1 обязателен. Тексты для людей — через `/humanizer`, если установлен.
+`/grow` is the conductor. Narrow tasks use the vendored [marketingskills](https://github.com/coreyhaines31/marketingskills) skills (MIT): `/product-marketing`, `/customer-research`, `/copywriting`, `/influencer-marketing`, `/referrals`, `/community-marketing`, `/directory-submissions`, `/launch-strategy` (launch plan, Product Hunt; the upstream skill is `launch`, renamed to avoid confusion with launchpad's `/launch`), `/ai-seo` (if there is a UI). All of them read `.agents/product-marketing.md`, so step 1 is mandatory. Texts for people go through `/humanizer`, if installed.
 
-## Опыт
+## Experience
 
-Что сработало и сколько стоило — в `/retro`: библиотека launchpad копит каналы по типам продуктов и рынкам.
+What worked and what it cost goes into `/retro`: the launchpad library accumulates channels by product type and market.

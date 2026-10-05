@@ -1,107 +1,107 @@
-# 01. Стратегия: OSS
+# 01. Strategy: OSS
 
-**Цель** — проверить идею работающим open-source продуктом, который чужой человек ставит у себя за 10 минут. Как в MVP: один сквозной сценарий и сигнал "да / нет / не так". Отличие от MVP: пользователь запускает продукт сам, на своей инфраструктуре, и судит о проекте по README, релизам и реакции на issues.
+**Goal**: validate the idea with a working open-source product that a stranger can install on their own machine in 10 minutes. As in MVP: one end-to-end scenario and a "yes / no / not like this" signal. The difference from MVP: the user runs the product themselves, on their own infrastructure, and judges the project by its README, releases and how issues are handled.
 
-Что отличается от профиля `mvp`:
+How it differs from the `mvp` profile:
 
-| Что | `mvp` | `oss` |
+| What | `mvp` | `oss` |
 |---|---|---|
-| Кто запускает | мы, на stage и prod | пользователь, self-host |
-| Главный путь | URL на Render | `docker compose -f compose.release.yml up -d` из образов GHCR |
-| Legal | Privacy Policy, Terms, согласия | лицензия проекта, совместимость лицензий зависимостей, раздел Privacy в README |
-| Репозиторий | приватный | приватный до G4, публичный после |
-| Язык README и файлов сообщества | язык команды | английский |
-| Телеметрия | Umami на stage | выключена по умолчанию; включается только явной настройкой пользователя |
+| Who runs it | us, on stage and prod | the user, self-host |
+| Main path | URL on Render | `docker compose -f compose.release.yml up -d` from GHCR images |
+| Legal | Privacy Policy, Terms, consents | project license, dependency license compatibility, Privacy section in the README |
+| Repository | private | private until G4, public after |
+| README and community file language | the team's language | English |
+| Telemetry | Umami on stage | off by default; enabled only by an explicit user setting |
 
-## 1. Ресерч и гипотеза до кода
+## 1. Research and hypothesis before code
 
-Как в `mvp`: `docs/research.md`, гейт G0, затем `docs/brief.md` с пользователем, болью, core scenario, сигналом успеха, kill-критерием и Won't.
+As in `mvp`: `docs/research.md`, gate G0, then `docs/brief.md` with the user, the pain, the core scenario, the success signal, the kill criterion and Won't.
 
-Сигнал успеха для OSS — поведение, а не звёзды:
+The success signal for OSS is behavior, not stars:
 
-- первые пользователи (своя команда, знакомые) поставили сами по README и пользуются через неделю;
-- внешние: issues от незнакомых людей, повторные установки (pulls образов в GHCR), PR.
+- first users (own team, acquaintances) installed it themselves from the README and still use it after a week;
+- external: issues from strangers, repeat installs (image pulls from GHCR), PRs.
 
-Звёзды — слабый сигнал, их считаем, но решение по ним не принимаем.
+Stars are a weak signal: we count them but make no decisions based on them.
 
 ## 2. Scope: Must / Should / Won't
 
-- **Must** — core scenario end-to-end **плюс установка**: чистая машина → `docker compose up` → сценарий работает. Установка — часть продукта.
-- **Should** — максимум 1 пункт.
-- **Won't** — всё остальное, явно. В README Won't становится разделом Roadmap and limitations: открытый проект показывает границы честно.
+- **Must**: the core scenario end-to-end **plus installation**: clean machine → `docker compose up` → the scenario works. Installation is part of the product.
+- **Should**: at most 1 item.
+- **Won't**: everything else, explicitly. In the README, Won't becomes the Roadmap and limitations section: an open project shows its boundaries honestly.
 
-### Отложено по умолчанию
+### Deferred by default
 
-Как в `mvp` (регистрация и роли, платежи, админка, i18n, очереди, "универсальность"), плюс:
+As in `mvp` (sign-up and roles, payments, admin panel, i18n, queues, "universality"), plus:
 
-- плагинная система и публичный SDK до второго реального провайдера;
-- Helm-чарты, k8s-манифесты, one-click деплой в облака — пока нет запроса в issues;
-- сайт документации — хватает README и `docs/`;
-- multi-tenant SaaS-версия.
+- a plugin system and public SDK until the second real provider;
+- Helm charts, k8s manifests, one-click cloud deploys, until there is a request in issues;
+- a documentation site: the README and `docs/` are enough;
+- a multi-tenant SaaS version.
 
-## 3. Ход работы
+## 3. Workflow
 
-Walking skeleton → вертикальные срезы, как в `mvp`. Дополнительно:
+Walking skeleton → vertical slices, as in `mvp`. Additionally:
 
-- **Секреты и внутренние данные никогда не попадают в git.** Через месяц репозиторий станет публичным вместе со всей историей: не коммитим токены, внутренние URL, имена коллег и скриншоты рабочих систем. Тестовые данные — выдуманные.
-- **Внешние API — за портом с mock.** Контрибьютор без доступа к нашему Jira или облаку должен пройти `make check` и сценарий на mock.
-- **Новая зависимость** → лицензия совместима с лицензией проекта (`make licenses`), строка в `THIRD_PARTY.md`. Проприетарный SDK с ключом в проде (пример: tldraw 4+) в ядро не берём.
-- **Пользовательские изменения** → строка в `CHANGELOG.md` под `Unreleased`.
+- **Secrets and internal data never go into git.** In a month the repository becomes public together with its entire history: do not commit tokens, internal URLs, colleagues' names or screenshots of work systems. Test data is made up.
+- **External APIs go behind a port with a mock.** A contributor without access to our Jira or cloud must be able to pass `make check` and run the scenario on the mock.
+- **New dependency** → its license is compatible with the project license (`make licenses`), a line in `THIRD_PARTY.md`. A proprietary SDK with a production key (example: tldraw 4+) does not go into the core.
+- **User-facing changes** → a line in `CHANGELOG.md` under `Unreleased`.
 
-## 4. Бюджет
+## 4. Budget
 
-Как в `mvp`. Плюс подготовка к публичному релизу (README на английском, скриншот, проверка истории, релиз) — 1 сессия на фазе ship.
+As in `mvp`. Plus preparation for the public release (English README, screenshot, history check, release): 1 session in the ship phase.
 
-## 5. Технический минимум
+## 5. Technical minimum
 
-Всё из `mvp` (compose одной командой, health, ready, metrics, JSON-логи, порты с mock, юнит-тесты domain, smoke, секреты в ENV), плюс:
+Everything from `mvp` (one-command compose, health, ready, metrics, JSON logs, ports with mocks, domain unit tests, smoke, secrets in ENV), plus:
 
-- образы публикуются в GHCR на тег `v*` (`.github/workflows/release.yml`), `compose.release.yml` поднимает продукт без исходников;
-- данные пользователя в одном томе (`./data`), обновление версии не теряет их: схема БД мигрирует сама при старте;
-- конфигурация только через ENV, все переменные описаны в `.env.example` и README;
-- проверка лицензий зависимостей в CI (`make licenses`);
-- Dependabot для зависимостей, actions и базовых образов.
+- images are published to GHCR on a `v*` tag (`.github/workflows/release.yml`), `compose.release.yml` starts the product without sources;
+- user data lives in a single volume (`./data`), a version update does not lose it: the DB schema migrates itself on startup;
+- configuration only through ENV, all variables described in `.env.example` and the README;
+- dependency license check in CI (`make licenses`);
+- Dependabot for dependencies, actions and base images.
 
-Хранилище по умолчанию — SQLite. Postgres — опцией, когда пользователи попросят.
+Default storage is SQLite. Postgres is an option once users ask for it.
 
-## 6. Гейты
+## 6. Gates
 
-Как в `mvp`. Отличия:
+As in `mvp`. Differences:
 
-| Гейт | Что дополнительно |
+| Gate | What is added |
 |---|---|
-| **G4 Ship** | установка из образов по README на чистой машине; `make licenses` зелёный; история git проверена gitleaks; файлы сообщества заполнены; после одобрения — репозиторий публичный, релиз `v0.1.0` с образами |
+| **G4 Ship** | installation from images per the README on a clean machine; `make licenses` green; git history checked with gitleaks; community files filled in; after approval, the repository goes public, release `v0.1.0` with images |
 
-Stage на Render для OSS — опционально, как публичное демо. Демо собирает данные посетителей → для него нужны Privacy Policy и Terms (`/legal`), для самого self-hosted продукта нет.
+Stage on Render is optional for OSS, as a public demo. The demo collects visitor data, so it needs a Privacy Policy and Terms (`/legal`); the self-hosted product itself does not.
 
-## 7. Git и релизы
+## 7. Git and releases
 
-- Ветка на срез `feat/<slice>`, conventional commits, мерж в `main` после G3.
-- SemVer: `0.x` пока API и формат данных меняются; ломающие изменения — в CHANGELOG под заголовком Breaking.
-- Релиз: перенести `Unreleased` в версию в `CHANGELOG.md` → коммит → тег `vX.Y.Z` → push тега запускает образы и GitHub Release.
-- После публикации чужие PR проходят тот же CI. Мержит только мейнтейнер.
+- One branch per slice `feat/<slice>`, conventional commits, merge into `main` after G3.
+- SemVer: `0.x` while the API and data format change; breaking changes go in the CHANGELOG under a Breaking heading.
+- Release: move `Unreleased` into a version in `CHANGELOG.md` → commit → tag `vX.Y.Z` → pushing the tag builds the images and the GitHub Release.
+- After publication, outside PRs go through the same CI. Only the maintainer merges.
 
-## 8. Когда параллелить
+## 8. When to parallelize
 
-Как в `mvp`: по умолчанию один агент, Orca только при ≥ 3 независимых `[P]` задачах.
+As in `mvp`: one agent by default, Orca only with ≥ 3 independent `[P]` tasks.
 
-## 9. Definition of Done для v0.1.0
+## 9. Definition of Done for v0.1.0
 
-- [ ] Core scenario проходит с чистой машины: из исходников (`docker compose up --build`) и из образов (`compose.release.yml`)
-- [ ] Mock-режим покрывает сценарий без ключей и доступа к внешним системам
-- [ ] `make check` и `make licenses` зелёные, `THIRD_PARTY.md` актуален
-- [ ] README на английском: что и зачем, скриншот, quick start, конфигурация, Privacy, roadmap и ограничения, contributing, license
-- [ ] `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md` на месте и без TODO
-- [ ] Вся история git чистая: `gitleaks git` без находок, нет внутренних URL и данных
-- [ ] Сигнал успеха можно измерить (счётчик в `/metrics`, опрос первых пользователей)
-- [ ] Репозиторий публичный, включены private vulnerability reporting, topics, описание
-- [ ] Тег `v0.1.0`, GitHub Release и образы в GHCR
-- [ ] Ретро (`/retro`) записано в библиотеку launchpad
+- [ ] The core scenario passes from a clean machine: from source (`docker compose up --build`) and from images (`compose.release.yml`)
+- [ ] Mock mode covers the scenario without keys or access to external systems
+- [ ] `make check` and `make licenses` are green, `THIRD_PARTY.md` is up to date
+- [ ] English README: what and why, screenshot, quick start, configuration, Privacy, roadmap and limitations, contributing, license
+- [ ] `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md` are in place and free of TODOs
+- [ ] The entire git history is clean: `gitleaks git` reports nothing, no internal URLs or data
+- [ ] The success signal can be measured (a counter in `/metrics`, a survey of first users)
+- [ ] The repository is public, private vulnerability reporting, topics and description are set
+- [ ] Tag `v0.1.0`, GitHub Release and images in GHCR
+- [ ] The retro (`/retro`) is recorded in the launchpad library
 
-## Анти-паттерны
+## Anti-patterns
 
-- Публиковать репозиторий без проверки истории: секрет в старом коммите найдут боты за минуты.
-- "Сделаю OSS-версию потом": ядро на проприетарной зависимости потом не переносится.
-- Полировать сайт, логотип и доки до того, как кто-то кроме автора поставил продукт.
-- Строить плагинную систему под одного провайдера.
-- Обещать в README то, чего нет: roadmap — это план, а не фичи.
+- Publishing the repository without checking its history: bots will find a secret in an old commit within minutes.
+- "I'll make the OSS version later": a core built on a proprietary dependency cannot be moved afterwards.
+- Polishing the site, logo and docs before anyone other than the author has installed the product.
+- Building a plugin system for a single provider.
+- Promising in the README what does not exist: a roadmap is a plan, not features.
