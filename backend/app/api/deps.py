@@ -2,6 +2,7 @@ from fastapi import Request
 
 from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
 from app.domain.settings import SettingsService
+from app.domain.tasks import select_provider
 
 
 def boards(request: Request) -> BoardRepo:
@@ -18,4 +19,4 @@ def settings(request: Request) -> SettingsService:
 
 def provider(request: Request) -> TaskProvider:
     state = request.app.state
-    return state.jira if state.settings.provider() == "jira" else state.demo
+    return select_provider(state.settings.provider(), state.demo, state.jira)

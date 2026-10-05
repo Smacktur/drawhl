@@ -41,3 +41,26 @@ def test_log_formatter_masks_token(jira_client, caplog):
     jira_client.put("/api/settings", json={"jira": JIRA})
     record = logging.LogRecord("x", logging.INFO, "", 0, f"oops {TOKEN}", None, None)
     assert TOKEN not in logging.getLogger().handlers[0].formatter.format(record)
+
+
+def test_stored_token_never_goes_to_another_host(jira_client, fake_jira):
+    jira_client.put("/api/settings", json={"provider": "jira", "jira": JIRA})
+    fake_jira.requests.clear()
+
+    other = {"base_url": "https://attacker.example.net"}
+    tested = jira_client.post("/api/settings/jira/test", json=other)
+    assert tested.json()["error"]["code"] == "jira_not_configured"
+
+    moved = jira_client.put("/api/settings", json={"jira": other})
+    assert moved.status_code == 422
+    assert jira_client.get("/api/settings").json()["jira"]["base_url"] == JIRA["base_url"]
+
+    assert all(r.url.host == "jira.example.com" for r in fake_jira.requests)
+
+
+def test_same_host_other_path_keeps_token(jira_client):
+    jira_client.put("/api/settings", json={"jira": JIRA})
+    moved = jira_client.put(
+        "/api/settings", json={"jira": {"base_url": JIRA["base_url"] + "/jira"}}
+    )
+    assert moved.json()["jira"]["token_state"] == "set"

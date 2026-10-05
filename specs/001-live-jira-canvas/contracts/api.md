@@ -44,8 +44,8 @@ Settings = {
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
 | `GET /settings` | – | `Settings` | |
-| `PUT /settings` | `{provider?, refresh_interval_s?, jira?: {base_url, token?}}` (token omitted keeps the stored one) | `Settings` | 400 `secret_key_missing`, 422 `invalid_request` |
-| `POST /settings/jira/test` | `{base_url?, token?}` (falls back to stored) | `{ok: true, user}` | 400 `secret_key_missing`, 401 `jira_unauthorized`, 503 `jira_unavailable` |
+| `PUT /settings` | `{provider?, refresh_interval_s?, jira?: {base_url, token?}}` (token omitted or blank keeps the stored one) | `Settings` | 400 `secret_key_missing`, 422 `invalid_request`, 422 `validation_failed` (new host without a new token) |
+| `POST /settings/jira/test` | `{base_url?, token?}` (falls back to stored; the stored token is used only for the stored host) | `{ok: true, user}` | 400 `jira_not_configured`, 401 `jira_unauthorized`, 422 `validation_failed`, 429 `jira_rate_limited`, 503 `jira_unavailable` |
 
 ## Demo
 

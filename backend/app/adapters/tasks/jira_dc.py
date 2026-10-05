@@ -1,3 +1,4 @@
+import re
 from collections.abc import Callable
 from urllib.parse import quote, urlparse
 
@@ -9,6 +10,7 @@ from app.domain.tasks import StatusCategory, Task, now_iso
 
 FIELDS = ["summary", "status", "issuetype", "assignee", "priority", "updated"]
 SEARCH_CHUNK = 500
+_KEY_IN_ERROR = re.compile(r"'([A-Z][A-Z0-9_]+-\d+)'")
 DEFAULT_RETRY_AFTER_S = 60
 
 _CATEGORIES: dict[str, StatusCategory] = {
@@ -38,6 +40,24 @@ def to_task(base_url: str, issue: dict) -> Task:
         url=f"{base_url}/browse/{issue['key']}",
         fetched_at=now_iso(),
     )
+
+
+def _json(response: httpx.Response) -> dict:
+    # An SSO login page or a wrong base path answers 200 with HTML.
+    try:
+        body = response.json()
+    except ValueError as exc:
+        raise JiraUnavailable("Jira returned an unexpected response. Check the URL.") from exc
+    if not isinstance(body, dict):
+        raise JiraUnavailable("Jira returned an unexpected response. Check the URL.")
+    return body
+
+
+def _task(base_url: str, issue: dict) -> Task:
+    try:
+        return to_task(base_url, issue)
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise JiraUnavailable("Jira returned an issue in an unexpected format.") from exc
 
 
 class JiraDcProvider:
@@ -81,7 +101,7 @@ class JiraDcProvider:
         _, response = self._request("GET", "/rest/api/2/myself")
         if response.status_code != 200:
             raise JiraUnavailable(f"Jira returned {response.status_code}")
-        body = response.json()
+        body = _json(response)
         return body.get("displayName") or body.get("name") or "unknown user"
 
     def resolve(self, key: str) -> Task:
@@ -93,26 +113,42 @@ class JiraDcProvider:
             raise TaskNotFound(f"{key} not found or you have no access")
         if response.status_code != 200:
             raise JiraUnavailable(f"Jira returned {response.status_code}")
-        return to_task(base_url, response.json())
+        return _task(base_url, _json(response))
+
+    def _search(self, keys: list[str]) -> tuple[str, list[dict]]:
+        base_url, response = self._request(
+            "POST",
+            "/rest/api/2/search",
+            # "warn" turns unknown or hidden keys into warnings instead of a 400.
+            json={
+                "jql": f"key in ({','.join(keys)})",
+                "fields": FIELDS,
+                "maxResults": len(keys),
+                "validateQuery": "warn",
+            },
+        )
+        if response.status_code == 400:
+            # Older Jira versions ignore "warn": drop the keys named in the error, retry once.
+            messages = " ".join(_json(response).get("errorMessages", []))
+            bad = set(_KEY_IN_ERROR.findall(messages))
+            rest = [key for key in keys if key not in bad]
+            if bad and rest and len(rest) < len(keys):
+                return self._search(rest)
+            if bad and not rest:
+                return base_url, []
+        if response.status_code != 200:
+            raise JiraUnavailable(f"Jira returned {response.status_code}")
+        issues = _json(response).get("issues", [])
+        return base_url, issues if isinstance(issues, list) else []
 
     def poll(self, keys: list[str]) -> list[Task]:
         found: dict[str, Task] = {}
-        base_url = ""
+        base_url = self._credentials().base_url
         for start in range(0, len(keys), SEARCH_CHUNK):
-            chunk = keys[start : start + SEARCH_CHUNK]
-            base_url, response = self._request(
-                "POST",
-                "/rest/api/2/search",
-                json={
-                    "jql": f"key in ({','.join(chunk)})",
-                    "fields": FIELDS,
-                    "maxResults": len(chunk),
-                },
-            )
-            if response.status_code != 200:
-                raise JiraUnavailable(f"Jira returned {response.status_code}")
-            for issue in response.json().get("issues", []):
-                found[issue["key"]] = to_task(base_url, issue)
+            base_url, issues = self._search(keys[start : start + SEARCH_CHUNK])
+            for issue in issues:
+                task = _task(base_url, issue)
+                found[task.key] = task
         return [
             found.get(key)
             or Task(

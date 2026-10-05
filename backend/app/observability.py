@@ -26,7 +26,8 @@ def register_secret(value: str) -> None:
 
 
 def _mask(text: str) -> str:
-    for secret in _secrets:
+    # A copy: request threads may register a token while another thread logs.
+    for secret in tuple(_secrets):
         text = text.replace(secret, "***")
     return text
 

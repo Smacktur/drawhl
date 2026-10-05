@@ -1,3 +1,4 @@
+import logging
 import ssl
 
 import httpx
@@ -24,6 +25,11 @@ from app.observability import (
     setup_logging,
 )
 
+log = logging.getLogger(__name__)
+
+# The Fernet key is a plain SHA-256 of this string, so a short one is easy to brute-force.
+MIN_SECRET_KEY_LENGTH = 32
+
 
 def _jira_client(settings: Settings, transport: httpx.BaseTransport | None) -> httpx.Client:
     verify: ssl.SSLContext | bool = settings.jira_tls_verify
@@ -47,10 +53,12 @@ def create_app(
     db = Database(settings.db_path)
     app.state.boards = SqliteBoardRepo(db)
     app.state.snapshots = SqliteSnapshotRepo(db)
-    key = settings.drawhl_secret_key
-    box = FernetSecretBox(key.get_secret_value()) if key else NullSecretBox()
+    key = settings.drawhl_secret_key.get_secret_value() if settings.drawhl_secret_key else ""
+    if key and len(key) < MIN_SECRET_KEY_LENGTH:
+        log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
+    box = FernetSecretBox(key) if key else NullSecretBox()
     service = SettingsService(
-        SqliteSettingsRepo(db), box, secret_key_configured=key is not None, on_token=register_secret
+        SqliteSettingsRepo(db), box, secret_key_configured=bool(key), on_token=register_secret
     )
     app.state.settings = service
     app.state.demo = DemoTaskProvider()

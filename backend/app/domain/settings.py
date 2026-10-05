@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
-from app.domain.errors import JiraNotConfigured, SecretUnreadable
+from app.domain.errors import JiraNotConfigured, SecretUnreadable, ValidationFailed
 from app.domain.ports import SecretBox, SettingsRepo
 
 Provider = Literal["demo", "jira"]
@@ -20,6 +20,17 @@ def normalize_base_url(value: str) -> str:
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
         raise ValueError("expected an http(s) URL like https://jira.example.com")
     return url
+
+
+def origin(url: str) -> tuple[str, str, int | None]:
+    parsed = urlparse(url)
+    return parsed.scheme, (parsed.hostname or "").lower(), parsed.port
+
+
+def _clean(token: SecretStr | None) -> str | None:
+    """Blank means "keep the stored token"; pasted tokens often carry a newline."""
+    plain = token.get_secret_value().strip() if token else ""
+    return plain or None
 
 
 class JiraIn(BaseModel):
@@ -95,18 +106,23 @@ class SettingsService:
         )
 
     def update(self, change: SettingsIn) -> SettingsView:
+        stored = self._repo.get_all()
         values: dict[str, str | None] = {}
         if change.provider is not None:
             values["provider"] = change.provider
         if change.refresh_interval_s is not None:
             values["refresh_interval_s"] = str(change.refresh_interval_s)
         if change.jira is not None:
+            plain = _clean(change.jira.token)
+            old_url = stored.get("jira_base_url")
+            moved = old_url is not None and origin(old_url) != origin(change.jira.base_url)
+            # The stored token must never be sent to a host it was not entered for.
+            if moved and plain is None and "jira_token_enc" in stored:
+                raise ValidationFailed("Enter the token for the new Jira URL.")
             values["jira_base_url"] = change.jira.base_url
-            if change.jira.token is not None:
-                plain = change.jira.token.get_secret_value().strip()
-                values["jira_token_enc"] = self._box.encrypt(plain) if plain else None
-                if plain:
-                    self._on_token(plain)
+            if plain is not None:
+                values["jira_token_enc"] = self._box.encrypt(plain)
+                self._on_token(plain)
         self._repo.set_many(values)
         return self.view()
 
@@ -115,15 +131,23 @@ class SettingsService:
     ) -> JiraCredentials:
         """Stored credentials, each overridable (used to test before saving)."""
         values = self._repo.get_all()
-        url = base_url or values.get("jira_base_url")
-        if token is None or not token.get_secret_value().strip():
-            state, token = self._token(values)
+        stored_url = values.get("jira_base_url")
+        try:
+            url = normalize_base_url(base_url) if base_url else stored_url
+        except ValueError as exc:
+            raise ValidationFailed(str(exc)) from exc
+        plain = _clean(token)
+        if plain is not None:
+            self._on_token(plain)
+            secret = SecretStr(plain)
+        else:
+            if url and stored_url and origin(url) != origin(stored_url):
+                raise JiraNotConfigured("Enter the token for this Jira URL.")
+            state, secret = self._token(values)
             if state == "unreadable":
                 raise JiraNotConfigured(
                     "The stored token cannot be read. Enter it again in Settings."
                 )
-        else:
-            self._on_token(token.get_secret_value())
-        if not url or token is None:
+        if not url or secret is None:
             raise JiraNotConfigured("Set the Jira URL and token in Settings.")
-        return JiraCredentials(base_url=normalize_base_url(url), token=token)
+        return JiraCredentials(base_url=url, token=secret)

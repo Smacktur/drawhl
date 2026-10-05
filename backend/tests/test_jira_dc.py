@@ -61,3 +61,19 @@ def test_network_error():
     jira = JiraDcProvider(lambda: creds, httpx.Client(transport=httpx.MockTransport(boom)))
     with pytest.raises(JiraUnavailable):
         jira.check()
+
+
+def test_poll_survives_strict_jira_with_unknown_keys():
+    fake = FakeJira(strict_only=True)
+    tasks = provider(fake).poll(["SRE-1", "SRE-8", "SRE-9"])
+    assert [t.state for t in tasks] == ["ok", "not_found", "not_found"]
+    assert all(t.state == "not_found" for t in provider(fake).poll(["SRE-8"]))
+
+
+def test_html_page_is_unavailable_not_crash():
+    fake = FakeJira()
+    fake.html = True
+    with pytest.raises(JiraUnavailable):
+        provider(fake).resolve("SRE-1")
+    with pytest.raises(JiraUnavailable):
+        provider(fake).check()

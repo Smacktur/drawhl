@@ -90,3 +90,26 @@ def test_changed_secret_key_makes_token_unreadable(tmp_path, fake_jira):
     assert second.get("/api/settings").json()["jira"]["token_state"] == "unreadable"
     response = second.post("/api/tasks/resolve", json={"ref": "SRE-1"})
     assert response.json()["error"]["code"] == "jira_not_configured"
+
+
+def test_blank_token_keeps_stored_one(jira_client):
+    connect(jira_client)
+    body = jira_client.put("/api/settings", json={"jira": JIRA | {"token": "  "}}).json()
+    assert body["jira"]["token_state"] == "set"
+
+
+def test_pasted_token_with_newline_works(jira_client):
+    response = jira_client.post("/api/settings/jira/test", json=JIRA | {"token": TOKEN + "\n"})
+    assert response.json()["ok"] is True
+
+
+def test_empty_secret_key_is_not_configured(fake_jira):
+    import httpx
+    from fastapi.testclient import TestClient
+
+    from app.config import Settings
+    from app.main import create_app
+
+    settings = Settings(db_path=":memory:", drawhl_secret_key="")
+    app = create_app(settings, jira_transport=httpx.MockTransport(fake_jira))
+    assert TestClient(app).get("/api/settings").json()["secret_key_configured"] is False

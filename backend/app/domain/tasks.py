@@ -53,3 +53,7 @@ def resolve_task(ref: str, provider: TaskProvider, snapshots: SnapshotRepo) -> T
     task = provider.resolve(parse_ref(ref, provider.base_host))
     snapshots.put_many([task])
     return task
+
+
+def select_provider(provider: str, demo: TaskProvider, jira: TaskProvider) -> TaskProvider:
+    return jira if provider == "jira" else demo
