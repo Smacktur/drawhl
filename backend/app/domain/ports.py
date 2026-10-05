@@ -40,3 +40,21 @@ class SnapshotRepo(Protocol):
     def get_many(self, keys: list[str]) -> dict[str, Task]: ...
 
     def put_many(self, tasks: list[Task]) -> None: ...
+
+
+class SecretBox(Protocol):
+    def encrypt(self, plain: str) -> str:
+        """Raises SecretKeyMissing when no key is configured."""
+        ...
+
+    def decrypt(self, token: str) -> str:
+        """Raises SecretUnreadable when the key is missing or different."""
+        ...
+
+
+class SettingsRepo(Protocol):
+    def get_all(self) -> dict[str, str]: ...
+
+    def set_many(self, values: dict[str, str | None]) -> None:
+        """None deletes the key."""
+        ...

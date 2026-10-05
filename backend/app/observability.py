@@ -16,8 +16,27 @@ HTTP_LATENCY = Histogram(
 )
 
 
+_secrets: set[str] = set()
+
+
+def register_secret(value: str) -> None:
+    """Masks the value in every later log line; short values would mask too much."""
+    if len(value) >= 8:
+        _secrets.add(value)
+
+
+def _mask(text: str) -> str:
+    # A copy: request threads may register a token while another thread logs.
+    for secret in tuple(_secrets):
+        text = text.replace(secret, "***")
+    return text
+
+
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
+        return _mask(self._format(record))
+
+    def _format(self, record: logging.LogRecord) -> str:
         payload = {
             "ts": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
             "level": record.levelname.lower(),

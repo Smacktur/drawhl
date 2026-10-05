@@ -8,6 +8,8 @@
 | Pydantic / pydantic-settings | MIT | Validation, config from ENV |
 | uvicorn | BSD-3 | ASGI server |
 | prometheus-client | Apache-2.0 | Metrics |
+| httpx | BSD-3-Clause | HTTP client for Jira Data Center |
+| cryptography | Apache-2.0 / BSD-3-Clause | Fernet encryption of the Jira token |
 | React | MIT | UI |
 | Vite | MIT | Build |
 | Tailwind CSS | MIT | Styles |
@@ -30,6 +32,7 @@ Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.j
 
 | Model / API | Provider | How it is used |
 |---|---|---|
+| Jira Data Center REST API v2 | the user's own Jira instance | Reads issue fields with the user's personal access token |
 
 ## Data
 

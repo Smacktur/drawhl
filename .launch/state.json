@@ -3,14 +3,16 @@
   "phase": "build",
   "feature": "specs/001-live-jira-canvas",
   "slices_done": [
-    "card-on-board"
+    "card-on-board",
+    "jira-dc-connection"
   ],
   "gates": {
     "G1_scope": "approved",
     "G2_spec": "approved",
     "legal": "pending",
     "G4_ship": "pending",
-    "G3_card-on-board": "approved"
+    "G3_card-on-board": "approved",
+    "G3_jira-dc-connection": "approved"
   },
   "notes": []
 }

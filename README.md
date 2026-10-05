@@ -41,6 +41,9 @@ Works without a `.env` file. To override defaults: `cp .env.example .env`.
 |---|---|---|
 | `LOG_LEVEL` | Log level | `info` |
 | `DB_PATH` | SQLite file inside the container | `data/app.db` |
+| `DRAWHL_SECRET_KEY` | Encrypts the Jira token at rest; needed only to connect Jira (`openssl rand -base64 32`) | unset |
+| `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate | `true` |
+| `JIRA_CA_BUNDLE` | Path to a CA bundle for a corporate certificate authority | unset |
 
 Data lives in `./data` (SQLite); back it up to keep your state.
 

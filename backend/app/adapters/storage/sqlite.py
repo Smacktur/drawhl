@@ -131,3 +131,25 @@ class SqliteSnapshotRepo:
                 " fetched_at = excluded.fetched_at",
                 [(t.key, t.state, t.model_dump_json(), t.fetched_at) for t in tasks],
             )
+
+
+class SqliteSettingsRepo:
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    def get_all(self) -> dict[str, str]:
+        with self._db.transaction() as conn:
+            rows = conn.execute("SELECT key, value FROM settings").fetchall()
+        return {row["key"]: row["value"] for row in rows}
+
+    def set_many(self, values: dict[str, str | None]) -> None:
+        with self._db.transaction() as conn:
+            for key, value in values.items():
+                if value is None:
+                    conn.execute("DELETE FROM settings WHERE key = ?", (key,))
+                else:
+                    conn.execute(
+                        "INSERT INTO settings (key, value) VALUES (?, ?)"
+                        " ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                        (key, value),
+                    )

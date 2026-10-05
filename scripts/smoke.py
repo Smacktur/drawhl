@@ -32,32 +32,54 @@ def check(condition: bool, label: str) -> None:
 status, _ = call("GET", f"{API}/health")
 check(status == 200, "health")
 
-status, board = call("POST", f"{API}/api/boards", {"name": "smoke"})
-check(status == 201, "create board")
+# The scenario runs on demo tasks; a connected Jira is switched back afterwards.
+status, settings = call("GET", f"{API}/api/settings")
+check(status == 200, "read settings")
+call("PUT", f"{API}/api/settings", {"provider": "demo"})
+try:
+    status, board = call("POST", f"{API}/api/boards", {"name": "smoke"})
+    check(status == 201, "create board")
 
-status, body = call("POST", f"{API}/api/tasks/resolve", {"ref": "DEMO-1"})
-check(status == 200 and body["task"]["key"] == "DEMO-1", "resolve by key")
+    status, body = call("POST", f"{API}/api/tasks/resolve", {"ref": "DEMO-1"})
+    check(status == 200 and body["task"]["key"] == "DEMO-1", "resolve by key")
 
-status, body = call(
-    "POST", f"{API}/api/tasks/resolve", {"ref": "https://jira.example.com/browse/DEMO-2"}
-)
-check(status == 200 and body["task"]["key"] == "DEMO-2", "resolve by link")
+    status, body = call(
+        "POST", f"{API}/api/tasks/resolve", {"ref": "https://jira.example.com/browse/DEMO-2"}
+    )
+    check(status == 200 and body["task"]["key"] == "DEMO-2", "resolve by link")
 
-doc = {
-    "nodes": [
-        {"id": "a", "type": "jira_card", "position": {"x": 0, "y": 0}, "data": {"key": "DEMO-1"}},
-        {"id": "b", "type": "jira_card", "position": {"x": 300, "y": 0}, "data": {"key": "DEMO-2"}},
-    ],
-    "edges": [],
-    "viewport": {"x": 0, "y": 0, "zoom": 1},
-}
-status, body = call("PUT", f"{API}/api/boards/{board['id']}", {"version": 1, "doc": doc})
-check(status == 200 and body["version"] == 2, "save board")
+    doc = {
+        "nodes": [
+            {
+                "id": "a",
+                "type": "jira_card",
+                "position": {"x": 0, "y": 0},
+                "data": {"key": "DEMO-1"},
+            },
+            {
+                "id": "b",
+                "type": "jira_card",
+                "position": {"x": 300, "y": 0},
+                "data": {"key": "DEMO-2"},
+            },
+        ],
+        "edges": [],
+        "viewport": {"x": 0, "y": 0, "zoom": 1},
+    }
+    status, body = call("PUT", f"{API}/api/boards/{board['id']}", {"version": 1, "doc": doc})
+    check(status == 200 and body["version"] == 2, "save board")
 
-status, body = call("GET", f"{API}/api/boards/{board['id']}")
-positions = [n["position"] for n in body["doc"]["nodes"]]
-check(positions == [{"x": 0, "y": 0}, {"x": 300, "y": 0}], "board reopens unchanged")
-check(set(body["tasks"]) == {"DEMO-1", "DEMO-2"}, "board carries task snapshots")
+    status, body = call("GET", f"{API}/api/boards/{board['id']}")
+    positions = [n["position"] for n in body["doc"]["nodes"]]
+    check(positions == [{"x": 0, "y": 0}, {"x": 300, "y": 0}], "board reopens unchanged")
+    check(set(body["tasks"]) == {"DEMO-1", "DEMO-2"}, "board carries task snapshots")
+
+finally:
+    call("PUT", f"{API}/api/settings", {"provider": settings["provider"]})
+
+status, body = call("GET", f"{API}/api/settings")
+check(status == 200 and set(body["jira"]) == {"base_url", "token_state"}, "settings hide token")
+check(isinstance(body["secret_key_configured"], bool), "secret key state reported")
 
 status, body = call("GET", f"{WEB}/api/boards")
 check(status == 200 and any(b["id"] == board["id"] for b in body["boards"]), "ui proxies /api")
