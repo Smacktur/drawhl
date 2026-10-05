@@ -126,10 +126,10 @@ description: "Task list for Live Jira Canvas (MVP)"
 
 **Goal**: compact cards and details without leaving the board.
 
-**Independent Test**: collapse a card → only the key with status color; click → mini-card with assignee, priority, updated, Jira link; reload keeps collapsed state.
+**Independent Test**: collapse a card → icon, key and status lozenge only; click → mini-card with assignee, priority, updated, Jira link; reload keeps collapsed state.
 
 - [ ] T050 [P] [US4] Add shadcn `popover`; create `frontend/src/canvas/nodes/CardDetails.tsx`: assignee, priority, relative updated time, "Open in Jira" link (`target="_blank" rel="noreferrer"`)
-- [ ] T051 [US4] Collapse toggle in `frontend/src/canvas/nodes/JiraCardNode.tsx` storing `data.collapsed`; collapsed view shows key with status color and strikethrough when done; click opens `CardDetails` (depends on T050)
+- [ ] T051 [US4] Collapse toggle in `frontend/src/canvas/nodes/JiraCardNode.tsx` storing `data.collapsed`; collapsed view shows type icon, key and status lozenge in one line (no title), key struck through when done; click opens `CardDetails` (depends on T050)
 - [ ] T052 [US4] Component test in `frontend/src/canvas/nodes/JiraCardNode.test.tsx`: collapsed and expanded render, done strikethrough, not-found state
 - [ ] T053 [US4] `CHANGELOG.md` `Unreleased`: collapsible cards and mini-card
 
