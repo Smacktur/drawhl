@@ -1,0 +1,39 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
+import { TopBar } from '@/board/TopBar'
+
+const boards = [
+  { id: 'a', name: 'Q4 goals', updated_at: '2026-10-05T07:00:00Z' },
+  { id: 'b', name: 'Team SRE', updated_at: '2026-10-05T07:00:00Z' },
+]
+
+afterEach(() => {
+  localStorage.clear()
+  document.documentElement.classList.remove('dark')
+})
+
+function renderBar(onSelect = vi.fn()) {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <TopBar boards={boards} current={boards[0]} onSelect={onSelect} />
+    </QueryClientProvider>,
+  )
+  return onSelect
+}
+
+test('switches boards from the board menu', async () => {
+  const onSelect = renderBar()
+  fireEvent.keyDown(screen.getByRole('button', { name: /Q4 goals/ }), { key: 'Enter' })
+  fireEvent.click(await screen.findByRole('menuitemradio', { name: 'Team SRE' }))
+  expect(onSelect).toHaveBeenCalledWith('b')
+})
+
+test('switches to the dark theme from the main menu', async () => {
+  renderBar()
+  fireEvent.keyDown(screen.getByRole('button', { name: 'Main menu' }), { key: 'Enter' })
+  fireEvent.keyDown(await screen.findByRole('menuitem', { name: 'Theme' }), { key: 'ArrowRight' })
+  fireEvent.click(await screen.findByRole('menuitemradio', { name: 'Dark' }))
+  expect(document.documentElement.classList.contains('dark')).toBe(true)
+  expect(localStorage.getItem('drawhl.theme')).toBe('dark')
+})

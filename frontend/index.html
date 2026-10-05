@@ -19,6 +19,14 @@
         "inLanguage": "en"
       }
     </script>
+    <script>
+      // Applies the saved theme before first paint; keep in sync with src/lib/theme.ts.
+      try {
+        var t = localStorage.getItem('drawhl.theme')
+        if (t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches))
+          document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
     <!--head-->
   </head>
   <body>

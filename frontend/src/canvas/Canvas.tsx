@@ -23,6 +23,7 @@ import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import type { AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
+import { useTheme } from '@/lib/theme'
 
 const nodeTypes = { jira_card: JiraCardNode }
 
@@ -40,6 +41,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     [board.tasks, added, refresh.data],
   )
   const { screenToFlowPosition } = useReactFlow()
+  const theme = useTheme().resolved
 
   const addCard = useCallback(
     (task: Task) => {
@@ -73,7 +75,8 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         nodeTypes={nodeTypes}
         defaultViewport={board.doc.viewport}
         onlyRenderVisibleElements
-        colorMode="system"
+        colorMode={theme}
+        proOptions={{ hideAttribution: true }}
         minZoom={0.1}
         deleteKeyCode={['Backspace', 'Delete']}
       >

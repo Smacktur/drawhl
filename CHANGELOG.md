@@ -14,3 +14,4 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 
 - Cards are added from the "Jira card" tool in a floating toolbar at the bottom; the card input no longer stays on the canvas.
+- The board panel is replaced by a compact top bar: a main menu with Settings and Theme (Light, Dark, System; kept in the browser) and the board name with a menu to switch or create boards. The canvas library label is gone.
