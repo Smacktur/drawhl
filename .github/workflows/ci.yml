@@ -41,3 +41,12 @@ jobs:
       - run: npm ci
         working-directory: frontend
       - run: make licenses
+
+  # The one required status check for main; add new jobs to `needs`.
+  gate:
+    name: CI Gate
+    if: always()
+    needs: [check, smoke, licenses]
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = false
