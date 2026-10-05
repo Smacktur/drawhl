@@ -1,4 +1,4 @@
-.PHONY: help up down backup logs dev-api dev-web test lint fmt check smoke clean-clone stage-validate stage-env stage-smoke audit licenses
+.PHONY: help up down backup logs dev-api dev-web test lint fmt check smoke release clean-clone stage-validate stage-env stage-smoke audit licenses
 
 API_URL ?= http://localhost:8000
 WEB_URL ?= http://localhost:3000
@@ -56,6 +56,9 @@ licenses:  ## fail on dependency licenses incompatible with MIT
 	cd frontend && npx --yes license-checker-rseidelsohn --production --excludePrivatePackages --summary \
 		--onlyAllow="$(NPM_LICENSES)"
 	@echo "licenses ok"
+
+release:  ## cut today's CalVer release vYYYY.M.D from CHANGELOG.md Unreleased (DRY=1 to preview)
+	scripts/release.sh $(if $(DRY),--dry-run)
 
 clean-clone:  ## clone origin/main to a temp dir and run it by README
 	scripts/clean-clone-check.sh

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Cut a CalVer release (vYYYY.M.D, today's UTC date): move CHANGELOG.md "Unreleased" into a
+# version section, commit, tag and push. The tag starts .github/workflows/release.yml.
+#
+# Usage: scripts/release.sh [--dry-run]
+set -euo pipefail
+
+version="$(date -u +%Y).$(date -u +%-m).$(date -u +%-d)"
+tag="v$version"
+
+[ "$(git branch --show-current)" = main ] || { echo "release from main only"; exit 1; }
+[ -z "$(git status --porcelain)" ] || { echo "working tree is not clean"; exit 1; }
+git fetch -q origin main --tags
+[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main differs from origin/main"; exit 1; }
+! git rev-parse -q --verify "refs/tags/$tag" >/dev/null || { echo "$tag already exists; one release per day"; exit 1; }
+
+unreleased="$(awk '/^## \[Unreleased\]/ {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md)"
+[ -n "$(echo "$unreleased" | tr -d '[:space:]')" ] || { echo "CHANGELOG.md Unreleased is empty"; exit 1; }
+
+python3 - "$version" <<'PY'
+import datetime, pathlib, sys
+version = sys.argv[1]
+path = pathlib.Path("CHANGELOG.md")
+today = datetime.datetime.now(datetime.UTC).date().isoformat()
+text = path.read_text()
+path.write_text(text.replace("## [Unreleased]\n", f"## [Unreleased]\n\n## [{version}] - {today}\n", 1))
+PY
+
+if [ "${1:-}" = "--dry-run" ]; then
+  git diff
+  git checkout -- CHANGELOG.md
+  echo "dry run: would tag $tag"
+  exit 0
+fi
+
+make check
+git commit -q -am "chore(release): $tag"
+git tag -a "$tag" -m "$tag"
+git push origin main "$tag"
+echo "pushed $tag; images and the GitHub release: $(git remote get-url origin | sed 's/\.git$//')/actions"

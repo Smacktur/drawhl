@@ -53,6 +53,6 @@ Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.j
 | GitHub spec-kit | Spec, plan, tasks (`specs/`) |
 | gstack | Scope and architecture review, QA, security |
 | context7 MCP | Up-to-date library docs |
-| marketingskills (MIT, Corey Haines) | Marketing skills for `/grow`: product context, customer research, copy, creators, referrals, communities, directories (`.claude/skills/`) |
-| Hallmark (MIT), Impeccable (Apache-2.0) | Design skills: UI generation and critique (`.claude/skills/`) |
+| marketingskills (MIT, Corey Haines) | Marketing skills for `/grow`: product context, customer research, copy, creators, referrals, communities, directories; local agent tooling, not shipped in the repository |
+| Hallmark (MIT), Impeccable (Apache-2.0) | Design skills: UI generation and critique; local agent tooling, not shipped in the repository |
 | Playwright MCP, Chrome DevTools MCP, shadcn MCP | UI checks in the browser, components |
