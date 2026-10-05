@@ -1,4 +1,4 @@
-.PHONY: help up down logs dev-api dev-web test lint fmt check smoke clean-clone stage-validate stage-env stage-smoke audit licenses
+.PHONY: help up down backup logs dev-api dev-web test lint fmt check smoke clean-clone stage-validate stage-env stage-smoke audit licenses
 
 API_URL ?= http://localhost:8000
 WEB_URL ?= http://localhost:3000
@@ -9,11 +9,14 @@ STAGE_WEB_URL ?= https://drawhl-web-stage.onrender.com
 help:  ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
 
-up:  ## build and start everything in docker (starts the daemon if needed)
+up: backup  ## back up data, build and start everything in docker (starts the daemon if needed)
 	@scripts/ensure-docker.sh
 	docker compose up --build -d
 	@echo "API: $(API_URL)/docs"
 	@echo "UI:  $(WEB_URL)"
+
+backup:  ## copy data/app.db to data/backups/ (keeps the newest 20)
+	@python3 scripts/backup.py
 
 down:  ## stop and remove containers (data/ is kept)
 	docker compose down
