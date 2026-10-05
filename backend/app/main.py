@@ -17,6 +17,7 @@ from app.adapters.tasks.jira_dc import JiraDcProvider
 from app.api.errors import register_error_handlers
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.domain.refresh import RefreshService
 from app.domain.settings import SettingsService
 from app.observability import (
     RequestContextMiddleware,
@@ -57,8 +58,13 @@ def create_app(
     if key and len(key) < MIN_SECRET_KEY_LENGTH:
         log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
     box = FernetSecretBox(key) if key else NullSecretBox()
+    app.state.refresher = RefreshService()
     service = SettingsService(
-        SqliteSettingsRepo(db), box, secret_key_configured=bool(key), on_token=register_secret
+        SqliteSettingsRepo(db),
+        box,
+        secret_key_configured=bool(key),
+        on_token=register_secret,
+        on_change=app.state.refresher.reset,
     )
     app.state.settings = service
     app.state.demo = DemoTaskProvider()

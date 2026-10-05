@@ -27,6 +27,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
   const [provider, setProvider] = useState(settings.provider)
   const [baseUrl, setBaseUrl] = useState(settings.jira.base_url ?? '')
   const [token, setToken] = useState('')
+  const [intervalS, setIntervalS] = useState(String(settings.refresh_interval_s))
 
   const jiraInput = () => ({
     base_url: baseUrl.trim(),
@@ -34,11 +35,17 @@ function SettingsForm({ settings }: { settings: Settings }) {
   })
 
   const save = useMutation({
-    mutationFn: () => saveSettings({ provider, ...(baseUrl.trim() && { jira: jiraInput() }) }),
+    mutationFn: () =>
+      saveSettings({
+        provider,
+        refresh_interval_s: Number(intervalS),
+        ...(baseUrl.trim() && { jira: jiraInput() }),
+      }),
     onSuccess: (saved) => {
       queryClient.setQueryData(['settings'], saved)
       // Cards resolve through the selected provider, so re-read open boards.
       void queryClient.invalidateQueries({ queryKey: ['board'] })
+      void queryClient.invalidateQueries({ queryKey: ['refresh'] })
       setToken('')
     },
   })
@@ -67,6 +74,24 @@ function SettingsForm({ settings }: { settings: Settings }) {
           </div>
         </RadioGroup>
       </fieldset>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="refresh-interval">Refresh every, seconds</Label>
+        <Input
+          id="refresh-interval"
+          type="number"
+          min={30}
+          max={300}
+          step={5}
+          required
+          value={intervalS}
+          onChange={(event) => setIntervalS(event.target.value)}
+          className="w-28"
+        />
+        <p className="text-muted-foreground text-[13px]">
+          30 to 300. One request to Jira per open board each time.
+        </p>
+      </div>
 
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-2 font-medium">Jira Data Center</legend>

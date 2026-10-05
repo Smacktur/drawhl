@@ -74,12 +74,14 @@ class SettingsService:
         box: SecretBox,
         secret_key_configured: bool,
         on_token: Callable[[str], None] = lambda _: None,
+        on_change: Callable[[], None] = lambda: None,
     ) -> None:
         self._repo = repo
         self._box = box
         self._secret_key_configured = secret_key_configured
         # Lets the log formatter mask the token wherever it might appear.
         self._on_token = on_token
+        self._on_change = on_change
 
     def _token(self, values: dict[str, str]) -> tuple[TokenState, SecretStr | None]:
         encrypted = values.get("jira_token_enc")
@@ -91,6 +93,9 @@ class SettingsService:
             return "unreadable", None
         self._on_token(plain)
         return "set", SecretStr(plain)
+
+    def refresh_interval_s(self) -> int:
+        return int(self._repo.get_all().get("refresh_interval_s", DEFAULT_INTERVAL_S))
 
     def provider(self) -> Provider:
         return "jira" if self._repo.get_all().get("provider") == "jira" else "demo"
@@ -124,6 +129,7 @@ class SettingsService:
                 values["jira_token_enc"] = self._box.encrypt(plain)
                 self._on_token(plain)
         self._repo.set_many(values)
+        self._on_change()
         return self.view()
 
     def jira_credentials(

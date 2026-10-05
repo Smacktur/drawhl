@@ -8,7 +8,7 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -17,6 +17,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { TasksContext } from '@/canvas/tasks-context'
 import { Toolbar } from '@/canvas/Toolbar'
+import { RefreshIndicator } from '@/board/RefreshIndicator'
+import { lastFetched, newest } from '@/board/refresh-timing'
+import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import type { AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
@@ -30,12 +33,17 @@ const CASCADE_Y = 96
 function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => void }) {
   const { nodes, setNodes, onNodesChange, edges, onEdgesChange, setViewport, saveError } =
     useBoardDoc(board, onConflict)
-  const [tasks, setTasks] = useState<Record<string, Task>>(board.tasks)
+  const [added, setAdded] = useState<Record<string, Task>>({})
+  const refresh = useRefresh(board.id)
+  const tasks = useMemo(
+    () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
+    [board.tasks, added, refresh.data],
+  )
   const { screenToFlowPosition } = useReactFlow()
 
   const addCard = useCallback(
     (task: Task) => {
-      setTasks((current) => ({ ...current, [task.key]: task }))
+      setAdded((current) => ({ ...current, [task.key]: task }))
       setNodes((current) => {
         const center = screenToFlowPosition({
           x: window.innerWidth / 2,
@@ -72,8 +80,14 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
         <Controls showInteractive={false} position="bottom-right" />
       </ReactFlow>
+      <RefreshIndicator
+        syncedAt={refresh.dataUpdatedAt || lastFetched(board.tasks)}
+        error={refresh.error}
+        refreshing={refresh.isFetching}
+        onRefresh={() => void refresh.refetch()}
+      />
       {saveError && (
-        <Alert variant="destructive" className="absolute top-4 right-4 z-10 w-80">
+        <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
           <AlertDescription>Not saved: {saveError}</AlertDescription>
         </Alert>
       )}

@@ -87,5 +87,13 @@ class DemoTaskProvider:
             for key in keys
         ]
 
+    def set_status(self, key: str, status: str) -> Task:
+        """Lets smoke tests and demos change a status the way Jira would."""
+        if key not in self._tasks:
+            raise TaskNotFound(f"{key} not found")
+        self._tasks[key]["status_name"] = status
+        self._tasks[key]["updated"] = now_iso()
+        return self._task(key)
+
     def check(self) -> str:
         return "Demo User"

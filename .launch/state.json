@@ -4,7 +4,8 @@
   "feature": "specs/001-live-jira-canvas",
   "slices_done": [
     "card-on-board",
-    "jira-dc-connection"
+    "jira-dc-connection",
+    "freshness"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -12,7 +13,8 @@
     "legal": "pending",
     "G4_ship": "pending",
     "G3_card-on-board": "approved",
-    "G3_jira-dc-connection": "approved"
+    "G3_jira-dc-connection": "approved",
+    "G3_freshness": "approved"
   },
   "notes": []
 }

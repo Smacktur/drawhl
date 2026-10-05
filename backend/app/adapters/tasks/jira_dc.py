@@ -119,16 +119,17 @@ class JiraDcProvider:
         base_url, response = self._request(
             "POST",
             "/rest/api/2/search",
-            # "warn" turns unknown or hidden keys into warnings instead of a 400.
+            # false skips JQL validation so unknown or hidden keys do not fail the whole search.
+            # Jira DC's POST /search takes a boolean here and rejects "warn" with a 400.
             json={
                 "jql": f"key in ({','.join(keys)})",
                 "fields": FIELDS,
                 "maxResults": len(keys),
-                "validateQuery": "warn",
+                "validateQuery": False,
             },
         )
         if response.status_code == 400:
-            # Older Jira versions ignore "warn": drop the keys named in the error, retry once.
+            # In case a Jira version validates anyway: drop the keys named in the error, retry.
             messages = " ".join(_json(response).get("errorMessages", []))
             bad = set(_KEY_IN_ERROR.findall(messages))
             rest = [key for key in keys if key not in bad]

@@ -58,3 +58,7 @@ class SettingsRepo(Protocol):
     def set_many(self, values: dict[str, str | None]) -> None:
         """None deletes the key."""
         ...
+
+
+class DemoTasks(Protocol):
+    def set_status(self, key: str, status: str) -> Task: ...

@@ -6,7 +6,10 @@ from pydantic import BaseModel
 from app.api import deps
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
-from app.domain.ports import BoardRepo, SnapshotRepo
+from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
+from app.domain.refresh import RefreshService
+from app.domain.settings import SettingsService
+from app.domain.tasks import Task, now_iso
 
 router = APIRouter(prefix="/boards", tags=["boards"])
 
@@ -31,6 +34,11 @@ class SaveOut(BaseModel):
     version: int
 
 
+class RefreshOut(BaseModel):
+    tasks: dict[str, Task]
+    fetched_at: str
+
+
 @router.get("")
 def list_boards(boards: Boards) -> BoardList:
     return BoardList(boards=boards.list())
@@ -49,3 +57,16 @@ def get_board(board_id: str, boards: Boards, snapshots: Snapshots) -> BoardView:
 @router.put("/{board_id}")
 def save_board(board_id: str, body: SaveIn, boards: Boards) -> SaveOut:
     return SaveOut(version=service.save_board(board_id, body.version, body.doc, boards))
+
+
+@router.post("/{board_id}/refresh")
+def refresh_board(
+    board_id: str,
+    boards: Boards,
+    snapshots: Snapshots,
+    settings: Annotated[SettingsService, Depends(deps.settings)],
+    provider: Annotated[TaskProvider, Depends(deps.provider)],
+    refresher: Annotated[RefreshService, Depends(deps.refresher)],
+) -> RefreshOut:
+    tasks = refresher.refresh(board_id, settings.refresh_interval_s(), boards, snapshots, provider)
+    return RefreshOut(tasks=tasks, fetched_at=now_iso())

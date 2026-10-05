@@ -28,7 +28,7 @@ class FakeJira:
     def __init__(self, issues: dict[str, dict] | None = None, strict_only: bool = False) -> None:
         self.issues = issues or {"SRE-1": issue("SRE-1"), "SRE-2": issue("SRE-2", "Done", "done")}
         self.fail: int | None = None
-        # Like Jira versions that ignore validateQuery=warn and answer 400 for unknown keys.
+        # Like a Jira that validates JQL even with validateQuery=false.
         self.strict_only = strict_only
         self.html = False
         self.requests: list[httpx.Request] = []
@@ -55,7 +55,9 @@ class FakeJira:
             jql = body["jql"]
             keys = jql[jql.index("(") + 1 : jql.index(")")].split(",")
             missing = [k for k in keys if k not in self.issues]
-            if missing and (self.strict_only or body.get("validateQuery") != "warn"):
+            if not isinstance(body.get("validateQuery", True), bool):
+                return httpx.Response(400, json={"errorMessages": ["Cannot deserialize value"]})
+            if missing and (self.strict_only or body.get("validateQuery", True)):
                 errors = [
                     f"An issue with key '{k}' does not exist for field 'key'." for k in missing
                 ]

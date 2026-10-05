@@ -68,3 +68,12 @@ export function saveBoard(id: string, version: number, doc: BoardDoc, keepalive 
     keepalive,
   }).then((body) => body.version)
 }
+
+const refreshSchema = z.object({
+  tasks: z.record(z.string(), taskSchema),
+  fetched_at: z.string(),
+})
+
+export function refreshBoard(id: string) {
+  return fetchJson(`/api/boards/${id}/refresh`, refreshSchema, { method: 'POST' })
+}
