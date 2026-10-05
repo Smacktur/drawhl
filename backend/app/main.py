@@ -17,6 +17,7 @@ from app.adapters.tasks.jira_dc import JiraDcProvider
 from app.api.errors import register_error_handlers
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.domain.refresh import RefreshService
 from app.domain.settings import SettingsService
 from app.observability import (
     RequestContextMiddleware,
@@ -62,6 +63,7 @@ def create_app(
     )
     app.state.settings = service
     app.state.demo = DemoTaskProvider()
+    app.state.refresher = RefreshService()
     client = _jira_client(settings, jira_transport)
     app.state.jira = JiraDcProvider(service.jira_credentials, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()

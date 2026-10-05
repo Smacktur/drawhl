@@ -74,6 +74,30 @@ try:
     check(positions == [{"x": 0, "y": 0}, {"x": 300, "y": 0}], "board reopens unchanged")
     check(set(body["tasks"]) == {"DEMO-1", "DEMO-2"}, "board carries task snapshots")
 
+    status, body = call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "Done"})
+    check(status == 200, "change demo status")
+    status, body = call("POST", f"{API}/api/boards/{board['id']}/refresh")
+    check(
+        status == 200 and body["tasks"]["DEMO-1"]["status_category"] == "done",
+        "refresh shows the new status",
+    )
+    call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "In Progress"})
+
+    status, other = call("POST", f"{API}/api/boards", {"name": "smoke other"})
+    other_doc = {
+        "nodes": [
+            {
+                "id": "c",
+                "type": "jira_card",
+                "position": {"x": 0, "y": 0},
+                "data": {"key": "DEMO-5"},
+            }
+        ]
+    }
+    call("PUT", f"{API}/api/boards/{other['id']}", {"version": 1, "doc": other_doc})
+    status, body = call("POST", f"{API}/api/boards/{board['id']}/refresh")
+    check("DEMO-5" not in body["tasks"], "only the open board is refreshed")
+
 finally:
     call("PUT", f"{API}/api/settings", {"provider": settings["provider"]})
 

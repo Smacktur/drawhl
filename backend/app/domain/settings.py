@@ -92,6 +92,9 @@ class SettingsService:
         self._on_token(plain)
         return "set", SecretStr(plain)
 
+    def refresh_interval_s(self) -> int:
+        return int(self._repo.get_all().get("refresh_interval_s", DEFAULT_INTERVAL_S))
+
     def provider(self) -> Provider:
         return "jira" if self._repo.get_all().get("provider") == "jira" else "demo"
 
