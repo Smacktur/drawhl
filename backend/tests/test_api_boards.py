@@ -84,7 +84,19 @@ def test_resolve_errors(client):
         ("NOPE-1", 404, "task_not_found"),
         ("https://other.example.org/browse/DEMO-1", 422, "host_mismatch"),
         ("hello", 422, "invalid_ref"),
+        ("", 422, "invalid_ref"),
     ]
     for ref, status, code in cases:
         response = client.post("/api/tasks/resolve", json={"ref": ref})
         assert (response.status_code, response.json()["error"]["code"]) == (status, code)
+
+
+def test_non_finite_numbers_rejected(client):
+    board = create(client)
+    viewport = '{"x": 0, "y": 0, "zoom": Infinity}'
+    body = f'{{"version": 1, "doc": {{"nodes": [], "edges": [], "viewport": {viewport}}}}}'
+    response = client.put(
+        f"/api/boards/{board['id']}", content=body, headers={"content-type": "application/json"}
+    )
+    assert response.status_code == 422
+    assert client.get(f"/api/boards/{board['id']}").status_code == 200

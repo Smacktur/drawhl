@@ -5,6 +5,9 @@ import { saveBoard, type Board, type BoardDoc } from '@/api/boards'
 import type { AppEdge, AppNode } from '@/canvas/types'
 
 const SAVE_DELAY_MS = 500
+const RETRY_BASE_MS = 1000
+const RETRY_MAX_MS = 30_000
+const KEEPALIVE_LIMIT = 60_000
 
 // Only persistent fields: xyflow adds selected, dragging, measured and more at runtime.
 export function toDoc(nodes: AppNode[], edges: AppEdge[], viewport: Viewport): BoardDoc {
@@ -32,7 +35,7 @@ export function toDoc(nodes: AppNode[], edges: AppEdge[], viewport: Viewport): B
 /** Board state with debounced compare-and-set saves; calls onConflict on a 409. */
 export function useBoardDoc(board: Board, onConflict: () => void) {
   const [nodes, setNodes, onNodesChange] = useNodesState(board.doc.nodes as AppNode[])
-  const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
+  const [edges, , onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
   const [viewport, setViewport] = useState<Viewport>(board.doc.viewport)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -43,10 +46,14 @@ export function useBoardDoc(board: Board, onConflict: () => void) {
   )
   const pending = useRef<string | null>(null)
   const inFlight = useRef(false)
+  const failures = useRef(0)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const flushRef = useRef<() => Promise<void>>(async () => {})
 
   const flush = useCallback(async () => {
     if (inFlight.current) return
     inFlight.current = true
+    clearTimeout(retryTimer.current)
     try {
       // Changes made while a save is in flight are picked up by the next iteration.
       while (pending.current !== null) {
@@ -54,12 +61,22 @@ export function useBoardDoc(board: Board, onConflict: () => void) {
         pending.current = null
         if (next === saved.current) continue
         try {
-          version.current = await saveBoard(board.id, version.current, JSON.parse(next))
+          // keepalive lets the last save finish when the tab closes; browsers cap it at 64 KiB.
+          const keepalive = next.length < KEEPALIVE_LIMIT
+          version.current = await saveBoard(board.id, version.current, JSON.parse(next), keepalive)
           saved.current = next
+          failures.current = 0
           setSaveError(null)
         } catch (error) {
-          if (error instanceof ApiError && error.code === 'version_conflict') onConflict()
-          else setSaveError(error instanceof Error ? error.message : 'Could not save the board')
+          if (error instanceof ApiError && error.code === 'version_conflict') {
+            onConflict()
+            return
+          }
+          pending.current ??= next
+          failures.current += 1
+          setSaveError(error instanceof Error ? error.message : 'Could not save the board')
+          const delay = Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failures.current - 1))
+          retryTimer.current = setTimeout(() => void flushRef.current(), delay)
           return
         }
       }
@@ -69,30 +86,30 @@ export function useBoardDoc(board: Board, onConflict: () => void) {
   }, [board.id, onConflict])
 
   useEffect(() => {
+    flushRef.current = flush
+  }, [flush])
+
+  useEffect(() => {
     pending.current = JSON.stringify(toDoc(nodes, edges, viewport))
     const timer = setTimeout(() => void flush(), SAVE_DELAY_MS)
     return () => clearTimeout(timer)
   }, [nodes, edges, viewport, flush])
 
+  // Save right away when the tab is hidden or closed, or the board is switched.
   useEffect(() => {
-    const onPageHide = () => {
-      const next = pending.current
-      if (next !== null && next !== saved.current && !inFlight.current) {
-        void saveBoard(board.id, version.current, JSON.parse(next), true).catch(() => {})
-      }
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') void flushRef.current()
     }
+    const onPageHide = () => void flushRef.current()
+    document.addEventListener('visibilitychange', onHide)
     window.addEventListener('pagehide', onPageHide)
-    return () => window.removeEventListener('pagehide', onPageHide)
-  }, [board.id])
+    return () => {
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('pagehide', onPageHide)
+      clearTimeout(retryTimer.current)
+      void flushRef.current()
+    }
+  }, [])
 
-  return {
-    nodes,
-    setNodes,
-    onNodesChange,
-    edges,
-    setEdges,
-    onEdgesChange,
-    setViewport,
-    saveError,
-  }
+  return { nodes, setNodes, onNodesChange, edges, onEdgesChange, setViewport, saveError }
 }

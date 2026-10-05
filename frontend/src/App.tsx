@@ -110,7 +110,7 @@ export default function App() {
       {current && boards.data && (
         <>
           <Suspense fallback={<Skeleton className="absolute inset-0 rounded-none" />}>
-            <Canvas boardId={current.id} />
+            <Canvas key={current.id} boardId={current.id} />
           </Suspense>
           <div className="bg-card absolute top-4 left-4 z-10 flex flex-col gap-2 rounded-lg border p-2 shadow-md">
             <label htmlFor="board-picker" className="sr-only">

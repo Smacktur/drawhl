@@ -13,7 +13,7 @@ BoardName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1
 
 class _Strict(BaseModel):
     # xyflow adds transient fields (selected, dragging, measured); they are not part of the doc.
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", allow_inf_nan=False)
 
 
 class Position(_Strict):
@@ -51,7 +51,7 @@ class _NodeBase(_Strict):
     position: Position
     width: float | None = None
     height: float | None = None
-    parentId: str | None = None  # noqa: N815 - mirrors xyflow
+    parentId: str | None = Field(default=None, max_length=100)  # noqa: N815 - mirrors xyflow
 
 
 class JiraCardNode(_NodeBase):
@@ -79,10 +79,10 @@ Node = Annotated[JiraCardNode | FrameNode | StickyNode | TextNode, Field(discrim
 
 class Edge(_Strict):
     id: str = Field(min_length=1, max_length=100)
-    source: str
-    target: str
-    sourceHandle: str | None = None  # noqa: N815
-    targetHandle: str | None = None  # noqa: N815
+    source: str = Field(max_length=100)
+    target: str = Field(max_length=100)
+    sourceHandle: str | None = Field(default=None, max_length=100)  # noqa: N815
+    targetHandle: str | None = Field(default=None, max_length=100)  # noqa: N815
 
 
 class Viewport(_Strict):
@@ -93,7 +93,7 @@ class Viewport(_Strict):
 
 class BoardDoc(_Strict):
     nodes: list[Node] = Field(default_factory=list, max_length=MAX_NODES)
-    edges: list[Edge] = Field(default_factory=list)
+    edges: list[Edge] = Field(default_factory=list, max_length=MAX_NODES * 2)
     viewport: Viewport = Field(default_factory=Viewport)
 
 
@@ -161,6 +161,4 @@ def get_board(board_id: str, boards: BoardRepo, snapshots: SnapshotRepo) -> Boar
 
 def save_board(board_id: str, version: int, doc: BoardDoc, boards: BoardRepo) -> int:
     check_doc(doc)
-    if boards.get(board_id) is None:
-        raise NotFound("board not found")
     return boards.save(board_id, version, doc)

@@ -5,10 +5,14 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
-from app.domain.errors import VersionConflict
+from app.domain.errors import NotFound, VersionConflict
 from app.domain.tasks import Task, now_iso
 
-MIGRATIONS = sorted((Path(__file__).parent / "migrations").glob("*.sql"))
+# File names start with the schema version they produce: 001_init.sql → user_version 1.
+MIGRATIONS = sorted(
+    (int(path.name.split("_", 1)[0]), path)
+    for path in (Path(__file__).parent / "migrations").glob("*.sql")
+)
 
 
 class Database:
@@ -25,7 +29,7 @@ class Database:
 
     def _migrate(self) -> None:
         current = self._conn.execute("PRAGMA user_version").fetchone()[0]
-        for number, script in enumerate(MIGRATIONS, start=1):
+        for number, script in MIGRATIONS:
             if number <= current:
                 continue
             # executescript commits any open transaction, so the script carries its own.
@@ -46,8 +50,11 @@ class Database:
             self._conn.execute("COMMIT")
 
     def ping(self) -> bool:
-        with self._lock:
-            return self._conn.execute("SELECT 1").fetchone()[0] == 1
+        try:
+            with self._lock:
+                return self._conn.execute("SELECT 1").fetchone()[0] == 1
+        except sqlite3.Error:
+            return False
 
 
 class SqliteBoardRepo:
@@ -93,8 +100,11 @@ class SqliteBoardRepo:
                 " WHERE id = ? AND version = ?",
                 (doc.model_dump_json(exclude_none=True), now_iso(), board_id, version),
             )
-        if cursor.rowcount == 0:
-            raise VersionConflict("board was changed elsewhere; reload it")
+            if cursor.rowcount == 0:
+                exists = conn.execute("SELECT 1 FROM boards WHERE id = ?", (board_id,)).fetchone()
+                if exists is None:
+                    raise NotFound("board not found")
+                raise VersionConflict("board was changed elsewhere; reload it")
         return version + 1
 
 

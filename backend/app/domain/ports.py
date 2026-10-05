@@ -32,7 +32,7 @@ class BoardRepo(Protocol):
     def get(self, board_id: str) -> BoardRecord | None: ...
 
     def save(self, board_id: str, version: int, doc: BoardDoc) -> int:
-        """Compare-and-set on version; raises VersionConflict, returns the new version."""
+        """Compare-and-set on version; raises NotFound or VersionConflict, returns new version."""
         ...
 
 

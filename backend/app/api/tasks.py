@@ -11,7 +11,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
 class ResolveIn(BaseModel):
-    ref: str = Field(min_length=1, max_length=500)
+    ref: str = Field(max_length=500)
 
 
 class ResolveOut(BaseModel):

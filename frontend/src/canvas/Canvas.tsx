@@ -12,12 +12,14 @@ import { useCallback, useState } from 'react'
 import { getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { TasksContext } from '@/canvas/tasks-context'
 import { Toolbar } from '@/canvas/Toolbar'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import type { AppNode } from '@/canvas/types'
+import { newId } from '@/lib/id'
 
 const nodeTypes = { jira_card: JiraCardNode }
 
@@ -41,7 +43,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         })
         const step = current.length % 5
         const node: AppNode = {
-          id: crypto.randomUUID(),
+          id: newId(),
           type: 'jira_card',
           position: { x: center.x - 128 + step * CASCADE_X, y: center.y - 200 + step * CASCADE_Y },
           data: { key: task.key, collapsed: false },
@@ -106,10 +108,13 @@ export default function Canvas({ boardId }: { boardId: string }) {
   return (
     <ReactFlowProvider>
       {conflict && (
-        <Alert className="absolute top-4 left-1/2 z-10 w-96 -translate-x-1/2">
+        <Alert className="absolute top-4 left-1/2 z-10 flex w-96 -translate-x-1/2 items-center justify-between gap-2">
           <AlertDescription>
             This board changed in another tab. Showing the latest version.
           </AlertDescription>
+          <Button variant="ghost" size="sm" onClick={() => setConflict(false)}>
+            Dismiss
+          </Button>
         </Alert>
       )}
       <BoardCanvas
