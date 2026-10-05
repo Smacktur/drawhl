@@ -1,19 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { TicketPlus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { resolveTask, type Task } from '@/api/tasks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
-export function Toolbar({ onAddCard }: { onAddCard: (task: Task) => void }) {
+export function AddCardForm({ onAdd }: { onAdd: (task: Task) => void }) {
   const [ref, setRef] = useState('')
-  const resolve = useMutation({
-    mutationFn: resolveTask,
-    onSuccess: (task) => {
-      onAddCard(task)
-      setRef('')
-    },
-  })
+  const resolve = useMutation({ mutationFn: resolveTask, onSuccess: onAdd })
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -21,33 +16,55 @@ export function Toolbar({ onAddCard }: { onAddCard: (task: Task) => void }) {
   }
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2">
+    <form onSubmit={submit} className="flex flex-col gap-1.5">
+      <label htmlFor="card-ref" className="text-muted-foreground text-[13px]">
+        Issue key or link
+      </label>
+      <Input
+        id="card-ref"
+        value={ref}
+        onChange={(event) => setRef(event.target.value)}
+        placeholder="DEMO-1"
+        className="h-8"
+        autoComplete="off"
+        spellCheck={false}
+        autoFocus
+        disabled={resolve.isPending}
+      />
       {resolve.isError && (
-        <p role="alert" className="bg-card text-destructive rounded-md border px-2 py-1 text-sm">
+        <p role="alert" className="text-destructive text-[13px]">
           {resolve.error.message}
         </p>
       )}
-      <form
-        onSubmit={submit}
-        className="bg-card flex items-center gap-1.5 rounded-lg border p-1.5 shadow-md"
-      >
-        <label htmlFor="card-ref" className="sr-only">
-          Issue key or link
-        </label>
-        <Input
-          id="card-ref"
-          value={ref}
-          onChange={(event) => setRef(event.target.value)}
-          placeholder="Issue key or link, e.g. DEMO-1"
-          className="h-8 w-64"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <Button type="submit" size="sm" disabled={resolve.isPending || !ref.trim()}>
-          <Plus strokeWidth={1.75} />
-          Add card
-        </Button>
-      </form>
+    </form>
+  )
+}
+
+export function Toolbar({ onAddCard }: { onAddCard: (task: Task) => void }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="bg-card absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border p-1 shadow-md">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant={open ? 'secondary' : 'ghost'}
+            size="icon"
+            aria-label="Jira card"
+            title="Jira card"
+          >
+            <TicketPlus className="size-[18px]" strokeWidth={1.75} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="top" sideOffset={10} className="w-72 p-2">
+          <AddCardForm
+            onAdd={(task) => {
+              onAddCard(task)
+              setOpen(false)
+            }}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
