@@ -26,3 +26,4 @@ All notable changes to this project are documented here. The format follows [Kee
 - Cards are added from the "Jira card" tool in a floating toolbar at the bottom; the card input no longer stays on the canvas.
 - Closing a menu or dialog with the mouse no longer leaves a focus ring on the button that opened it.
 - The board panel is replaced by a compact top bar: a main menu with Settings and Theme (Light, Dark, System; kept in the browser) and the board name with a menu to switch or create boards. The canvas library label is gone.
+- The Jira card input grows with the text and keeps line breaks, so a long or pasted multi-line JQL query stays readable; Shift+Enter starts a new line. Suggestions open above the input, so it no longer jumps while you type.

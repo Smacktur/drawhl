@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { getJqlValues, getJqlVocabulary, searchTasks, type JqlVocabulary } from '@/api/tasks'
-import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { applySuggestion, jqlContext, rank, type JqlContext } from '@/lib/jql'
 import { cn } from '@/lib/utils'
 
@@ -91,14 +91,14 @@ function suggestionsFor(
   }
 }
 
-type Props = Omit<ComponentProps<typeof Input>, 'value' | 'onChange'> & {
+type Props = Omit<ComponentProps<typeof Textarea>, 'value' | 'onChange'> & {
   value: string
   onValueChange: (value: string) => void
 }
 
-/** Text input with JQL suggestions: Tab inserts, arrows move, Enter inserts after arrows. */
+/** Growing JQL field with suggestions: Tab inserts, arrows move, Enter inserts after arrows or submits, Shift+Enter breaks the line. */
 export function JqlInput({ value, onValueChange, className, ...props }: Props) {
-  const input = useRef<HTMLInputElement>(null)
+  const input = useRef<HTMLTextAreaElement>(null)
   const [cursor, setCursor] = useState(value.length)
   const [highlight, setHighlight] = useState(0)
   const [navigated, setNavigated] = useState(false)
@@ -139,6 +139,14 @@ export function JqlInput({ value, onValueChange, className, ...props }: Props) {
     pendingCursor.current = null
   }, [value])
 
+  // Grows with the text so a long or pasted multi-line query stays readable.
+  useLayoutEffect(() => {
+    const field = input.current
+    if (!field) return
+    field.style.height = 'auto'
+    field.style.height = `${field.scrollHeight + field.offsetHeight - field.clientHeight}px`
+  }, [value])
+
   const track = () => setCursor(input.current?.selectionStart ?? value.length)
 
   const apply = (item: Suggestion) => {
@@ -149,7 +157,13 @@ export function JqlInput({ value, onValueChange, className, ...props }: Props) {
     onValueChange(next.text)
   }
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    const submit = event.key === 'Enter' && !event.shiftKey && !(open && navigated)
+    if (submit) {
+      event.preventDefault()
+      event.currentTarget.form?.requestSubmit()
+      return
+    }
     if (!open) return
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
@@ -165,9 +179,9 @@ export function JqlInput({ value, onValueChange, className, ...props }: Props) {
   }
 
   return (
-    // The list is in the flow, so the popover grows and the hint below stays visible.
-    <div className="flex flex-col gap-1">
-      <Input
+    // The list floats above the field, so the popover keeps its size while suggestions change.
+    <div className="relative">
+      <Textarea
         {...props}
         ref={input}
         value={value}
@@ -177,7 +191,8 @@ export function JqlInput({ value, onValueChange, className, ...props }: Props) {
         aria-autocomplete="list"
         aria-activedescendant={open ? `jql-suggestion-${active}` : undefined}
         data-suggesting={open}
-        className={className}
+        rows={1}
+        className={cn('max-h-48 min-h-8 resize-none py-1.5', className)}
         onChange={(event) => {
           setDismissed(false)
           setHighlight(0)
@@ -195,7 +210,7 @@ export function JqlInput({ value, onValueChange, className, ...props }: Props) {
         <ul
           id="jql-suggestions"
           role="listbox"
-          className="max-h-64 overflow-y-auto rounded-md border p-1"
+          className="bg-popover text-popover-foreground absolute right-0 bottom-full left-0 z-10 mb-1 max-h-64 overflow-y-auto rounded-md border p-1 shadow-md"
         >
           {items.map((item, i) => (
             <li

@@ -130,7 +130,6 @@ export function AddCardForm({
         value={input}
         onValueChange={setInput}
         placeholder="DEMO-1, DEMO-2"
-        className="h-8"
         autoComplete="off"
         spellCheck={false}
         autoFocus
