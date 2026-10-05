@@ -18,14 +18,15 @@ function mockFetch(status: number, body: unknown) {
 
 afterEach(() => vi.unstubAllGlobals())
 
-test('shows greeting from the API', async () => {
-  mockFetch(200, { message: 'Hello, world!' })
+test('offers to create the first board', async () => {
+  mockFetch(200, { boards: [] })
   renderApp()
-  expect(await screen.findByTestId('greeting')).toHaveTextContent('Hello, world!')
+  expect(await screen.findByText(/Create a board/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /New board/ })).toBeDisabled()
 })
 
 test('shows the unified API error message', async () => {
-  mockFetch(422, { error: { code: 'validation_failed', message: 'name must not be blank' } })
+  mockFetch(503, { error: { code: 'dependency_unavailable', message: 'database is down' } })
   renderApp()
-  expect(await screen.findByText('name must not be blank')).toBeInTheDocument()
+  expect(await screen.findByText('database is down')).toBeInTheDocument()
 })

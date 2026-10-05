@@ -18,3 +18,4 @@
 - 2026-10-05 — issue type icon from lucide by type name — Jira icon URLs need a session — proxying Jira icons
 - 2026-10-05 — no router: board in `?board=<id>`, last board in localStorage — one screen — react-router
 - 2026-10-05 — canvas is `React.lazy` and browser-only — the shell is prerendered in Node — SSR of xyflow
+- 2026-10-05 — engine verdict after the slice 1 spike: keep `@xyflow/react` — a frame as a parent node with `NodeResizer` works; a card dropped with its centre inside a frame gets `parentId` and a relative position, moves with the frame, survives reload and detaches when dragged out (checked in a real browser). Two findings: `useReactFlow().setNodes` in a controlled flow did not apply the reparenting, so the drop handler uses the `useNodesState` setter; cards under a newly drawn frame do not join it until dragged. Spike code kept on branch `spike/frames` for slice 4 — Plait prototype not needed

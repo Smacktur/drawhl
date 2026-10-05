@@ -40,6 +40,7 @@ Works without a `.env` file. To override defaults: `cp .env.example .env`.
 | Variable | Purpose | Default |
 |---|---|---|
 | `LOG_LEVEL` | Log level | `info` |
+| `DB_PATH` | SQLite file inside the container | `data/app.db` |
 
 Data lives in `./data` (SQLite); back it up to keep your state.
 

@@ -4,11 +4,28 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.domain.errors import DependencyUnavailable, DomainError, NotFound, ValidationFailed
+from app.domain.errors import (
+    DependencyUnavailable,
+    DomainError,
+    HostMismatch,
+    InvalidRef,
+    NotFound,
+    TaskNotFound,
+    ValidationFailed,
+    VersionConflict,
+)
 
 log = logging.getLogger(__name__)
 
-_STATUS = {ValidationFailed: 422, NotFound: 404, DependencyUnavailable: 503}
+_STATUS = {
+    ValidationFailed: 422,
+    NotFound: 404,
+    DependencyUnavailable: 503,
+    VersionConflict: 409,
+    InvalidRef: 422,
+    HostMismatch: 422,
+    TaskNotFound: 404,
+}
 
 
 def error_body(code: str, message: str) -> dict:

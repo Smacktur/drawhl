@@ -2,12 +2,15 @@
   "profile": "oss",
   "phase": "build",
   "feature": "specs/001-live-jira-canvas",
-  "slices_done": [],
+  "slices_done": [
+    "card-on-board"
+  ],
   "gates": {
     "G1_scope": "approved",
     "G2_spec": "approved",
     "legal": "pending",
-    "G4_ship": "pending"
+    "G4_ship": "pending",
+    "G3_card-on-board": "approved"
   },
   "notes": []
 }

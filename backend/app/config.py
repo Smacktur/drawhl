@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     app_name: str = "drawhl"
     app_env: str = "local"
     log_level: str = "info"
+    db_path: str = "data/app.db"
 
 
 @lru_cache
