@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SettingsSheet } from '@/settings/SettingsSheet'
 
 // xyflow needs the DOM, so the canvas is loaded only in the browser, never in prerender.
 const Canvas = lazy(() => import('@/canvas/Canvas'))
@@ -116,18 +117,21 @@ export default function App() {
             <label htmlFor="board-picker" className="sr-only">
               Board
             </label>
-            <select
-              id="board-picker"
-              value={current.id}
-              onChange={(event) => setBoardId(event.target.value)}
-              className="border-input bg-background h-8 rounded-md border px-2 text-[14px]"
-            >
-              {boards.data.map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5">
+              <select
+                id="board-picker"
+                value={current.id}
+                onChange={(event) => setBoardId(event.target.value)}
+                className="border-input bg-background h-8 min-w-0 flex-1 rounded-md border px-2 text-[14px]"
+              >
+                {boards.data.map((board) => (
+                  <option key={board.id} value={board.id}>
+                    {board.name}
+                  </option>
+                ))}
+              </select>
+              <SettingsSheet />
+            </div>
             <NewBoardForm onCreated={setBoardId} />
           </div>
         </>

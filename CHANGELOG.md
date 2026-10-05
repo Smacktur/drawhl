@@ -8,3 +8,4 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Initial project skeleton.
 - Boards on an infinite canvas: add Jira task cards by key or link, pan, zoom and drag; boards save automatically and reopen as left. Works out of the box with built-in demo tasks.
+- Connect Jira Data Center with a personal access token in Settings; the token is encrypted at rest with `DRAWHL_SECRET_KEY` and never sent back to the browser.

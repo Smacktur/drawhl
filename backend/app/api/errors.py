@@ -9,7 +9,11 @@ from app.domain.errors import (
     DomainError,
     HostMismatch,
     InvalidRef,
+    JiraNotConfigured,
+    JiraRateLimited,
+    JiraUnauthorized,
     NotFound,
+    SecretKeyMissing,
     TaskNotFound,
     ValidationFailed,
     VersionConflict,
@@ -25,7 +29,19 @@ _STATUS = {
     InvalidRef: 422,
     HostMismatch: 422,
     TaskNotFound: 404,
+    SecretKeyMissing: 400,
+    JiraNotConfigured: 400,
+    JiraUnauthorized: 401,
+    JiraRateLimited: 429,
 }
+
+
+def _status(exc: DomainError) -> int:
+    # Subclasses (JiraUnavailable → DependencyUnavailable) share their parent's status.
+    for cls in type(exc).__mro__:
+        if cls in _STATUS:
+            return _STATUS[cls]
+    return 400
 
 
 def error_body(code: str, message: str) -> dict:
@@ -35,8 +51,11 @@ def error_body(code: str, message: str) -> dict:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def domain_error(_: Request, exc: DomainError) -> JSONResponse:
+        headers = (
+            {"retry-after": str(exc.retry_after)} if isinstance(exc, JiraRateLimited) else None
+        )
         return JSONResponse(
-            error_body(exc.code, exc.message), status_code=_STATUS.get(type(exc), 400)
+            error_body(exc.code, exc.message), status_code=_status(exc), headers=headers
         )
 
     @app.exception_handler(RequestValidationError)

@@ -59,5 +59,9 @@ positions = [n["position"] for n in body["doc"]["nodes"]]
 check(positions == [{"x": 0, "y": 0}, {"x": 300, "y": 0}], "board reopens unchanged")
 check(set(body["tasks"]) == {"DEMO-1", "DEMO-2"}, "board carries task snapshots")
 
+status, body = call("GET", f"{API}/api/settings")
+check(status == 200 and set(body["jira"]) == {"base_url", "token_state"}, "settings hide token")
+check(body["provider"] == "demo", "demo provider by default")
+
 status, body = call("GET", f"{WEB}/api/boards")
 check(status == 200 and any(b["id"] == board["id"] for b in body["boards"]), "ui proxies /api")

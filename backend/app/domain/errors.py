@@ -34,3 +34,31 @@ class HostMismatch(DomainError):
 
 class TaskNotFound(DomainError):
     code = "task_not_found"
+
+
+class SecretKeyMissing(DomainError):
+    code = "secret_key_missing"
+
+
+class SecretUnreadable(DomainError):
+    code = "secret_unreadable"
+
+
+class JiraNotConfigured(DomainError):
+    code = "jira_not_configured"
+
+
+class JiraUnauthorized(DomainError):
+    code = "jira_unauthorized"
+
+
+class JiraRateLimited(DomainError):
+    code = "jira_rate_limited"
+
+    def __init__(self, message: str, retry_after: int) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+class JiraUnavailable(DependencyUnavailable):
+    code = "jira_unavailable"

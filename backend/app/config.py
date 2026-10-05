@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +11,9 @@ class Settings(BaseSettings):
     app_env: str = "local"
     log_level: str = "info"
     db_path: str = "data/app.db"
+    drawhl_secret_key: SecretStr | None = None
+    jira_tls_verify: bool = True
+    jira_ca_bundle: str | None = None
 
 
 @lru_cache
