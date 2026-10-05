@@ -45,7 +45,7 @@ Works without a `.env` file. To override defaults: `cp .env.example .env`.
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate | `true` |
 | `JIRA_CA_BUNDLE` | Path to a CA bundle for a corporate certificate authority | unset |
 
-Data lives in `./data` (SQLite); back it up to keep your state.
+Data lives in `./data` (SQLite) and survives rebuilds. `make backup` copies the database to `data/backups/` with a timestamp and keeps the newest 20; `make up` runs it first. To restore, stop the stack and copy a backup over `data/app.db`.
 
 ## Privacy
 

@@ -15,6 +15,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Keyboard shortcuts for tools (V, H, F, N, T, C), copy and paste at the cursor, duplicate and select all; press ? for the full list.
 - Add several Jira cards at once: separate keys or links with commas, and they are laid out in a grid. Keys that fail stay in the field with their errors.
 - Draw a frame by dragging; a new frame takes in the elements under it.
+- `make backup` saves a timestamped copy of the database to `data/backups/`; `make up` runs it before every rebuild.
 
 ### Changed
 
