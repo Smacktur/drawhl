@@ -12,6 +12,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Modules: interactive blocks added from the Modules button in the toolbar (`M`) or the right-click menu. The first one is Gantt: a timeline over days, weeks, months or quarters, with its own name (double-click the header), a line for today, start and end dates, and "+" buttons that add a calendar quarter on either side. Stretch the block to give each day more room.
 - Gantt rows: drop a Jira card onto a Gantt to plan it as a bar at the drop date, or use "Add" in the module: a task from the tracker by key, link or JQL, or a plain task that lives only on the board. Bars show the task's live status color, and done tasks are struck through. Drag a bar to move it, drag its ends to change the dates, drag a row's label to reorder it, or drag it out onto the board to turn it back into a card (plain rows become sticky notes). Plan dates stay on the board and are never written to Jira. Drag the border of the task column to show more of the titles.
 - Gantt rows form a tree: nest tasks and plain rows under each other up to five levels by dragging a row label right or with the indent buttons, and add a row under any row. A row with children keeps its own dates and always covers its children (a task keeps its key, title and status color): stretch it wider than its children, drag it to move the whole branch, and collapse it. A child that moves past its parent's edge pushes the parent out. A task row opens in the tracker from its own link button, so dragging never opens it by accident. Deleting a parent keeps its children one level up.
+- Gantt milestones and dependencies: add a milestone from the module controls, rename it with a double-click and drag it to its date. Drag the dot past a bar's end onto another row to say that row starts after this one; the line follows both bars and turns amber when the second one starts before the first ends. Click a line to remove it; deleting a row removes its lines. Hover a bar to see its exact dates and length; they follow the bar while you drag it or its ends. A milestone shows its date on hover.
 - Update notice: when a newer drawhl release is out, the About button gets a dot and the panel links to what's new and how to upgrade. The server asks GitHub at most every 6 hours; `UPDATE_CHECK=false` turns it off.
 
 ### Changed
@@ -21,6 +22,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- A plain Gantt row's title opens for editing on a double-click again.
 - A selection box no longer picks up a frame or element that was dragged earlier and sits outside the box.
 - Syncing resumes on its own on the next tick after the network or VPN comes back, instead of waiting out a backoff of up to five minutes. Only rate limits and Jira server errors slow polling down now.
 

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { ReactFlow, ReactFlowProvider, useNodesState, type Node } from '@xyflow/react'
 import { useLayoutEffect } from 'react'
 import { beforeAll, expect, test, vi } from 'vitest'
@@ -52,7 +52,7 @@ const content: GanttContent = {
 
 let latest: Node[] = []
 
-function Board() {
+function Board({ start }: { start: GanttContent }) {
   const [nodes, , onNodesChange] = useNodesState<AppNode>([
     {
       id: 'g',
@@ -61,7 +61,7 @@ function Board() {
       width: 960,
       height: 320,
       selected: true,
-      data: { kind: 'gantt', content },
+      data: { kind: 'gantt', content: start },
     },
   ])
   useLayoutEffect(() => {
@@ -70,7 +70,7 @@ function Board() {
   return <ReactFlow nodes={nodes} nodeTypes={nodeTypes} onNodesChange={onNodesChange} />
 }
 
-function renderGantt(host: Partial<ModuleHost> = {}) {
+function renderGantt(host: Partial<ModuleHost> = {}, start = content) {
   const full: ModuleHost = { addTasks: vi.fn(), ejectCard: vi.fn(), ejectNote: vi.fn(), ...host }
   render(
     <div style={{ width: 1200, height: 800 }}>
@@ -78,7 +78,7 @@ function renderGantt(host: Partial<ModuleHost> = {}) {
         <ReactFlowProvider>
           <TasksContext.Provider value={{ 'DEMO-1': task }}>
             <ModuleHostContext.Provider value={full}>
-              <Board />
+              <Board start={start} />
             </ModuleHostContext.Provider>
           </TasksContext.Provider>
         </ReactFlowProvider>
@@ -88,7 +88,8 @@ function renderGantt(host: Partial<ModuleHost> = {}) {
   return full
 }
 
-const rows = () => (latest[0].data as { content: GanttContent }).content.rows
+const current = () => (latest[0].data as { content: GanttContent }).content
+const rows = () => current().rows
 
 test('shows task rows with live data and plain rows with their title', () => {
   renderGantt()
@@ -114,8 +115,8 @@ test('adds a plain row and removes a row', () => {
 
 test('renames a plain row in place', () => {
   renderGantt()
-  // The label comes before the bar, which shows the same title.
-  fireEvent.doubleClick(screen.getAllByText('Design review')[0])
+  // The press captures the pointer, so the browser sends the double-click to the row itself.
+  fireEvent.doubleClick(screen.getAllByText('Design review')[0].closest('.group\\/label')!)
   const field = screen.getByLabelText('Row title')
   fireEvent.change(field, { target: { value: 'Security review' } })
   fireEvent.blur(field)
@@ -220,4 +221,68 @@ test('stretching a parent grows its own dates and leaves the child alone', () =>
     ['2026-10-05', '2026-10-24'],
     ['2026-10-12', '2026-10-14'],
   ])
+})
+
+test('adds a milestone in the middle of the range, renames, drags and removes it', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Milestone' }))
+  expect(current().milestones).toEqual([
+    { id: expect.any(String), date: '2026-11-15', title: 'Milestone' },
+  ])
+  const milestone = screen.getByTestId('gantt-milestone')
+  // The drag captures the pointer, so the browser sends the double-click to the milestone itself.
+  fireEvent.doubleClick(milestone)
+  const field = screen.getByLabelText('Milestone title')
+  fireEvent.change(field, { target: { value: 'Beta' } })
+  fireEvent.blur(field)
+  expect(current().milestones[0].title).toBe('Beta')
+  // About ten days to the left.
+  fireEvent.pointerDown(milestone, { clientX: 300, pointerId: 1 })
+  fireEvent.pointerMove(milestone, { clientX: 213, pointerId: 1 })
+  fireEvent.pointerUp(milestone, { pointerId: 1 })
+  expect(current().milestones[0].date).toBe('2026-11-05')
+  fireEvent.click(screen.getByRole('button', { name: 'Remove Beta' }))
+  expect(current().milestones).toEqual([])
+})
+
+test('dragging a bar handle onto another row links them', () => {
+  renderGantt()
+  const target = document.querySelector('[data-gantt-row="b"]')!
+  document.elementFromPoint = () => target
+  const [handle] = screen.getAllByRole('button', { name: 'Drag to another task to link it' })
+  fireEvent.pointerDown(handle, { clientX: 100, clientY: 10, pointerId: 1 })
+  fireEvent.pointerMove(handle, { clientX: 150, clientY: 40, pointerId: 1 })
+  fireEvent.pointerUp(handle, { clientX: 150, clientY: 40, pointerId: 1 })
+  expect(current().links).toEqual([{ id: expect.any(String), from: 'a', to: 'b' }])
+  expect(screen.getByTestId('gantt-link').getAttribute('data-conflict')).toBeNull()
+})
+
+test('a link that starts too early is drawn as a warning and can be removed', () => {
+  const early = {
+    ...content,
+    rows: [content.rows[0], { ...content.rows[1], start: '2026-10-08' }],
+    links: [{ id: 'l1', from: 'a', to: 'b' }],
+  }
+  renderGantt({}, early)
+  const line = screen.getByTestId('gantt-link')
+  expect(line.getAttribute('data-conflict')).toBe('true')
+  fireEvent.pointerDown(within(line).getByRole('button'))
+  fireEvent.click(screen.getByRole('button', { name: 'Remove the dependency' }))
+  expect(current().links).toEqual([])
+})
+
+test('a bar shows its exact dates while it is dragged', () => {
+  renderGantt()
+  const bar = screen.getByRole('slider', { name: 'Design review dates' })
+  const tip = () => within(bar.parentElement!).getByRole('tooltip', { hidden: true })
+  expect(tip().textContent).toContain('Mon Oct 12 – Wed Oct 14 · 3 days')
+  expect(tip().className).not.toMatch(/(^| )flex( |$)/)
+  // About ten days to the right.
+  fireEvent.pointerDown(bar, { clientX: 100, pointerId: 1 })
+  fireEvent.pointerMove(bar, { clientX: 187, pointerId: 1 })
+  expect(tip().className).toMatch(/(^| )flex( |$)/)
+  expect(tip().textContent).toContain('Thu Oct 22 – Sat Oct 24 · 3 days')
+  expect(tip().textContent).not.toContain('Design review')
+  fireEvent.pointerUp(bar, { pointerId: 1 })
+  expect(tip().className).not.toMatch(/(^| )flex( |$)/)
 })

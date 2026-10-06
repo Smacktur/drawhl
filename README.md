@@ -50,6 +50,7 @@ Open http://localhost:3000. A fresh install runs on built-in demo tasks: pick th
 - **Fast ways to add tasks.** By key (`DEV-12`), by link, several at once, or by query (JQL in Jira) with suggestions for fields and values. New cards land in a neat grid.
 - **A real whiteboard.** Frames, sticky notes, text and arrows. Drag cards in and out of frames; moving a frame moves everything inside.
 - **Details on demand.** Click a card for assignee, priority, last update and a link to the task. Collapse cards to one line when the board gets busy.
+- **Gantt module.** Drop cards onto a timeline to plan them as bars with live status, nest them into stages, mark milestones and draw dependency lines that turn amber when a task starts too early. Plan dates stay on the board.
 - **Several boards.** Saved on the server and reopened exactly as you left them.
 - **Keyboard first.** Undo and redo, copy and paste, duplicate, shortcuts for every tool (press `?`), light and dark theme.
 - **Yours to keep.** One SQLite file, no telemetry, no account, no cloud.

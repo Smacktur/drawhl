@@ -1,5 +1,5 @@
 import { useReactFlow, type XYPosition } from '@xyflow/react'
-import { CalendarRange, Plus } from 'lucide-react'
+import { CalendarRange, Diamond, Plus } from 'lucide-react'
 import { useContext, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import type { Task } from '@/api/tasks'
 import { TasksContext } from '@/canvas/tasks-context'
@@ -10,6 +10,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { GanttAdd } from '@/modules/gantt/GanttAdd'
 import { GanttBar } from '@/modules/gantt/GanttBar'
 import { GanttLabel } from '@/modules/gantt/GanttLabel'
+import { ConnectHandle, Links, type BarPlace, type Point } from '@/modules/gantt/Links'
+import { Milestone } from '@/modules/gantt/Milestone'
+import {
+  addLink,
+  addMilestone,
+  MAX_MILESTONES,
+  removeLink,
+  removeMilestone,
+  updateMilestone,
+} from '@/modules/gantt/plan'
 import {
   addRows,
   FOOTER,
@@ -39,6 +49,7 @@ import {
   visibleRows,
 } from '@/modules/gantt/tree'
 import {
+  barBox,
   fitsRange,
   formatDay,
   header,
@@ -86,6 +97,8 @@ function HeaderRow({ cells, pxPerDay, top }: { cells: Cell[]; pxPerDay: number; 
 export function GanttModule({ content, width, selected, onChange, host }: Props) {
   const tasks = useContext(TasksContext)
   const [fresh, setFresh] = useState<string | null>(null)
+  const [picked, setPicked] = useState<string | null>(null)
+  const [wire, setWire] = useState<{ from: Point; to: Point } | null>(null)
   const span = range(content)
   const { start, end } = span
   const scale = pxPerDay(content, width)
@@ -97,6 +110,19 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
   const visible = visibleRows(content.rows)
   const indexOf = new Map(content.rows.map((r, i) => [r.id, i]))
   const barSpan = (row: Row) => branchSpan(content.rows, indexOf.get(row.id)!)
+  const bars = new Map<string, BarPlace>()
+  visible.forEach(({ row }, i) => {
+    const rowSpan = barSpan(row)
+    const box = barBox(rowSpan, span, scale)
+    if (!box) return
+    const y = i * ROW_HEIGHT + ROW_HEIGHT / 2
+    bars.set(row.id, { left: box.left, right: box.left + box.width, y, span: rowSpan })
+  })
+  const link = (from: string, target: Element | null) => {
+    const to = target?.closest('[data-gantt-row]')?.getAttribute('data-gantt-row')
+    const next = to ? addLink(content, from, to) : null
+    if (next) onChange(next)
+  }
   // A parent's bar moves its whole branch, or stretches its own dates around its children.
   const onParentSpan = (row: Row, next: Span) => {
     const current = barSpan(row)
@@ -184,7 +210,7 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
           />
         </div>
       </div>
-      <div className="relative min-w-0 flex-1">
+      <div data-gantt-body className="relative min-w-0 flex-1">
         <div className="border-b">
           <HeaderRow cells={top} pxPerDay={scale} top />
           <HeaderRow cells={bottom} pxPerDay={scale} top={false} />
@@ -212,7 +238,8 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
         {visible.map(({ row, hasChildren }) => (
           <div
             key={row.id}
-            className="relative border-b border-border/60"
+            data-gantt-row={row.id}
+            className="group/row relative border-b border-border/60"
             style={{ height: ROW_HEIGHT }}
           >
             <GanttBar
@@ -228,7 +255,35 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
                   : onChange(updateRow(content, row.id, (r) => withSpan(r, next)))
               }
             />
+            {bars.has(row.id) && (
+              <ConnectHandle
+                bar={bars.get(row.id)!}
+                onWire={setWire}
+                onDrop={(target) => link(row.id, target)}
+              />
+            )}
           </div>
+        ))}
+        <Links
+          links={content.links}
+          bars={bars}
+          wire={wire}
+          picked={selected ? picked : null}
+          onPick={setPicked}
+          onRemove={(id) => {
+            setPicked(null)
+            onChange(removeLink(content, id))
+          }}
+        />
+        {content.milestones.map((milestone) => (
+          <Milestone
+            key={milestone.id}
+            milestone={milestone}
+            range={span}
+            pxPerDay={scale}
+            onChange={(change) => onChange(updateMilestone(content, milestone.id, change))}
+            onRemove={() => onChange(removeMilestone(content, milestone.id))}
+          />
         ))}
         {content.rows.length === 0 && (
           <p
@@ -350,6 +405,19 @@ export function GanttControls({ content, onChange }: Props) {
         </Button>
       ))}
       <RangePopover content={content} onChange={onChange} />
+      <Button
+        size="sm"
+        variant="ghost"
+        disabled={content.milestones.length >= MAX_MILESTONES}
+        title="Add a milestone in the middle of the range; drag it to its date"
+        onClick={() => {
+          const { start, end } = range(content)
+          onChange(addMilestone(content, Math.floor((start + end) / 2)))
+        }}
+      >
+        <Diamond className="size-4" strokeWidth={1.75} />
+        Milestone
+      </Button>
     </>
   )
 }

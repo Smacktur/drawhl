@@ -19,6 +19,7 @@
   --color-status-done-foreground: var(--status-done-foreground);
   --color-sync-ok: var(--sync-ok);
   --color-sync-partial: var(--sync-partial);
+  --color-warning: var(--warning);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -82,6 +83,8 @@
   /* Sync dot: saturated enough to tell green from amber at 10px. */
   --sync-ok: oklch(0.65 0.17 150);
   --sync-partial: oklch(0.78 0.16 75);
+  /* Thin lines on the board: darker than the sync amber to read on white. */
+  --warning: oklch(0.68 0.17 55);
   --status-new: oklch(0.93 0.006 260);
   --status-new-foreground: oklch(0.42 0.01 260);
   --status-progress: oklch(0.93 0.04 255);
@@ -135,6 +138,7 @@
   --grid: oklch(0.27 0.006 260);
   --sync-ok: oklch(0.72 0.17 150);
   --sync-partial: oklch(0.82 0.15 80);
+  --warning: oklch(0.78 0.15 60);
   --status-new: oklch(0.93 0.006 260);
   --status-new-foreground: oklch(0.42 0.01 260);
   --status-progress: oklch(0.93 0.04 255);

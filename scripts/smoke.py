@@ -171,6 +171,21 @@ try:
     module_doc["nodes"][0]["data"]["content"] = gantt | {"rows": [row, orphan]}
     status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 4, "doc": module_doc})
     check(status == 422, "row under a missing parent rejected")
+    milestone = {"id": "m", "date": "2026-11-01", "title": "Beta"}
+    link = {"id": "l", "from": "r", "to": "c"}
+    planned = gantt | {"rows": [row, child], "milestones": [milestone], "links": [link]}
+    module_doc["nodes"][0]["data"]["content"] = planned
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 4, "doc": module_doc})
+    check(status == 200, "save gantt milestones and links")
+    status, body = call("GET", f"{API}/api/boards/{other['id']}")
+    content = body["doc"]["nodes"][0]["data"]["content"]
+    check(
+        content["milestones"] == [milestone] and content["links"] == [link],
+        "gantt milestones and links reopen",
+    )
+    module_doc["nodes"][0]["data"]["content"] = planned | {"links": [link | {"to": "r"}]}
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 5, "doc": module_doc})
+    check(status == 422, "link from a row to itself rejected")
 
     status, body = call("POST", f"{API}/api/tasks/search", {"jql": 'status = "Backlog"'})
     check(
