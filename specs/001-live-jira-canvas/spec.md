@@ -22,8 +22,8 @@ The lead starts drawhl on their machine, opens it in the browser, connects it to
 
 1. **Given** a fresh install, **When** the user opens the app, **Then** they can create a board and use it immediately with demo task data, without entering any credentials.
 2. **Given** the settings screen, **When** the user enters a Jira DC base URL and a personal access token and saves, **Then** the app confirms the connection works (or shows why it failed) and the token is never shown again in the browser.
-3. **Given** an open board, **When** the user picks the "Jira card" tool in the bottom toolbar (or "Add Jira card" from the right-click menu) and enters `SRE-121`, **Then** a compact card appears at the chosen spot (viewport center for the toolbar, the clicked point for the right-click menu) showing type icon, key, title and status.
-4. **Given** an open board, **When** the user pastes a Jira issue link (e.g. `https://jira.example.com/browse/SRE-121`), **Then** the key is extracted and the same card appears.
+3. **Given** an open board, **When** the user picks the "Jira card" tool in the bottom toolbar (or "Add Jira card" from the right-click menu) and enters `DEV-12`, **Then** a compact card appears at the chosen spot (viewport center for the toolbar, the clicked point for the right-click menu) showing type icon, key, title and status.
+4. **Given** an open board, **When** the user pastes a Jira issue link (e.g. `https://jira.example.com/browse/DEV-12`), **Then** the key is extracted and the same card appears.
 5. **Given** a board with cards, **When** the user reloads the page or restarts the app, **Then** the board reopens with every element in the same place and state.
 
 ---
@@ -83,7 +83,7 @@ The lead collapses cards they know well down to just the key to save space, and 
 
 ### User Story 5 - Keep several boards (Priority: P3)
 
-The lead keeps separate boards (e.g. "Q4 goals", "Team SRE") and switches between them.
+The lead keeps separate boards (e.g. "Q4 goals", "Team Platform") and switches between them.
 
 **Why this priority**: Useful after the first board proves itself; a single board is enough to test the hypothesis.
 

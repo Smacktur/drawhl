@@ -23,17 +23,17 @@ def provider(fake: FakeJira, token: str = TOKEN) -> JiraDcProvider:
 
 def test_resolve_maps_fields():
     fake = FakeJira()
-    task = provider(fake).resolve("SRE-2")
+    task = provider(fake).resolve("DEV-2")
     assert task.status_category == "done"
     assert task.assignee_name == "Alex Rivera"
-    assert task.url == f"{BASE}/browse/SRE-2"
-    assert fake.requests[0].url.path == "/jira/rest/api/2/issue/SRE-2"
+    assert task.url == f"{BASE}/browse/DEV-2"
+    assert fake.requests[0].url.path == "/jira/rest/api/2/issue/DEV-2"
     assert provider(fake).base_host == "jira.example.com"
 
 
 def test_resolve_missing():
     with pytest.raises(TaskNotFound):
-        provider(FakeJira()).resolve("SRE-9")
+        provider(FakeJira()).resolve("DEV-9")
 
 
 def test_check_and_bad_token():
@@ -43,8 +43,8 @@ def test_check_and_bad_token():
 
 
 def test_poll_marks_missing_keys():
-    tasks = provider(FakeJira()).poll(["SRE-1", "SRE-9"])
-    assert [(t.key, t.state) for t in tasks] == [("SRE-1", "ok"), ("SRE-9", "not_found")]
+    tasks = provider(FakeJira()).poll(["DEV-1", "DEV-9"])
+    assert [(t.key, t.state) for t in tasks] == [("DEV-1", "ok"), ("DEV-9", "not_found")]
 
 
 @pytest.mark.parametrize(
@@ -54,7 +54,7 @@ def test_error_statuses(status, error):
     fake = FakeJira()
     fake.fail = status
     with pytest.raises(error) as info:
-        provider(fake).resolve("SRE-1")
+        provider(fake).resolve("DEV-1")
     if status == 429:
         assert info.value.retry_after == 42
 
@@ -71,23 +71,23 @@ def test_network_error():
 
 def test_poll_survives_strict_jira_with_unknown_keys():
     fake = FakeJira(strict_only=True)
-    tasks = provider(fake).poll(["SRE-1", "SRE-8", "SRE-9"])
+    tasks = provider(fake).poll(["DEV-1", "DEV-8", "DEV-9"])
     assert [t.state for t in tasks] == ["ok", "not_found", "not_found"]
-    assert all(t.state == "not_found" for t in provider(fake).poll(["SRE-8"]))
+    assert all(t.state == "not_found" for t in provider(fake).poll(["DEV-8"]))
 
 
 def test_html_page_is_unavailable_not_crash():
     fake = FakeJira()
     fake.html = True
     with pytest.raises(JiraUnavailable):
-        provider(fake).resolve("SRE-1")
+        provider(fake).resolve("DEV-1")
     with pytest.raises(JiraUnavailable):
         provider(fake).check()
 
 
 def test_search_returns_page_and_total():
-    tasks, total = provider(FakeJira()).search("project = SRE", 1)
-    assert [task.key for task in tasks] == ["SRE-1"]
+    tasks, total = provider(FakeJira()).search("project = DEV", 1)
+    assert [task.key for task in tasks] == ["DEV-1"]
     assert total == 2
 
 

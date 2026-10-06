@@ -3,8 +3,7 @@ _commit: v0.11.0
 _src_path: /Users/pgkbuild/Documents/code/project/launchpad
 contact_email: smacktur@gmail.com
 copyright_holder: The drawhl Authors
-description: Open-source infinite canvas with live Jira Data Center task cards for
-    leads who think spatially
+description: 'Open-source infinite canvas for your tasks: live cards from your tracker, arranged the way you think'
 frontend: true
 github_owner: Smacktur
 license: MIT

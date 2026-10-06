@@ -5,7 +5,7 @@ import { TopBar } from '@/board/TopBar'
 
 const boards = [
   { id: 'a', name: 'Q4 goals', updated_at: '2026-10-05T07:00:00Z' },
-  { id: 'b', name: 'Team SRE', updated_at: '2026-10-05T07:00:00Z' },
+  { id: 'b', name: 'Team Platform', updated_at: '2026-10-05T07:00:00Z' },
 ]
 
 afterEach(() => {
@@ -25,7 +25,7 @@ function renderBar(onSelect = vi.fn()) {
 test('switches boards from the board menu', async () => {
   const onSelect = renderBar()
   fireEvent.keyDown(screen.getByRole('button', { name: /Q4 goals/ }), { key: 'Enter' })
-  fireEvent.click(await screen.findByRole('menuitemradio', { name: 'Team SRE' }))
+  fireEvent.click(await screen.findByRole('menuitemradio', { name: 'Team Platform' }))
   expect(onSelect).toHaveBeenCalledWith('b')
 })
 

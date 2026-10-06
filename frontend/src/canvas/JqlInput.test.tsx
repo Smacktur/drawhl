@@ -75,7 +75,7 @@ test('values come from Jira and Enter inserts only after arrows', async () => {
 
 test('an issue key shows no list and Escape closes it', async () => {
   const field = renderField()
-  type(field, 'SRE-15')
+  type(field, 'DEV-15')
   await waitFor(() => expect(fetch).toHaveBeenCalled())
   expect(screen.queryByRole('listbox')).toBeNull()
   type(field, 'sta')

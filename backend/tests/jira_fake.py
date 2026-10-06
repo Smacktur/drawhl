@@ -37,7 +37,7 @@ class FakeJira:
     """Serves known issues; `fail` forces a status code for every request."""
 
     def __init__(self, issues: dict[str, dict] | None = None, strict_only: bool = False) -> None:
-        self.issues = issues or {"SRE-1": issue("SRE-1"), "SRE-2": issue("SRE-2", "Done", "done")}
+        self.issues = issues or {"DEV-1": issue("DEV-1"), "DEV-2": issue("DEV-2", "Done", "done")}
         self.fail: int | None = None
         # Like a Jira that validates JQL even with validateQuery=false.
         self.strict_only = strict_only

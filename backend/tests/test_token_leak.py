@@ -13,8 +13,8 @@ def calls(client):
     yield client.get("/api/settings")
     yield client.post("/api/settings/jira/test", json={})
     yield client.post("/api/settings/jira/test", json=JIRA)
-    yield client.post("/api/tasks/resolve", json={"ref": "SRE-1"})
-    yield client.post("/api/tasks/resolve", json={"ref": "SRE-404"})
+    yield client.post("/api/tasks/resolve", json={"ref": "DEV-1"})
+    yield client.post("/api/tasks/resolve", json={"ref": "DEV-404"})
     yield client.get(f"/api/boards/{board['id']}")
     yield client.get("/api/boards")
     yield client.get("/metrics")
@@ -24,7 +24,7 @@ def test_token_absent_from_responses_and_logs(jira_client, fake_jira, caplog):
     caplog.set_level(logging.DEBUG)
     responses = list(calls(jira_client))
     fake_jira.fail = 401
-    responses.append(jira_client.post("/api/tasks/resolve", json={"ref": "SRE-1"}))
+    responses.append(jira_client.post("/api/tasks/resolve", json={"ref": "DEV-1"}))
     fake_jira.fail = 500
     responses.append(jira_client.post("/api/settings/jira/test", json=JIRA))
 
