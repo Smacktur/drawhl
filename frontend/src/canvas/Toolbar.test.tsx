@@ -19,10 +19,10 @@ const task = {
 
 afterEach(() => vi.unstubAllGlobals())
 
-function renderToolbar(onAddCards = vi.fn(), onTool = vi.fn()) {
+function renderToolbar(onAddCards = vi.fn(), onTool = vi.fn(), onAddModule = vi.fn()) {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <Toolbar tool="select" onTool={onTool} onAddCards={onAddCards} />
+      <Toolbar tool="select" onTool={onTool} onAddCards={onAddCards} onAddModule={onAddModule} />
     </QueryClientProvider>,
   )
   return onAddCards
@@ -114,4 +114,13 @@ test('picks tools from the keyboard', () => {
   fireEvent.keyDown(document, { key: 'f', code: 'KeyF' })
   expect(onTool).toHaveBeenCalledWith('frame')
   expect(screen.getByRole('button', { name: 'Frame' })).toHaveAttribute('title', 'Frame (F)')
+})
+
+test('adds a module picked from the gallery', async () => {
+  const onAddModule = vi.fn()
+  renderToolbar(vi.fn(), vi.fn(), onAddModule)
+  fireEvent.click(screen.getByRole('button', { name: 'Modules' }))
+  fireEvent.click(await screen.findByRole('button', { name: /Gantt/ }))
+  expect(onAddModule).toHaveBeenCalledWith('gantt')
+  await waitFor(() => expect(screen.queryByRole('button', { name: /Gantt/ })).toBeNull())
 })

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { cloneSnippet, copySelection, snippetOrigin } from '@/canvas/clipboard'
+import type { Task } from '@/api/tasks'
 import type { AppEdge, AppNode } from '@/canvas/types'
 
 const frame: AppNode = {
@@ -60,4 +61,26 @@ test('a clone gets new ids, keeps links between its parts and moves only top-lev
   expect(a).toMatchObject({ parentId: f.id, position: { x: 10, y: 20 }, selected: true })
   expect(copy.edges[0]).toMatchObject({ source: a.id, target: b.id })
   expect(copy.edges[0].id).not.toBe('e')
+})
+
+test('a copied module carries the live tasks of its rows', () => {
+  const content = {
+    start: '2026-10-01',
+    end: '2026-12-31',
+    scale: 'week',
+    rows: [{ id: 'r', key: 'DEMO-2', title: '', start: '2026-10-05', end: '2026-10-09' }],
+  }
+  const gantt = {
+    id: 'g',
+    type: 'module',
+    position: { x: 0, y: 0 },
+    data: { kind: 'gantt', content },
+    selected: true,
+  } as AppNode
+  const task = { key: 'DEMO-2' } as Task
+  const snippet = copySelection([gantt], [], { 'DEMO-2': task, 'DEMO-9': task })!
+  expect(Object.keys(snippet.tasks)).toEqual(['DEMO-2'])
+  const copy = cloneSnippet(snippet, { x: 10, y: 0 })
+  expect(copy.nodes[0].data).toEqual(gantt.data)
+  expect(copy.nodes[0].data).not.toBe(gantt.data)
 })

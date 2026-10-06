@@ -28,7 +28,7 @@ export function reparent(nodes: AppNode[], droppedIds: string[]): AppNode[] {
   let changed = false
 
   const next = nodes.map((node) => {
-    if (!dropped.has(node.id) || node.type === 'frame') return node
+    if (!dropped.has(node.id) || node.type === 'frame' || node.type === 'module') return node
     const position = absolute(node, byId)
     const { width, height } = size(node)
     const center = { x: position.x + width / 2, y: position.y + height / 2 }

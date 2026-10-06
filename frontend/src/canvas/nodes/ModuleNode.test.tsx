@@ -1,0 +1,73 @@
+import { fireEvent, render, screen } from '@testing-library/react'
+import { ReactFlow, ReactFlowProvider, useNodesState } from '@xyflow/react'
+import { beforeAll, expect, test } from 'vitest'
+import { ModuleNode } from '@/canvas/nodes/ModuleNode'
+import type { AppNode, ModuleNode as ModuleNodeType } from '@/canvas/types'
+
+const nodeTypes = { module: ModuleNode }
+
+beforeAll(() => {
+  // xyflow measures nodes; jsdom has no layout.
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+})
+
+const gantt = {
+  start: '2026-10-01',
+  end: '2026-12-31',
+  scale: 'week',
+  rows: [],
+  milestones: [],
+  links: [],
+}
+
+function Board({ data }: { data: ModuleNodeType['data'] }) {
+  const [nodes, , onNodesChange] = useNodesState<AppNode>([
+    {
+      id: 'm',
+      type: 'module',
+      position: { x: 0, y: 0 },
+      width: 960,
+      height: 320,
+      selected: true,
+      data,
+    },
+  ])
+  return <ReactFlow nodes={nodes} nodeTypes={nodeTypes} onNodesChange={onNodesChange} />
+}
+
+function renderModule(data: ModuleNodeType['data']) {
+  render(
+    <div style={{ width: 1200, height: 800 }}>
+      <ReactFlowProvider>
+        <Board data={data} />
+      </ReactFlowProvider>
+    </div>,
+  )
+}
+
+test('renders a known module through its view', () => {
+  renderModule({ kind: 'gantt', content: gantt })
+  expect(screen.getByText('Gantt')).toBeTruthy()
+  expect(screen.getByText('Q4 2026')).toBeTruthy()
+  expect(screen.getByText('W41')).toBeTruthy()
+})
+
+test('keeps an unknown kind as a placeholder', () => {
+  renderModule({ kind: 'future_thing', content: { anything: 1 } })
+  expect(screen.getByText(/Unknown module "future_thing"/)).toBeTruthy()
+})
+
+test('shows a placeholder for content it cannot read', () => {
+  renderModule({ kind: 'gantt', content: { start: 'soon' } })
+  expect(screen.getByText(/cannot read/)).toBeTruthy()
+})
+
+test('switches the scale from the controls', () => {
+  renderModule({ kind: 'gantt', content: gantt })
+  fireEvent.click(screen.getByRole('button', { name: 'Months' }))
+  expect(screen.getByText('Nov')).toBeTruthy()
+})

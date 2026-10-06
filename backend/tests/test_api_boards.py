@@ -152,3 +152,51 @@ def test_delete_board(client):
     assert [b["id"] for b in client.get("/api/boards").json()["boards"]] == [keep["id"]]
     assert client.get(f"/api/boards/{gone['id']}").status_code == 404
     assert client.delete(f"/api/boards/{gone['id']}").status_code == 404
+
+
+GANTT = {
+    "start": "2026-10-01",
+    "end": "2026-12-31",
+    "scale": "week",
+    "rows": [
+        {"id": "r1", "key": "DEMO-3", "title": "", "start": "2026-10-06", "end": "2026-10-17"}
+    ],
+    "milestones": [{"id": "m1", "date": "2026-11-01", "title": "Beta"}],
+    "links": [],
+}
+
+
+def module(node_id, kind, content):
+    return {
+        "id": node_id,
+        "type": "module",
+        "position": {"x": 0, "y": 400},
+        "width": 960,
+        "height": 320,
+        "data": {"kind": kind, "content": content},
+    }
+
+
+def test_modules_round_trip_with_their_tasks(client):
+    board = create(client)
+    client.post("/api/tasks/resolve", json={"ref": "DEMO-3"})
+    doc = {
+        "nodes": [module("g", "gantt", GANTT), module("u", "future_thing", {"x": [1, None]})],
+        "edges": [],
+        "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
+    }
+    saved = client.put(f"/api/boards/{board['id']}", json={"version": 1, "doc": doc})
+    assert saved.status_code == 200
+
+    body = client.get(f"/api/boards/{board['id']}").json()
+    assert body["doc"] == doc
+    assert set(body["tasks"]) == {"DEMO-3"}
+
+
+def test_invalid_module_content_rejected(client):
+    board = create(client)
+    bad = module("g", "gantt", GANTT | {"end": "2026-09-01"})
+    body = {"version": 1, "doc": {"nodes": [bad]}}
+    response = client.put(f"/api/boards/{board['id']}", json=body)
+    assert response.status_code == 422
+    assert "gantt: end before start" in response.json()["error"]["message"]

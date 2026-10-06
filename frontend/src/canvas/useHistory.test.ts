@@ -69,3 +69,18 @@ test('an unsettled change is undone first and a new change clears redo', async (
   act(() => result.current.redo())
   expect(xs(result.current.nodes)).toEqual(['a@70'])
 })
+
+test('undo restores a module content change', async () => {
+  const module = (scale: string): AppNode => ({
+    id: 'g',
+    type: 'module',
+    position: { x: 0, y: 0 },
+    data: { kind: 'gantt', content: { start: '2026-10-01', end: '2026-12-31', scale } },
+  })
+  const { result } = setup([module('week')])
+  act(() => result.current.setNodes([module('month')]))
+  await settle()
+
+  act(() => result.current.undo())
+  expect(result.current.nodes[0].data).toEqual(module('week').data)
+})
