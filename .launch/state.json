@@ -30,7 +30,7 @@
     "G3_undo": "approved",
     "G3_about": "approved",
     "G3_sync-status": "pending",
-    "G3_version-check": "pending"
+    "G3_version-check": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
