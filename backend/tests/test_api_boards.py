@@ -131,13 +131,13 @@ def test_non_finite_numbers_rejected(client):
 
 def test_rename_keeps_doc_version(client):
     board = create(client)
-    renamed = client.patch(f"/api/boards/{board['id']}", json={"name": "  Team SRE "})
+    renamed = client.patch(f"/api/boards/{board['id']}", json={"name": "  Team Platform "})
     assert renamed.status_code == 200
-    assert renamed.json()["name"] == "Team SRE"
+    assert renamed.json()["name"] == "Team Platform"
     assert (
         client.put(f"/api/boards/{board['id']}", json={"version": 1, "doc": DOC}).status_code == 200
     )
-    assert client.get("/api/boards").json()["boards"][0]["name"] == "Team SRE"
+    assert client.get("/api/boards").json()["boards"][0]["name"] == "Team Platform"
 
 
 def test_rename_validates_and_404s(client):

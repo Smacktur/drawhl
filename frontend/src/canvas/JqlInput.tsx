@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 
 const VALUE_DELAY_MS = 150
 const COUNT_DELAY_MS = 400
-// A first token like "SRE-15" is an issue key being typed, not the start of a query.
+// A first token like "DEV-15" is an issue key being typed, not the start of a query.
 const KEY_START = /^[A-Za-z][A-Za-z0-9_]*-/
 
 type Suggestion = { insert: string; label: string }

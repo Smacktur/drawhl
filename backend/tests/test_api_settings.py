@@ -27,10 +27,10 @@ def test_saving_token_needs_secret_key(client):
 def test_connect_and_resolve_real_card(jira_client):
     body = connect(jira_client)
     assert body["jira"] == {"base_url": "https://jira.example.com", "token_state": "set"}
-    task = jira_client.post("/api/tasks/resolve", json={"ref": "sre-1"}).json()["task"]
-    assert task["url"] == "https://jira.example.com/browse/SRE-1"
+    task = jira_client.post("/api/tasks/resolve", json={"ref": "dev-1"}).json()["task"]
+    assert task["url"] == "https://jira.example.com/browse/DEV-1"
     link = jira_client.post(
-        "/api/tasks/resolve", json={"ref": "https://jira.example.com/browse/SRE-2"}
+        "/api/tasks/resolve", json={"ref": "https://jira.example.com/browse/DEV-2"}
     )
     assert link.json()["task"]["status_category"] == "done"
 
@@ -63,14 +63,14 @@ def test_connection_test(jira_client, fake_jira):
 
 def test_jira_not_configured(jira_client):
     jira_client.put("/api/settings", json={"provider": "jira"})
-    response = jira_client.post("/api/tasks/resolve", json={"ref": "SRE-1"})
+    response = jira_client.post("/api/tasks/resolve", json={"ref": "DEV-1"})
     assert (response.status_code, response.json()["error"]["code"]) == (400, "jira_not_configured")
 
 
 def test_rate_limit_passes_retry_after(jira_client, fake_jira):
     connect(jira_client)
     fake_jira.fail = 429
-    response = jira_client.post("/api/tasks/resolve", json={"ref": "SRE-1"})
+    response = jira_client.post("/api/tasks/resolve", json={"ref": "DEV-1"})
     assert response.status_code == 429
     assert response.headers["retry-after"] == "42"
 
@@ -88,7 +88,7 @@ def test_changed_secret_key_makes_token_unreadable(tmp_path, fake_jira):
     connect(first)
     second = TestClient(create_app(Settings(db_path=db, drawhl_secret_key="two"), transport))
     assert second.get("/api/settings").json()["jira"]["token_state"] == "unreadable"
-    response = second.post("/api/tasks/resolve", json={"ref": "SRE-1"})
+    response = second.post("/api/tasks/resolve", json={"ref": "DEV-1"})
     assert response.json()["error"]["code"] == "jira_not_configured"
 
 

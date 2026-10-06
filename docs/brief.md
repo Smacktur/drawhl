@@ -1,6 +1,6 @@
 # Brief: drawhl
 
-> Open-source infinite canvas with live Jira Data Center task cards for leads who think spatially
+> Open-source infinite canvas for your tasks: live cards from your tracker, arranged the way you think
 
 Filled in during Intake and Scope (gate **G1**) from [research.md](research.md). Structure: [docs/playbook/01-strategy.md](playbook/01-strategy.md).
 
@@ -20,7 +20,7 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 
 1. The user starts drawhl (`docker compose up`), opens it in the browser and enters the Jira DC URL and their PAT in settings.
 2. Creates a board, draws frames and sticky notes, connects them with arrows.
-3. Adds a task with the "Jira card" tool by key (`SRE-121`) or by pasting a link. A compact card appears on the canvas: type icon, key, title, status.
+3. Adds a task with the "Jira card" tool by key (`DEV-12`) or by pasting a link. A compact card appears on the canvas: type icon, key, title, status.
 4. Drags cards into frames, collapses them to the key, and clicks to expand a mini-card (assignee, priority, updated, link to Jira).
 5. Changes the task status in Jira. Within ≤ 1 min the card on the board shows the new status. A closed task is struck through. The board is saved and reopens looking the same.
 

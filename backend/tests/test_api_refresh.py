@@ -27,12 +27,12 @@ def test_only_open_board_keys_are_polled(jira_client, fake_jira):
         "/api/settings",
         json={"provider": "jira", "jira": {"base_url": "https://jira.example.com", "token": TOKEN}},
     )
-    board_with(jira_client, "SRE-2", name="other")
-    open_board = board_with(jira_client, "SRE-1")
+    board_with(jira_client, "DEV-2", name="other")
+    open_board = board_with(jira_client, "DEV-1")
     fake_jira.requests.clear()
 
     body = jira_client.post(f"/api/boards/{open_board}/refresh").json()
-    assert set(body["tasks"]) == {"SRE-1"}
+    assert set(body["tasks"]) == {"DEV-1"}
     assert len(fake_jira.requests) == 1
 
 
@@ -41,7 +41,7 @@ def test_rate_limited_refresh(jira_client, fake_jira):
         "/api/settings",
         json={"provider": "jira", "jira": {"base_url": "https://jira.example.com", "token": TOKEN}},
     )
-    board_id = board_with(jira_client, "SRE-1")
+    board_id = board_with(jira_client, "DEV-1")
     fake_jira.fail = 429
     first = jira_client.post(f"/api/boards/{board_id}/refresh")
     assert (first.status_code, first.headers["retry-after"]) == (429, "42")
@@ -65,7 +65,7 @@ def test_settings_change_lifts_backoff(jira_client, fake_jira):
         "/api/settings",
         json={"provider": "jira", "jira": {"base_url": "https://jira.example.com", "token": TOKEN}},
     )
-    board_id = board_with(jira_client, "SRE-1")
+    board_id = board_with(jira_client, "DEV-1")
     fake_jira.fail = 503
     assert jira_client.post(f"/api/boards/{board_id}/refresh").status_code == 503
     jira_client.put("/api/settings", json={"provider": "demo"})

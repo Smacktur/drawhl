@@ -16,7 +16,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Draw a frame by dragging; a new frame takes in the elements under it.
 - Click a card to open a mini-card with assignee, priority, last update and an "Open in Jira" link. Collapse cards to a single line with key and status from the mini-card or, for the whole selection, from the right-click menu; the state is saved with the board.
 - Rename or delete the current board from the board menu; deleting asks first.
-- Add cards by JQL: type a query such as `project = SRE AND status != Done` into the Jira card input, and up to 50 matching tasks are laid out in a grid. Jira's own error is shown for a broken query.
+- Add cards by JQL: type a query such as `project = DEV AND status != Done` into the Jira card input, and up to 50 matching tasks are laid out in a grid. Jira's own error is shown for a broken query.
 - JQL suggestions in the Jira card input, from your own Jira: field names (custom fields too), the operators each field allows, values such as statuses and people, then AND, OR or ORDER BY. Tab inserts a suggestion. Before you press Enter, the hint shows how many tasks match or Jira's error.
 - Undo and redo on the board: Cmd/Ctrl+Z takes back a move, resize, delete, edit or new element, Cmd/Ctrl+Shift+Z or Ctrl+Y brings it back. A drag is one step; text fields keep their own undo.
 - `make backup` saves a timestamped copy of the database to `data/backups/`; `make up` runs it before every rebuild.
