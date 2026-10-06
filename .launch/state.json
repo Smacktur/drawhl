@@ -16,7 +16,7 @@
     "G1_scope": "approved",
     "G2_spec": "approved",
     "legal": "approved",
-    "G4_ship": "pending",
+    "G4_ship": "approved",
     "G3_card-on-board": "approved",
     "G3_jira-dc-connection": "approved",
     "G3_freshness": "approved",
@@ -27,6 +27,7 @@
     "G3_undo": "approved"
   },
   "notes": [
-    "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo."
+    "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
+    "2026-10-06 G4: repo public, main protected by rulesets, first release v2026.10.6 (ghcr images amd64+arm64). Author email stays in history by owner's choice. Next: Render slice with optional basic auth."
   ]
 }
