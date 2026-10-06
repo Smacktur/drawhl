@@ -1,5 +1,14 @@
 import { useReactFlow } from '@xyflow/react'
-import { GripVertical, X } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  ListIndentDecrease,
+  ListIndentIncrease,
+  ListPlus,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 import { useRef, useState, type PointerEvent } from 'react'
 import type { Task } from '@/api/tasks'
 import { TypeIcon } from '@/canvas/nodes/TaskBits'
@@ -8,25 +17,46 @@ import { cn } from '@/lib/utils'
 
 // A press that moves further than this starts a row drag.
 const DRAG_SLOP = 4
+// One tree level, in label pixels and in drag distance.
+export const INDENT = 16
 
 type Props = {
   row: Row
-  index: number
+  depth: number
+  hasChildren: boolean
   task?: Task
   /** A row just added by the user opens with its title in edit mode. */
   fresh?: boolean
   onTitle: (title: string) => void
   onRemove: () => void
-  /** Dropped inside the module: the row's new index. */
-  onMove: (index: number) => void
+  onToggle: () => void
+  onIndent: () => void
+  onOutdent: () => void
+  onAddChild: () => void
+  /** Dropped inside the module: how many rows down and levels right it moved. */
+  onMove: (rows: number, levels: number) => void
   /** Dropped outside the module, at this screen point. */
   onEject: (screen: { x: number; y: number }) => void
 }
 
 /** The row's label: drag it to reorder, or out of the module to put it back on the board. */
-export function GanttLabel({ row, index, task, fresh, onTitle, onRemove, onMove, onEject }: Props) {
+export function GanttLabel({
+  row,
+  depth,
+  hasChildren,
+  task,
+  fresh,
+  onTitle,
+  onRemove,
+  onToggle,
+  onIndent,
+  onOutdent,
+  onAddChild,
+  onMove,
+  onEject,
+}: Props) {
   const { getZoom } = useReactFlow()
-  const [offset, setOffset] = useState<number | null>(null)
+  const [offset, setOffset] = useState<{ x: number; y: number } | null>(null)
   const [editing, setEditing] = useState(Boolean(fresh))
   const press = useRef<{ x: number; y: number; zoom: number } | null>(null)
 
@@ -38,9 +68,10 @@ export function GanttLabel({ row, index, task, fresh, onTitle, onRemove, onMove,
   const move = (event: PointerEvent) => {
     const start = press.current
     if (!start) return
+    const dx = event.clientX - start.x
     const dy = event.clientY - start.y
-    if (offset === null && Math.hypot(event.clientX - start.x, dy) < DRAG_SLOP) return
-    setOffset(dy / start.zoom)
+    if (offset === null && Math.hypot(dx, dy) < DRAG_SLOP) return
+    setOffset({ x: dx / start.zoom, y: dy / start.zoom })
   }
   const up = (event: PointerEvent) => {
     const start = press.current
@@ -56,10 +87,11 @@ export function GanttLabel({ row, index, task, fresh, onTitle, onRemove, onMove,
       event.clientY >= box.top &&
       event.clientY <= box.bottom
     if (!inside) return onEject({ x: event.clientX, y: event.clientY })
-    onMove(index + Math.round(offset / ROW_HEIGHT))
+    onMove(Math.round(offset.y / ROW_HEIGHT), Math.round(offset.x / INDENT))
   }
 
   const done = task?.status_category === 'done'
+  const name = row.key ?? (row.title || 'row')
   return (
     <div
       onPointerDown={down}
@@ -70,17 +102,41 @@ export function GanttLabel({ row, index, task, fresh, onTitle, onRemove, onMove,
         setOffset(null)
       }}
       className={cn(
-        'group/label flex cursor-grab items-center gap-1.5 border-b border-border/60 pr-1 pl-1 select-none',
+        'group/label flex cursor-grab items-center gap-1 border-b border-border/60 pr-1 select-none',
         offset !== null && 'bg-card relative z-10 cursor-grabbing shadow-md',
       )}
       style={{
         height: ROW_HEIGHT,
-        transform: offset !== null ? `translateY(${offset}px)` : undefined,
+        paddingLeft: 4 + depth * INDENT,
+        transform: offset !== null ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
       }}
     >
       <GripVertical className="text-muted-foreground/60 size-3.5 shrink-0" />
+      {hasChildren ? (
+        <button
+          type="button"
+          aria-label={`${row.collapsed ? 'Expand' : 'Collapse'} ${name}`}
+          aria-expanded={!row.collapsed}
+          onClick={onToggle}
+          className="text-muted-foreground hover:text-foreground -mx-0.5 shrink-0 rounded-sm"
+        >
+          {row.collapsed ? (
+            <ChevronRight className="size-3.5" />
+          ) : (
+            <ChevronDown className="size-3.5" />
+          )}
+        </button>
+      ) : (
+        <span className="w-2.5 shrink-0" />
+      )}
       {row.key ? (
-        <span className={cn('flex min-w-0 items-center gap-1', done && 'text-muted-foreground')}>
+        <span
+          className={cn(
+            'flex min-w-0 items-center gap-1',
+            done && 'text-muted-foreground',
+            hasChildren && 'font-semibold',
+          )}
+        >
           {task && <TypeIcon typeName={task.type_name} />}
           <span className={cn('shrink-0 font-medium', done && 'line-through')}>{row.key}</span>
           <span className="truncate" title={task?.summary}>
@@ -105,20 +161,46 @@ export function GanttLabel({ row, index, task, fresh, onTitle, onRemove, onMove,
         />
       ) : (
         <span
-          className={cn('truncate', !row.title && 'text-muted-foreground')}
+          className={cn(
+            'truncate',
+            !row.title && 'text-muted-foreground',
+            hasChildren && 'font-semibold',
+          )}
           onDoubleClick={() => setEditing(true)}
         >
           {row.title || 'Untitled'}
         </span>
       )}
-      <button
-        type="button"
-        aria-label={`Remove ${row.key ?? (row.title || 'row')}`}
-        onClick={onRemove}
-        className="text-muted-foreground hover:text-foreground ml-auto hidden shrink-0 rounded-sm p-0.5 group-hover/label:block"
-      >
-        <X className="size-3.5" />
-      </button>
+      <span className="bg-card ml-auto hidden shrink-0 items-center group-hover/label:flex">
+        <RowAction label={`Add a row under ${name}`} Icon={ListPlus} onClick={onAddChild} />
+        {depth > 0 && (
+          <RowAction label={`Outdent ${name}`} Icon={ListIndentDecrease} onClick={onOutdent} />
+        )}
+        <RowAction label={`Indent ${name}`} Icon={ListIndentIncrease} onClick={onIndent} />
+        <RowAction label={`Remove ${name}`} Icon={X} onClick={onRemove} />
+      </span>
     </div>
+  )
+}
+
+function RowAction({
+  label,
+  Icon,
+  onClick,
+}: {
+  label: string
+  Icon: LucideIcon
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="text-muted-foreground hover:text-foreground rounded-sm p-0.5"
+    >
+      <Icon className="size-3.5" />
+    </button>
   )
 }

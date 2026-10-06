@@ -19,11 +19,13 @@ type Props = {
   label: string
   /** Undefined for a plain row; a task row without data yet is drawn like a plain one. */
   task?: Task
+  /** A parent's bar: spans its children and follows them instead of being dragged. */
+  summary?: boolean
   onSpan: (span: Span) => void
 }
 
 /** A row's bar: drag the body to move it, an end to change that date, in whole days. */
-export function GanttBar({ span, range, pxPerDay, label, task, onSpan }: Props) {
+export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }: Props) {
   const { getZoom } = useReactFlow()
   const drag = useRef<{ x: number; zoom: number; grip: Grip; span: Span } | null>(null)
   const box = barBox(span, range, pxPerDay)
@@ -38,6 +40,29 @@ export function GanttBar({ span, range, pxPerDay, label, task, onSpan }: Props) 
       >
         <Icon className="size-4" />
       </span>
+    )
+  }
+
+  if (summary) {
+    return (
+      <div
+        role="img"
+        aria-label={`${label} summary`}
+        title={label}
+        className={cn(
+          'bg-foreground/70 absolute top-3 h-2 rounded-[2px]',
+          !box.clippedStart && 'rounded-bl-none',
+          !box.clippedEnd && 'rounded-br-none',
+        )}
+        style={{ left: box.left, width: Math.max(box.width, 4) }}
+      >
+        {!box.clippedStart && (
+          <span className="bg-foreground/70 absolute top-full left-0 h-1.5 w-1" />
+        )}
+        {!box.clippedEnd && (
+          <span className="bg-foreground/70 absolute top-full right-0 h-1.5 w-1" />
+        )}
+      </div>
     )
   }
 

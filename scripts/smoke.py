@@ -163,6 +163,14 @@ try:
     module_doc["nodes"][0]["data"]["content"] = gantt | {"end": "2026-09-01"}
     status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 3, "doc": module_doc})
     check(status == 422, "invalid gantt rejected")
+    child = {"id": "c", "title": "Child", "start": "2026-10-05", "end": "2026-10-06", "parent": "r"}
+    orphan = child | {"id": "o", "parent": "missing"}
+    module_doc["nodes"][0]["data"]["content"] = gantt | {"rows": [row, child]}
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 3, "doc": module_doc})
+    check(status == 200, "gantt rows nest in a tree")
+    module_doc["nodes"][0]["data"]["content"] = gantt | {"rows": [row, orphan]}
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 4, "doc": module_doc})
+    check(status == 422, "row under a missing parent rejected")
 
     status, body = call("POST", f"{API}/api/tasks/search", {"jql": 'status = "Backlog"'})
     check(

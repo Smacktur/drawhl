@@ -26,11 +26,16 @@ Node type "module"  data {kind, title?, content}
   links: Link[]          ≤ 400
 }
 
-Row       {id, key?, title, start, end}
+Row       {id, key?, title, start, end, parent?, collapsed}
             id 1–40 chars, unique in the module
             key: issue key (same rule as cards) → live task row; absent → plain row
             title ≤ 200 chars (plain rows; ignored for task rows)
             end ≥ start; dates may lie outside the range (bar is clipped)
+            parent: id of a row earlier in the list; rows are in display (pre-order) order,
+              so a row's parent is the row above it or one of that row's ancestors; depth ≤ 5
+            collapsed: hides the row's descendants
+            a row with children shows its descendants' span; its own dates are kept for when
+              it has none
 Milestone {id, date, title}   title ≤ 200 chars
 Link      {id, from, to}      from and to are row ids in this module, from ≠ to, no duplicates
 ```

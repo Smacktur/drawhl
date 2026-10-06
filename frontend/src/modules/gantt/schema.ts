@@ -17,6 +17,8 @@ export const ganttSchema = z.object({
         title: z.string(),
         start: isoDate,
         end: isoDate,
+        parent: z.string().optional(),
+        collapsed: z.boolean().optional(),
       }),
     )
     .default([]),

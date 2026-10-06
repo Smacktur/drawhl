@@ -19,10 +19,8 @@ import {
   LABEL_WIDTH,
   makeRow,
   MAX_ROWS,
-  moveRow,
   pxPerDay,
   range,
-  removeRow,
   ROW_HEIGHT,
   spanOf,
   updateRow,
@@ -30,6 +28,16 @@ import {
   type Row,
 } from '@/modules/gantt/rows'
 import type { GanttContent } from '@/modules/gantt/schema'
+import {
+  addChild,
+  indent,
+  liftRemove,
+  moveSubtree,
+  outdent,
+  subtreeEnd,
+  summarySpan,
+  visibleRows,
+} from '@/modules/gantt/tree'
 import {
   fitsRange,
   formatDay,
@@ -85,6 +93,8 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
   const before = quarterBefore(start)
   const after = quarterAfter(end)
   const full = content.rows.length >= MAX_ROWS
+  const visible = visibleRows(content.rows)
+  const indexOf = new Map(content.rows.map((r, i) => [r.id, i]))
 
   const addTasks = (list: Task[]) => {
     host.addTasks(list)
@@ -103,7 +113,22 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
   const eject = (row: Row, screen: XYPosition) => {
     if (row.key) host.ejectCard(row.key, screen)
     else host.ejectNote(row.title, screen)
-    onChange(removeRow(content, row.id))
+    onChange(liftRemove(content, row.id))
+  }
+  const addChildRow = (parentId: string) => {
+    if (full) return
+    const row = makeRow(content, {})
+    setFresh(row.id)
+    onChange(addChild(content, parentId, row))
+  }
+  // Rows dropped among the others: the dragged subtree is left out when counting places.
+  const drop = (id: string, depth: number, rowsDown: number, levels: number) => {
+    const at = visible.findIndex((t) => t.row.id === id)
+    const end = subtreeEnd(content.rows, indexOf.get(id)!)
+    const moving = new Set(content.rows.slice(indexOf.get(id)!, end).map((r) => r.id))
+    const rest = visible.filter((t) => !moving.has(t.row.id))
+    const slot = Math.min(Math.max(at + rowsDown, 0), rest.length)
+    onChange(moveSubtree(content, id, rest[slot]?.row.id ?? null, depth + levels))
   }
 
   return (
@@ -123,16 +148,23 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
         >
           {formatRange(content.start, content.end)}
         </div>
-        {content.rows.map((row, index) => (
+        {visible.map(({ row, depth, hasChildren }) => (
           <GanttLabel
             key={row.id}
             row={row}
-            index={index}
+            depth={depth}
+            hasChildren={hasChildren}
             task={row.key ? tasks[row.key] : undefined}
             fresh={row.id === fresh}
             onTitle={(title) => onChange(updateRow(content, row.id, (r) => ({ ...r, title })))}
-            onRemove={() => onChange(removeRow(content, row.id))}
-            onMove={(to) => onChange(moveRow(content, row.id, to))}
+            onRemove={() => onChange(liftRemove(content, row.id))}
+            onToggle={() =>
+              onChange(updateRow(content, row.id, (r) => ({ ...r, collapsed: !r.collapsed })))
+            }
+            onIndent={() => onChange(indent(content, row.id))}
+            onOutdent={() => onChange(outdent(content, row.id))}
+            onAddChild={() => addChildRow(row.id)}
+            onMove={(rowsDown, levels) => drop(row.id, depth, rowsDown, levels)}
             onEject={(screen) => eject(row, screen)}
           />
         ))}
@@ -175,14 +207,15 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
             style={{ left: (now - start + 0.5) * scale, top: HEADER }}
           />
         )}
-        {content.rows.map((row) => (
+        {visible.map(({ row, hasChildren }) => (
           <div
             key={row.id}
             className="relative border-b border-border/60"
             style={{ height: ROW_HEIGHT }}
           >
             <GanttBar
-              span={spanOf(row)}
+              span={(hasChildren && summarySpan(content.rows, indexOf.get(row.id)!)) || spanOf(row)}
+              summary={hasChildren}
               range={span}
               pxPerDay={scale}
               label={row.key ? `${row.key} ${tasks[row.key]?.summary ?? ''}` : row.title}

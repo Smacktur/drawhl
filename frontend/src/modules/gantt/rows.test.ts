@@ -5,8 +5,6 @@ import {
   bodyHeight,
   HEADER,
   MAX_ROWS,
-  moveRow,
-  removeRow,
   ROW_HEIGHT,
   type Row,
 } from '@/modules/gantt/rows'
@@ -41,17 +39,6 @@ describe('rows', () => {
     ])
     const full = { ...base, rows: Array.from({ length: MAX_ROWS }, (_, i) => row(String(i))) }
     expect(addRows(full, [row('x')]).rows).toHaveLength(MAX_ROWS)
-  })
-
-  it('removes a row with its links', () => {
-    const next = removeRow(base, 'a')
-    expect(next.rows.map((r) => r.id)).toEqual(['b'])
-    expect(next.links).toEqual([])
-  })
-
-  it('moves a row to a clamped index', () => {
-    expect(moveRow(base, 'a', 5).rows.map((r) => r.id)).toEqual(['b', 'a'])
-    expect(moveRow(base, 'b', -2).rows.map((r) => r.id)).toEqual(['b', 'a'])
   })
 
   it('grows with rows and keeps one empty row', () => {

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ReactFlow, ReactFlowProvider, useNodesState, type Node } from '@xyflow/react'
+import { useLayoutEffect } from 'react'
 import { beforeAll, expect, test, vi } from 'vitest'
 import type { Task } from '@/api/tasks'
 import { ModuleNode } from '@/canvas/nodes/ModuleNode'
@@ -62,7 +63,9 @@ function Board() {
       data: { kind: 'gantt', content },
     },
   ])
-  latest = nodes
+  useLayoutEffect(() => {
+    latest = nodes
+  }, [nodes])
   return <ReactFlow nodes={nodes} nodeTypes={nodeTypes} onNodesChange={onNodesChange} />
 }
 
@@ -142,4 +145,27 @@ test('the module title is renamed in its header', () => {
   fireEvent.blur(field)
   expect((latest[0].data as { title?: string }).title).toBe('Q4 roadmap')
   expect(screen.getByText('Q4 roadmap')).toBeTruthy()
+})
+
+test('rows nest under rows, show a summary bar and collapse', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  expect(rows()[1].parent).toBe('a')
+  expect(screen.getByRole('img', { name: /DEMO-1 .* summary/ })).toBeTruthy()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Add a row under Design review' }))
+  expect(rows().map((r) => r.parent)).toEqual([undefined, 'a', 'b'])
+  fireEvent.blur(screen.getByLabelText('Row title'))
+
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse DEMO-1' }))
+  expect(rows()[0].collapsed).toBe(true)
+  expect(screen.queryByRole('slider', { name: 'Design review dates' })).toBeNull()
+})
+
+test('removing a parent keeps its children one level up', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Remove DEMO-1' }))
+  expect(rows()).toEqual([expect.objectContaining({ id: 'b' })])
+  expect(rows()[0].parent).toBeUndefined()
 })

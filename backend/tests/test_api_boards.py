@@ -160,7 +160,14 @@ GANTT = {
     "scale": "week",
     "labelWidth": 240,
     "rows": [
-        {"id": "r1", "key": "DEMO-3", "title": "", "start": "2026-10-06", "end": "2026-10-17"}
+        {
+            "id": "r1",
+            "key": "DEMO-3",
+            "title": "",
+            "start": "2026-10-06",
+            "end": "2026-10-17",
+            "collapsed": False,
+        }
     ],
     "milestones": [{"id": "m1", "date": "2026-11-01", "title": "Beta"}],
     "links": [],
