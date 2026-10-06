@@ -39,6 +39,9 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 **Should** (at most 1)
 - Pasting a JQL query: tasks are laid out on the canvas in a batch
 
+**Next** (after ship, [specs/002-modules](../specs/002-modules/spec.md))
+- Modules: interactive blocks on the canvas, added from a picker, built on one module host so new kinds plug in. First module: Gantt with live task bars, scale, quarters, milestones and dependency lines. Plan dates live on the board only.
+
 **Won't**
 - Real-time collaborative editing, board sharing
 - Jira Cloud, Confluence, Todoist (only a hook in the provider interface)
