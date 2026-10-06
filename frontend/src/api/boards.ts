@@ -80,9 +80,22 @@ export function saveBoard(id: string, version: number, doc: BoardDoc, keepalive 
   }).then((body) => body.version)
 }
 
+const sourceSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  state: z.enum(['ok', 'error']),
+  synced_at: z.string().nullable(),
+  error: z
+    .object({ code: z.string(), message: z.string(), retry_after: z.number().nullable() })
+    .nullable(),
+})
+
+export type SyncSource = z.infer<typeof sourceSchema>
+
 const refreshSchema = z.object({
   tasks: z.record(z.string(), taskSchema),
   fetched_at: z.string(),
+  sources: z.array(sourceSchema),
 })
 
 export function refreshBoard(id: string) {

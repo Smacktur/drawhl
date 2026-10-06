@@ -60,7 +60,7 @@ sequenceDiagram
   end
 ```
 
-One batched request per open board per tick. On errors the server sets a backoff (honours `Retry-After`, up to 300 s) and the client doubles its interval.
+One batched request per open board per tick. The response lists every tracker with its own state (`sources`), so one failing tracker never hides the others. Backoff lives on the server, per tracker: rate limits and 5xx double the wait (honours `Retry-After`, up to 300 s); network errors retry at the normal interval, so a VPN coming back shows up on the next tick. The client polls at the interval, or at `retry_after` when a tracker asked to wait.
 
 ## If it takes off
 

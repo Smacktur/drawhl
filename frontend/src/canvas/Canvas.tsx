@@ -39,7 +39,7 @@ import { TextNode } from '@/canvas/nodes/TextNode'
 import { TasksContext } from '@/canvas/tasks-context'
 import { Toolbar, type Tool } from '@/canvas/Toolbar'
 import { RefreshIndicator } from '@/board/RefreshIndicator'
-import { lastFetched, newest } from '@/board/refresh-timing'
+import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
@@ -350,8 +350,9 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         </div>
       </CanvasContextMenu>
       <RefreshIndicator
-        syncedAt={refresh.dataUpdatedAt || lastFetched(board.tasks)}
-        error={refresh.error}
+        sources={refresh.data?.sources ?? []}
+        serverError={refresh.error}
+        syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
         refreshing={refresh.isFetching}
         onRefresh={() => void refresh.refetch()}
       />

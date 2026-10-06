@@ -31,7 +31,21 @@ Settings = {
 | `PUT /boards/{id}` | `{version, doc}` | `{version}` (incremented) | 404, 409 `version_conflict`, 422 `invalid_request` (schema) or `validation_failed` (doc rules) |
 | `PATCH /boards/{id}` | `{name}` | `BoardSummary` (doc version unchanged) | 404, 422 |
 | `DELETE /boards/{id}` | – | 204 | 404 |
-| `POST /boards/{id}/refresh` | – (keys from the saved doc) | `{tasks: {KEY: Task}, fetched_at}` | 404, 400 `jira_not_configured`, 401 `jira_unauthorized`, 429 `jira_rate_limited` + `Retry-After`, 503 `jira_unavailable` |
+| `POST /boards/{id}/refresh` | – (keys from the saved doc) | `{tasks: {KEY: Task}, fetched_at, sources: SyncSource[]}`; a failing tracker is reported in `sources`, not as an HTTP error | 404 |
+
+`SyncSource` is one tracker's state after this call:
+
+```text
+SyncSource {
+  id: string,                  # "demo" | "jira"
+  name: string,                # "Demo tasks" | "Jira Data Center"
+  state: "ok" | "error",
+  synced_at: string | null,    # last successful poll since the server started
+  error: {code, message, retry_after: int | null} | null   # retry_after while the server backs off
+}
+```
+
+Backoff is per tracker on the server: `jira_rate_limited` and Jira 5xx double the wait (honouring `Retry-After`, up to 300 s); auth, config and network errors (`Jira is unreachable`, timeouts) retry at the normal interval.
 
 ## Tasks
 

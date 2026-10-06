@@ -3,7 +3,13 @@ import pytest
 from app.adapters.storage.sqlite import Database, SqliteBoardRepo, SqliteSnapshotRepo
 from app.adapters.tasks.demo import DemoTaskProvider
 from app.domain.boards import BoardDoc
-from app.domain.errors import JiraRateLimited, JiraUnauthorized, JiraUnavailable, NotFound
+from app.domain.errors import (
+    JiraRateLimited,
+    JiraUnauthorized,
+    JiraUnavailable,
+    JiraUnreachable,
+    NotFound,
+)
 from app.domain.refresh import RefreshService
 
 DOC = BoardDoc.model_validate(
@@ -20,6 +26,8 @@ class Flaky:
     """Demo provider that fails with the queued errors before answering."""
 
     base_host = "jira.example.com"
+    source_id = "jira"
+    source_name = "Jira Data Center"
 
     def __init__(self, *errors: Exception) -> None:
         self.errors = list(errors)
@@ -50,99 +58,125 @@ class Clock:
         return self.now
 
 
+def poll(service, repos, provider, board_id=None):
+    default_id, boards, snapshots = repos
+    tasks, (status,) = service.refresh(board_id or default_id, 30, boards, snapshots, provider)
+    return tasks, status
+
+
 def test_one_poll_stores_snapshots(repos):
-    board_id, boards, snapshots = repos
+    _, _, snapshots = repos
     provider = Flaky()
-    tasks = RefreshService().refresh(board_id, 30, boards, snapshots, provider)
+    tasks, status = poll(RefreshService(), repos, provider)
     assert set(tasks) == {"DEMO-1", "DEMO-2"}
     assert provider.calls == 1
+    assert (status.id, status.state, status.error) == ("jira", "ok", None)
+    assert status.synced_at
     assert set(snapshots.get_many(["DEMO-1", "DEMO-2"])) == {"DEMO-1", "DEMO-2"}
 
 
+def test_failure_is_a_source_status_not_an_exception(repos):
+    service = RefreshService(Clock())
+    poll(service, repos, Flaky())
+    tasks, status = poll(service, repos, Flaky(JiraUnauthorized("Jira returned 401")))
+    assert tasks == {}
+    assert status.state == "error"
+    assert (status.error.code, status.error.message) == ("jira_unauthorized", "Jira returned 401")
+    # The last good sync time stays, so the UI can say how stale the cards are.
+    assert status.synced_at
+
+
 def test_backoff_doubles_and_resets(repos):
-    board_id, boards, snapshots = repos
     clock = Clock()
     service = RefreshService(clock)
     provider = Flaky(JiraUnavailable("down"), JiraUnavailable("down"))
 
-    with pytest.raises(JiraUnavailable):
-        service.refresh(board_id, 30, boards, snapshots, provider)
+    _, status = poll(service, repos, provider)
+    assert status.error.retry_after == 60
     clock.now += 59
-    with pytest.raises(JiraRateLimited) as waiting:
-        service.refresh(board_id, 30, boards, snapshots, provider)
-    assert waiting.value.retry_after == 1
+    _, status = poll(service, repos, provider)
+    assert (status.state, status.error.message, status.error.retry_after) == ("error", "down", 1)
     assert provider.calls == 1
 
     clock.now += 1
-    with pytest.raises(JiraUnavailable):
-        service.refresh(board_id, 30, boards, snapshots, provider)
+    _, status = poll(service, repos, provider)
+    assert status.error.retry_after == 120
     clock.now += 119
-    with pytest.raises(JiraRateLimited):
-        service.refresh(board_id, 30, boards, snapshots, provider)
+    poll(service, repos, provider)
+    assert provider.calls == 2
 
     clock.now += 1
-    assert service.refresh(board_id, 30, boards, snapshots, provider)
+    tasks, status = poll(service, repos, provider)
+    assert tasks and status.state == "ok"
 
     # After a success the next outage starts again from interval × 2.
     provider.errors.append(JiraUnavailable("down"))
-    with pytest.raises(JiraUnavailable):
-        service.refresh(board_id, 30, boards, snapshots, provider)
-    with pytest.raises(JiraRateLimited) as waiting:
-        service.refresh(board_id, 30, boards, snapshots, provider)
-    assert waiting.value.retry_after == 60
+    _, status = poll(service, repos, provider)
+    assert status.error.retry_after == 60
+
+
+def test_unreachable_tracker_retries_at_normal_pace(repos):
+    service = RefreshService(Clock())
+    provider = Flaky(*[JiraUnreachable("Jira is unreachable")] * 3)
+    for _ in range(3):
+        _, status = poll(service, repos, provider)
+        assert status.error.retry_after is None
+    assert provider.calls == 3
+    # The VPN is back: the very next tick syncs.
+    tasks, status = poll(service, repos, provider)
+    assert tasks and status.state == "ok"
 
 
 def test_retry_after_and_cap(repos):
-    board_id, boards, snapshots = repos
     clock = Clock()
     service = RefreshService(clock)
     provider = Flaky(JiraRateLimited("slow down", 500))
-    with pytest.raises(JiraRateLimited):
-        service.refresh(board_id, 30, boards, snapshots, provider)
+    _, status = poll(service, repos, provider)
+    assert status.error.retry_after == 300
     clock.now += 299
-    with pytest.raises(JiraRateLimited):
-        service.refresh(board_id, 30, boards, snapshots, provider)
+    poll(service, repos, provider)
+    assert provider.calls == 1
     clock.now += 1
-    assert service.refresh(board_id, 30, boards, snapshots, provider)
+    tasks, _ = poll(service, repos, provider)
+    assert tasks
 
 
 def test_auth_errors_do_not_back_off(repos):
-    board_id, boards, snapshots = repos
-    provider = Flaky(JiraUnauthorized("401"))
     service = RefreshService(Clock())
-    with pytest.raises(JiraUnauthorized):
-        service.refresh(board_id, 30, boards, snapshots, provider)
-    assert service.refresh(board_id, 30, boards, snapshots, provider)
+    provider = Flaky(JiraUnauthorized("401"))
+    poll(service, repos, provider)
+    tasks, _ = poll(service, repos, provider)
+    assert tasks
 
 
 def test_failed_refresh_keeps_last_snapshot(repos):
-    board_id, boards, snapshots = repos
+    _, _, snapshots = repos
     service = RefreshService(Clock())
-    service.refresh(board_id, 30, boards, snapshots, Flaky())
-    with pytest.raises(JiraUnavailable):
-        service.refresh(board_id, 30, boards, snapshots, Flaky(JiraUnavailable("down")))
+    poll(service, repos, Flaky())
+    poll(service, repos, Flaky(JiraUnavailable("down")))
     assert set(snapshots.get_many(["DEMO-1"])) == {"DEMO-1"}
 
 
 def test_missing_board(repos):
-    _, boards, snapshots = repos
     with pytest.raises(NotFound):
-        RefreshService().refresh("nope", 30, boards, snapshots, Flaky())
+        poll(RefreshService(), repos, Flaky(), board_id="nope")
 
 
 def test_reset_clears_backoff(repos):
-    board_id, boards, snapshots = repos
     service = RefreshService(Clock())
-    with pytest.raises(JiraUnavailable):
-        service.refresh(board_id, 30, boards, snapshots, Flaky(JiraUnavailable("down")))
+    poll(service, repos, Flaky(JiraUnavailable("down")))
     service.reset()
-    assert service.refresh(board_id, 30, boards, snapshots, Flaky())
+    tasks, _ = poll(service, repos, Flaky())
+    assert tasks
 
 
-def test_empty_board_ignores_backoff(repos):
-    board_id, boards, snapshots = repos
+def test_empty_board_reports_the_last_known_state(repos):
+    _, boards, _ = repos
     service = RefreshService(Clock())
     empty = boards.create("empty", BoardDoc())
-    with pytest.raises(JiraUnavailable):
-        service.refresh(board_id, 30, boards, snapshots, Flaky(JiraUnavailable("down")))
-    assert service.refresh(empty.id, 30, boards, snapshots, Flaky()) == {}
+    provider = Flaky()
+    _, status = poll(service, repos, provider, board_id=empty.id)
+    assert (status.state, provider.calls) == ("ok", 0)
+    poll(service, repos, Flaky(JiraUnreachable("down")))
+    _, status = poll(service, repos, provider, board_id=empty.id)
+    assert status.state == "error"

@@ -107,6 +107,10 @@ try:
         status == 200 and body["tasks"]["DEMO-1"]["status_category"] == "done",
         "refresh shows the new status",
     )
+    check(
+        [(s["id"], s["state"]) for s in body["sources"]] == [("demo", "ok")],
+        "refresh reports sync status per tracker",
+    )
 
     status, other = call("POST", f"{API}/api/boards", {"name": "smoke other"})
     created.append(other["id"])
