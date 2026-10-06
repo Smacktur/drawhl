@@ -34,6 +34,7 @@ import { framesFirst, releaseChildren, reparent, splitDeletion } from '@/canvas/
 import { gridPositions } from '@/canvas/layout'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
+import { ModuleNode } from '@/canvas/nodes/ModuleNode'
 import { StickyNode } from '@/canvas/nodes/StickyNode'
 import { TextNode } from '@/canvas/nodes/TextNode'
 import { TasksContext } from '@/canvas/tasks-context'
@@ -46,10 +47,17 @@ import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useHistory } from '@/canvas/useHistory'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 import { newId } from '@/lib/id'
+import { findModule } from '@/modules/registry'
 import { useShortcut } from '@/lib/shortcuts'
 import { useTheme } from '@/lib/theme'
 
-const nodeTypes = { jira_card: JiraCardNode, frame: FrameNode, sticky: StickyNode, text: TextNode }
+const nodeTypes = {
+  jira_card: JiraCardNode,
+  frame: FrameNode,
+  sticky: StickyNode,
+  text: TextNode,
+  module: ModuleNode,
+}
 const defaultEdgeOptions = { markerEnd: { type: MarkerType.ArrowClosed } }
 
 // New cards step down by about one card height so several adds in a row stay readable.
@@ -194,6 +202,25 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setNodes((current) => reparent([...current, node], [node.id]))
   }
 
+  const addModule = (kind: string, screen: XYPosition) => {
+    const def = findModule(kind)
+    if (!def) return
+    const { width, height } = def.size
+    const point = screenToFlowPosition(screen)
+    const node: AppNode = {
+      id: newId(),
+      type: 'module',
+      position: { x: point.x - width / 2, y: point.y - height / 2 },
+      width,
+      height,
+      data: { kind, content: def.defaults() },
+    }
+    setNodes((current) => [
+      ...current.map((n) => ({ ...n, selected: false })),
+      { ...node, selected: true },
+    ])
+  }
+
   const drawFrame = ({ x, y, width, height }: ScreenRect) => {
     setTool('select')
     if (width < MIN_DRAW || height < MIN_DRAW) return placeAt('frame', { x, y })
@@ -268,6 +295,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         target={menuTarget}
         onPlace={placeAt}
         onAddCards={addCards}
+        onAddModule={addModule}
         onDelete={deleteSelection}
         cards={cardCounts}
         onCollapse={setCollapsed}
@@ -361,7 +389,12 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           <AlertDescription>Not saved: {saveError}</AlertDescription>
         </Alert>
       )}
-      <Toolbar tool={tool} onTool={setTool} onAddCards={addCards} />
+      <Toolbar
+        tool={tool}
+        onTool={setTool}
+        onAddCards={addCards}
+        onAddModule={(kind) => addModule(kind, viewportCenter())}
+      />
     </TasksContext.Provider>
   )
 }

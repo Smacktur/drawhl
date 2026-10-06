@@ -23,23 +23,23 @@ description: "Task list for Modules and the Gantt module"
 
 ### Domain and tests
 
-- [ ] T001 [P] [US1] Create `domain/modules/__init__.py`: `ModuleKind` (content model, `keys`), `MODULES` registry, `validate_module(kind, content)`; kind pattern, 256 KB limit, unknown kinds pass through. Tests in `tests/test_modules.py`
-- [ ] T002 [P] [US2] Create `domain/modules/gantt.py`: `GanttContent` with `start`, `end`, `scale`, empty-by-default `rows`, `milestones`, `links` and all rules from [data-model.md](data-model.md) (row, milestone and link rules land now so the schema is fixed once); register `gantt`. Tests in `tests/test_gantt.py`
-- [ ] T003 [US1] Add `ModuleNode` to the node union in `domain/boards.py`; `check_doc` validates modules, rejects `parentId` on a module and children of a module; rename `card_keys` to `task_keys` and include module keys; update `refresh.py` and tests (depends on T001, T002)
+- [x] T001 [P] [US1] Create `domain/modules/__init__.py`: `ModuleKind` (content model, `keys`), `MODULES` registry, `validate_module(kind, content)`; kind pattern, 256 KB limit, unknown kinds pass through. Tests in `tests/test_modules.py`
+- [x] T002 [P] [US2] Create `domain/modules/gantt.py`: `GanttContent` with `start`, `end`, `scale`, empty-by-default `rows`, `milestones`, `links` and all rules from [data-model.md](data-model.md) (row, milestone and link rules land now so the schema is fixed once); register `gantt`. Tests in `tests/test_gantt.py`
+- [x] T003 [US1] Add `ModuleNode` to the node union in `domain/boards.py`; `check_doc` validates modules, rejects `parentId` on a module and children of a module; rename `card_keys` to `task_keys` and include module keys; update `refresh.py` and tests (depends on T001, T002)
 
 ### API
 
-- [ ] T004 [US1] API tests in `tests/test_api_boards.py`: module round-trip, unknown kind round-trip, invalid gantt content → 422 with the reason, gantt task keys returned in `tasks` (depends on T003)
+- [x] T004 [US1] API tests in `tests/test_api_boards.py`: module round-trip, unknown kind round-trip, invalid gantt content → 422 with the reason, gantt task keys returned in `tasks` (depends on T003)
 
 ### UI
 
-- [ ] T005 [P] [US1] Create `modules/registry.ts` (`ModuleDef`, `ModuleViewProps`, `ModuleHost`, `MODULES`, `findModule`) and add `module` to `canvas/types.ts` and the zod board schema in `api/boards.ts`
-- [ ] T006 [P] [US2] Create `modules/gantt/timeline.ts`: days between dates, `pxPerDay`, date ↔ x, snapping, quarter and month and week header cells, add quarter before and after, current quarter range. Tests in `modules/gantt/timeline.test.ts`
-- [ ] T007 [US1] Create `canvas/nodes/ModuleNode.tsx`: header as drag handle with name and settings slot, `NodeResizer` with the def's min size, zod parse of content, placeholder for unknown kind or invalid content; register `module` in `nodeTypes`; keep modules out of `reparent`. Tests in `canvas/nodes/ModuleNode.test.tsx` (depends on T005)
-- [ ] T008 [US1] Create `modules/ModulePicker.tsx` (shadcn popover gallery: icon, name, description); add a "Modules" button to `Toolbar.tsx` and "Add module…" to `CanvasContextMenu.tsx`; place at viewport center or clicked point (depends on T007)
-- [ ] T009 [US2] Create `modules/gantt/` `schema.ts`, `index.ts`, `GanttModule.tsx`: header rows, grid, weekend shading at day scale, today line, "+ quarter" on both sides, settings popover with start, end and scale; all controls `nodrag nopan`; tokens from `DESIGN.md` in both themes (depends on T006, T007)
-- [ ] T010 [US1] Copy, paste, duplicate and undo work for modules: tests in `canvas/clipboard.test.ts` and `canvas/useHistory.test.ts`
-- [ ] T011 [US1] Smoke: save and load a board with a gantt module and with an unknown kind in `scripts/smoke.py`; `DESIGN.md` module section; `CHANGELOG.md`
+- [x] T005 [P] [US1] Create `modules/registry.ts` (`ModuleDef`, `ModuleViewProps`, `ModuleHost`, `MODULES`, `findModule`) and add `module` to `canvas/types.ts` and the zod board schema in `api/boards.ts`
+- [x] T006 [P] [US2] Create `modules/gantt/timeline.ts`: days between dates, `pxPerDay`, date ↔ x, snapping, quarter and month and week header cells, add quarter before and after, current quarter range. Tests in `modules/gantt/timeline.test.ts`
+- [x] T007 [US1] Create `canvas/nodes/ModuleNode.tsx`: header as drag handle with name and settings slot, `NodeResizer` with the def's min size, zod parse of content, placeholder for unknown kind or invalid content; register `module` in `nodeTypes`; keep modules out of `reparent`. Tests in `canvas/nodes/ModuleNode.test.tsx` (depends on T005)
+- [x] T008 [US1] Create `modules/ModulePicker.tsx` (shadcn popover gallery: icon, name, description); add a "Modules" button to `Toolbar.tsx` and "Add module…" to `CanvasContextMenu.tsx`; place at viewport center or clicked point (depends on T007)
+- [x] T009 [US2] Create `modules/gantt/` `schema.ts`, `index.ts`, `GanttModule.tsx`: header rows, grid, weekend shading at day scale, today line, "+ quarter" on both sides, settings popover with start, end and scale; all controls `nodrag nopan`; tokens from `DESIGN.md` in both themes (depends on T006, T007)
+- [x] T010 [US1] Copy, paste, duplicate and undo work for modules: tests in `canvas/clipboard.test.ts` and `canvas/useHistory.test.ts`
+- [x] T011 [US1] Smoke: save and load a board with a gantt module and with an unknown kind in `scripts/smoke.py`; `DESIGN.md` module section; `CHANGELOG.md`
 
 **Checkpoint**: `make check`, `make smoke`, screenshot of a Gantt in light and dark → G3.
 

@@ -14,5 +14,8 @@ export type StickyNode = Node<StickyData, 'sticky'>
 export type TextData = { text: string }
 export type TextNode = Node<TextData, 'text'>
 
-export type AppNode = JiraCardNode | FrameNode | StickyNode | TextNode
+export type ModuleData = { kind: string; content: unknown }
+export type ModuleNode = Node<ModuleData, 'module'>
+
+export type AppNode = JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode
 export type AppEdge = Edge

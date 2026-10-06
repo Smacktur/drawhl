@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.domain.boards import BoardDoc, card_keys, check_doc
+from app.domain.boards import BoardDoc, check_doc, task_keys
 from app.domain.errors import ValidationFailed
 
 
@@ -35,7 +35,7 @@ def test_valid_doc_passes_and_lists_unique_keys():
         [{"id": "e", "source": "a", "target": "b"}],
     )
     check_doc(board)
-    assert card_keys(board) == ["DEV-1", "DEV-2"]
+    assert task_keys(board) == ["DEV-1", "DEV-2"]
 
 
 @pytest.mark.parametrize(

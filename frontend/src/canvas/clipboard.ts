@@ -3,6 +3,7 @@ import type { Task } from '@/api/tasks'
 import { absolute } from '@/canvas/frames'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
+import { findModule } from '@/modules/registry'
 
 /** Copied elements: top-level nodes in absolute positions, frame contents relative to their frame. */
 export type Snippet = { nodes: AppNode[]; edges: AppEdge[]; tasks: Record<string, Task> }
@@ -48,7 +49,7 @@ export function copySelection(
       const { parentId: _frame, ...rest } = node
       return persistent({ ...rest, position: absolute(node, byId) } as AppNode)
     })
-  const cards = copied.flatMap((n) => (n.type === 'jira_card' ? [n.data.key] : []))
+  const cards = copied.flatMap(taskKeys)
   return {
     nodes: copied,
     edges: edges
@@ -62,6 +63,14 @@ export function copySelection(
       })),
     tasks: Object.fromEntries(cards.filter((key) => tasks[key]).map((key) => [key, tasks[key]])),
   }
+}
+
+function taskKeys(node: AppNode): string[] {
+  if (node.type === 'jira_card') return [node.data.key]
+  if (node.type !== 'module') return []
+  const def = findModule(node.data.kind)
+  const parsed = def?.schema.safeParse(node.data.content)
+  return def && parsed?.success ? def.keys(parsed.data) : []
 }
 
 /** Top-left corner of the snippet's top-level nodes. */

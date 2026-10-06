@@ -1,8 +1,16 @@
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.domain.errors import NotFound, ValidationFailed
+from app.domain.modules import KIND_PATTERN, module_keys, validate_module
 from app.domain.ports import BoardRepo, SnapshotRepo
 from app.domain.tasks import KEY_RE, Task
 
@@ -46,6 +54,16 @@ class TextData(_Strict):
     text: str = Field(default="", max_length=5000)
 
 
+class ModuleData(_Strict):
+    kind: str = Field(pattern=KIND_PATTERN)
+    content: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _content(self) -> "ModuleData":
+        self.content = validate_module(self.kind, self.content)
+        return self
+
+
 class _NodeBase(_Strict):
     id: str = Field(min_length=1, max_length=100)
     position: Position
@@ -74,7 +92,14 @@ class TextNode(_NodeBase):
     data: TextData
 
 
-Node = Annotated[JiraCardNode | FrameNode | StickyNode | TextNode, Field(discriminator="type")]
+class ModuleNode(_NodeBase):
+    type: Literal["module"]
+    data: ModuleData
+
+
+Node = Annotated[
+    JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode, Field(discriminator="type")
+]
 
 
 class Edge(_Strict):
@@ -122,8 +147,8 @@ def check_doc(doc: BoardDoc) -> None:
         if node.id in seen:
             raise ValidationFailed(f"duplicate node id {node.id}")
         if node.parentId is not None:
-            if node.type == "frame":
-                raise ValidationFailed("frames cannot be nested")
+            if node.type in ("frame", "module"):
+                raise ValidationFailed(f"{node.type}s cannot be nested")
             if seen.get(node.parentId) != "frame":
                 raise ValidationFailed(f"node {node.id} must follow its parent frame")
         seen[node.id] = node.type
@@ -136,8 +161,15 @@ def check_doc(doc: BoardDoc) -> None:
             raise ValidationFailed(f"edge {edge.id} points at a missing node")
 
 
-def card_keys(doc: BoardDoc) -> list[str]:
-    return sorted({node.data.key for node in doc.nodes if isinstance(node, JiraCardNode)})
+def task_keys(doc: BoardDoc) -> list[str]:
+    """Keys of every live task on the board: cards and tasks inside modules."""
+    keys: set[str] = set()
+    for node in doc.nodes:
+        if isinstance(node, JiraCardNode):
+            keys.add(node.data.key)
+        elif isinstance(node, ModuleNode):
+            keys |= module_keys(node.data.kind, node.data.content)
+    return sorted(keys)
 
 
 def create_board(name: str, boards: BoardRepo) -> BoardSummary:
@@ -148,7 +180,7 @@ def get_board(board_id: str, boards: BoardRepo, snapshots: SnapshotRepo) -> Boar
     record = boards.get(board_id)
     if record is None:
         raise NotFound("board not found")
-    tasks = snapshots.get_many(card_keys(record.doc))
+    tasks = snapshots.get_many(task_keys(record.doc))
     return BoardView(
         id=record.id,
         name=record.name,

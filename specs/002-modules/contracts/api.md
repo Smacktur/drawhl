@@ -30,11 +30,14 @@ Base contract: [001 contracts/api.md](../../001-live-jira-canvas/contracts/api.m
 }
 ```
 
-Errors, all `422 validation_failed` with the reason in `detail`:
+Errors, all `422`. Schema errors come as `invalid_request` with the field and reason in `message`, like other doc fields:
 
 - `kind` not matching `^[a-z][a-z0-9_]{0,39}$`
 - content over 256 KB
 - known kind with invalid content, e.g. `gantt: end before start`, `gantt: range over 3 years`, `gantt: duplicate row id r1`, `gantt: link l1 points at a missing row`, invalid issue key
+
+Structure errors come as `validation_failed`:
+
 - `parentId` on a module, or a node whose `parentId` points at a module
 
 Unknown kinds are accepted and returned unchanged.

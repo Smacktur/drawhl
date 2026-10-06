@@ -19,6 +19,7 @@ export const SHORTCUTS = {
   sticky: { keys: 'n', label: 'Sticky note', group: 'Tools' },
   text: { keys: 't', label: 'Text', group: 'Tools' },
   card: { keys: 'c', label: 'Jira card', group: 'Tools' },
+  module: { keys: 'm', label: 'Modules', group: 'Tools' },
   cancel: { keys: 'escape', label: 'Back to Select', group: 'Tools' },
   undo: { keys: 'mod+z', label: 'Undo', group: 'Edit' },
   redo: { keys: 'mod+shift+z, ctrl+y', label: 'Redo', group: 'Edit' },

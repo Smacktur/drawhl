@@ -11,6 +11,7 @@ import {
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { keepOpenWhileSuggesting } from '@/canvas/JqlInput'
 import { AddCardForm } from '@/canvas/Toolbar'
+import { MODULES } from '@/modules/registry'
 
 export type MenuTarget = { kind: 'pane'; point: XYPosition } | { kind: 'selection' }
 export type PlaceTool = 'frame' | 'sticky' | 'text'
@@ -19,6 +20,7 @@ type Props = {
   target: MenuTarget | null
   onPlace: (tool: PlaceTool, point: XYPosition) => void
   onAddCards: (tasks: Task[], point: XYPosition) => void
+  onAddModule: (kind: string, point: XYPosition) => void
   onDelete: () => void
   /** How many selected cards are expanded and collapsed, for the collapse items. */
   cards: { expanded: number; collapsed: number }
@@ -40,6 +42,7 @@ export function CanvasContextMenu({
   target,
   onPlace,
   onAddCards,
+  onAddModule,
   onDelete,
   cards,
   onCollapse,
@@ -84,6 +87,12 @@ export function CanvasContextMenu({
                 <ContextMenuItem key={tool} onSelect={later(() => onPlace(tool, target.point))}>
                   <Icon strokeWidth={1.75} />
                   {label}
+                </ContextMenuItem>
+              ))}
+              {MODULES.map(({ kind, name, Icon }) => (
+                <ContextMenuItem key={kind} onSelect={later(() => onAddModule(kind, target.point))}>
+                  <Icon strokeWidth={1.75} />
+                  Add {name}
                 </ContextMenuItem>
               ))}
             </>

@@ -129,6 +129,35 @@ try:
     status, body = call("POST", f"{API}/api/boards/{board['id']}/refresh")
     check(status == 200 and "DEMO-5" not in body["tasks"], "only the open board is refreshed")
 
+    gantt = {"start": "2026-10-01", "end": "2026-12-31", "scale": "week"}
+    module_doc = {
+        "nodes": [
+            {
+                "id": "g",
+                "type": "module",
+                "position": {"x": 0, "y": 0},
+                "data": {"kind": "gantt", "content": gantt},
+            },
+            {
+                "id": "u",
+                "type": "module",
+                "position": {"x": 0, "y": 400},
+                "data": {"kind": "future_thing", "content": {"kept": [1, None]}},
+            },
+        ]
+    }
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 2, "doc": module_doc})
+    check(status == 200, "save board with modules")
+    status, body = call("GET", f"{API}/api/boards/{other['id']}")
+    nodes = body["doc"]["nodes"]
+    check(
+        nodes[0]["data"]["content"]["rows"] == [] and nodes[1]["data"] == module_doc["nodes"][1]["data"],
+        "gantt and unknown module reopen",
+    )
+    module_doc["nodes"][0]["data"]["content"] = gantt | {"end": "2026-09-01"}
+    status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 3, "doc": module_doc})
+    check(status == 422, "invalid gantt rejected")
+
     status, body = call("POST", f"{API}/api/tasks/search", {"jql": 'status = "Backlog"'})
     check(
         status == 200 and {t["key"] for t in body["tasks"]} == {"DEMO-5", "DEMO-12"},

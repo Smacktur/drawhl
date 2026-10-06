@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import {
   Frame,
   Hand,
+  LayoutTemplate,
   MousePointer2,
   StickyNote,
   TicketPlus,
@@ -13,6 +14,7 @@ import { resolveTask, searchTasks, type Task } from '@/api/tasks'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { ModulePicker } from '@/modules/ModulePicker'
 import { JqlInput, keepOpenWhileSuggesting, useJqlCount } from '@/canvas/JqlInput'
 import { SHORTCUTS, useShortcut, withShortcut } from '@/lib/shortcuts'
 
@@ -165,10 +167,12 @@ type Props = {
   tool: Tool
   onTool: (tool: Tool) => void
   onAddCards: (tasks: Task[]) => void
+  onAddModule: (kind: string) => void
 }
 
-export function Toolbar({ tool, onTool, onAddCards }: Props) {
+export function Toolbar({ tool, onTool, onAddCards, onAddModule }: Props) {
   const [open, setOpen] = useState(false)
+  const [modulesOpen, setModulesOpen] = useState(false)
 
   useShortcut('select', () => onTool('select'))
   useShortcut('hand', () => onTool('hand'))
@@ -176,6 +180,7 @@ export function Toolbar({ tool, onTool, onAddCards }: Props) {
   useShortcut('sticky', () => onTool('sticky'))
   useShortcut('text', () => onTool('text'))
   useShortcut('card', () => setOpen(true))
+  useShortcut('module', () => setModulesOpen(true))
 
   return (
     <div className="bg-card absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border p-1 shadow-md">
@@ -210,6 +215,26 @@ export function Toolbar({ tool, onTool, onAddCards }: Props) {
           onEscapeKeyDown={keepOpenWhileSuggesting}
         >
           <AddCardForm onAdd={onAddCards} onDone={() => setOpen(false)} />
+        </PopoverContent>
+      </Popover>
+      <Popover open={modulesOpen} onOpenChange={setModulesOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant={modulesOpen ? 'secondary' : 'ghost'}
+            size="icon"
+            aria-label={SHORTCUTS.module.label}
+            title={withShortcut('module')}
+          >
+            <LayoutTemplate className="size-[18px]" strokeWidth={1.75} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="top" sideOffset={10} className="w-80 p-1">
+          <ModulePicker
+            onPick={(kind) => {
+              onAddModule(kind)
+              setModulesOpen(false)
+            }}
+          />
         </PopoverContent>
       </Popover>
     </div>

@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.domain.boards import card_keys
+from app.domain.boards import task_keys
 from app.domain.errors import (
     DomainError,
     JiraRateLimited,
@@ -72,7 +72,7 @@ class RefreshService:
         record = boards.get(board_id)
         if record is None:
             raise NotFound("board not found")
-        keys = card_keys(record.doc)
+        keys = task_keys(record.doc)
         with self._lock:
             source = self._sources.setdefault(provider.source_id, _Source())
             tasks = self._poll(source, keys, interval_s, provider) if keys else []
