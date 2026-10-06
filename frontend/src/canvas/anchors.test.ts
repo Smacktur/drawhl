@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { anchorAt, orphanAnchors } from '@/canvas/anchors'
+import { anchorAt, orphanAnchors, raiseAnchors } from '@/canvas/anchors'
 import type { AppNode } from '@/canvas/types'
 
 const at = (id: string, type: AppNode['type']) =>
@@ -26,5 +26,18 @@ describe('orphanAnchors', () => {
     const nodes = [at('a', 'sticky'), at('p', 'anchor'), at('q', 'anchor')]
     const edges = [{ id: 'e', source: 'a', target: 'p' }]
     expect(orphanAnchors(nodes, edges).map((n) => n.id)).toEqual(['q'])
+  })
+})
+
+describe('raiseAnchors', () => {
+  it('lifts anchors and their arrows above other elements', () => {
+    const nodes = [at('a', 'sticky'), at('b', 'sticky'), at('p', 'anchor')]
+    const edges = [
+      { id: 'e', source: 'a', target: 'p' },
+      { id: 'f', source: 'a', target: 'b' },
+    ]
+    const raised = raiseAnchors(nodes, edges)
+    expect(raised.nodes.map((n) => n.zIndex)).toEqual([undefined, undefined, 2000])
+    expect(raised.edges.map((e) => e.zIndex)).toEqual([1999, undefined])
   })
 })

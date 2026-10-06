@@ -21,7 +21,7 @@ import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { anchorAt, orphanAnchors } from '@/canvas/anchors'
+import { anchorAt, orphanAnchors, raiseAnchors } from '@/canvas/anchors'
 import { CanvasContextMenu, type MenuTarget, type PlaceTool } from '@/canvas/CanvasContextMenu'
 import {
   cloneSnippet,
@@ -113,6 +113,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
 
   useShortcut('cancel', () => setTool('select'), { preventDefault: false })
 
+  const shown = useMemo(() => raiseAnchors(nodes, edges), [nodes, edges])
   const history = useHistory(nodes, edges, setNodes, setEdges)
   const guides = useGuides(onNodesChange)
   useShortcut('undo', history.undo)
@@ -419,8 +420,8 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             onPointerDownCapture={draw.onPointerDownCapture}
           >
             <ReactFlow
-              nodes={nodes}
-              edges={edges}
+              nodes={shown.nodes}
+              edges={shown.edges}
               onNodesChange={guides.onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
