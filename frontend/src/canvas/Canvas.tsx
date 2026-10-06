@@ -215,12 +215,12 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         current.filter((e) => !result.absorbed.has(e.source) && !result.absorbed.has(e.target)),
       )
     }
-    setNodes(
-      reparent(
-        result?.nodes ?? current,
-        ids.filter((id) => !result?.absorbed.has(id)),
-      ),
+    const next = reparent(
+      result?.nodes ?? current,
+      ids.filter((id) => !result?.absorbed.has(id)),
     )
+    // The store still says dragging, and xyflow puts a dragging node into every marquee.
+    setNodes(next.map((n) => (n.dragging ? { ...n, dragging: false } : n)))
   }
 
   const moduleHost = useMemo<ModuleHost>(
