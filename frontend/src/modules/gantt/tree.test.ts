@@ -8,6 +8,7 @@ import {
   liftRemove,
   moveSubtree,
   outdent,
+  shiftBranch,
   summarySpan,
   visibleRows,
 } from '@/modules/gantt/tree'
@@ -87,6 +88,17 @@ describe('tree', () => {
     const next = addChild(folded, 'A', row('X'))
     expect(shape(next)).toBe('A<- B<A C<B D<A X<A E<-')
     expect(next.rows[0].collapsed).toBe(false)
+  })
+
+  it('shifts a branch by whole days, leaving the rest', () => {
+    const next = shiftBranch(tree, 'B', 3)
+    expect(next.rows.map((r) => r.start)).toEqual([
+      '2026-10-05',
+      '2026-10-08',
+      '2026-10-08',
+      '2026-10-05',
+      '2026-10-05',
+    ])
   })
 
   it('lifts children of a removed row one level up', () => {

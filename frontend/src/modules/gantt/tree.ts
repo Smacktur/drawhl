@@ -1,6 +1,6 @@
 import type { GanttContent } from '@/modules/gantt/schema'
 import type { Span } from '@/modules/gantt/timeline'
-import { parseDay } from '@/modules/gantt/timeline'
+import { formatDay, parseDay } from '@/modules/gantt/timeline'
 
 type Row = GanttContent['rows'][number]
 
@@ -155,5 +155,19 @@ export function liftRemove(content: GanttContent, id: string): GanttContent {
         return row.parent ? { ...rest, parent: row.parent } : rest
       }),
     links: content.links.filter((l) => l.from !== id && l.to !== id),
+  }
+}
+
+/** Moves a row and everything under it by whole days. */
+export function shiftBranch(content: GanttContent, id: string, days: number): GanttContent {
+  const from = content.rows.findIndex((r) => r.id === id)
+  if (from < 0 || days === 0) return content
+  const end = subtreeEnd(content.rows, from)
+  const shift = (iso: string) => formatDay(parseDay(iso) + days)
+  return {
+    ...content,
+    rows: content.rows.map((r, i) =>
+      i >= from && i < end ? { ...r, start: shift(r.start), end: shift(r.end) } : r,
+    ),
   }
 }

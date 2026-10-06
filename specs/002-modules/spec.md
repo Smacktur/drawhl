@@ -78,7 +78,7 @@ The lead nests rows under rows: a task under a plain row, a plain row under a pl
 
 1. **Given** rows, **When** the user drags a row label onto a new place and to the right, or presses indent, **Then** the row with its whole subtree becomes a child of the row above; outdent and dragging left move it up a level.
 2. **Given** a row, **When** the user presses "+" on it, **Then** a new plain row appears as its last child, ready to be named.
-3. **Given** a row with children, **When** the user looks at it, **Then** its bar spans from the earliest start to the latest end of all its descendants, cannot be dragged, and updates when a child moves.
+3. **Given** a row with children, **When** the user looks at it, **Then** its bar spans from the earliest start to the latest end of all its descendants and updates when a child moves; dragging it moves the whole branch by whole days, and its ends cannot be stretched.
 4. **Given** a row with children, **When** the user collapses it, **Then** its descendants are hidden and the state survives reload.
 5. **Given** a row with children, **When** the user deletes it or drags it out of the module, **Then** its children move one level up and stay in the plan.
 6. **Given** a card dropped between rows, **When** it lands, **Then** it becomes a sibling of the row above it.

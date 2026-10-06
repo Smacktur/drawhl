@@ -33,6 +33,7 @@ import {
   liftRemove,
   moveSubtree,
   outdent,
+  shiftBranch,
   subtreeEnd,
   summarySpan,
   visibleRows,
@@ -94,6 +95,8 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
   const full = content.rows.length >= MAX_ROWS
   const visible = visibleRows(content.rows)
   const indexOf = new Map(content.rows.map((r, i) => [r.id, i]))
+  const barSpan = (row: Row, hasChildren: boolean) =>
+    (hasChildren && summarySpan(content.rows, indexOf.get(row.id)!)) || spanOf(row)
 
   const addTasks = (list: Task[]) => {
     host.addTasks(list)
@@ -203,13 +206,19 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
             style={{ height: ROW_HEIGHT }}
           >
             <GanttBar
-              span={(hasChildren && summarySpan(content.rows, indexOf.get(row.id)!)) || spanOf(row)}
+              span={barSpan(row, hasChildren)}
               summary={hasChildren}
               range={span}
               pxPerDay={scale}
               label={row.key ? `${row.key} ${tasks[row.key]?.summary ?? ''}` : row.title}
               task={row.key ? tasks[row.key] : undefined}
-              onSpan={(next) => onChange(updateRow(content, row.id, (r) => withSpan(r, next)))}
+              onSpan={(next) =>
+                onChange(
+                  hasChildren
+                    ? shiftBranch(content, row.id, next.start - barSpan(row, true).start)
+                    : updateRow(content, row.id, (r) => withSpan(r, next)),
+                )
+              }
             />
           </div>
         ))}

@@ -43,46 +43,6 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
     )
   }
 
-  const missing = task?.state === 'not_found'
-  const live = task && !missing
-  const content = (
-    <>
-      {live && (
-        <span className="mr-1 opacity-80">
-          <TypeIcon typeName={task.type_name} />
-        </span>
-      )}
-      <span className="truncate">{label}</span>
-    </>
-  )
-
-  // A parent keeps its look (a task stays a task) and gains brackets; its dates follow its children.
-  if (summary) {
-    return (
-      <div
-        role="img"
-        aria-label={`${label} summary`}
-        title={live ? `${label} · ${task.status_name}` : label}
-        className={cn(
-          'absolute top-1 flex h-5 items-center rounded-[4px] px-1.5 text-[11px] leading-5 font-semibold whitespace-nowrap select-none',
-          live ? BAR_COLOR[task.status_category] : 'bg-foreground/75 text-background',
-          task?.status_category === 'done' && 'line-through',
-          box.clippedStart && 'rounded-l-none',
-          box.clippedEnd && 'rounded-r-none',
-        )}
-        style={{ left: box.left, width: Math.max(box.width, 4) }}
-      >
-        {content}
-        {!box.clippedStart && (
-          <span className="bg-foreground/60 absolute top-full left-0 h-1.5 w-0.5" />
-        )}
-        {!box.clippedEnd && (
-          <span className="bg-foreground/60 absolute top-full right-0 h-1.5 w-0.5" />
-        )}
-      </div>
-    )
-  }
-
   const start = (grip: Grip) => (event: PointerEvent) => {
     event.stopPropagation()
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -98,6 +58,50 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
   const stop = () => (drag.current = null)
   // Grips capture the pointer themselves; their moves bubble up to the bar's handlers.
   const handlers = { onPointerMove: move, onPointerUp: stop, onPointerCancel: stop }
+
+  const missing = task?.state === 'not_found'
+  const live = task && !missing
+  const content = (
+    <>
+      {live && (
+        <span className="mr-1 opacity-80">
+          <TypeIcon typeName={task.type_name} />
+        </span>
+      )}
+      <span className="truncate">{label}</span>
+    </>
+  )
+
+  // A parent keeps its look (a task stays a task) and gains brackets; its length follows its
+  // children, so it only moves, taking the whole branch along.
+  if (summary) {
+    return (
+      <div
+        role="slider"
+        aria-label={`${label} summary`}
+        aria-valuetext={label}
+        title={live ? `${label} · ${task.status_name}` : label}
+        onPointerDown={start('move')}
+        {...handlers}
+        className={cn(
+          'absolute top-1 h-5 cursor-grab rounded-[4px] text-[11px] leading-5 font-semibold whitespace-nowrap select-none active:cursor-grabbing',
+          live ? BAR_COLOR[task.status_category] : 'bg-foreground/75 text-background',
+          task?.status_category === 'done' && 'line-through',
+          box.clippedStart && 'rounded-l-none',
+          box.clippedEnd && 'rounded-r-none',
+        )}
+        style={{ left: box.left, width: Math.max(box.width, 4) }}
+      >
+        <span className="flex h-full items-center overflow-hidden px-1.5">{content}</span>
+        {!box.clippedStart && (
+          <span className="bg-foreground/60 absolute top-full left-0 h-1.5 w-0.5" />
+        )}
+        {!box.clippedEnd && (
+          <span className="bg-foreground/60 absolute top-full right-0 h-1.5 w-0.5" />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div

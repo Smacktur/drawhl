@@ -159,7 +159,7 @@ test('rows nest under rows, show a summary bar and collapse', () => {
   renderGantt()
   fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
   expect(rows()[1].parent).toBe('a')
-  expect(screen.getByRole('img', { name: /DEMO-1 .* summary/ })).toBeTruthy()
+  expect(screen.getByRole('slider', { name: /DEMO-1 .* summary/ })).toBeTruthy()
 
   fireEvent.click(screen.getByRole('button', { name: 'Add a task under Design review' }))
   expect(rows().map((r) => r.parent)).toEqual([undefined, 'a', 'b'])
@@ -188,7 +188,21 @@ test('a task row links to the tracker from its own button only', () => {
 test('a task that becomes a parent keeps its key, title and status color', () => {
   renderGantt()
   fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
-  const summary = screen.getByRole('img', { name: /DEMO-1 .* summary/ })
+  const summary = screen.getByRole('slider', { name: /DEMO-1 .* summary/ })
   expect(summary.textContent).toContain('Rotate the staging certificates')
   expect(summary.className).toContain('bg-status-done')
+})
+
+test('dragging a parent moves its whole branch', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  const summary = screen.getByRole('slider', { name: /DEMO-1 .* summary/ })
+  // 92 days over 800px: about 8.7px a day, so 87px is ten days.
+  fireEvent.pointerDown(summary, { clientX: 100, pointerId: 1 })
+  fireEvent.pointerMove(summary, { clientX: 187, pointerId: 1 })
+  fireEvent.pointerUp(summary, { pointerId: 1 })
+  expect(rows().map((r) => [r.start, r.end])).toEqual([
+    ['2026-10-15', '2026-10-19'],
+    ['2026-10-22', '2026-10-24'],
+  ])
 })
