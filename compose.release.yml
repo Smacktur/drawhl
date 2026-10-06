@@ -1,6 +1,6 @@
 # Self-hosting from released images, no source checkout needed:
 #   docker compose -f compose.release.yml up -d
-# Pin a version instead of latest: TAG=2026.10.5 docker compose -f compose.release.yml up -d
+# Pin a version instead of latest: TAG=2026.10.6 docker compose -f compose.release.yml up -d
 services:
   api:
     image: ghcr.io/smacktur/drawhl-api:${TAG:-latest}
