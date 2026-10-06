@@ -16,7 +16,8 @@
     "version-check",
     "module-host",
     "gantt-tasks",
-    "gantt-tree"
+    "gantt-tree",
+    "smart-guides"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -38,7 +39,8 @@
     "G2_modules": "approved",
     "G3_module-host": "approved",
     "G3_gantt-tasks": "approved",
-    "G3_gantt-tree": "approved"
+    "G3_gantt-tree": "approved",
+    "G3_smart-guides": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",

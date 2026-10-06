@@ -213,6 +213,16 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [x] T090 `UpdateService` with a `ReleaseFeed` port and a GitHub adapter, cached 6 h, `UPDATE_CHECK`; `GET /api/version`; tests
 - [x] T091 About shows the running version and the update notice; README, `.env.example`, contract, `DESIGN.md`, `CHANGELOG.md`
 
+## Phase 7g: Slice 12 `feat/smart-guides` — alignment and equal gaps while dragging
+
+**Goal**: elements line up and space out evenly by hand, like in Miro.
+
+**Independent Test**: dragging a sticky next to a row of two shows equal-gap markers and lands at the same gap; near another element's edge or center it snaps and shows a dashed line; with Alt it moves freely.
+
+- [x] T092 `snap` in `frontend/src/canvas/snap.ts`: edge and center alignment, gap between two neighbors, repeating the gap of a row or column; tests
+- [x] T093 `useGuides` wraps `onNodesChange` for a node dragged alone, snaps within 6 screen pixels, Alt turns it off; `Guides` draws lines and markers above nodes; Alt + drag in the shortcut list; `DESIGN.md`, `CHANGELOG.md`
+- [x] T094 `matchSize`: a resized node takes the width or height of others on screen, with size bars beside each match; the end of a drag or resize keeps the snapped values; sticky and module toolbars hide while dragging; tests
+
 ## Phase 8: Polish (verify and ship phases)
 
 - [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data

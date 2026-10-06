@@ -5,7 +5,7 @@ import { Handles } from '@/canvas/nodes/Handles'
 import { STICKY_COLORS, type StickyNode as StickyNodeType } from '@/canvas/types'
 import { cn } from '@/lib/utils'
 
-function StickyNodeView({ id, data, selected }: NodeProps<StickyNodeType>) {
+function StickyNodeView({ id, data, selected, dragging }: NodeProps<StickyNodeType>) {
   const { updateNodeData } = useReactFlow()
   return (
     <div
@@ -17,6 +17,8 @@ function StickyNodeView({ id, data, selected }: NodeProps<StickyNodeType>) {
     >
       <NodeResizer isVisible={selected} minWidth={80} minHeight={60} />
       <NodeToolbar
+        // Hidden while dragging: it covers the guides and the elements next to it.
+        isVisible={dragging ? false : undefined}
         position={Position.Top}
         className="flex gap-1 rounded-md border bg-card p-1 shadow-md"
       >
