@@ -9,7 +9,14 @@ import { ModuleHostContext } from '@/modules/host-context'
 import { findModule } from '@/modules/registry'
 import { cn } from '@/lib/utils'
 
-function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleNodeType>) {
+function ModuleNodeView({
+  id,
+  data,
+  selected,
+  dragging,
+  width,
+  height,
+}: NodeProps<ModuleNodeType>) {
   const { updateNodeData, updateNode } = useReactFlow()
   const host = useContext(ModuleHostContext)
   const def = findModule(data.kind)
@@ -57,6 +64,8 @@ function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleN
       />
       {view && def?.Controls && (
         <NodeToolbar
+          // Hidden while dragging: it covers the guides and the elements next to it.
+          isVisible={dragging ? false : undefined}
           position={Position.Top}
           className="bg-card flex items-center gap-0.5 rounded-md border p-1 shadow-md"
         >

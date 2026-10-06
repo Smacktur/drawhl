@@ -132,3 +132,54 @@ export function snap(moving: Box, others: Box[], threshold: number) {
   ]
   return { x: final.x, y: final.y, guides }
 }
+
+function nearestSize(value: number, sizes: number[], threshold: number) {
+  let best: number | undefined
+  for (const s of sizes) {
+    const dist = Math.abs(s - value)
+    if (dist <= threshold && (best === undefined || dist < Math.abs(best - value))) best = s
+  }
+  return best
+}
+
+/**
+ * The size a resized box takes when close to the width or height of others, with a bar
+ * beside every box of that size; `inset` keeps the bars off the boxes.
+ */
+export function matchSize(
+  box: Box,
+  others: Box[],
+  threshold: number,
+  inset: number,
+  changing: { width: boolean; height: boolean },
+) {
+  const width = changing.width
+    ? nearestSize(
+        box.width,
+        others.map((o) => o.width),
+        threshold,
+      )
+    : undefined
+  const height = changing.height
+    ? nearestSize(
+        box.height,
+        others.map((o) => o.height),
+        threshold,
+      )
+    : undefined
+  const final = { ...box, width: width ?? box.width, height: height ?? box.height }
+  const guides: Guide[] = []
+  if (width !== undefined) {
+    for (const b of [final, ...others.filter((o) => o.width === width)]) {
+      const y = b.y - inset
+      guides.push({ kind: 'gap', x1: b.x, y1: y, x2: b.x + b.width, y2: y })
+    }
+  }
+  if (height !== undefined) {
+    for (const b of [final, ...others.filter((o) => o.height === height)]) {
+      const x = b.x - inset
+      guides.push({ kind: 'gap', x1: x, y1: b.y, x2: x, y2: b.y + b.height })
+    }
+  }
+  return { width: final.width, height: final.height, guides }
+}

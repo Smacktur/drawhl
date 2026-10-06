@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { snap, type Box } from '@/canvas/snap'
+import { matchSize, snap, type Box } from '@/canvas/snap'
 
 const box = (x: number, y: number, width = 100, height = 100): Box => ({ x, y, width, height })
 
@@ -51,5 +51,33 @@ describe('snap', () => {
   it('ignores neighbors outside the row', () => {
     const result = snap(box(296, 400), [box(0, 0), box(150, 0)], 6)
     expect(result.guides.some((g) => g.kind === 'gap')).toBe(false)
+  })
+})
+
+describe('matchSize', () => {
+  const both = { width: true, height: true }
+
+  it('keeps a size nothing is close to', () => {
+    expect(matchSize(box(0, 0, 130, 130), [box(300, 0)], 6, 8, both)).toEqual({
+      width: 130,
+      height: 130,
+      guides: [],
+    })
+  })
+
+  it('takes the height of the others and marks each of them', () => {
+    const others = [box(0, 0), box(0, 200), box(300, 0, 100, 40)]
+    const result = matchSize(box(0, 400, 100, 104), others, 6, 8, { width: false, height: true })
+    expect(result.height).toBe(100)
+    expect(result.guides).toEqual([
+      { kind: 'gap', x1: -8, y1: 400, x2: -8, y2: 500 },
+      { kind: 'gap', x1: -8, y1: 0, x2: -8, y2: 100 },
+      { kind: 'gap', x1: -8, y1: 200, x2: -8, y2: 300 },
+    ])
+  })
+
+  it('snaps only the side being resized', () => {
+    const result = matchSize(box(0, 400, 97, 97), [box(0, 0)], 6, 8, { width: true, height: false })
+    expect(result).toMatchObject({ width: 100, height: 97 })
   })
 })

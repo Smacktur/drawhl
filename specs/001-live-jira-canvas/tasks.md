@@ -221,6 +221,7 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 - [x] T092 `snap` in `frontend/src/canvas/snap.ts`: edge and center alignment, gap between two neighbors, repeating the gap of a row or column; tests
 - [x] T093 `useGuides` wraps `onNodesChange` for a node dragged alone, snaps within 6 screen pixels, Alt turns it off; `Guides` draws lines and markers above nodes; Alt + drag in the shortcut list; `DESIGN.md`, `CHANGELOG.md`
+- [x] T094 `matchSize`: a resized node takes the width or height of others on screen, with size bars beside each match; the end of a drag or resize keeps the snapped values; sticky and module toolbars hide while dragging; tests
 
 ## Phase 8: Polish (verify and ship phases)
 
