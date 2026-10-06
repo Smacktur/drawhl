@@ -1,9 +1,34 @@
+import { useReactFlow, type XYPosition } from '@xyflow/react'
 import { CalendarRange, Plus } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useContext, useRef, useState, type FormEvent, type PointerEvent } from 'react'
+import type { Task } from '@/api/tasks'
+import { keepOpenWhileSuggesting } from '@/canvas/JqlInput'
+import { TasksContext } from '@/canvas/tasks-context'
+import { AddCardForm } from '@/canvas/Toolbar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { GanttBar } from '@/modules/gantt/GanttBar'
+import { GanttLabel } from '@/modules/gantt/GanttLabel'
+import {
+  addRows,
+  FOOTER,
+  HEADER,
+  HEADER_ROW,
+  LABEL_WIDTH,
+  makeRow,
+  MAX_ROWS,
+  moveRow,
+  pxPerDay,
+  range,
+  removeRow,
+  ROW_HEIGHT,
+  spanOf,
+  updateRow,
+  withSpan,
+  type Row,
+} from '@/modules/gantt/rows'
 import type { GanttContent } from '@/modules/gantt/schema'
 import {
   fitsRange,
@@ -12,7 +37,6 @@ import {
   parseDay,
   quarterAfter,
   quarterBefore,
-  rangeDays,
   today,
   type Cell,
   type Scale,
@@ -22,14 +46,13 @@ import { cn } from '@/lib/utils'
 
 type Props = ModuleViewProps<GanttContent>
 
-const LABEL_WIDTH = 160
-const HEADER_ROW = 24
 // A label narrower than this would be clipped to nonsense, so the cell stays blank.
 const MIN_LABEL_PX = 40
 const SCALES: { scale: Scale; label: string }[] = [
   { scale: 'day', label: 'Days' },
   { scale: 'week', label: 'Weeks' },
   { scale: 'month', label: 'Months' },
+  { scale: 'quarter', label: 'Quarters' },
 ]
 
 function HeaderRow({ cells, pxPerDay, top }: { cells: Cell[]; pxPerDay: number; top: boolean }) {
@@ -51,31 +74,88 @@ function HeaderRow({ cells, pxPerDay, top }: { cells: Cell[]; pxPerDay: number; 
   )
 }
 
-export function GanttModule({ content, width, selected, onChange }: Props) {
-  const start = parseDay(content.start)
-  const end = parseDay(content.end)
-  const pxPerDay = Math.max(width - LABEL_WIDTH, 1) / rangeDays(start, end)
+export function GanttModule({ content, width, selected, onChange, host }: Props) {
+  const tasks = useContext(TasksContext)
+  const [fresh, setFresh] = useState<string | null>(null)
+  const span = range(content)
+  const { start, end } = span
+  const scale = pxPerDay(content, width)
   const { top, bottom } = header(start, end, content.scale)
   const now = today()
   const before = quarterBefore(start)
   const after = quarterAfter(end)
+  const full = content.rows.length >= MAX_ROWS
+
+  const addTasks = (list: Task[]) => {
+    host.addTasks(list)
+    onChange(
+      addRows(
+        content,
+        list.map((task) => makeRow(content, { key: task.key })),
+      ),
+    )
+  }
+  const addPlain = () => {
+    const row = makeRow(content, {})
+    setFresh(row.id)
+    onChange(addRows(content, [row]))
+  }
+  const eject = (row: Row, screen: XYPosition) => {
+    if (row.key) host.ejectCard(row.key, screen)
+    else host.ejectNote(row.title, screen)
+    onChange(removeRow(content, row.id))
+  }
 
   return (
     <div className="flex h-full text-[12px]">
       <div
-        className="text-muted-foreground flex shrink-0 flex-col border-r"
-        style={{ width: LABEL_WIDTH }}
+        className="relative flex shrink-0 flex-col border-r"
+        style={{ width: content.labelWidth }}
       >
-        <div className="flex items-center px-3 border-b" style={{ height: HEADER_ROW * 2 }}>
+        <ColumnResizer
+          width={content.labelWidth}
+          max={Math.min(LABEL_WIDTH.max, width - LABEL_WIDTH.min)}
+          onWidth={(labelWidth) => onChange({ ...content, labelWidth })}
+        />
+        <div
+          className="text-muted-foreground flex shrink-0 items-center border-b px-3"
+          style={{ height: HEADER }}
+        >
           {formatRange(content.start, content.end)}
+        </div>
+        {content.rows.map((row, index) => (
+          <GanttLabel
+            key={row.id}
+            row={row}
+            index={index}
+            task={row.key ? tasks[row.key] : undefined}
+            fresh={row.id === fresh}
+            onTitle={(title) => onChange(updateRow(content, row.id, (r) => ({ ...r, title })))}
+            onRemove={() => onChange(removeRow(content, row.id))}
+            onMove={(to) => onChange(moveRow(content, row.id, to))}
+            onEject={(screen) => eject(row, screen)}
+          />
+        ))}
+        <div className="mt-auto flex shrink-0 items-center gap-1 px-1" style={{ height: FOOTER }}>
+          <AddTaskButton disabled={full} onAdd={addTasks} />
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={full}
+            title={full ? `Up to ${MAX_ROWS} rows` : undefined}
+            onClick={addPlain}
+          >
+            <Plus className="size-3.5" />
+            Row
+          </Button>
         </div>
       </div>
       <div className="relative min-w-0 flex-1">
         <div className="border-b">
-          <HeaderRow cells={top} pxPerDay={pxPerDay} top />
-          <HeaderRow cells={bottom} pxPerDay={pxPerDay} top={false} />
+          <HeaderRow cells={top} pxPerDay={scale} top />
+          <HeaderRow cells={bottom} pxPerDay={scale} top={false} />
         </div>
-        <div className="absolute inset-x-0 bottom-0" style={{ top: HEADER_ROW * 2 }}>
+        <div className="absolute inset-x-0 bottom-0" style={{ top: HEADER }}>
           {bottom.map((cell) => (
             <div
               key={cell.from}
@@ -83,7 +163,7 @@ export function GanttModule({ content, width, selected, onChange }: Props) {
                 'absolute inset-y-0 border-l border-border/60',
                 cell.weekend && 'bg-muted/60',
               )}
-              style={{ left: cell.from * pxPerDay, width: cell.span * pxPerDay }}
+              style={{ left: cell.from * scale, width: cell.span * scale }}
             />
           ))}
         </div>
@@ -91,9 +171,33 @@ export function GanttModule({ content, width, selected, onChange }: Props) {
           <div
             data-testid="gantt-today"
             title="Today"
-            className="bg-primary pointer-events-none absolute bottom-0 w-px"
-            style={{ left: (now - start + 0.5) * pxPerDay, top: HEADER_ROW * 2 }}
+            className="bg-primary pointer-events-none absolute bottom-0 z-10 w-px"
+            style={{ left: (now - start + 0.5) * scale, top: HEADER }}
           />
+        )}
+        {content.rows.map((row) => (
+          <div
+            key={row.id}
+            className="relative border-b border-border/60"
+            style={{ height: ROW_HEIGHT }}
+          >
+            <GanttBar
+              span={spanOf(row)}
+              range={span}
+              pxPerDay={scale}
+              label={row.key ? `${row.key} ${tasks[row.key]?.summary ?? ''}` : row.title}
+              task={row.key ? tasks[row.key] : undefined}
+              onSpan={(next) => onChange(updateRow(content, row.id, (r) => withSpan(r, next)))}
+            />
+          </div>
+        ))}
+        {content.rows.length === 0 && (
+          <p
+            className="text-muted-foreground pointer-events-none relative px-3 leading-8"
+            style={{ height: ROW_HEIGHT }}
+          >
+            Drop cards here, or add a task or a row.
+          </p>
         )}
         {selected && (
           <>
@@ -111,6 +215,65 @@ export function GanttModule({ content, width, selected, onChange }: Props) {
         )}
       </div>
     </div>
+  )
+}
+
+/** Grip on the label column's right border: drag to show more or less of the titles. */
+function ColumnResizer({
+  width,
+  max,
+  onWidth,
+}: {
+  width: number
+  max: number
+  onWidth: (width: number) => void
+}) {
+  const { getZoom } = useReactFlow()
+  const drag = useRef<{ x: number; width: number; zoom: number } | null>(null)
+  const move = (event: PointerEvent) => {
+    const start = drag.current
+    if (!start) return
+    const next = Math.round(start.width + (event.clientX - start.x) / start.zoom)
+    const clamped = Math.min(Math.max(next, LABEL_WIDTH.min), max)
+    if (clamped !== width) onWidth(clamped)
+  }
+  const stop = () => (drag.current = null)
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the task column"
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId)
+        drag.current = { x: event.clientX, width, zoom: getZoom() }
+      }}
+      onPointerMove={move}
+      onPointerUp={stop}
+      onPointerCancel={stop}
+      className="hover:bg-primary/40 active:bg-primary absolute inset-y-0 -right-[3px] z-20 w-1.5 cursor-col-resize"
+    />
+  )
+}
+
+function AddTaskButton({ disabled, onAdd }: { disabled: boolean; onAdd: (tasks: Task[]) => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant={open ? 'secondary' : 'ghost'} disabled={disabled}>
+          <Plus className="size-3.5" />
+          Task
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        className="w-96 p-2"
+        onEscapeKeyDown={keepOpenWhileSuggesting}
+      >
+        <AddCardForm onAdd={onAdd} onDone={() => setOpen(false)} />
+      </PopoverContent>
+    </Popover>
   )
 }
 

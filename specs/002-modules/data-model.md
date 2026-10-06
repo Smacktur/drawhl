@@ -5,8 +5,9 @@ No table changes. Modules live in the board document (`boards.doc`).
 ## Board document delta
 
 ```text
-Node type "module"  data {kind, content}
+Node type "module"  data {kind, title?, content}
   kind     string, ^[a-z][a-z0-9_]{0,39}$
+  title    optional, ≤ 200 chars; empty shows the module's name
   content  object; validated by the kind's schema when the kind is known,
            kept as is when unknown; ≤ 256 KB as JSON
   parentId never set; a module is never a parent
@@ -18,7 +19,8 @@ Node type "module"  data {kind, content}
 {
   start: date            YYYY-MM-DD
   end: date              ≥ start, end - start ≤ 1096 days
-  scale: "day" | "week" | "month"
+  scale: "day" | "week" | "month" | "quarter"
+  labelWidth: int        120–480, default 160: width of the task column
   rows: Row[]            ≤ 200, order = display order
   milestones: Milestone[] ≤ 100
   links: Link[]          ≤ 400

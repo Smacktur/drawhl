@@ -1,15 +1,17 @@
 import { NodeResizer, NodeToolbar, Position, useReactFlow, type NodeProps } from '@xyflow/react'
 import { Puzzle } from 'lucide-react'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, useContext, useEffect } from 'react'
+import { MODULE_HEADER as HEADER } from '@/canvas/modules'
+import { EditableText } from '@/canvas/nodes/EditableText'
 import { Handles } from '@/canvas/nodes/Handles'
 import type { ModuleNode as ModuleNodeType } from '@/canvas/types'
+import { ModuleHostContext } from '@/modules/host-context'
 import { findModule } from '@/modules/registry'
 import { cn } from '@/lib/utils'
 
-const HEADER = 36
-
 function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleNodeType>) {
-  const { updateNodeData } = useReactFlow()
+  const { updateNodeData, updateNode } = useReactFlow()
+  const host = useContext(ModuleHostContext)
   const def = findModule(data.kind)
   const parsed = def?.schema.safeParse(data.content)
   const onChange = useCallback(
@@ -17,15 +19,25 @@ function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleN
     [id, updateNodeData],
   )
 
+  const content = parsed?.success ? parsed.data : undefined
+  const minHeight = HEADER + (content !== undefined && def?.minHeight ? def.minHeight(content) : 0)
+  const tooShort = height !== undefined && height < minHeight
+
+  // New rows grow the block instead of hiding behind its bottom edge.
+  useEffect(() => {
+    if (tooShort) updateNode(id, { height: minHeight })
+  }, [id, tooShort, minHeight, updateNode])
+
   const view =
-    def && parsed?.success
+    def && content !== undefined
       ? {
           id,
-          content: parsed.data,
+          content,
           width: width ?? def.size.width,
           height: Math.max((height ?? def.size.height) - HEADER, 0),
           selected: Boolean(selected),
           onChange,
+          host,
         }
       : null
   const Icon = def?.Icon ?? Puzzle
@@ -41,7 +53,7 @@ function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleN
       <NodeResizer
         isVisible={selected}
         minWidth={def?.minSize.width ?? 160}
-        minHeight={def?.minSize.height ?? 80}
+        minHeight={Math.max(def?.minSize.height ?? 80, minHeight)}
       />
       {view && def?.Controls && (
         <NodeToolbar
@@ -56,7 +68,15 @@ function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleN
         style={{ height: HEADER }}
       >
         <Icon className="text-muted-foreground size-4" strokeWidth={1.75} />
-        {def?.name ?? data.kind}
+        <EditableText
+          nodeId={id}
+          value={data.title ?? ''}
+          field="title"
+          maxLength={200}
+          placeholder={def?.name ?? data.kind}
+          singleLine
+          className="min-w-0 flex-1 truncate"
+        />
       </div>
       <div className="nodrag nopan relative min-h-0 flex-1 cursor-default">
         {view && def ? (

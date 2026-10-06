@@ -1,7 +1,7 @@
 /** Calendar days as whole numbers since 1970-01-01, so date math is integer math. */
 export type Day = number
 
-export type Scale = 'day' | 'week' | 'month'
+export type Scale = 'day' | 'week' | 'month' | 'quarter'
 
 export type Cell = { label: string; from: number; span: number; weekend?: boolean }
 
@@ -93,6 +93,8 @@ const nextMonth = (day: Day) => {
 }
 const nextQuarter = (day: Day) => quarterBounds(quarterIndex(day) + 1).start
 
+const nextYear = (day: Day) => monthStart(parts(day).year + 1, 0)
+
 const quarterLabel = (day: Day) => `Q${(quarterIndex(day) % 4) + 1} ${parts(day).year}`
 const monthLabel = (day: Day) => `${MONTHS[parts(day).month]} ${parts(day).year}`
 
@@ -109,6 +111,12 @@ export function header(start: Day, end: Day, scale: Scale): { top: Cell[]; botto
       ).map((cell) => ({ ...cell, weekend: weekday(start + cell.from) >= 5 })),
     }
   }
+  if (scale === 'quarter') {
+    return {
+      top: cells(start, end, nextYear, (day) => String(parts(day).year)),
+      bottom: cells(start, end, nextQuarter, (day) => `Q${(quarterIndex(day) % 4) + 1}`),
+    }
+  }
   const top = cells(start, end, nextQuarter, quarterLabel)
   if (scale === 'week') {
     return {
@@ -122,4 +130,40 @@ export function header(start: Day, end: Day, scale: Scale): { top: Cell[]; botto
     }
   }
   return { top, bottom: cells(start, end, nextMonth, (day) => MONTHS[parts(day).month]) }
+}
+
+export type Span = { start: Day; end: Day }
+
+/** Where a bar sits in timeline pixels, clipped to the range; null when it is all outside. */
+export function barBox(span: Span, range: Span, pxPerDay: number) {
+  const from = Math.max(span.start, range.start)
+  const to = Math.min(span.end, range.end)
+  if (from > to) return null
+  return {
+    left: (from - range.start) * pxPerDay,
+    width: rangeDays(from, to) * pxPerDay,
+    clippedStart: span.start < range.start,
+    clippedEnd: span.end > range.end,
+  }
+}
+
+/** The day under a timeline x, kept inside the range. */
+export function dayAt(x: number, range: Span, pxPerDay: number): Day {
+  const day = range.start + Math.floor(x / pxPerDay)
+  return Math.min(Math.max(day, range.start), range.end)
+}
+
+export type Grip = 'move' | 'start' | 'end'
+
+/** A bar dragged by its body or one of its ends by whole days; it never ends before it starts. */
+export function dragSpan(span: Span, grip: Grip, days: number): Span {
+  if (grip === 'move') return { start: span.start + days, end: span.end + days }
+  if (grip === 'start') return { start: Math.min(span.start + days, span.end), end: span.end }
+  return { start: span.start, end: Math.max(span.end + days, span.start) }
+}
+
+/** A new bar: a week from the given day, or from today when it is in range, else the range start. */
+export function newSpan(range: Span, at?: Day, now = today()): Span {
+  const start = at ?? (now >= range.start && now <= range.end ? now : range.start)
+  return { start, end: start + 6 }
 }

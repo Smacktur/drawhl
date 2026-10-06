@@ -56,6 +56,7 @@ class TextData(_Strict):
 
 class ModuleData(_Strict):
     kind: str = Field(pattern=KIND_PATTERN)
+    title: str | None = Field(default=None, max_length=200)
     content: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")

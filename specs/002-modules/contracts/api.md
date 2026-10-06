@@ -15,10 +15,12 @@ Base contract: [001 contracts/api.md](../../001-live-jira-canvas/contracts/api.m
   "height": 320,
   "data": {
     "kind": "gantt",
+    "title": "Q4 plan",
     "content": {
       "start": "2026-10-01",
       "end": "2026-12-31",
       "scale": "week",
+      "labelWidth": 160,
       "rows": [
         { "id": "r1", "key": "DEMO-3", "title": "", "start": "2026-10-06", "end": "2026-10-17" },
         { "id": "r2", "title": "Design review", "start": "2026-10-20", "end": "2026-10-22" }
