@@ -38,21 +38,40 @@ export function visibleRows(rows: Row[]): TreeRow[] {
   return out
 }
 
-/** A parent's bar: from the earliest start to the latest end of the leaves under it. */
-export function summarySpan(rows: Row[], index: number): Span | null {
-  const end = subtreeEnd(rows, index)
-  if (end === index + 1) return null
-  const parents = new Set(rows.map((r) => r.parent))
+function union(rows: Row[]): Span | null {
   let span: Span | null = null
-  for (const row of rows.slice(index + 1, end)) {
-    if (parents.has(row.id)) continue
+  for (const row of rows) {
     const start = parseDay(row.start)
-    const finish = parseDay(row.end)
+    const end = parseDay(row.end)
     span = span
-      ? { start: Math.min(span.start, start), end: Math.max(span.end, finish) }
-      : { start, end: finish }
+      ? { start: Math.min(span.start, start), end: Math.max(span.end, end) }
+      : { start, end }
   }
   return span
+}
+
+/** What a row's bar covers: its own dates and everything under it. */
+export function branchSpan(rows: Row[], index: number): Span {
+  return union(rows.slice(index, subtreeEnd(rows, index)))!
+}
+
+/** What a row's children cover, or null without children. */
+export function childrenSpan(rows: Row[], index: number): Span | null {
+  return union(rows.slice(index + 1, subtreeEnd(rows, index)))
+}
+
+/** A parent stretched to new dates: it can grow past its children but never cut them off. */
+export function resizeParent(content: GanttContent, id: string, next: Span): GanttContent {
+  const index = content.rows.findIndex((r) => r.id === id)
+  const inner = childrenSpan(content.rows, index)
+  const start = inner ? Math.min(next.start, inner.start) : next.start
+  const end = inner ? Math.max(next.end, inner.end) : next.end
+  return {
+    ...content,
+    rows: content.rows.map((r) =>
+      r.id === id ? { ...r, start: formatDay(start), end: formatDay(end) } : r,
+    ),
+  }
 }
 
 /** The ancestor ids of rows[index], nearest first, including the row itself. */

@@ -34,8 +34,7 @@ Row       {id, key?, title, start, end, parent?, collapsed}
             parent: id of a row earlier in the list; rows are in display (pre-order) order,
               so a row's parent is the row above it or one of that row's ancestors; depth ≤ 5
             collapsed: hides the row's descendants
-            a row with children shows its descendants' span; its own dates are kept for when
-              it has none
+            a row with children shows the span of its own dates and all its descendants
 Milestone {id, date, title}   title ≤ 200 chars
 Link      {id, from, to}      from and to are row ids in this module, from ≠ to, no duplicates
 ```

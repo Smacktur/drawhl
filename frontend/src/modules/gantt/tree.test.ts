@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import type { GanttContent } from '@/modules/gantt/schema'
-import { formatDay } from '@/modules/gantt/timeline'
+import { formatDay, parseDay } from '@/modules/gantt/timeline'
 import {
   addChild,
+  branchSpan,
+  childrenSpan,
+  resizeParent,
   indent,
   insertRow,
   liftRemove,
   moveSubtree,
   outdent,
   shiftBranch,
-  summarySpan,
   visibleRows,
 } from '@/modules/gantt/tree'
 
@@ -50,16 +52,39 @@ describe('tree', () => {
     expect(visibleRows(folded).map((t) => t.row.id)).toEqual(['A', 'B', 'D', 'E'])
   })
 
-  it('spans a parent over its leaves', () => {
+  it('covers the own dates of a parent and everything under it', () => {
     const rows = [
-      row('A', undefined, '2027-01-01', '2027-01-02'),
+      row('A', undefined, '2026-10-01', '2026-10-02'),
       row('B', 'A', '2026-10-10', '2026-10-12'),
       row('C', 'B', '2026-11-01', '2026-11-20'),
       row('D', 'A', '2026-10-05', '2026-10-06'),
     ]
-    const span = summarySpan(rows, 0)!
-    expect([formatDay(span.start), formatDay(span.end)]).toEqual(['2026-10-05', '2026-11-20'])
-    expect(summarySpan(rows, 3)).toBeNull()
+    const days = (span: { start: number; end: number }) => [
+      formatDay(span.start),
+      formatDay(span.end),
+    ]
+    expect(days(branchSpan(rows, 0))).toEqual(['2026-10-01', '2026-11-20'])
+    expect(days(branchSpan(rows, 1))).toEqual(['2026-10-10', '2026-11-20'])
+    expect(days(childrenSpan(rows, 0)!)).toEqual(['2026-10-05', '2026-11-20'])
+    expect(childrenSpan(rows, 3)).toBeNull()
+  })
+
+  it('stretches a parent past its only child but never cuts it off', () => {
+    // An epic over one story: same dates until the epic is stretched.
+    const chainOfOne = content([
+      row('E', undefined, '2026-10-12', '2026-10-16'),
+      row('S', 'E', '2026-10-12', '2026-10-16'),
+    ])
+    const wider = resizeParent(chainOfOne, 'E', {
+      start: parseDay('2026-10-01'),
+      end: parseDay('2026-10-16'),
+    })
+    expect([wider.rows[0].start, wider.rows[0].end]).toEqual(['2026-10-01', '2026-10-16'])
+    const cut = resizeParent(wider, 'E', {
+      start: parseDay('2026-10-14'),
+      end: parseDay('2026-10-16'),
+    })
+    expect([cut.rows[0].start, cut.rows[0].end]).toEqual(['2026-10-12', '2026-10-16'])
   })
 
   it('moves a subtree under another row', () => {

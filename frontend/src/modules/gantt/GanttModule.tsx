@@ -21,7 +21,6 @@ import {
   pxPerDay,
   range,
   ROW_HEIGHT,
-  spanOf,
   updateRow,
   withSpan,
   type Row,
@@ -35,7 +34,8 @@ import {
   outdent,
   shiftBranch,
   subtreeEnd,
-  summarySpan,
+  branchSpan,
+  resizeParent,
   visibleRows,
 } from '@/modules/gantt/tree'
 import {
@@ -47,6 +47,7 @@ import {
   quarterBefore,
   today,
   type Cell,
+  type Span,
   type Scale,
 } from '@/modules/gantt/timeline'
 import type { ModuleViewProps } from '@/modules/types'
@@ -95,8 +96,17 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
   const full = content.rows.length >= MAX_ROWS
   const visible = visibleRows(content.rows)
   const indexOf = new Map(content.rows.map((r, i) => [r.id, i]))
-  const barSpan = (row: Row, hasChildren: boolean) =>
-    (hasChildren && summarySpan(content.rows, indexOf.get(row.id)!)) || spanOf(row)
+  const barSpan = (row: Row) => branchSpan(content.rows, indexOf.get(row.id)!)
+  // A parent's bar moves its whole branch, or stretches its own dates around its children.
+  const onParentSpan = (row: Row, next: Span) => {
+    const current = barSpan(row)
+    const moved = next.end - next.start === current.end - current.start
+    onChange(
+      moved
+        ? shiftBranch(content, row.id, next.start - current.start)
+        : resizeParent(content, row.id, next),
+    )
+  }
 
   const addTasks = (list: Task[]) => {
     host.addTasks(list)
@@ -206,18 +216,16 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
             style={{ height: ROW_HEIGHT }}
           >
             <GanttBar
-              span={barSpan(row, hasChildren)}
+              span={barSpan(row)}
               summary={hasChildren}
               range={span}
               pxPerDay={scale}
               label={row.key ? `${row.key} ${tasks[row.key]?.summary ?? ''}` : row.title}
               task={row.key ? tasks[row.key] : undefined}
               onSpan={(next) =>
-                onChange(
-                  hasChildren
-                    ? shiftBranch(content, row.id, next.start - barSpan(row, true).start)
-                    : updateRow(content, row.id, (r) => withSpan(r, next)),
-                )
+                hasChildren
+                  ? onParentSpan(row, next)
+                  : onChange(updateRow(content, row.id, (r) => withSpan(r, next)))
               }
             />
           </div>

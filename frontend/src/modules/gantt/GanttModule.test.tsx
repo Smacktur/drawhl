@@ -206,3 +206,18 @@ test('dragging a parent moves its whole branch', () => {
     ['2026-10-22', '2026-10-24'],
   ])
 })
+
+test('stretching a parent grows its own dates and leaves the child alone', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  const summary = screen.getByRole('slider', { name: /DEMO-1 .* summary/ })
+  const end = summary.querySelectorAll('.cursor-ew-resize')[1]
+  // About ten days to the right.
+  fireEvent.pointerDown(end, { clientX: 100, pointerId: 1 })
+  fireEvent.pointerMove(end, { clientX: 187, pointerId: 1 })
+  fireEvent.pointerUp(end, { pointerId: 1 })
+  expect(rows().map((r) => [r.start, r.end])).toEqual([
+    ['2026-10-05', '2026-10-24'],
+    ['2026-10-12', '2026-10-14'],
+  ])
+})

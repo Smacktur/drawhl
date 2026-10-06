@@ -72,8 +72,8 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
     </>
   )
 
-  // A parent keeps its look (a task stays a task) and gains brackets; its length follows its
-  // children, so it only moves, taking the whole branch along.
+  // A parent keeps its look (a task stays a task) and gains brackets around its children.
+  // Moving it takes the whole branch along; its ends stretch but never cut a child off.
   if (summary) {
     return (
       <div
@@ -93,6 +93,21 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
         style={{ left: box.left, width: Math.max(box.width, 4) }}
       >
         <span className="flex h-full items-center overflow-hidden px-1.5">{content}</span>
+        {!box.clippedStart && (
+          <span
+            aria-hidden
+            onPointerDown={start('start')}
+            className="absolute inset-y-0 left-0 w-1.5 cursor-ew-resize"
+          />
+        )}
+        {!box.clippedEnd && (
+          <span
+            aria-hidden
+            onPointerDown={start('end')}
+            className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize"
+          />
+        )}
+
         {!box.clippedStart && (
           <span className="bg-foreground/60 absolute top-full left-0 h-1.5 w-0.5" />
         )}

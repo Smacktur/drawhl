@@ -68,7 +68,7 @@ The lead drags a Jira card from the board into the Gantt, or adds a task by key 
 
 ### User Story 3b - Group rows in a tree (Priority: P1)
 
-The lead nests rows under rows: a task under a plain row, a plain row under a plain row, a plain row under a task, several levels deep. A row with children shows a summary bar from its earliest child start to its latest child end and can be collapsed.
+The lead nests rows under rows: a task under a plain row, a plain row under a plain row, a plain row under a task, several levels deep. A row with children keeps its own dates, its bar always covers its children, and it can be collapsed.
 
 **Why this priority**: A plan is a hierarchy (stage, sub-stage, tasks). A flat list of bars does not read as a plan.
 
@@ -78,7 +78,7 @@ The lead nests rows under rows: a task under a plain row, a plain row under a pl
 
 1. **Given** rows, **When** the user drags a row label onto a new place and to the right, or presses indent, **Then** the row with its whole subtree becomes a child of the row above; outdent and dragging left move it up a level.
 2. **Given** a row, **When** the user presses "+" on it, **Then** a new plain row appears as its last child, ready to be named.
-3. **Given** a row with children, **When** the user looks at it, **Then** its bar spans from the earliest start to the latest end of all its descendants and updates when a child moves; dragging it moves the whole branch by whole days, and its ends cannot be stretched.
+3. **Given** a row with children, **When** the user looks at it, **Then** its bar covers its own dates and all its descendants and grows when a child moves past it; dragging it moves the whole branch by whole days, and stretching its ends changes its own dates but never cuts off a child.
 4. **Given** a row with children, **When** the user collapses it, **Then** its descendants are hidden and the state survives reload.
 5. **Given** a row with children, **When** the user deletes it or drags it out of the module, **Then** its children move one level up and stay in the plan.
 6. **Given** a card dropped between rows, **When** it lands, **Then** it becomes a sibling of the row above it.
@@ -123,7 +123,7 @@ The lead adds milestones (a date with a title, shown as a diamond and a vertical
 - **FR-007**: Gantt rows are either a task (live, by key) or plain text, each with start and end dates; bars snap to whole days.
 - **FR-008**: Task keys inside Gantt modules are refreshed together with card keys of the open board, in the same batched request.
 - **FR-009**: Cards move into a Gantt by drop and out of it by dragging a row onto the board.
-- **FR-009b**: Gantt rows form a tree up to 5 levels deep; a row with children shows a summary bar computed from its descendants and can be collapsed.
+- **FR-009b**: Gantt rows form a tree up to 5 levels deep; a row with children shows a bar covering its own dates and its descendants and can be collapsed.
 - **FR-010**: Gantt has milestones (date, title) and finish-to-start dependency lines between rows.
 - **FR-011**: Plan dates live only on the board and are never written to the tracker.
 - **FR-012**: The module follows `DESIGN.md` tokens in light and dark themes.
