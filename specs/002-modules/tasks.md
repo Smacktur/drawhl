@@ -29,7 +29,7 @@ description: "Task list for Modules and the Gantt module"
 
 ### API
 
-- [x] T004 [US1] API tests in `tests/test_api_boards.py`: module round-trip, unknown kind round-trip, invalid gantt content → 422 with the reason, gantt task keys returned in `tasks` (depends on T003)
+- [x] T004 [US1] API tests in `tests/test_api_boards.py`: module round-trip, unknown kind round-trip, invalid gantt content → 422 with the reason, gantt task keys returned in `tasks` (depends on T003) Done: content errors come as `invalid_request` like other schema errors; contract updated.
 
 ### UI
 
