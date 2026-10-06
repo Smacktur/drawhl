@@ -203,6 +203,16 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [x] T087 Client polls at the interval or the server's `retry_after`; no client-side backoff
 - [x] T088 `RefreshIndicator`: dot only (green, amber, red), popover with trackers; `--sync-*` tokens; `DESIGN.md`, `CHANGELOG.md`, smoke
 
+## Phase 7f: Slice 11 `feat/version-check` — running version and update notice
+
+**Goal**: About shows the version actually running, and the user learns about a new release without leaving drawhl.
+
+**Independent Test**: `GET /api/version` returns the running version; with a newer release on GitHub the About button shows a dot and the panel links to it; `UPDATE_CHECK=false` makes no outside calls.
+
+- [x] T089 `backend/app/version.py` as the single version source, bumped by `scripts/release.sh`; build arg removed
+- [x] T090 `UpdateService` with a `ReleaseFeed` port and a GitHub adapter, cached 6 h, `UPDATE_CHECK`; `GET /api/version`; tests
+- [x] T091 About shows the running version and the update notice; README, `.env.example`, contract, `DESIGN.md`, `CHANGELOG.md`
+
 ## Phase 8: Polish (verify and ship phases)
 
 - [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data

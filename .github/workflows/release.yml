@@ -40,7 +40,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: VITE_APP_VERSION=${{ github.ref_name }}
 
   release:
     needs: images

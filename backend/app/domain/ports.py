@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
     from app.domain.jql import JqlValue, JqlVocabulary
     from app.domain.tasks import Task
+    from app.domain.updates import Release
 
 
 class TaskProvider(Protocol):
@@ -85,3 +86,9 @@ class SettingsRepo(Protocol):
 
 class DemoTasks(Protocol):
     def set_status(self, key: str, status: str) -> Task: ...
+
+
+class ReleaseFeed(Protocol):
+    def latest(self) -> Release:
+        """Newest published release; raises DependencyUnavailable when it can't be fetched."""
+        ...

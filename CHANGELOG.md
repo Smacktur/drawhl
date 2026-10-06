@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - About button in the bottom left: what drawhl is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.
+- Update notice: when a newer drawhl release is out, the About button gets a dot and the panel links to what's new and how to upgrade. The server asks GitHub at most every 6 hours; `UPDATE_CHECK=false` turns it off.
 
 ### Changed
 

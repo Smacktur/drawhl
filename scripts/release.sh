@@ -24,11 +24,16 @@ path = pathlib.Path("CHANGELOG.md")
 today = datetime.datetime.now(datetime.UTC).date().isoformat()
 text = path.read_text()
 path.write_text(text.replace("## [Unreleased]\n", f"## [Unreleased]\n\n## [{version}] - {today}\n", 1))
+# The running app reports this version in About and compares it with the latest release.
+pathlib.Path("backend/app/version.py").write_text(
+    "# Bumped by scripts/release.sh in the release commit; a source build shows the last release.\n"
+    f'VERSION = "{version}"\n'
+)
 PY
 
 if [ "${1:-}" = "--dry-run" ]; then
   git diff
-  git checkout -- CHANGELOG.md
+  git checkout -- CHANGELOG.md backend/app/version.py
   echo "dry run: would tag $tag"
   exit 0
 fi
