@@ -105,6 +105,10 @@ export function GanttLabel({
         press.current = null
         setOffset(null)
       }}
+      // The press captures the pointer, so the double-click lands here and not on the title.
+      onDoubleClick={(event) => {
+        if (!row.key && !(event.target as Element).closest('a, button, input')) setEditing(true)
+      }}
       className={cn(
         'group/label flex cursor-grab items-center gap-1 border-b border-border/60 pr-1 select-none',
         offset !== null && 'bg-card relative z-10 cursor-grabbing shadow-md',
@@ -170,7 +174,6 @@ export function GanttLabel({
             !row.title && 'text-muted-foreground',
             hasChildren && 'font-semibold',
           )}
-          onDoubleClick={() => setEditing(true)}
         >
           {row.title || 'Untitled'}
         </span>

@@ -115,8 +115,8 @@ test('adds a plain row and removes a row', () => {
 
 test('renames a plain row in place', () => {
   renderGantt()
-  // The label comes before the bar, which shows the same title.
-  fireEvent.doubleClick(screen.getAllByText('Design review')[0])
+  // The press captures the pointer, so the browser sends the double-click to the row itself.
+  fireEvent.doubleClick(screen.getAllByText('Design review')[0].closest('.group\\/label')!)
   const field = screen.getByLabelText('Row title')
   fireEvent.change(field, { target: { value: 'Security review' } })
   fireEvent.blur(field)
@@ -230,7 +230,8 @@ test('adds a milestone in the middle of the range, renames, drags and removes it
     { id: expect.any(String), date: '2026-11-15', title: 'Milestone' },
   ])
   const milestone = screen.getByTestId('gantt-milestone')
-  fireEvent.doubleClick(within(milestone).getByText('Milestone'))
+  // The drag captures the pointer, so the browser sends the double-click to the milestone itself.
+  fireEvent.doubleClick(milestone)
   const field = screen.getByLabelText('Milestone title')
   fireEvent.change(field, { target: { value: 'Beta' } })
   fireEvent.blur(field)

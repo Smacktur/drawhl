@@ -50,6 +50,10 @@ export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Pr
         onPointerMove={move}
         onPointerUp={stop}
         onPointerCancel={stop}
+        // The drag captures the pointer, so the double-click lands here and not on the title.
+        onDoubleClick={(event) => {
+          if (!(event.target as Element).closest('button, input')) setEditing(true)
+        }}
         className="group/milestone absolute z-20 flex cursor-ew-resize items-center gap-1 select-none"
         style={{ left: x - 5, bottom: FOOTER / 2 - 5 }}
       >
@@ -76,7 +80,6 @@ export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Pr
               'bg-background/90 max-w-40 truncate rounded-sm px-0.5 text-[11px] font-medium',
               !milestone.title && 'text-muted-foreground',
             )}
-            onDoubleClick={() => setEditing(true)}
           >
             {milestone.title || 'Milestone'}
           </span>
