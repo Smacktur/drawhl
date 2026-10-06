@@ -6,6 +6,7 @@ import {
   dragSpan,
   fitsRange,
   formatDay,
+  formatSpan,
   header,
   newSpan,
   parseDay,
@@ -144,4 +145,13 @@ describe('bars', () => {
     expect(newSpan(range, undefined, d('2027-01-06')).start).toBe(range.start)
     expect(newSpan(range, d('2026-10-20')).start).toBe(d('2026-10-20'))
   })
+})
+
+it('a span reads as weekdays, dates and its length', () => {
+  const span = (a: string, b: string) => ({ start: parseDay(a), end: parseDay(b) })
+  expect(formatSpan(span('2026-10-05', '2026-10-16'))).toBe('Mon Oct 5 – Fri Oct 16 · 12 days')
+  expect(formatSpan(span('2026-10-05', '2026-10-05'))).toBe('Mon Oct 5 · 1 day')
+  expect(formatSpan(span('2026-12-28', '2027-01-08'))).toBe(
+    'Mon Dec 28, 2026 – Fri Jan 8, 2027 · 12 days',
+  )
 })

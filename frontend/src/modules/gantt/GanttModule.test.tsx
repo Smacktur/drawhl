@@ -270,3 +270,18 @@ test('a link that starts too early is drawn as a warning and can be removed', ()
   fireEvent.click(screen.getByRole('button', { name: 'Remove the dependency' }))
   expect(current().links).toEqual([])
 })
+
+test('a bar shows its exact dates while it is dragged', () => {
+  renderGantt()
+  const bar = screen.getByRole('slider', { name: 'Design review dates' })
+  const tip = () => within(bar.parentElement!).getByRole('tooltip', { hidden: true })
+  expect(tip().textContent).toContain('Mon Oct 12 – Wed Oct 14 · 3 days')
+  expect(tip().className).not.toMatch(/(^| )flex( |$)/)
+  // About ten days to the right.
+  fireEvent.pointerDown(bar, { clientX: 100, pointerId: 1 })
+  fireEvent.pointerMove(bar, { clientX: 187, pointerId: 1 })
+  expect(tip().className).toMatch(/(^| )flex( |$)/)
+  expect(tip().textContent).toContain('Thu Oct 22 – Sat Oct 24 · 3 days')
+  fireEvent.pointerUp(bar, { pointerId: 1 })
+  expect(tip().className).not.toMatch(/(^| )flex( |$)/)
+})

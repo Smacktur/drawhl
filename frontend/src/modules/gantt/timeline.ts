@@ -8,6 +8,7 @@ export type Cell = { label: string; from: number; span: number; weekend?: boolea
 const MS_PER_DAY = 86_400_000
 export const MAX_RANGE_DAYS = 1096
 
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export function parseDay(iso: string): Day {
@@ -166,4 +167,19 @@ export function dragSpan(span: Span, grip: Grip, days: number): Span {
 export function newSpan(range: Span, at?: Day, now = today()): Span {
   const start = at ?? (now >= range.start && now <= range.end ? now : range.start)
   return { start, end: start + 6 }
+}
+
+/** "Mon Oct 5", with the year when asked. */
+export function formatDate(day: Day, year = false) {
+  const { year: y, month, date } = parts(day)
+  return `${WEEKDAYS[weekday(day)]} ${MONTHS[month]} ${date}${year ? `, ${y}` : ''}`
+}
+
+/** "Mon Oct 5 – Fri Oct 16 · 12 days"; years only when the span crosses one. */
+export function formatSpan(span: Span) {
+  const days = rangeDays(span.start, span.end)
+  const length = `${days} ${days === 1 ? 'day' : 'days'}`
+  if (span.start === span.end) return `${formatDate(span.start)} · ${length}`
+  const years = parts(span.start).year !== parts(span.end).year
+  return `${formatDate(span.start, years)} – ${formatDate(span.end, years)} · ${length}`
 }

@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import { useRef, useState, type PointerEvent } from 'react'
 import type { Milestone as MilestoneData } from '@/modules/gantt/plan'
 import { FOOTER, HEADER } from '@/modules/gantt/rows'
-import { formatDay, parseDay, type Span } from '@/modules/gantt/timeline'
+import { formatDate, formatDay, parseDay, type Span } from '@/modules/gantt/timeline'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -18,6 +18,7 @@ type Props = {
 export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Props) {
   const { getZoom } = useReactFlow()
   const [editing, setEditing] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const drag = useRef<{ x: number; zoom: number; day: number } | null>(null)
   const day = parseDay(milestone.date)
   if (day < range.start || day > range.end) return null
@@ -27,6 +28,7 @@ export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Pr
     if ((event.target as Element).closest('button, input')) return
     event.currentTarget.setPointerCapture(event.pointerId)
     drag.current = { x: event.clientX, zoom: getZoom(), day }
+    setDragging(true)
   }
   const move = (event: PointerEvent) => {
     const start = drag.current
@@ -35,7 +37,10 @@ export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Pr
     const next = Math.min(Math.max(start.day + days, range.start), range.end)
     if (next !== day) onChange({ date: formatDay(next) })
   }
-  const stop = () => (drag.current = null)
+  const stop = () => {
+    drag.current = null
+    setDragging(false)
+  }
 
   return (
     <>
@@ -45,7 +50,6 @@ export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Pr
       />
       <div
         data-testid="gantt-milestone"
-        title={`${milestone.title || 'Milestone'} · ${milestone.date}`}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={stop}
@@ -84,6 +88,14 @@ export function Milestone({ milestone, range, pxPerDay, onChange, onRemove }: Pr
             {milestone.title || 'Milestone'}
           </span>
         )}
+        <span
+          className={cn(
+            'bg-background/90 text-muted-foreground hidden rounded-sm px-0.5 text-[11px] whitespace-nowrap tabular-nums group-hover/milestone:inline',
+            dragging && 'inline',
+          )}
+        >
+          {formatDate(day)}
+        </span>
         <button
           type="button"
           aria-label={`Remove ${milestone.title || 'milestone'}`}
