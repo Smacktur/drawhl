@@ -66,6 +66,25 @@ The lead drags a Jira card from the board into the Gantt, or adds a task by key 
 
 ---
 
+### User Story 3b - Group rows in a tree (Priority: P1)
+
+The lead nests rows under rows: a task under a plain row, a plain row under a plain row, a plain row under a task, several levels deep. A row with children keeps its own dates, its bar always covers its children, and it can be collapsed.
+
+**Why this priority**: A plan is a hierarchy (stage, sub-stage, tasks). A flat list of bars does not read as a plan.
+
+**Independent Test**: Make a stage row, put two tasks and a plain row under it, put a task under that plain row, collapse and expand the stage, move a child bar: the summary bar follows. Delete the stage: its children stay, one level up. Reload: the tree is the same.
+
+**Acceptance Scenarios**:
+
+1. **Given** rows, **When** the user drags a row label onto a new place and to the right, or presses indent, **Then** the row with its whole subtree becomes a child of the row above; outdent and dragging left move it up a level.
+2. **Given** a row, **When** the user presses "+" on it, **Then** a new plain row appears as its last child, ready to be named.
+3. **Given** a row with children, **When** the user looks at it, **Then** its bar covers its own dates and all its descendants and grows when a child moves past it; dragging it moves the whole branch by whole days, and stretching its ends changes its own dates but never cuts off a child.
+4. **Given** a row with children, **When** the user collapses it, **Then** its descendants are hidden and the state survives reload.
+5. **Given** a row with children, **When** the user deletes it or drags it out of the module, **Then** its children move one level up and stay in the plan.
+6. **Given** a card dropped between rows, **When** it lands, **Then** it becomes a sibling of the row above it.
+
+---
+
 ### User Story 4 - Milestones and dependency lines (Priority: P2)
 
 The lead adds milestones (a date with a title, shown as a diamond and a vertical line) and connects bars with dependency lines ("A must finish before B starts").
@@ -104,6 +123,7 @@ The lead adds milestones (a date with a title, shown as a diamond and a vertical
 - **FR-007**: Gantt rows are either a task (live, by key) or plain text, each with start and end dates; bars snap to whole days.
 - **FR-008**: Task keys inside Gantt modules are refreshed together with card keys of the open board, in the same batched request.
 - **FR-009**: Cards move into a Gantt by drop and out of it by dragging a row onto the board.
+- **FR-009b**: Gantt rows form a tree up to 5 levels deep; a row with children shows a bar covering its own dates and its descendants and can be collapsed.
 - **FR-010**: Gantt has milestones (date, title) and finish-to-start dependency lines between rows.
 - **FR-011**: Plan dates live only on the board and are never written to the tracker.
 - **FR-012**: The module follows `DESIGN.md` tokens in light and dark themes.
@@ -113,7 +133,7 @@ The lead adds milestones (a date with a title, shown as a diamond and a vertical
 - **Module**: a board element with kind, position, size and kind-specific content.
 - **Module kind**: a registered type with name, icon, description, default size and content, content schema and view.
 - **Gantt content**: range, scale, rows, milestones, dependencies.
-- **Row**: id, task key or text title, start, end.
+- **Row**: id, task key or text title, start, end, optional parent row, collapsed flag.
 - **Milestone**: id, date, title.
 - **Dependency**: id, from row, to row.
 

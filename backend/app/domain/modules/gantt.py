@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.domain.tasks import KEY_RE
 
 MAX_RANGE_DAYS = 1096
+MAX_DEPTH = 5
 
 ItemId = Annotated[str, Field(min_length=1, max_length=40)]
 Title = Annotated[str, Field(max_length=200)]
@@ -21,6 +22,8 @@ class Row(_Strict):
     title: Title = ""
     start: date
     end: date
+    parent: str | None = Field(default=None, max_length=40)
+    collapsed: bool = False
 
     @field_validator("key")
     @classmethod
@@ -68,6 +71,7 @@ class GanttContent(_Strict):
         for label, items in (("row", self.rows), ("milestone", self.milestones)):
             _unique(label, [item.id for item in items])
         _unique("link", [link.id for link in self.links])
+        _check_tree(self.rows)
         rows = {row.id for row in self.rows}
         pairs: set[tuple[str, str]] = set()
         for link in self.links:
@@ -79,6 +83,21 @@ class GanttContent(_Strict):
                 raise ValueError(f"link {link.id} duplicates another link")
             pairs.add((link.from_, link.to))
         return self
+
+
+def _check_tree(rows: list[Row]) -> None:
+    # Rows are in display order, so a parent is the row above or one of its ancestors.
+    ancestors: list[str] = []
+    for row in rows:
+        if row.parent is None:
+            ancestors = []
+        elif row.parent in ancestors:
+            ancestors = ancestors[: ancestors.index(row.parent) + 1]
+        else:
+            raise ValueError(f"row {row.id} must follow its parent {row.parent}")
+        if len(ancestors) >= MAX_DEPTH:
+            raise ValueError(f"row {row.id} is nested deeper than {MAX_DEPTH} levels")
+        ancestors.append(row.id)
 
 
 def _unique(label: str, ids: list[str]) -> None:

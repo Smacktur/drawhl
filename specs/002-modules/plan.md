@@ -117,6 +117,7 @@ Row eject: the Gantt view tracks a row drag; when the pointer leaves the module,
 |---|---|---|---|
 | 12 | `feat/module-host` | US1, US2 | `module` node, registries, picker, placeholder, Gantt timeline (range, scale, header, today, + quarter, settings, resize) |
 | 13 | `feat/gantt-tasks` | US3 | rows and bars, drop card in, add by key or text, drag and stretch, reorder, eject, live status in refresh |
+| 13b | `feat/gantt-tree` | US3b | rows nested in a tree, summary bars, collapse, indent and outdent, child rows |
 | 14 | `feat/gantt-milestones` | US4 | milestones, dependency lines, conflict color |
 
 ## Complexity Tracking

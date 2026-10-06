@@ -1,5 +1,7 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ReactFlow, ReactFlowProvider, useNodesState, type Node } from '@xyflow/react'
+import { useLayoutEffect } from 'react'
 import { beforeAll, expect, test, vi } from 'vitest'
 import type { Task } from '@/api/tasks'
 import { ModuleNode } from '@/canvas/nodes/ModuleNode'
@@ -62,7 +64,9 @@ function Board() {
       data: { kind: 'gantt', content },
     },
   ])
-  latest = nodes
+  useLayoutEffect(() => {
+    latest = nodes
+  }, [nodes])
   return <ReactFlow nodes={nodes} nodeTypes={nodeTypes} onNodesChange={onNodesChange} />
 }
 
@@ -70,13 +74,15 @@ function renderGantt(host: Partial<ModuleHost> = {}) {
   const full: ModuleHost = { addTasks: vi.fn(), ejectCard: vi.fn(), ejectNote: vi.fn(), ...host }
   render(
     <div style={{ width: 1200, height: 800 }}>
-      <ReactFlowProvider>
-        <TasksContext.Provider value={{ 'DEMO-1': task }}>
-          <ModuleHostContext.Provider value={full}>
-            <Board />
-          </ModuleHostContext.Provider>
-        </TasksContext.Provider>
-      </ReactFlowProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <ReactFlowProvider>
+          <TasksContext.Provider value={{ 'DEMO-1': task }}>
+            <ModuleHostContext.Provider value={full}>
+              <Board />
+            </ModuleHostContext.Provider>
+          </TasksContext.Provider>
+        </ReactFlowProvider>
+      </QueryClientProvider>
     </div>,
   )
   return full
@@ -95,7 +101,12 @@ test('shows task rows with live data and plain rows with their title', () => {
 
 test('adds a plain row and removes a row', () => {
   renderGantt()
-  fireEvent.click(screen.getByRole('button', { name: 'Row' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+  fireEvent.click(screen.getByRole('tab', { name: 'Plain task' }))
+  const field = screen.getByLabelText('Title')
+  fireEvent.change(field, { target: { value: 'Kickoff' } })
+  fireEvent.submit(field)
+  expect(rows().map((r) => r.title)).toContain('Kickoff')
   expect(rows()).toHaveLength(3)
   fireEvent.click(screen.getByRole('button', { name: 'Remove Design review' }))
   expect(rows().map((r) => r.id)).not.toContain('b')
@@ -142,4 +153,71 @@ test('the module title is renamed in its header', () => {
   fireEvent.blur(field)
   expect((latest[0].data as { title?: string }).title).toBe('Q4 roadmap')
   expect(screen.getByText('Q4 roadmap')).toBeTruthy()
+})
+
+test('rows nest under rows, show a summary bar and collapse', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  expect(rows()[1].parent).toBe('a')
+  expect(screen.getByRole('slider', { name: /DEMO-1 .* summary/ })).toBeTruthy()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Add a task under Design review' }))
+  expect(rows().map((r) => r.parent)).toEqual([undefined, 'a', 'b'])
+  fireEvent.blur(screen.getByLabelText('Row title'))
+
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse DEMO-1' }))
+  expect(rows()[0].collapsed).toBe(true)
+  expect(screen.queryByRole('slider', { name: 'Design review dates' })).toBeNull()
+})
+
+test('removing a parent keeps its children one level up', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Remove DEMO-1' }))
+  expect(rows()).toEqual([expect.objectContaining({ id: 'b' })])
+  expect(rows()[0].parent).toBeUndefined()
+})
+
+test('a task row links to the tracker from its own button only', () => {
+  renderGantt()
+  const link = screen.getByRole('link', { name: 'Open DEMO-1 in the tracker' })
+  expect(link.getAttribute('href')).toBe(task.url)
+  expect(screen.getByText('DEMO-1').closest('a')).toBeNull()
+})
+
+test('a task that becomes a parent keeps its key, title and status color', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  const summary = screen.getByRole('slider', { name: /DEMO-1 .* summary/ })
+  expect(summary.textContent).toContain('Rotate the staging certificates')
+  expect(summary.className).toContain('bg-status-done')
+})
+
+test('dragging a parent moves its whole branch', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  const summary = screen.getByRole('slider', { name: /DEMO-1 .* summary/ })
+  // 92 days over 800px: about 8.7px a day, so 87px is ten days.
+  fireEvent.pointerDown(summary, { clientX: 100, pointerId: 1 })
+  fireEvent.pointerMove(summary, { clientX: 187, pointerId: 1 })
+  fireEvent.pointerUp(summary, { pointerId: 1 })
+  expect(rows().map((r) => [r.start, r.end])).toEqual([
+    ['2026-10-15', '2026-10-19'],
+    ['2026-10-22', '2026-10-24'],
+  ])
+})
+
+test('stretching a parent grows its own dates and leaves the child alone', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  const summary = screen.getByRole('slider', { name: /DEMO-1 .* summary/ })
+  const end = summary.querySelectorAll('.cursor-ew-resize')[1]
+  // About ten days to the right.
+  fireEvent.pointerDown(end, { clientX: 100, pointerId: 1 })
+  fireEvent.pointerMove(end, { clientX: 187, pointerId: 1 })
+  fireEvent.pointerUp(end, { pointerId: 1 })
+  expect(rows().map((r) => [r.start, r.end])).toEqual([
+    ['2026-10-05', '2026-10-24'],
+    ['2026-10-12', '2026-10-14'],
+  ])
 })

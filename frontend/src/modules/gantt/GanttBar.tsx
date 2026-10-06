@@ -19,11 +19,13 @@ type Props = {
   label: string
   /** Undefined for a plain row; a task row without data yet is drawn like a plain one. */
   task?: Task
+  /** A parent's bar: spans its children and follows them instead of being dragged. */
+  summary?: boolean
   onSpan: (span: Span) => void
 }
 
 /** A row's bar: drag the body to move it, an end to change that date, in whole days. */
-export function GanttBar({ span, range, pxPerDay, label, task, onSpan }: Props) {
+export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }: Props) {
   const { getZoom } = useReactFlow()
   const drag = useRef<{ x: number; zoom: number; grip: Grip; span: Span } | null>(null)
   const box = barBox(span, range, pxPerDay)
@@ -58,6 +60,64 @@ export function GanttBar({ span, range, pxPerDay, label, task, onSpan }: Props) 
   const handlers = { onPointerMove: move, onPointerUp: stop, onPointerCancel: stop }
 
   const missing = task?.state === 'not_found'
+  const live = task && !missing
+  const content = (
+    <>
+      {live && (
+        <span className="mr-1 opacity-80">
+          <TypeIcon typeName={task.type_name} />
+        </span>
+      )}
+      <span className="truncate">{label}</span>
+    </>
+  )
+
+  // A parent keeps its look (a task stays a task) and gains brackets around its children.
+  // Moving it takes the whole branch along; its ends stretch but never cut a child off.
+  if (summary) {
+    return (
+      <div
+        role="slider"
+        aria-label={`${label} summary`}
+        aria-valuetext={label}
+        title={live ? `${label} · ${task.status_name}` : label}
+        onPointerDown={start('move')}
+        {...handlers}
+        className={cn(
+          'absolute top-1 h-5 cursor-grab rounded-[4px] text-[11px] leading-5 font-semibold whitespace-nowrap select-none active:cursor-grabbing',
+          live ? BAR_COLOR[task.status_category] : 'bg-foreground/75 text-background',
+          task?.status_category === 'done' && 'line-through',
+          box.clippedStart && 'rounded-l-none',
+          box.clippedEnd && 'rounded-r-none',
+        )}
+        style={{ left: box.left, width: Math.max(box.width, 4) }}
+      >
+        <span className="flex h-full items-center overflow-hidden px-1.5">{content}</span>
+        {!box.clippedStart && (
+          <span
+            aria-hidden
+            onPointerDown={start('start')}
+            className="absolute inset-y-0 left-0 w-1.5 cursor-ew-resize"
+          />
+        )}
+        {!box.clippedEnd && (
+          <span
+            aria-hidden
+            onPointerDown={start('end')}
+            className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize"
+          />
+        )}
+
+        {!box.clippedStart && (
+          <span className="bg-foreground/60 absolute top-full left-0 h-1.5 w-0.5" />
+        )}
+        {!box.clippedEnd && (
+          <span className="bg-foreground/60 absolute top-full right-0 h-1.5 w-0.5" />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       role="slider"
@@ -78,14 +138,9 @@ export function GanttBar({ span, range, pxPerDay, label, task, onSpan }: Props) 
         box.clippedEnd && 'rounded-r-none',
       )}
       style={{ left: box.left, width: Math.max(box.width, 4) }}
-      title={task && !missing ? `${label} · ${task.status_name}` : label}
+      title={live ? `${label} · ${task.status_name}` : label}
     >
-      {task && !missing && (
-        <span className="mr-1 opacity-80">
-          <TypeIcon typeName={task.type_name} />
-        </span>
-      )}
-      <span className="truncate">{label}</span>
+      {content}
       {!box.clippedStart && (
         <span
           aria-hidden

@@ -53,6 +53,29 @@ def test_rules(extra, reason):
         gantt(**extra)
 
 
+def test_rows_form_a_tree_in_display_order():
+    rows = [row("a"), row("b", parent="a"), row("c", parent="b"), row("d", parent="a"), row("e")]
+    content = gantt(rows=rows)
+    assert [r.parent for r in content.rows] == [None, "a", "b", "a", None]
+
+
+@pytest.mark.parametrize(
+    ("rows", "reason"),
+    [
+        ([row("b", parent="a"), row("a")], "row b must follow its parent a"),
+        ([row("a"), row("b"), row("c", parent="a")], "row c must follow its parent a"),
+        ([row("a", parent="a")], "row a must follow its parent a"),
+        (
+            [row("0")] + [row(str(i), parent=str(i - 1)) for i in range(1, 6)],
+            "nested deeper than 5",
+        ),
+    ],
+)
+def test_tree_rules(rows, reason):
+    with pytest.raises(ValidationError, match=reason):
+        gantt(rows=rows)
+
+
 def test_rows_may_lie_outside_the_range():
     content = gantt(rows=[row("a", start="2025-01-01", end="2027-01-01", key="DEV-1")])
     assert content.rows[0].key == "DEV-1"

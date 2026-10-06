@@ -59,16 +59,30 @@ description: "Task list for Modules and the Gantt module"
 
 **Checkpoint**: `make check`, `make smoke`, screenshot → G3.
 
+## Phase 2b: Slice 13b `feat/gantt-tree` — rows in a tree (US3b)
+
+**Goal**: plans read as stages, sub-stages and tasks.
+
+**Independent Test**: see US3b in [spec.md](spec.md).
+
+- [x] T022 [P] [US3b] Backend: `parent` and `collapsed` on `Row`; rule that a parent is the row above or one of its ancestors, depth ≤ 5. Tests in `tests/test_gantt.py`
+- [x] T023 [P] [US3b] Create `modules/gantt/tree.ts`: depths, visible rows, summary spans, move a subtree to an index and depth, indent, outdent, add a child, remove a row with its children moved up. Tests in `tree.test.ts`
+- [x] T024 [US3b] Label: indent by depth, collapse chevron, hover indent, outdent and "+ child"; row drag picks the depth from the horizontal offset; summary bars are not draggable; card drop becomes a sibling of the row above; eject and delete lift children (depends on T023)
+- [x] T025 [US3b] Smoke, `DESIGN.md`, `CHANGELOG.md`
+- [x] T025a [US3] [US3b] After review: tracker link only in the row's hover actions; task parents keep their key, title and status color on the summary bar; one "Add" with a tab per tracker and a "Plain task" tab
+
+**Checkpoint**: `make check`, `make smoke`, screenshot → G3.
+
 ## Phase 3: Slice 14 `feat/gantt-milestones` — milestones and dependencies (US4)
 
 **Goal**: checkpoints and order on the plan.
 
 **Independent Test**: add two milestones, rename and drag one; connect two bars; move the first bar past the second's start: the line turns to the warning color; delete a row: its lines go; reload keeps all.
 
-- [ ] T018 [P] [US4] Create `modules/gantt/Milestone.tsx`: diamond, vertical line, editable title, drag in whole days; "Add milestone" in the module toolbar at the visible center date
-- [ ] T019 [P] [US4] Create `modules/gantt/Links.tsx`: SVG paths from bar end to bar start, warning token on conflict, select and delete; link pure helpers with tests in `timeline.test.ts`
-- [ ] T020 [US4] Connect bars: drag from the bar's end handle onto another bar creates a link; no self or duplicate links; deleting a row removes its links (depends on T019)
-- [ ] T021 [US4] Smoke and `CHANGELOG.md`; README feature list mentions modules and Gantt
+- [ ] T026 [P] [US4] Create `modules/gantt/Milestone.tsx`: diamond, vertical line, editable title, drag in whole days; "Add milestone" in the module toolbar at the visible center date
+- [ ] T027 [P] [US4] Create `modules/gantt/Links.tsx`: SVG paths from bar end to bar start, warning token on conflict, select and delete; link pure helpers with tests in `timeline.test.ts`
+- [ ] T028 [US4] Connect bars: drag from the bar's end handle onto another bar creates a link; no self or duplicate links; deleting a row removes its links (depends on T027)
+- [ ] T029 [US4] Smoke and `CHANGELOG.md`; README feature list mentions modules and Gantt
 
 **Checkpoint**: `make check`, `make smoke`, screenshot → G3.
 
@@ -81,5 +95,5 @@ description: "Task list for Modules and the Gantt module"
 
 - Slice 12: T001, T002 on the backend with T005, T006 on the frontend.
 - Slice 13: T012 and T013.
-- Slice 14: T018 and T019.
+- Slice 14: T026 and T027.
 - Fewer than 3 independent zones per slice after the first tasks: Orca is not worth it.
