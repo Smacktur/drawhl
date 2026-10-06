@@ -1,9 +1,10 @@
 # Managed by launchpad (`launch update`). Do not edit by hand.
-_commit: v0.11.0
+_commit: v0.11.0-4-g0a01ba6
 _src_path: /Users/pgkbuild/Documents/code/project/launchpad
 contact_email: smacktur@gmail.com
 copyright_holder: The drawhl Authors
-description: 'Open-source infinite canvas for your tasks: live cards from your tracker, arranged the way you think'
+description: 'Open-source infinite canvas for your tasks: live cards from your tracker,
+    arranged the way you think'
 frontend: true
 github_owner: Smacktur
 license: MIT
