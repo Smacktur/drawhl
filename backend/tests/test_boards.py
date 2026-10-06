@@ -38,6 +38,13 @@ def test_valid_doc_passes_and_lists_unique_keys():
     assert task_keys(board) == ["DEV-1", "DEV-2"]
 
 
+def test_arrow_can_end_at_an_anchor():
+    anchor = {"id": "p", "type": "anchor", "position": {"x": 5, "y": 5}, "data": {}}
+    board = doc([card("a", "DEV-1"), anchor], [{"id": "e", "source": "a", "target": "p"}])
+    check_doc(board)
+    assert task_keys(board) == ["DEV-1"]
+
+
 @pytest.mark.parametrize(
     ("nodes", "edges"),
     [

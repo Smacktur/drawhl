@@ -17,5 +17,8 @@ export type TextNode = Node<TextData, 'text'>
 export type ModuleData = { kind: string; title?: string; content: unknown }
 export type ModuleNode = Node<ModuleData, 'module'>
 
-export type AppNode = JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode
+// The free end of an arrow that points somewhere instead of at an element.
+export type AnchorNode = Node<Record<string, never>, 'anchor'>
+
+export type AppNode = JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode | AnchorNode
 export type AppEdge = Edge

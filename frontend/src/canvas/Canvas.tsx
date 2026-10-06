@@ -10,6 +10,7 @@ import {
   ReactFlowProvider,
   useReactFlow,
   type Connection,
+  type OnConnectEnd,
   type XYPosition,
   type OnBeforeDelete,
 } from '@xyflow/react'
@@ -20,6 +21,7 @@ import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { anchorAt, orphanAnchors } from '@/canvas/anchors'
 import { CanvasContextMenu, type MenuTarget, type PlaceTool } from '@/canvas/CanvasContextMenu'
 import {
   cloneSnippet,
@@ -34,6 +36,7 @@ import { framesFirst, releaseChildren, reparent, splitDeletion } from '@/canvas/
 import { Guides } from '@/canvas/Guides'
 import { gridPositions } from '@/canvas/layout'
 import { absorbCards } from '@/canvas/modules'
+import { AnchorNode } from '@/canvas/nodes/AnchorNode'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { ModuleNode } from '@/canvas/nodes/ModuleNode'
@@ -62,6 +65,7 @@ const nodeTypes = {
   sticky: StickyNode,
   text: TextNode,
   module: ModuleNode,
+  anchor: AnchorNode,
 }
 const defaultEdgeOptions = { markerEnd: { type: MarkerType.ArrowClosed } }
 
@@ -73,6 +77,8 @@ const DUPLICATE_OFFSET = 24
 const MIN_DRAW = 8
 // Same floor as the frame resizer, so a thin drag still makes a usable frame.
 const MIN_FRAME = { width: 160, height: 120 }
+// An arrow released closer than this to where it started was a click on the handle, not a drag.
+const MIN_ARROW = 16
 
 const viewportCenter = () => ({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
@@ -94,11 +100,16 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
     [board.tasks, added, refresh.data],
   )
-  const { screenToFlowPosition, deleteElements, getNodes } = useReactFlow<AppNode, AppEdge>()
+  const { screenToFlowPosition, deleteElements, getNodes, getEdges } = useReactFlow<
+    AppNode,
+    AppEdge
+  >()
   const theme = useTheme().resolved
   const placing = tool === 'frame' || tool === 'sticky' || tool === 'text'
   // Last pointer position over the canvas, where pasted items land.
   const pointer = useRef<XYPosition | null>(null)
+  // Screen point where the current arrow drag started.
+  const connectFrom = useRef<XYPosition | null>(null)
 
   useShortcut('cancel', () => setTool('select'), { preventDefault: false })
 
@@ -213,13 +224,17 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     // The store has the final drag position; this render's nodes may not yet.
     const current = getNodes()
     const result = absorbCards(current, ids)
+    let kept = result?.nodes ?? current
     if (result) {
-      setEdges((current) =>
-        current.filter((e) => !result.absorbed.has(e.source) && !result.absorbed.has(e.target)),
+      const edgesLeft = getEdges().filter(
+        (e) => !result.absorbed.has(e.source) && !result.absorbed.has(e.target),
       )
+      setEdges(edgesLeft)
+      const orphans = new Set(orphanAnchors(kept, edgesLeft).map((n) => n.id))
+      kept = kept.filter((n) => !orphans.has(n.id))
     }
     const next = reparent(
-      result?.nodes ?? current,
+      kept,
       ids.filter((id) => !result?.absorbed.has(id)),
     )
     // The store still says dragging, and xyflow puts a dragging node into every marquee.
@@ -332,15 +347,57 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     [setEdges],
   )
 
+  // An arrow released over empty space points there: it ends at a new anchor.
+  const onConnectEnd: OnConnectEnd = useCallback(
+    (event, state) => {
+      setConnecting(false)
+      const start = connectFrom.current
+      connectFrom.current = null
+      if (state.isValid || !state.fromNode || !state.fromHandle || !state.from || !start) return
+      const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event
+      if (Math.hypot(clientX - start.x, clientY - start.y) < MIN_ARROW) return
+      const { node, side } = anchorAt(
+        newId(),
+        state.from,
+        screenToFlowPosition({ x: clientX, y: clientY }),
+      )
+      setNodes((current) => reparent([...current, node], [node.id]))
+      setEdges((current) => [
+        ...current,
+        {
+          id: newId(),
+          source: state.fromNode.id,
+          sourceHandle: state.fromHandle.id,
+          target: node.id,
+          targetHandle: side,
+        },
+      ])
+    },
+    [screenToFlowPosition, setNodes, setEdges],
+  )
+
   // Deleting a frame keeps its children: only what the user selected goes away.
+  // An anchor goes with the last arrow that ends at it.
   const onBeforeDelete: OnBeforeDelete<AppNode, AppEdge> = useCallback(
     async ({ nodes: doomed, edges: doomedEdges }) => {
       const split = splitDeletion(doomed, doomedEdges)
-      if (!split) return true
-      setNodes((current) => releaseChildren(current, new Set(split.nodes.map((n) => n.id))))
-      return split
+      if (split) {
+        setNodes((current) => releaseChildren(current, new Set(split.nodes.map((n) => n.id))))
+      }
+      const plan = split ?? { nodes: doomed, edges: doomedEdges }
+      const goneNodes = new Set(plan.nodes.map((n) => n.id))
+      const goneEdges = new Set(plan.edges.map((e) => e.id))
+      const edgesLeft = getEdges().filter(
+        (e) => !goneEdges.has(e.id) && !goneNodes.has(e.source) && !goneNodes.has(e.target),
+      )
+      const orphans = orphanAnchors(
+        getNodes().filter((n) => !goneNodes.has(n.id)),
+        edgesLeft,
+      )
+      if (!split && orphans.length === 0) return true
+      return { nodes: [...plan.nodes, ...orphans], edges: plan.edges }
     },
-    [setNodes],
+    [setNodes, getNodes, getEdges],
   )
 
   return (
@@ -367,8 +424,12 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
               onNodesChange={guides.onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
-              onConnectStart={() => setConnecting(true)}
-              onConnectEnd={() => setConnecting(false)}
+              onConnectStart={(event) => {
+                setConnecting(true)
+                const { clientX, clientY } = 'touches' in event ? event.touches[0] : event
+                connectFrom.current = { x: clientX, y: clientY }
+              }}
+              onConnectEnd={onConnectEnd}
               onNodeDragStop={(_, __, dragged) => dropNodes(dragged.map((n) => n.id))}
               onBeforeDelete={onBeforeDelete}
               onPaneClick={place}
