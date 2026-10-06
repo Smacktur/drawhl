@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- A selection box no longer picks up a frame or element that was dragged earlier and sits outside the box.
 - Syncing resumes on its own on the next tick after the network or VPN comes back, instead of waiting out a backoff of up to five minutes. Only rate limits and Jira server errors slow polling down now.
 
 ## [2026.10.6] - 2026-10-06
