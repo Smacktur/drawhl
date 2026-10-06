@@ -1,6 +1,6 @@
-import type { XYPosition } from '@xyflow/react'
+import { useReactFlow, type XYPosition } from '@xyflow/react'
 import { CalendarRange, Plus } from 'lucide-react'
-import { useContext, useState, type FormEvent } from 'react'
+import { useContext, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import type { Task } from '@/api/tasks'
 import { keepOpenWhileSuggesting } from '@/canvas/JqlInput'
 import { TasksContext } from '@/canvas/tasks-context'
@@ -52,6 +52,7 @@ const SCALES: { scale: Scale; label: string }[] = [
   { scale: 'day', label: 'Days' },
   { scale: 'week', label: 'Weeks' },
   { scale: 'month', label: 'Months' },
+  { scale: 'quarter', label: 'Quarters' },
 ]
 
 function HeaderRow({ cells, pxPerDay, top }: { cells: Cell[]; pxPerDay: number; top: boolean }) {
@@ -107,7 +108,15 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
 
   return (
     <div className="flex h-full text-[12px]">
-      <div className="flex shrink-0 flex-col border-r" style={{ width: LABEL_WIDTH }}>
+      <div
+        className="relative flex shrink-0 flex-col border-r"
+        style={{ width: content.labelWidth }}
+      >
+        <ColumnResizer
+          width={content.labelWidth}
+          max={Math.min(LABEL_WIDTH.max, width - LABEL_WIDTH.min)}
+          onWidth={(labelWidth) => onChange({ ...content, labelWidth })}
+        />
         <div
           className="text-muted-foreground flex shrink-0 items-center border-b px-3"
           style={{ height: HEADER }}
@@ -206,6 +215,43 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
         )}
       </div>
     </div>
+  )
+}
+
+/** Grip on the label column's right border: drag to show more or less of the titles. */
+function ColumnResizer({
+  width,
+  max,
+  onWidth,
+}: {
+  width: number
+  max: number
+  onWidth: (width: number) => void
+}) {
+  const { getZoom } = useReactFlow()
+  const drag = useRef<{ x: number; width: number; zoom: number } | null>(null)
+  const move = (event: PointerEvent) => {
+    const start = drag.current
+    if (!start) return
+    const next = Math.round(start.width + (event.clientX - start.x) / start.zoom)
+    const clamped = Math.min(Math.max(next, LABEL_WIDTH.min), max)
+    if (clamped !== width) onWidth(clamped)
+  }
+  const stop = () => (drag.current = null)
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the task column"
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId)
+        drag.current = { x: event.clientX, width, zoom: getZoom() }
+      }}
+      onPointerMove={move}
+      onPointerUp={stop}
+      onPointerCancel={stop}
+      className="hover:bg-primary/40 active:bg-primary absolute inset-y-0 -right-[3px] z-20 w-1.5 cursor-col-resize"
+    />
   )
 }
 

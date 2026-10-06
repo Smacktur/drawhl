@@ -26,7 +26,7 @@ def doc(nodes):
 
 def test_known_kind_is_normalized():
     content = validate_module("gantt", GANTT | {"extra": 1})
-    assert content == GANTT | {"rows": [], "milestones": [], "links": []}
+    assert content == GANTT | {"labelWidth": 160, "rows": [], "milestones": [], "links": []}
 
 
 def test_unknown_kind_passes_through():

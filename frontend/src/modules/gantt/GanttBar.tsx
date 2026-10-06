@@ -2,6 +2,7 @@ import { useReactFlow } from '@xyflow/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRef, type PointerEvent } from 'react'
 import type { Task } from '@/api/tasks'
+import { TypeIcon } from '@/canvas/nodes/TaskBits'
 import { barBox, dragSpan, type Grip, type Span } from '@/modules/gantt/timeline'
 import { cn } from '@/lib/utils'
 
@@ -68,14 +69,22 @@ export function GanttBar({ span, range, pxPerDay, label, task, onSpan }: Props) 
         'absolute top-1.5 flex h-5 cursor-grab items-center overflow-hidden rounded-[4px] px-1.5 text-[11px] leading-5 font-medium whitespace-nowrap select-none active:cursor-grabbing',
         task && !missing
           ? BAR_COLOR[task.status_category]
-          : 'bg-secondary text-secondary-foreground border',
+          : task
+            ? 'bg-secondary text-secondary-foreground border'
+            : 'bg-card text-card-foreground border',
         missing && 'border-dashed opacity-70',
         task?.status_category === 'done' && 'line-through',
         box.clippedStart && 'rounded-l-none',
         box.clippedEnd && 'rounded-r-none',
       )}
       style={{ left: box.left, width: Math.max(box.width, 4) }}
+      title={task && !missing ? `${label} · ${task.status_name}` : label}
     >
+      {task && !missing && (
+        <span className="mr-1 opacity-80">
+          <TypeIcon typeName={task.type_name} />
+        </span>
+      )}
       <span className="truncate">{label}</span>
       {!box.clippedStart && (
         <span

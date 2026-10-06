@@ -53,7 +53,7 @@ describe('header', () => {
   const end = d('2026-12-31')
 
   it('covers the range without gaps at every scale', () => {
-    for (const scale of ['day', 'week', 'month'] as const) {
+    for (const scale of ['day', 'week', 'month', 'quarter'] as const) {
       const { top, bottom } = header(start, end, scale)
       for (const row of [top, bottom]) {
         expect(row[0].from).toBe(0)
@@ -83,6 +83,12 @@ describe('header', () => {
       true,
       true,
     ])
+  })
+
+  it('shows years over quarters', () => {
+    const { top, bottom } = header(d('2026-10-01'), d('2027-06-30'), 'quarter')
+    expect(top.map((c) => c.label)).toEqual(['2026', '2027'])
+    expect(bottom.map((c) => c.label)).toEqual(['Q4', 'Q1', 'Q2'])
   })
 
   it('shows quarters over months', () => {

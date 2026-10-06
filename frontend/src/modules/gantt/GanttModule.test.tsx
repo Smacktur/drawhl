@@ -39,6 +39,7 @@ const content: GanttContent = {
   start: '2026-10-01',
   end: '2026-12-31',
   scale: 'week',
+  labelWidth: 160,
   rows: [
     { id: 'a', key: 'DEMO-1', title: '', start: '2026-10-05', end: '2026-10-09' },
     { id: 'b', title: 'Design review', start: '2026-10-12', end: '2026-10-14' },
@@ -118,4 +119,27 @@ test('a row dragged out of the module goes back to the board', () => {
   fireEvent.pointerUp(label, { clientX: 2000, clientY: 2000, pointerId: 1 })
   expect(host.ejectCard).toHaveBeenCalledWith('DEMO-1', { x: 2000, y: 2000 })
   expect(rows().map((r) => r.id)).toEqual(['b'])
+})
+
+test('the task column is resized by dragging its border, within limits', () => {
+  renderGantt()
+  const grip = screen.getByRole('separator', { name: 'Resize the task column' })
+  fireEvent.pointerDown(grip, { clientX: 160, pointerId: 1 })
+  fireEvent.pointerMove(grip, { clientX: 260, pointerId: 1 })
+  fireEvent.pointerUp(grip, { pointerId: 1 })
+  const width = () => (latest[0].data as { content: GanttContent }).content.labelWidth
+  expect(width()).toBe(260)
+  fireEvent.pointerDown(grip, { clientX: 260, pointerId: 1 })
+  fireEvent.pointerMove(grip, { clientX: -500, pointerId: 1 })
+  expect(width()).toBe(120)
+})
+
+test('the module title is renamed in its header', () => {
+  renderGantt()
+  fireEvent.doubleClick(screen.getByText('Gantt'))
+  const field = screen.getByLabelText('Gantt')
+  fireEvent.change(field, { target: { value: 'Q4 roadmap' } })
+  fireEvent.blur(field)
+  expect((latest[0].data as { title?: string }).title).toBe('Q4 roadmap')
+  expect(screen.getByText('Q4 roadmap')).toBeTruthy()
 })

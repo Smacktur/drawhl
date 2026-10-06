@@ -2,6 +2,7 @@ import { NodeResizer, NodeToolbar, Position, useReactFlow, type NodeProps } from
 import { Puzzle } from 'lucide-react'
 import { memo, useCallback, useContext, useEffect } from 'react'
 import { MODULE_HEADER as HEADER } from '@/canvas/modules'
+import { EditableText } from '@/canvas/nodes/EditableText'
 import { Handles } from '@/canvas/nodes/Handles'
 import type { ModuleNode as ModuleNodeType } from '@/canvas/types'
 import { ModuleHostContext } from '@/modules/host-context'
@@ -67,7 +68,15 @@ function ModuleNodeView({ id, data, selected, width, height }: NodeProps<ModuleN
         style={{ height: HEADER }}
       >
         <Icon className="text-muted-foreground size-4" strokeWidth={1.75} />
-        {def?.name ?? data.kind}
+        <EditableText
+          nodeId={id}
+          value={data.title ?? ''}
+          field="title"
+          maxLength={200}
+          placeholder={def?.name ?? data.kind}
+          singleLine
+          className="min-w-0 flex-1 truncate"
+        />
       </div>
       <div className="nodrag nopan relative min-h-0 flex-1 cursor-default">
         {view && def ? (

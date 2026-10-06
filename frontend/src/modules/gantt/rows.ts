@@ -5,7 +5,7 @@ import { newId } from '@/lib/id'
 
 export type Row = GanttContent['rows'][number]
 
-export const LABEL_WIDTH = 160
+export const LABEL_WIDTH = { min: 120, max: 480 }
 export const HEADER_ROW = 24
 export const HEADER = HEADER_ROW * 2
 export const ROW_HEIGHT = 32
@@ -18,7 +18,7 @@ export function range(content: GanttContent): Span {
 
 export function pxPerDay(content: GanttContent, width: number) {
   const { start, end } = range(content)
-  return Math.max(width - LABEL_WIDTH, 1) / rangeDays(start, end)
+  return Math.max(width - content.labelWidth, 1) / rangeDays(start, end)
 }
 
 /** Body height that shows every row, keeping one empty row as a drop target. */
@@ -80,8 +80,8 @@ export function acceptCard(
 ): GanttContent | null {
   if (content.rows.length >= MAX_ROWS || content.rows.some((r) => r.key === key)) return null
   const day =
-    at.x >= LABEL_WIDTH
-      ? dayAt(at.x - LABEL_WIDTH, range(content), pxPerDay(content, width))
+    at.x >= content.labelWidth
+      ? dayAt(at.x - content.labelWidth, range(content), pxPerDay(content, width))
       : undefined
   const index = Math.round((at.y - HEADER) / ROW_HEIGHT)
   const rows = [...content.rows]

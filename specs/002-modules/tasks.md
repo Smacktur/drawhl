@@ -54,6 +54,7 @@ description: "Task list for Modules and the Gantt module"
 - [x] T014 [US3] Add rows in `GanttModule.tsx`: "Add task" (key or URL via `host.resolveTask`, same errors as cards) and "Add row" (plain); delete row; reorder by dragging the label; node min height follows rows (depends on T012, T013)
 - [x] T015 [US3] Card drop: `acceptCard` on the gantt def; `Canvas.tsx` `onNodeDragStop` moves a dropped card into the module in one history step. Tests
 - [x] T016 [US3] Row eject: dragging a row label out of the module creates a card (task row) or sticky note (plain row) at the pointer via `host.ejectCard` and `host.ejectNote`, one history step. Tests Done: the module host (`ModuleHost`: `addTasks`, `ejectCard`, `ejectNote`) comes through a React context; "Add task" reuses the Jira card form, so it also takes JQL.
+- [x] T017a [US2] [US3] After review: module title in the header, `quarter` scale, resizable task column (`labelWidth`), plain bars distinct from task bars (card surface vs status color with type icon)
 - [x] T017 [US3] Smoke: board with gantt task rows returns their `tasks`, and refresh polls them; `CHANGELOG.md`
 
 **Checkpoint**: `make check`, `make smoke`, screenshot → G3.

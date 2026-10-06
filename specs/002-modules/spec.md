@@ -30,7 +30,7 @@ The lead opens the module picker from the bottom toolbar or the right-click menu
 
 ### User Story 2 - Shape the Gantt timeline (Priority: P1)
 
-The lead sets the time range of the Gantt, switches the scale between days, weeks and months, and sees a header with months and quarters and a line for today. They extend the range by a quarter on either side and stretch the block wider to give each day more room.
+The lead sets the time range of the Gantt, switches the scale between days, weeks, months and quarters, names the module, and sees a header with months and quarters and a line for today. They extend the range by a quarter on either side and stretch the block wider to give each day more room.
 
 **Why this priority**: The timeline is the frame for everything else in the module.
 
@@ -100,7 +100,7 @@ The lead adds milestones (a date with a title, shown as a diamond and a vertical
 - **FR-003**: The picker lists every registered module and is reachable from the bottom toolbar and the right-click menu.
 - **FR-004**: Modules move, resize, copy, paste, delete, undo and redo like other elements, and are not nested in frames or in each other in this feature.
 - **FR-005**: An unknown module kind is kept and shown as a placeholder, never dropped.
-- **FR-006**: Gantt has a range (start and end calendar dates), a scale (day, week, month), a quarter and month header, a today line and "+ quarter" controls on both sides.
+- **FR-006**: Gantt has a title, a range (start and end calendar dates), a scale (day, week, month, quarter), a resizable task column, a quarter and month header, a today line and "+ quarter" controls on both sides.
 - **FR-007**: Gantt rows are either a task (live, by key) or plain text, each with start and end dates; bars snap to whole days.
 - **FR-008**: Task keys inside Gantt modules are refreshed together with card keys of the open board, in the same batched request.
 - **FR-009**: Cards move into a Gantt by drop and out of it by dragging a row onto the board.

@@ -16,7 +16,7 @@ def gantt(**extra):
 
 def test_defaults():
     content = gantt()
-    assert content.scale == "week"
+    assert content.scale == "week" and content.labelWidth == 160
     assert content.rows == [] and content.milestones == [] and content.links == []
 
 
@@ -31,6 +31,7 @@ def test_links_serialize_with_from():
         ({"end": "2026-09-30"}, "end before start"),
         ({"end": "2029-10-03"}, "range over 3 years"),
         ({"scale": "year"}, "Input should be"),
+        ({"labelWidth": 50}, "greater than or equal to 120"),
         ({"rows": [row("a", end="2026-10-01")]}, "row a ends before it starts"),
         ({"rows": [row("a", key="nope")]}, "invalid issue key"),
         ({"rows": [row("a"), row("a")]}, "duplicate row id a"),

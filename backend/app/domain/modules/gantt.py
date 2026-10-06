@@ -53,7 +53,8 @@ class Link(_Strict):
 class GanttContent(_Strict):
     start: date
     end: date
-    scale: Literal["day", "week", "month"] = "week"
+    scale: Literal["day", "week", "month", "quarter"] = "week"
+    labelWidth: int = Field(default=160, ge=120, le=480)  # noqa: N815 - mirrors the frontend
     rows: list[Row] = Field(default_factory=list, max_length=200)
     milestones: list[Milestone] = Field(default_factory=list, max_length=100)
     links: list[Link] = Field(default_factory=list, max_length=400)

@@ -7,7 +7,8 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 export const ganttSchema = z.object({
   start: isoDate,
   end: isoDate,
-  scale: z.enum(['day', 'week', 'month']),
+  scale: z.enum(['day', 'week', 'month', 'quarter']),
+  labelWidth: z.number().default(160),
   rows: z
     .array(
       z.object({
@@ -31,6 +32,7 @@ export function ganttDefaults(): GanttContent {
     start: formatDay(quarter.start),
     end: formatDay(quarter.end),
     scale: 'week',
+    labelWidth: 160,
     rows: [],
     milestones: [],
     links: [],

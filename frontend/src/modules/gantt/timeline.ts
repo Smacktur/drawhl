@@ -1,7 +1,7 @@
 /** Calendar days as whole numbers since 1970-01-01, so date math is integer math. */
 export type Day = number
 
-export type Scale = 'day' | 'week' | 'month'
+export type Scale = 'day' | 'week' | 'month' | 'quarter'
 
 export type Cell = { label: string; from: number; span: number; weekend?: boolean }
 
@@ -93,6 +93,8 @@ const nextMonth = (day: Day) => {
 }
 const nextQuarter = (day: Day) => quarterBounds(quarterIndex(day) + 1).start
 
+const nextYear = (day: Day) => monthStart(parts(day).year + 1, 0)
+
 const quarterLabel = (day: Day) => `Q${(quarterIndex(day) % 4) + 1} ${parts(day).year}`
 const monthLabel = (day: Day) => `${MONTHS[parts(day).month]} ${parts(day).year}`
 
@@ -107,6 +109,12 @@ export function header(start: Day, end: Day, scale: Scale): { top: Cell[]; botto
         (day) => day + 1,
         (day) => String(parts(day).date),
       ).map((cell) => ({ ...cell, weekend: weekday(start + cell.from) >= 5 })),
+    }
+  }
+  if (scale === 'quarter') {
+    return {
+      top: cells(start, end, nextYear, (day) => String(parts(day).year)),
+      bottom: cells(start, end, nextQuarter, (day) => `Q${(quarterIndex(day) % 4) + 1}`),
     }
   }
   const top = cells(start, end, nextQuarter, quarterLabel)

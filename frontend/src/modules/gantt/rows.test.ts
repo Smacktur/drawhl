@@ -4,7 +4,6 @@ import {
   addRows,
   bodyHeight,
   HEADER,
-  LABEL_WIDTH,
   MAX_ROWS,
   moveRow,
   removeRow,
@@ -25,12 +24,13 @@ const base: GanttContent = {
   start: '2026-10-01',
   end: '2026-10-31',
   scale: 'week',
+  labelWidth: 160,
   rows: [row('a', 'DEMO-1'), row('b')],
   milestones: [],
   links: [{ id: 'l', from: 'a', to: 'b' }],
 }
 // 31 days over 310px of timeline: 10px a day.
-const WIDTH = LABEL_WIDTH + 310
+const WIDTH = base.labelWidth + 310
 
 describe('rows', () => {
   it('skips tasks already on the chart and stops at the limit', () => {
@@ -62,7 +62,7 @@ describe('rows', () => {
 
 describe('card drop', () => {
   it('becomes a row at the drop day, between the rows it fell on', () => {
-    const at = { x: LABEL_WIDTH + 95, y: HEADER + ROW_HEIGHT }
+    const at = { x: base.labelWidth + 95, y: HEADER + ROW_HEIGHT }
     const next = acceptCard(base, 'DEMO-7', at, WIDTH)!
     expect(next.rows.map((r) => r.key ?? r.id)).toEqual(['DEMO-1', 'DEMO-7', 'b'])
     expect(next.rows[1]).toMatchObject({ start: '2026-10-10', end: '2026-10-16' })

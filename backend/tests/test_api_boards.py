@@ -158,6 +158,7 @@ GANTT = {
     "start": "2026-10-01",
     "end": "2026-12-31",
     "scale": "week",
+    "labelWidth": 240,
     "rows": [
         {"id": "r1", "key": "DEMO-3", "title": "", "start": "2026-10-06", "end": "2026-10-17"}
     ],
@@ -173,7 +174,7 @@ def module(node_id, kind, content):
         "position": {"x": 0, "y": 400},
         "width": 960,
         "height": 320,
-        "data": {"kind": kind, "content": content},
+        "data": {"kind": kind, "title": "Q4 plan", "content": content},
     }
 
 
