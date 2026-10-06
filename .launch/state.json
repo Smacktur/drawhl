@@ -14,7 +14,8 @@
     "about",
     "sync-status",
     "version-check",
-    "module-host"
+    "module-host",
+    "gantt-tasks"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -34,7 +35,8 @@
     "G3_version-check": "approved",
     "G1_modules": "approved",
     "G2_modules": "approved",
-    "G3_module-host": "approved"
+    "G3_module-host": "approved",
+    "G3_gantt-tasks": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
