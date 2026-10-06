@@ -11,6 +11,7 @@ from app.domain.errors import (
     JiraRateLimited,
     JiraUnauthorized,
     JiraUnavailable,
+    JiraUnreachable,
     TaskNotFound,
 )
 from app.domain.jql import JqlField, JqlValue, JqlVocabulary
@@ -80,6 +81,9 @@ def _task(base_url: str, issue: dict) -> Task:
 class JiraDcProvider:
     """Jira Data Center REST v2 with a personal access token (Bearer)."""
 
+    source_id = "jira"
+    source_name = "Jira Data Center"
+
     def __init__(self, credentials: Callable[[], JiraCredentials], client: httpx.Client) -> None:
         self._credentials = credentials
         self._client = client
@@ -100,9 +104,9 @@ class JiraDcProvider:
                 method, f"{creds.base_url}{path}", headers=headers, **kwargs
             )
         except httpx.TimeoutException as exc:
-            raise JiraUnavailable("Jira did not answer in time.") from exc
+            raise JiraUnreachable("Jira did not answer in time.") from exc
         except httpx.TransportError as exc:
-            raise JiraUnavailable("Jira is unreachable. Check the URL and your network.") from exc
+            raise JiraUnreachable("Jira is unreachable. Check the URL and your network.") from exc
         if response.status_code in (401, 403):
             raise JiraUnauthorized(
                 f"Jira returned {response.status_code}. Check your token in Settings."

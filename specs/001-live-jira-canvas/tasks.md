@@ -193,6 +193,16 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [x] T084 Release images carry the version: `ARG VITE_APP_VERSION` in `frontend/Dockerfile`, build arg in `release.yml`
 - [x] T085 Icon for the Theme item in the main menu; `CHANGELOG.md`, `DESIGN.md`; live check in the browser
 
+## Phase 7e: Slice 10 `feat/sync-status` — tracker-neutral sync status
+
+**Goal**: syncing recovers by itself after a network outage, and the user sees per tracker what syncs.
+
+**Independent Test**: with Jira unreachable the dot turns red and the panel shows the reason; when Jira is back, the next tick turns it green without a click.
+
+- [x] T086 `RefreshService` reports `SyncSource` per tracker instead of raising; backoff per tracker, none for network errors (`JiraUnreachable`); contract and tests
+- [x] T087 Client polls at the interval or the server's `retry_after`; no client-side backoff
+- [x] T088 `RefreshIndicator`: dot only (green, amber, red), popover with trackers; `--sync-*` tokens; `DESIGN.md`, `CHANGELOG.md`, smoke
+
 ## Phase 8: Polish (verify and ship phases)
 
 - [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data

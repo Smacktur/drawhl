@@ -66,3 +66,7 @@ class JiraRateLimited(DomainError):
 
 class JiraUnavailable(DependencyUnavailable):
     code = "jira_unavailable"
+
+
+class JiraUnreachable(JiraUnavailable):
+    """No answer at all (network, VPN, timeout): nothing reached Jira, so no backoff."""

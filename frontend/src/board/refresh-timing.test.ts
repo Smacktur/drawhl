@@ -1,27 +1,44 @@
 import { expect, test } from 'vitest'
-import { ApiError } from '@/api/client'
+import type { SyncSource } from '@/api/boards'
 import type { Task } from '@/api/tasks'
-import { lastFetched, newest, nextDelayS } from '@/board/refresh-timing'
+import { lastFetched, lastSynced, newest, nextDelayS, syncHealth } from '@/board/refresh-timing'
 
-const down = new ApiError('jira_unavailable', 'down')
-
-test('success polls at the configured interval', () => {
-  expect(nextDelayS(30, 0, null)).toBe(30)
+const ok = (id: string, synced_at = '2026-10-05T10:00:00+00:00'): SyncSource => ({
+  id,
+  name: id,
+  state: 'ok',
+  synced_at,
+  error: null,
+})
+const failing = (id: string, retry_after: number | null = null): SyncSource => ({
+  id,
+  name: id,
+  state: 'error',
+  synced_at: null,
+  error: { code: 'jira_unavailable', message: 'down', retry_after },
 })
 
-test('outages double the interval up to 300 s', () => {
-  expect(nextDelayS(30, 1, down)).toBe(60)
-  expect(nextDelayS(30, 2, down)).toBe(120)
-  expect(nextDelayS(30, 5, down)).toBe(300)
+test('polls at the interval unless a tracker asked to wait longer', () => {
+  expect(nextDelayS(30, [])).toBe(30)
+  expect(nextDelayS(30, [failing('jira')])).toBe(30)
+  expect(nextDelayS(30, [failing('jira', 120)])).toBe(120)
+  expect(nextDelayS(60, [failing('jira', 5)])).toBe(60)
+  expect(nextDelayS(30, [failing('jira', 900)])).toBe(300)
 })
 
-test('rate limits wait exactly Retry-After', () => {
-  expect(nextDelayS(30, 3, new ApiError('jira_rate_limited', 'wait', 42))).toBe(42)
-  expect(nextDelayS(60, 3, new ApiError('jira_rate_limited', 'wait', 5))).toBe(60)
+test('health is green, amber or red by how many trackers fail', () => {
+  expect(syncHealth([ok('jira'), ok('linear')], null)).toBe('ok')
+  expect(syncHealth([ok('jira'), failing('linear')], null)).toBe('partial')
+  expect(syncHealth([failing('jira')], null)).toBe('down')
+  expect(syncHealth([ok('jira')], new Error('server down'))).toBe('down')
+  expect(syncHealth([], null)).toBe('ok')
 })
 
-test('errors the user must fix do not slow polling', () => {
-  expect(nextDelayS(30, 4, new ApiError('jira_unauthorized', '401'))).toBe(30)
+test('lastSynced picks the newest tracker sync', () => {
+  expect(lastSynced([ok('a', '2026-10-05T10:00:00Z'), ok('b', '2026-10-05T10:01:00Z')])).toBe(
+    Date.parse('2026-10-05T10:01:00Z'),
+  )
+  expect(lastSynced([failing('a')])).toBe(0)
 })
 
 const task = (key: string, status: string, fetched_at: string): Task => ({

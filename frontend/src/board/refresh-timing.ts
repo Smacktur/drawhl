@@ -1,22 +1,26 @@
-import { ApiError } from '@/api/client'
+import type { SyncSource } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 
 export const MAX_INTERVAL_S = 300
 
-// The user has to fix these; polling slower would only delay noticing the fix.
-const USER_ACTION_CODES = new Set(['jira_unauthorized', 'jira_not_configured'])
-
-export function userMustAct(error: unknown): boolean {
-  return error instanceof ApiError && USER_ACTION_CODES.has(error.code)
+/** Seconds until the next poll: the interval, or longer while a tracker asked us to wait. */
+export function nextDelayS(intervalS: number, sources: SyncSource[]): number {
+  const wait = Math.max(0, ...sources.map((source) => source.error?.retry_after ?? 0))
+  return Math.min(MAX_INTERVAL_S, Math.max(intervalS, wait))
 }
 
-/** Seconds until the next poll after the given error, or after success when error is null. */
-export function nextDelayS(intervalS: number, failures: number, error: unknown): number {
-  if (error instanceof ApiError && error.code === 'jira_rate_limited' && error.retryAfter) {
-    return Math.min(MAX_INTERVAL_S, Math.max(intervalS, error.retryAfter))
-  }
-  if (!error || userMustAct(error)) return intervalS
-  return Math.min(MAX_INTERVAL_S, intervalS * 2 ** failures)
+export type SyncHealth = 'ok' | 'partial' | 'down'
+
+/** Down when no tracker syncs (or the drawhl server itself fails), partial when only some do. */
+export function syncHealth(sources: SyncSource[], serverError: unknown): SyncHealth {
+  const failing = sources.filter((source) => source.state === 'error').length
+  if (serverError || (sources.length > 0 && failing === sources.length)) return 'down'
+  return failing ? 'partial' : 'ok'
+}
+
+/** Newest successful sync across trackers, in ms; 0 when none synced in this server session. */
+export function lastSynced(sources: SyncSource[]): number {
+  return Math.max(0, ...sources.map((source) => Date.parse(source.synced_at ?? '') || 0))
 }
 
 /** A card's snapshot can come from the board load, a fresh add or a refresh; the newest wins. */

@@ -9,6 +9,10 @@ if TYPE_CHECKING:
 
 
 class TaskProvider(Protocol):
+    source_id: str
+    """Stable tracker id, such as "jira"; the sync status is reported per id."""
+    source_name: str
+
     @property
     def base_host(self) -> str: ...
 

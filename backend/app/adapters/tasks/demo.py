@@ -62,6 +62,8 @@ _SEED = [
 
 class DemoTaskProvider:
     base_host = DEMO_HOST
+    source_id = "demo"
+    source_name = "Demo tasks"
 
     def __init__(self) -> None:
         self._tasks = {

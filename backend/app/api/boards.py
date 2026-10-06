@@ -7,7 +7,7 @@ from app.api import deps
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
 from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
-from app.domain.refresh import RefreshService
+from app.domain.refresh import RefreshService, SourceStatus
 from app.domain.settings import SettingsService
 from app.domain.tasks import Task, now_iso
 
@@ -37,6 +37,7 @@ class SaveOut(BaseModel):
 class RefreshOut(BaseModel):
     tasks: dict[str, Task]
     fetched_at: str
+    sources: list[SourceStatus]
 
 
 @router.get("")
@@ -79,5 +80,7 @@ def refresh_board(
     provider: Annotated[TaskProvider, Depends(deps.provider)],
     refresher: Annotated[RefreshService, Depends(deps.refresher)],
 ) -> RefreshOut:
-    tasks = refresher.refresh(board_id, settings.refresh_interval_s(), boards, snapshots, provider)
-    return RefreshOut(tasks=tasks, fetched_at=now_iso())
+    tasks, sources = refresher.refresh(
+        board_id, settings.refresh_interval_s(), boards, snapshots, provider
+    )
+    return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
