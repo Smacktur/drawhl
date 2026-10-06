@@ -1,6 +1,6 @@
 {
   "profile": "oss",
-  "phase": "spec",
+  "phase": "build",
   "feature": "specs/002-modules",
   "slices_done": [
     "card-on-board",
@@ -31,7 +31,8 @@
     "G3_about": "approved",
     "G3_sync-status": "approved",
     "G3_version-check": "approved",
-    "G1_modules": "approved"
+    "G1_modules": "approved",
+    "G2_modules": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
