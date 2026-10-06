@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  barBox,
   currentQuarter,
+  dayAt,
+  dragSpan,
   fitsRange,
   formatDay,
   header,
+  newSpan,
   parseDay,
   quarterAfter,
   quarterBefore,
@@ -91,5 +95,47 @@ describe('header', () => {
       'W53',
       'W1',
     ])
+  })
+})
+
+describe('bars', () => {
+  const range = { start: d('2026-10-01'), end: d('2026-10-31') }
+
+  it('places a bar by its days, end day included', () => {
+    expect(barBox({ start: d('2026-10-03'), end: d('2026-10-04') }, range, 10)).toEqual({
+      left: 20,
+      width: 20,
+      clippedStart: false,
+      clippedEnd: false,
+    })
+  })
+
+  it('clips a bar at the range edges and hides one fully outside', () => {
+    const box = barBox({ start: d('2026-09-20'), end: d('2026-10-02') }, range, 10)
+    expect(box).toMatchObject({ left: 0, width: 20, clippedStart: true })
+    expect(barBox({ start: d('2026-11-02'), end: d('2026-11-05') }, range, 10)).toBeNull()
+  })
+
+  it('maps x to a day inside the range', () => {
+    expect(formatDay(dayAt(25, range, 10))).toBe('2026-10-03')
+    expect(formatDay(dayAt(-40, range, 10))).toBe('2026-10-01')
+    expect(formatDay(dayAt(9999, range, 10))).toBe('2026-10-31')
+  })
+
+  it('moves and stretches by whole days without inverting', () => {
+    const span = { start: 10, end: 14 }
+    expect(dragSpan(span, 'move', -3)).toEqual({ start: 7, end: 11 })
+    expect(dragSpan(span, 'start', 2)).toEqual({ start: 12, end: 14 })
+    expect(dragSpan(span, 'start', 9)).toEqual({ start: 14, end: 14 })
+    expect(dragSpan(span, 'end', -9)).toEqual({ start: 10, end: 10 })
+  })
+
+  it('starts a new bar today when today is in range', () => {
+    expect(newSpan(range, undefined, d('2026-10-06'))).toEqual({
+      start: d('2026-10-06'),
+      end: d('2026-10-12'),
+    })
+    expect(newSpan(range, undefined, d('2027-01-06')).start).toBe(range.start)
+    expect(newSpan(range, d('2026-10-20')).start).toBe(d('2026-10-20'))
   })
 })

@@ -49,12 +49,12 @@ description: "Task list for Modules and the Gantt module"
 
 **Independent Test**: drop two demo cards into a Gantt, add `DEMO-5` by key and a plain row, drag and stretch bars, reorder rows, drag one row out as a card; change a demo task status: the bar updates in the refresh interval; reload keeps dates.
 
-- [ ] T012 [P] [US3] Row math in `modules/gantt/timeline.ts`: bar box from dates, clip to range, date from drop point, move and stretch with snapping, end ≥ start. Tests
-- [ ] T013 [P] [US3] Create `modules/gantt/GanttRow.tsx` and `GanttBar.tsx`: label column with key and title (editable for plain rows), bar colored by `status_category`, done struck through, not-found state; drag body and ends with pointer capture
-- [ ] T014 [US3] Add rows in `GanttModule.tsx`: "Add task" (key or URL via `host.resolveTask`, same errors as cards) and "Add row" (plain); delete row; reorder by dragging the label; node min height follows rows (depends on T012, T013)
-- [ ] T015 [US3] Card drop: `acceptCard` on the gantt def; `Canvas.tsx` `onNodeDragStop` moves a dropped card into the module in one history step. Tests
-- [ ] T016 [US3] Row eject: dragging a row label out of the module creates a card (task row) or sticky note (plain row) at the pointer via `host.ejectCard` and `host.ejectNote`, one history step. Tests
-- [ ] T017 [US3] Smoke: board with gantt task rows returns their `tasks`, and refresh polls them; `CHANGELOG.md`
+- [x] T012 [P] [US3] Row math in `modules/gantt/timeline.ts`: bar box from dates, clip to range, date from drop point, move and stretch with snapping, end ≥ start. Tests
+- [x] T013 [P] [US3] Create `modules/gantt/GanttRow.tsx` and `GanttBar.tsx`: label column with key and title (editable for plain rows), bar colored by `status_category`, done struck through, not-found state; drag body and ends with pointer capture
+- [x] T014 [US3] Add rows in `GanttModule.tsx`: "Add task" (key or URL via `host.resolveTask`, same errors as cards) and "Add row" (plain); delete row; reorder by dragging the label; node min height follows rows (depends on T012, T013)
+- [x] T015 [US3] Card drop: `acceptCard` on the gantt def; `Canvas.tsx` `onNodeDragStop` moves a dropped card into the module in one history step. Tests
+- [x] T016 [US3] Row eject: dragging a row label out of the module creates a card (task row) or sticky note (plain row) at the pointer via `host.ejectCard` and `host.ejectNote`, one history step. Tests Done: the module host (`ModuleHost`: `addTasks`, `ejectCard`, `ejectNote`) comes through a React context; "Add task" reuses the Jira card form, so it also takes JQL.
+- [x] T017 [US3] Smoke: board with gantt task rows returns their `tasks`, and refresh polls them; `CHANGELOG.md`
 
 **Checkpoint**: `make check`, `make smoke`, screenshot → G3.
 

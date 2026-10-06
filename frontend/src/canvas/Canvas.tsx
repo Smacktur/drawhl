@@ -32,6 +32,7 @@ import {
 import { markFresh } from '@/canvas/editing'
 import { framesFirst, releaseChildren, reparent, splitDeletion } from '@/canvas/frames'
 import { gridPositions } from '@/canvas/layout'
+import { absorbCards } from '@/canvas/modules'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { ModuleNode } from '@/canvas/nodes/ModuleNode'
@@ -47,7 +48,9 @@ import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useHistory } from '@/canvas/useHistory'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 import { newId } from '@/lib/id'
+import { ModuleHostContext } from '@/modules/host-context'
 import { findModule } from '@/modules/registry'
+import type { ModuleHost } from '@/modules/types'
 import { useShortcut } from '@/lib/shortcuts'
 import { useTheme } from '@/lib/theme'
 
@@ -89,7 +92,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
     [board.tasks, added, refresh.data],
   )
-  const { screenToFlowPosition, deleteElements } = useReactFlow()
+  const { screenToFlowPosition, deleteElements, getNodes } = useReactFlow<AppNode, AppEdge>()
   const theme = useTheme().resolved
   const placing = tool === 'frame' || tool === 'sticky' || tool === 'text'
   // Last pointer position over the canvas, where pasted items land.
@@ -202,6 +205,54 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setNodes((current) => reparent([...current, node], [node.id]))
   }
 
+  // Cards dropped on a module that takes them join it; the rest may change frames.
+  const dropNodes = (ids: string[]) => {
+    // The store has the final drag position; this render's nodes may not yet.
+    const current = getNodes()
+    const result = absorbCards(current, ids)
+    if (result) {
+      setEdges((current) =>
+        current.filter((e) => !result.absorbed.has(e.source) && !result.absorbed.has(e.target)),
+      )
+    }
+    setNodes(
+      reparent(
+        result?.nodes ?? current,
+        ids.filter((id) => !result?.absorbed.has(id)),
+      ),
+    )
+  }
+
+  const moduleHost = useMemo<ModuleHost>(
+    () => ({
+      addTasks: (list) =>
+        setAdded((current) => ({ ...current, ...Object.fromEntries(list.map((t) => [t.key, t])) })),
+      ejectCard: (key, screen) => {
+        const node: AppNode = {
+          id: newId(),
+          type: 'jira_card',
+          position: screenToFlowPosition(screen),
+          data: { key, collapsed: false },
+        }
+        setNodes((current) => reparent([...current, node], [node.id]))
+      },
+      ejectNote: (text, screen) => {
+        const { width, height } = NEW_NODES.sticky
+        const point = screenToFlowPosition(screen)
+        const node: AppNode = {
+          id: newId(),
+          type: 'sticky',
+          position: { x: point.x - width / 2, y: point.y - height / 2 },
+          width,
+          height,
+          data: { text, color: 'yellow' },
+        }
+        setNodes((current) => reparent([...current, node], [node.id]))
+      },
+    }),
+    [screenToFlowPosition, setNodes],
+  )
+
   const addModule = (kind: string, screen: XYPosition) => {
     const def = findModule(kind)
     if (!def) return
@@ -291,92 +342,87 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
 
   return (
     <TasksContext.Provider value={tasks}>
-      <CanvasContextMenu
-        target={menuTarget}
-        onPlace={placeAt}
-        onAddCards={addCards}
-        onAddModule={addModule}
-        onDelete={deleteSelection}
-        cards={cardCounts}
-        onCollapse={setCollapsed}
-      >
-        <div
-          className="absolute inset-0"
-          onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
-          onPointerLeave={() => (pointer.current = null)}
-          onPointerDownCapture={draw.onPointerDownCapture}
+      <ModuleHostContext.Provider value={moduleHost}>
+        <CanvasContextMenu
+          target={menuTarget}
+          onPlace={placeAt}
+          onAddCards={addCards}
+          onAddModule={addModule}
+          onDelete={deleteSelection}
+          cards={cardCounts}
+          onCollapse={setCollapsed}
         >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onConnectStart={() => setConnecting(true)}
-            onConnectEnd={() => setConnecting(false)}
-            onNodeDragStop={(_, __, dragged) =>
-              setNodes((current) =>
-                reparent(
-                  current,
-                  dragged.map((n) => n.id),
-                ),
-              )
-            }
-            onBeforeDelete={onBeforeDelete}
-            onPaneClick={place}
-            onPaneContextMenu={(event) =>
-              setMenuTarget({ kind: 'pane', point: { x: event.clientX, y: event.clientY } })
-            }
-            onNodeContextMenu={(_, node) => {
-              if (!node.selected) selectOnly(node.id, 'node')
-              setMenuTarget({ kind: 'selection' })
-            }}
-            onEdgeContextMenu={(_, edge) => {
-              if (!edge.selected) selectOnly(edge.id, 'edge')
-              setMenuTarget({ kind: 'selection' })
-            }}
-            onSelectionContextMenu={() => setMenuTarget({ kind: 'selection' })}
-            onNodeClick={(event) => place(event)}
-            onMoveEnd={(_, viewport) => setViewport(viewport)}
-            nodeTypes={nodeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
-            connectionMode={ConnectionMode.Loose}
-            defaultViewport={board.doc.viewport}
-            onlyRenderVisibleElements
-            colorMode={theme}
-            proOptions={{ hideAttribution: true }}
-            minZoom={0.1}
-            deleteKeyCode={['Backspace', 'Delete']}
-            multiSelectionKeyCode="Shift"
-            selectionOnDrag={tool === 'select'}
-            panOnDrag={tool === 'hand' ? true : [1]}
-            panOnScroll
-            elementsSelectable={!placing}
-            nodesDraggable={!placing}
-            className={[
-              connecting && 'connecting',
-              placing && 'cursor-crosshair',
-              tool === 'hand' && 'cursor-grab',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+          <div
+            className="absolute inset-0"
+            onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
+            onPointerLeave={() => (pointer.current = null)}
+            onPointerDownCapture={draw.onPointerDownCapture}
           >
-            <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
-            <Controls showInteractive={false} position="bottom-right" />
-          </ReactFlow>
-          {draw.preview && (
-            <div
-              className="border-primary bg-primary/5 pointer-events-none fixed rounded-sm border border-dashed"
-              style={{
-                left: draw.preview.x,
-                top: draw.preview.y,
-                width: draw.preview.width,
-                height: draw.preview.height,
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onConnectStart={() => setConnecting(true)}
+              onConnectEnd={() => setConnecting(false)}
+              onNodeDragStop={(_, __, dragged) => dropNodes(dragged.map((n) => n.id))}
+              onBeforeDelete={onBeforeDelete}
+              onPaneClick={place}
+              onPaneContextMenu={(event) =>
+                setMenuTarget({ kind: 'pane', point: { x: event.clientX, y: event.clientY } })
+              }
+              onNodeContextMenu={(_, node) => {
+                if (!node.selected) selectOnly(node.id, 'node')
+                setMenuTarget({ kind: 'selection' })
               }}
-            />
-          )}
-        </div>
-      </CanvasContextMenu>
+              onEdgeContextMenu={(_, edge) => {
+                if (!edge.selected) selectOnly(edge.id, 'edge')
+                setMenuTarget({ kind: 'selection' })
+              }}
+              onSelectionContextMenu={() => setMenuTarget({ kind: 'selection' })}
+              onNodeClick={(event) => place(event)}
+              onMoveEnd={(_, viewport) => setViewport(viewport)}
+              nodeTypes={nodeTypes}
+              defaultEdgeOptions={defaultEdgeOptions}
+              connectionMode={ConnectionMode.Loose}
+              defaultViewport={board.doc.viewport}
+              onlyRenderVisibleElements
+              colorMode={theme}
+              proOptions={{ hideAttribution: true }}
+              minZoom={0.1}
+              deleteKeyCode={['Backspace', 'Delete']}
+              multiSelectionKeyCode="Shift"
+              selectionOnDrag={tool === 'select'}
+              panOnDrag={tool === 'hand' ? true : [1]}
+              panOnScroll
+              elementsSelectable={!placing}
+              nodesDraggable={!placing}
+              className={[
+                connecting && 'connecting',
+                placing && 'cursor-crosshair',
+                tool === 'hand' && 'cursor-grab',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
+              <Controls showInteractive={false} position="bottom-right" />
+            </ReactFlow>
+            {draw.preview && (
+              <div
+                className="border-primary bg-primary/5 pointer-events-none fixed rounded-sm border border-dashed"
+                style={{
+                  left: draw.preview.x,
+                  top: draw.preview.y,
+                  width: draw.preview.width,
+                  height: draw.preview.height,
+                }}
+              />
+            )}
+          </div>
+        </CanvasContextMenu>
+      </ModuleHostContext.Provider>
       <RefreshIndicator
         sources={refresh.data?.sources ?? []}
         serverError={refresh.error}

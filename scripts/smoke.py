@@ -129,7 +129,8 @@ try:
     status, body = call("POST", f"{API}/api/boards/{board['id']}/refresh")
     check(status == 200 and "DEMO-5" not in body["tasks"], "only the open board is refreshed")
 
-    gantt = {"start": "2026-10-01", "end": "2026-12-31", "scale": "week"}
+    row = {"id": "r", "key": "DEMO-7", "start": "2026-10-05", "end": "2026-10-09"}
+    gantt = {"start": "2026-10-01", "end": "2026-12-31", "scale": "week", "rows": [row]}
     module_doc = {
         "nodes": [
             {
@@ -151,9 +152,14 @@ try:
     status, body = call("GET", f"{API}/api/boards/{other['id']}")
     nodes = body["doc"]["nodes"]
     check(
-        nodes[0]["data"]["content"]["rows"] == [] and nodes[1]["data"] == module_doc["nodes"][1]["data"],
+        nodes[0]["data"]["content"]["rows"][0]["key"] == "DEMO-7"
+        and nodes[1]["data"] == module_doc["nodes"][1]["data"],
         "gantt and unknown module reopen",
     )
+    status, body = call("POST", f"{API}/api/boards/{other['id']}/refresh")
+    check(status == 200 and "DEMO-7" in body["tasks"], "gantt tasks are refreshed")
+    status, body = call("GET", f"{API}/api/boards/{other['id']}")
+    check("DEMO-7" in body["tasks"], "board carries gantt task snapshots")
     module_doc["nodes"][0]["data"]["content"] = gantt | {"end": "2026-09-01"}
     status, _ = call("PUT", f"{API}/api/boards/{other['id']}", {"version": 3, "doc": module_doc})
     check(status == 422, "invalid gantt rejected")
