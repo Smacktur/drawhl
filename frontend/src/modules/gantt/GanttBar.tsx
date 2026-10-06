@@ -210,13 +210,15 @@ function DatesTip({
     <span
       role="tooltip"
       className={cn(
-        'bg-foreground text-background pointer-events-none absolute bottom-[calc(100%-4px)] z-30 hidden max-w-72 flex-col rounded-[4px] px-1.5 py-1 text-[11px] leading-4 whitespace-nowrap shadow-md peer-hover:flex',
-        shown && 'flex',
+        'bg-foreground/80 text-background pointer-events-none absolute bottom-[calc(100%-4px)] z-30 hidden max-w-72 flex-col rounded-[4px] px-1.5 py-1 text-[11px] leading-4 whitespace-nowrap peer-hover:flex',
+        // While dragging, the bar is compared with the ones above: the tip moves below it,
+        // dates only and lighter.
+        shown && 'bg-foreground/55 top-[calc(100%-4px)] bottom-auto flex py-0.5',
       )}
       style={flip ? { right: Math.max(width - right, 0) } : { left: Math.max(left, 0) }}
     >
       <span className="font-semibold tabular-nums">{formatSpan(span)}</span>
-      <span className="truncate opacity-70">{note}</span>
+      {!shown && <span className="truncate opacity-70">{note}</span>}
     </span>
   )
 }

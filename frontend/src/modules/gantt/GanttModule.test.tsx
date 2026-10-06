@@ -282,6 +282,7 @@ test('a bar shows its exact dates while it is dragged', () => {
   fireEvent.pointerMove(bar, { clientX: 187, pointerId: 1 })
   expect(tip().className).toMatch(/(^| )flex( |$)/)
   expect(tip().textContent).toContain('Thu Oct 22 – Sat Oct 24 · 3 days')
+  expect(tip().textContent).not.toContain('Design review')
   fireEvent.pointerUp(bar, { pointerId: 1 })
   expect(tip().className).not.toMatch(/(^| )flex( |$)/)
 })
