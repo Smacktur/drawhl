@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Smart guides: a dragged element snaps to the edges and centers of the others on screen and to an equal gap in a row or column, with dashed alignment lines and gap markers like in Miro. Hold Alt to move freely.
 - About button in the bottom left: what drawhl is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.
 - Modules: interactive blocks added from the Modules button in the toolbar (`M`) or the right-click menu. The first one is Gantt: a timeline over days, weeks, months or quarters, with its own name (double-click the header), a line for today, start and end dates, and "+" buttons that add a calendar quarter on either side. Stretch the block to give each day more room.
 - Gantt rows: drop a Jira card onto a Gantt to plan it as a bar at the drop date, or use "Add" in the module: a task from the tracker by key, link or JQL, or a plain task that lives only on the board. Bars show the task's live status color, and done tasks are struck through. Drag a bar to move it, drag its ends to change the dates, drag a row's label to reorder it, or drag it out onto the board to turn it back into a card (plain rows become sticky notes). Plan dates stay on the board and are never written to Jira. Drag the border of the task column to show more of the titles.

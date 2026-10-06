@@ -31,6 +31,7 @@ import {
 } from '@/canvas/clipboard'
 import { markFresh } from '@/canvas/editing'
 import { framesFirst, releaseChildren, reparent, splitDeletion } from '@/canvas/frames'
+import { Guides } from '@/canvas/Guides'
 import { gridPositions } from '@/canvas/layout'
 import { absorbCards } from '@/canvas/modules'
 import { FrameNode } from '@/canvas/nodes/FrameNode'
@@ -45,6 +46,7 @@ import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
+import { useGuides } from '@/canvas/useGuides'
 import { useHistory } from '@/canvas/useHistory'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 import { newId } from '@/lib/id'
@@ -101,6 +103,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   useShortcut('cancel', () => setTool('select'), { preventDefault: false })
 
   const history = useHistory(nodes, edges, setNodes, setEdges)
+  const guides = useGuides(onNodesChange)
   useShortcut('undo', history.undo)
   useShortcut('redo', history.redo)
 
@@ -361,7 +364,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             <ReactFlow
               nodes={nodes}
               edges={edges}
-              onNodesChange={onNodesChange}
+              onNodesChange={guides.onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onConnectStart={() => setConnecting(true)}
@@ -408,6 +411,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
             >
               <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
               <Controls showInteractive={false} position="bottom-right" />
+              <Guides guides={guides.guides} />
             </ReactFlow>
             {draw.preview && (
               <div

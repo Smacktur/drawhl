@@ -219,6 +219,7 @@ The lead moves, deletes or edits something by mistake and presses Cmd/Ctrl+Z to 
 - **FR-032**: The card input MUST accept several keys or links separated by commas (up to 50) and lay the new cards out in a grid; Jira is called a few keys at a time.
 - **FR-033**: The card input MUST offer JQL suggestions from the connected Jira (fields, operators, values, keywords), inserted with Tab, and show the match count or Jira's error before submit. Suggestion labels from Jira MUST be shown as plain text, never as HTML.
 - **FR-034**: Cmd/Ctrl+Z MUST undo and Cmd/Ctrl+Shift+Z or Ctrl+Y MUST redo board changes (nodes and edges, not the viewport or selection), at least 100 steps per open board; history is kept in memory only.
+- **FR-035**: A node dragged alone MUST snap to the edges and centers of the elements on screen and to the gap between its neighbors in a row or column, showing alignment lines and equal-gap markers while it snaps; holding Alt MUST move it freely.
 
 **Out of scope (Won't)**
 

@@ -36,6 +36,12 @@ export const SHORTCUTS = {
     group: 'Edit',
   },
   pan: { keys: 'space', display: 'Space + drag', label: 'Pan', group: 'Canvas' },
+  freeDrag: {
+    keys: 'alt',
+    display: 'Alt + drag',
+    label: 'Move without snapping',
+    group: 'Canvas',
+  },
 } satisfies Record<string, Shortcut>
 
 export type ShortcutId = keyof typeof SHORTCUTS
