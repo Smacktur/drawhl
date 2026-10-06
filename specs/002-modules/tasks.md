@@ -79,10 +79,11 @@ description: "Task list for Modules and the Gantt module"
 
 **Independent Test**: add two milestones, rename and drag one; connect two bars; move the first bar past the second's start: the line turns to the warning color; delete a row: its lines go; reload keeps all.
 
-- [ ] T026 [P] [US4] Create `modules/gantt/Milestone.tsx`: diamond, vertical line, editable title, drag in whole days; "Add milestone" in the module toolbar at the visible center date
-- [ ] T027 [P] [US4] Create `modules/gantt/Links.tsx`: SVG paths from bar end to bar start, warning token on conflict, select and delete; link pure helpers with tests in `timeline.test.ts`
-- [ ] T028 [US4] Connect bars: drag from the bar's end handle onto another bar creates a link; no self or duplicate links; deleting a row removes its links (depends on T027)
-- [ ] T029 [US4] Smoke and `CHANGELOG.md`; README feature list mentions modules and Gantt
+- [x] T026 [P] [US4] Create `modules/gantt/Milestone.tsx`: diamond, vertical line, editable title, drag in whole days; "Add milestone" in the module toolbar at the visible center date
+- [x] T027 [P] [US4] Create `modules/gantt/Links.tsx`: SVG paths from bar end to bar start, warning token on conflict, select and delete; link pure helpers with tests in `timeline.test.ts`
+- [x] T028 [US4] Connect bars: drag from the bar's end handle onto another bar creates a link; no self or duplicate links; deleting a row removes its links (depends on T027)
+- [x] T029 [US4] Smoke and `CHANGELOG.md`; README feature list mentions modules and Gantt
+- [x] T029a [US4] After review: link helpers live in `plan.ts`; exact dates of a bar in a tooltip on hover and below the bar while dragging, a milestone's date on hover; titles open on double-click under pointer capture
 
 **Checkpoint**: `make check`, `make smoke`, screenshot → G3.
 
