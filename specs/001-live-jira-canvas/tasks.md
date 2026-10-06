@@ -183,6 +183,16 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 - [x] T081 [US8] `undo` and `redo` in the shortcut registry, wired in `Canvas.tsx`; text fields keep their own undo
 - [x] T082 [US8] `CHANGELOG.md`; live check in the browser
 
+## Phase 7d: Slice 9 `feat/about` — About panel and theme icon
+
+**Goal**: anyone who opens drawhl sees what it is, which version runs and where to read more.
+
+**Independent Test**: the About button in the bottom left opens a small panel with a short description, the version, GitHub and docs links; the Theme item in the main menu has an icon.
+
+- [x] T083 `frontend/src/board/AboutButton.tsx`: bottom-left button with a `Popover`: what drawhl is, version (`VITE_APP_VERSION`, `dev` for source builds) linked to its release, GitHub and documentation links; test
+- [x] T084 Release images carry the version: `ARG VITE_APP_VERSION` in `frontend/Dockerfile`, build arg in `release.yml`
+- [x] T085 Icon for the Theme item in the main menu; `CHANGELOG.md`, `DESIGN.md`; live check in the browser
+
 ## Phase 8: Polish (verify and ship phases)
 
 - [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data

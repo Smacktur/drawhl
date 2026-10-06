@@ -8,6 +8,7 @@ import {
   Plus,
   Settings,
   Sun,
+  SunMoon,
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -74,7 +75,10 @@ export function TopBar({ boards, current, onSelect }: Props) {
             <DropdownMenuShortcut>{formatShortcut('help')[0]}</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>
+              <SunMoon strokeWidth={1.75} />
+              Theme
+            </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup
                 value={theme}

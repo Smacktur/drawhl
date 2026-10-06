@@ -16,6 +16,7 @@
 | shadcn/ui, cn | MIT | Components, theme, class merging |
 | Radix UI | MIT | Accessible primitives for shadcn |
 | lucide-react | ISC | Icons |
+| Octicons `mark-github` (inlined SVG path) | MIT | GitHub icon in the About panel |
 | React Flow (@xyflow/react) | MIT | Infinite canvas, nodes and edges |
 | IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font |
 | JetBrains Mono (@fontsource-variable/jetbrains-mono) | OFL-1.1 | Monospace font for task keys |
