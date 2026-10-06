@@ -10,7 +10,8 @@
     "card-details",
     "boards",
     "jql-assist",
-    "undo"
+    "undo",
+    "about"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -24,7 +25,8 @@
     "G3_card-details": "approved",
     "G3_boards": "approved",
     "G3_jql-assist": "approved",
-    "G3_undo": "approved"
+    "G3_undo": "approved",
+    "G3_about": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",

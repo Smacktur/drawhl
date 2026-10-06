@@ -48,6 +48,7 @@ Dark theme:
 - Icons: lucide, stroke 1.75.
 - Jira card: one inline flow like the Confluence issue macro: type icon, key (link to Jira), title, status lozenge. Long titles wrap from the left edge and are cut at 120 characters so the lozenge stays visible. States: collapsed (icon, key, lozenge; the key is plain text so the whole card opens the mini-card), inline (with title), expanded (popover on click: assignee, priority, updated, "Collapse card" and "Open in Jira"). Closed task: key struck through, title muted.
 - Sync indicator in the corner: "synced 12s ago"; on error, a red dot and the reason text.
+- About: icon button in the bottom left, same surface as the top bar. A `Popover` above it: name and version (links to the release), one-line description, links to GitHub, documentation and issues, license.
 
 ## Motion
 - Card expand and collapse 120ms ease-out, popover 100ms fade-scale.

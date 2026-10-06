@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { listBoards } from '@/api/boards'
 import { NewBoardForm } from '@/board/NewBoardForm'
+import { AboutButton } from '@/board/AboutButton'
 import { TopBar } from '@/board/TopBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -66,6 +67,7 @@ export default function App() {
         </Suspense>
       )}
       {boards.data && <TopBar boards={boards.data} current={current} onSelect={setBoardId} />}
+      <AboutButton />
     </main>
   )
 }

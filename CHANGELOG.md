@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- About button in the bottom left: what drawhl is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.
+
+### Changed
+
+- The Theme item in the main menu has an icon.
+
 ## [2026.10.6] - 2026-10-06
 
 ### Added
