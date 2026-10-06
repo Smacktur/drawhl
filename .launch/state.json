@@ -1,7 +1,7 @@
 {
   "profile": "oss",
-  "phase": "ship",
-  "feature": "specs/001-live-jira-canvas",
+  "phase": "build",
+  "feature": "specs/002-modules",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -30,10 +30,13 @@
     "G3_undo": "approved",
     "G3_about": "approved",
     "G3_sync-status": "approved",
-    "G3_version-check": "approved"
+    "G3_version-check": "approved",
+    "G1_modules": "approved",
+    "G2_modules": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
-    "2026-10-06 G4: repo public, main protected by rulesets, first release v2026.10.6 (ghcr images amd64+arm64). Author email stays in history by owner's choice. Next: Render slice with optional basic auth."
+    "2026-10-06 G4: repo public, main protected by rulesets, first release v2026.10.6 (ghcr images amd64+arm64). Author email stays in history by owner's choice. Next: Render slice with optional basic auth.",
+    "2026-10-06 G1 modules: owner approved a module host with Gantt as the first module; plan dates on the board only, Jira dates later. Spec 002 awaits G2."
   ]
 }
