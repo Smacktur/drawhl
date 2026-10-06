@@ -132,6 +132,7 @@ Everything works without a `.env` file. To override defaults, `cp .env.example .
 | `LOG_LEVEL` | Log level | `info` |
 | `DB_PATH` | SQLite file inside the container | `data/app.db` |
 | `APP_ENV` | Environment name: `local`, `stage` or `production` | `local` |
+| `UPDATE_CHECK` | Ask GitHub every 6 hours for the latest release to show "update available" in About; `false` turns it off | `true` |
 
 To trust a corporate CA, put the bundle in `./data` (for example `data/corp-ca.pem`) and set `JIRA_CA_BUNDLE=data/corp-ca.pem`.
 
@@ -152,7 +153,7 @@ drawhl is a single-user app and **has no login yet**. Anyone who can open its UR
 
 Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too.
 
-The token is stored only on the server, encrypted with `DRAWHL_SECRET_KEY`. It is never sent back to the browser or written to logs. drawhl sends no telemetry: it stores your boards, settings, the encrypted token and a cached copy of each card's key, summary, status, type, assignee, priority and last update, and talks only to the tracker URL you configure. Fonts and icons ship with the app.
+The token is stored only on the server, encrypted with `DRAWHL_SECRET_KEY`. It is never sent back to the browser or written to logs. drawhl sends no telemetry: it stores your boards, settings, the encrypted token and a cached copy of each card's key, summary, status, type, assignee, priority and last update, and talks only to the tracker URL you configure and, unless `UPDATE_CHECK=false`, to the GitHub API for the latest drawhl release (no data about you or your boards is sent). Fonts and icons ship with the app.
 
 Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 

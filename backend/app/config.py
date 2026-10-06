@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     drawhl_secret_key: SecretStr | None = None
     jira_tls_verify: bool = True
     jira_ca_bundle: str | None = None
+    # Asks GitHub for the latest release every 6 hours to show "update available".
+    update_check: bool = True
 
 
 @lru_cache

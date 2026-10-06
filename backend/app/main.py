@@ -5,6 +5,7 @@ import httpx
 from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
 
+from app.adapters.releases.github import GitHubReleaseFeed
 from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
     Database,
@@ -17,14 +18,17 @@ from app.adapters.tasks.jira_dc import JiraDcProvider
 from app.api.errors import register_error_handlers
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.domain.ports import ReleaseFeed
 from app.domain.refresh import RefreshService
 from app.domain.settings import SettingsService
+from app.domain.updates import UpdateService
 from app.observability import (
     RequestContextMiddleware,
     metrics_response,
     register_secret,
     setup_logging,
 )
+from app.version import VERSION
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +46,9 @@ def _jira_client(settings: Settings, transport: httpx.BaseTransport | None) -> h
 
 
 def create_app(
-    settings: Settings | None = None, jira_transport: httpx.BaseTransport | None = None
+    settings: Settings | None = None,
+    jira_transport: httpx.BaseTransport | None = None,
+    release_feed: ReleaseFeed | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     setup_logging(settings.log_level)
@@ -71,6 +77,9 @@ def create_app(
     client = _jira_client(settings, jira_transport)
     app.state.jira = JiraDcProvider(service.jira_credentials, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()
+    if release_feed is None and settings.update_check:
+        release_feed = GitHubReleaseFeed("Smacktur/drawhl", httpx.Client(timeout=5.0))
+    app.state.updates = UpdateService(VERSION, release_feed if settings.update_check else None)
     app.include_router(router)
 
     @app.get("/health", include_in_schema=False)

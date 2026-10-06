@@ -1,11 +1,12 @@
-import { BookOpen, Bug, Info } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowUpCircle, BookOpen, Bug, Info } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
+import { getVersion } from '@/api/version'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const REPO = 'https://github.com/Smacktur/drawhl'
-// Release images get the tag at build time; a source build has none.
-const VERSION = import.meta.env.VITE_APP_VERSION || 'dev'
+const UPGRADE_DOCS = `${REPO}#-data-backups-and-upgrades`
 
 // lucide dropped brand icons, so this is the Octicons mark (MIT).
 function GitHubIcon(props: ComponentProps<'svg'>) {
@@ -39,29 +40,62 @@ function AboutLink({
 }
 
 export function AboutButton() {
-  const release = VERSION === 'dev' ? `${REPO}/releases` : `${REPO}/releases/tag/${VERSION}`
+  // The server checks GitHub at most every few hours, so an hour of cache is plenty.
+  const info = useQuery({ queryKey: ['version'], queryFn: getVersion, staleTime: 3600_000 }).data
+  const update = info?.update_available ? info.latest : null
   return (
     <Popover>
       <div className="bg-card absolute bottom-4 left-4 z-10 rounded-lg border p-1 shadow-md">
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="About drawhl" title="About drawhl">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            aria-label={update ? 'About drawhl, update available' : 'About drawhl'}
+            title={update ? `About drawhl: v${update.version} is available` : 'About drawhl'}
+          >
             <Info className="size-[18px]" strokeWidth={1.75} />
+            {update && (
+              <span
+                aria-hidden
+                className="bg-primary ring-card absolute top-1 right-1 size-2 rounded-full ring-2"
+              />
+            )}
           </Button>
         </PopoverTrigger>
       </div>
       <PopoverContent side="top" align="start" className="w-80 gap-3 p-3">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[16px] font-semibold">drawhl</h2>
-          <a
-            href={release}
-            target="_blank"
-            rel="noreferrer"
-            className="text-muted-foreground hover:text-foreground font-mono text-[12px]"
-            title="Release notes"
-          >
-            {VERSION}
-          </a>
+          {info && (
+            <a
+              href={`${REPO}/releases/tag/v${info.version}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-muted-foreground hover:text-foreground font-mono text-[12px]"
+              title="Release notes for this version"
+            >
+              v{info.version}
+            </a>
+          )}
         </div>
+        {update && (
+          <div className="bg-accent flex items-start gap-2 rounded-md p-2 text-[13px]">
+            <ArrowUpCircle className="text-primary mt-0.5 size-4 shrink-0" strokeWidth={1.75} />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">v{update.version} is available</span>
+              <span className="text-muted-foreground">
+                <a href={update.url} target="_blank" rel="noreferrer" className="text-primary">
+                  See what's new
+                </a>
+                {' · '}
+                <a href={UPGRADE_DOCS} target="_blank" rel="noreferrer" className="text-primary">
+                  How to upgrade
+                </a>
+              </span>
+            </div>
+          </div>
+        )}
         <p className="text-muted-foreground text-[13px] leading-normal">
           An infinite canvas for your tasks: live cards from your tracker, arranged the way you
           think. Open source, self-hosted, no telemetry.

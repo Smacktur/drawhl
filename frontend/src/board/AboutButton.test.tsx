@@ -1,17 +1,49 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { expect, test } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { AboutButton } from '@/board/AboutButton'
 
-test('opens the About panel with the version and project links', async () => {
-  render(<AboutButton />)
+afterEach(() => vi.unstubAllGlobals())
+
+function renderWith(body: object) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => new Response(JSON.stringify(body), { status: 200 })),
+  )
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AboutButton />
+    </QueryClientProvider>,
+  )
+}
+
+test('shows the running version and project links', async () => {
+  renderWith({ version: '2026.10.6', latest: null, update_available: false })
   fireEvent.click(screen.getByRole('button', { name: 'About drawhl' }))
-  expect(await screen.findByRole('link', { name: 'dev' })).toHaveAttribute(
+  expect(await screen.findByRole('link', { name: 'v2026.10.6' })).toHaveAttribute(
     'href',
-    'https://github.com/Smacktur/drawhl/releases',
+    'https://github.com/Smacktur/drawhl/releases/tag/v2026.10.6',
   )
   expect(screen.getByRole('link', { name: /GitHub/ })).toHaveAttribute(
     'href',
     'https://github.com/Smacktur/drawhl',
   )
-  expect(screen.getByRole('link', { name: /Documentation/ })).toHaveAttribute('target', '_blank')
+  expect(screen.queryByText(/is available/)).toBeNull()
+})
+
+test('flags a newer release on the button and in the panel', async () => {
+  renderWith({
+    version: '2026.10.6',
+    latest: {
+      version: '2026.11.1',
+      url: 'https://github.com/Smacktur/drawhl/releases/tag/v2026.11.1',
+    },
+    update_available: true,
+  })
+  fireEvent.click(await screen.findByRole('button', { name: 'About drawhl, update available' }))
+  expect(await screen.findByText('v2026.11.1 is available')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: "See what's new" })).toHaveAttribute(
+    'href',
+    'https://github.com/Smacktur/drawhl/releases/tag/v2026.11.1',
+  )
 })

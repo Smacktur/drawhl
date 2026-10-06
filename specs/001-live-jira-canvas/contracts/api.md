@@ -69,6 +69,12 @@ Backoff is per tracker on the server: `jira_rate_limited` and Jira 5xx double th
 | `PUT /settings` | `{provider?, refresh_interval_s?, jira?: {base_url, token?}}` (token omitted or blank keeps the stored one) | `Settings` | 400 `secret_key_missing`, 422 `invalid_request`, 422 `validation_failed` (new host without a new token) |
 | `POST /settings/jira/test` | `{base_url?, token?}` (falls back to stored; the stored token is used only for the stored host) | `{ok: true, user}` | 400 `jira_not_configured`, 401 `jira_unauthorized`, 422 `validation_failed`, 429 `jira_rate_limited`, 503 `jira_unavailable` |
 
+## Version
+
+| Method, path | Request | Response | Errors |
+|---|---|---|---|
+| `GET /version` | – | `{version, latest: {version, url} \| null, update_available}` (`version` is the running release; `latest` comes from GitHub, cached 6 h, retried after 1 h on failure, `null` when `UPDATE_CHECK=false` or GitHub is unreachable) | |
+
 ## Demo
 
 | Method, path | Request | Response | Errors |

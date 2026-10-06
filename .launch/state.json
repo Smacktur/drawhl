@@ -12,7 +12,8 @@
     "jql-assist",
     "undo",
     "about",
-    "sync-status"
+    "sync-status",
+    "version-check"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -28,7 +29,8 @@
     "G3_jql-assist": "approved",
     "G3_undo": "approved",
     "G3_about": "approved",
-    "G3_sync-status": "pending"
+    "G3_sync-status": "pending",
+    "G3_version-check": "pending"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
