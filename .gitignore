@@ -6,6 +6,7 @@
 # agent-local state
 .claude/
 tmp/
+.launch/private-patterns
 .playwright-mcp/
 **/.impeccable/live/
 

@@ -76,7 +76,7 @@ Stage on Render is optional for OSS, as a public demo. The demo collects visitor
 
 ## 7. Git and releases
 
-- One branch per slice `feat/<slice>`, conventional commits, merge into `main` after G3.
+- One branch per slice `feat/<slice>`, conventional commits, after G3 it lands on `main` through a PR with green CI (`/pr`).
 - SemVer: `0.x` while the API and data format change; breaking changes go in the CHANGELOG under a Breaking heading.
 - Release: move `Unreleased` into a version in `CHANGELOG.md` → commit → tag `vX.Y.Z` → pushing the tag builds the images and the GitHub Release.
 - After publication, outside PRs go through the same CI. Only the maintainer merges.
