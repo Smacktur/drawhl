@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Arrows can point at a spot instead of an element: drag an arrow from a handle and release it over empty space. Its free end shows a dot on hover; drag it to point elsewhere. Deleting the arrow removes its free end too.
 - Smart guides: a dragged element snaps to the edges and centers of the others on screen and to an equal gap in a row or column, with dashed alignment lines and gap markers like in Miro. Resizing snaps to the width or height of the others and marks each element of that size. Hold Alt to move or resize freely. The sticky color bar and module controls hide while you drag.
 - About button in the bottom left: what drawhl is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.
 - Modules: interactive blocks added from the Modules button in the toolbar (`M`) or the right-click menu. The first one is Gantt: a timeline over days, weeks, months or quarters, with its own name (double-click the header), a line for today, start and end dates, and "+" buttons that add a calendar quarter on either side. Stretch the block to give each day more room.

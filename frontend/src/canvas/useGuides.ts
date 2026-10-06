@@ -52,7 +52,7 @@ function asResize(changes: NodeChange<AppNode>[]): Resize | undefined {
 
 /**
  * Snaps a node dragged or resized alone to the others on screen and returns the guides to
- * draw; Alt turns it off.
+ * draw; Alt turns it off. Arrow anchors take no part.
  */
 export function useGuides(onNodesChange: OnNodesChange<AppNode>) {
   const store = useStoreApi<AppNode>()
@@ -67,7 +67,9 @@ export function useGuides(onNodesChange: OnNodesChange<AppNode>) {
       const resize = drag ? undefined : asResize(changes)
       const id = drag?.id ?? resize?.size.id
       const { nodeLookup, transform, width, height } = store.getState()
-      const node = id ? nodeLookup.get(id) : undefined
+      const found = id ? nodeLookup.get(id) : undefined
+      // An arrow's free end points at an exact spot, so it neither snaps nor attracts others.
+      const node = found?.type === 'anchor' ? undefined : found
       if (!node || free || (!drag && !resize)) {
         setGuides((current) => (current.length ? [] : current))
         const snapped = last.current
@@ -93,7 +95,13 @@ export function useGuides(onNodesChange: OnNodesChange<AppNode>) {
       const view = { x: -tx / zoom, y: -ty / zoom, width: width / zoom, height: height / zoom }
       const others: Box[] = []
       for (const other of nodeLookup.values()) {
-        if (other.id === node.id || other.parentId === node.id || other.hidden) continue
+        if (
+          other.id === node.id ||
+          other.parentId === node.id ||
+          other.hidden ||
+          other.type === 'anchor'
+        )
+          continue
         const box = boxOf(other)
         if (box.width && box.height && intersects(box, view)) others.push(box)
       }

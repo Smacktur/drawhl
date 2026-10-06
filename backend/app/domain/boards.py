@@ -98,8 +98,20 @@ class ModuleNode(_NodeBase):
     data: ModuleData
 
 
+class AnchorData(_Strict):
+    pass
+
+
+class AnchorNode(_NodeBase):
+    """The free end of an arrow that points somewhere instead of at an element."""
+
+    type: Literal["anchor"]
+    data: AnchorData = Field(default_factory=AnchorData)
+
+
 Node = Annotated[
-    JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode, Field(discriminator="type")
+    JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode | AnchorNode,
+    Field(discriminator="type"),
 ]
 
 

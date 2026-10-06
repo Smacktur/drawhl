@@ -227,6 +227,15 @@
   opacity: 1;
 }
 
+/* An anchor's handles only hold the arrow tip at its center; the anchor itself is the grip. */
+.react-flow__node .react-flow__handle.anchor-handle {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .react-flow__handle {
     transition: none;
