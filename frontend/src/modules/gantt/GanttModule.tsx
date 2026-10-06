@@ -2,13 +2,12 @@ import { useReactFlow, type XYPosition } from '@xyflow/react'
 import { CalendarRange, Plus } from 'lucide-react'
 import { useContext, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import type { Task } from '@/api/tasks'
-import { keepOpenWhileSuggesting } from '@/canvas/JqlInput'
 import { TasksContext } from '@/canvas/tasks-context'
-import { AddCardForm } from '@/canvas/Toolbar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { GanttAdd } from '@/modules/gantt/GanttAdd'
 import { GanttBar } from '@/modules/gantt/GanttBar'
 import { GanttLabel } from '@/modules/gantt/GanttLabel'
 import {
@@ -105,11 +104,6 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
       ),
     )
   }
-  const addPlain = () => {
-    const row = makeRow(content, {})
-    setFresh(row.id)
-    onChange(addRows(content, [row]))
-  }
   const eject = (row: Row, screen: XYPosition) => {
     if (row.key) host.ejectCard(row.key, screen)
     else host.ejectNote(row.title, screen)
@@ -155,6 +149,7 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
             depth={depth}
             hasChildren={hasChildren}
             task={row.key ? tasks[row.key] : undefined}
+            url={row.key ? tasks[row.key]?.url : undefined}
             fresh={row.id === fresh}
             onTitle={(title) => onChange(updateRow(content, row.id, (r) => ({ ...r, title })))}
             onRemove={() => onChange(liftRemove(content, row.id))}
@@ -169,17 +164,11 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
           />
         ))}
         <div className="mt-auto flex shrink-0 items-center gap-1 px-1" style={{ height: FOOTER }}>
-          <AddTaskButton disabled={full} onAdd={addTasks} />
-          <Button
-            size="sm"
-            variant="ghost"
+          <GanttAdd
             disabled={full}
-            title={full ? `Up to ${MAX_ROWS} rows` : undefined}
-            onClick={addPlain}
-          >
-            <Plus className="size-3.5" />
-            Row
-          </Button>
+            onTasks={addTasks}
+            onPlain={(title) => onChange(addRows(content, [makeRow(content, { title })]))}
+          />
         </div>
       </div>
       <div className="relative min-w-0 flex-1">
@@ -285,28 +274,6 @@ function ColumnResizer({
       onPointerCancel={stop}
       className="hover:bg-primary/40 active:bg-primary absolute inset-y-0 -right-[3px] z-20 w-1.5 cursor-col-resize"
     />
-  )
-}
-
-function AddTaskButton({ disabled, onAdd }: { disabled: boolean; onAdd: (tasks: Task[]) => void }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button size="sm" variant={open ? 'secondary' : 'ghost'} disabled={disabled}>
-          <Plus className="size-3.5" />
-          Task
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="start"
-        className="w-96 p-2"
-        onEscapeKeyDown={keepOpenWhileSuggesting}
-      >
-        <AddCardForm onAdd={onAdd} onDone={() => setOpen(false)} />
-      </PopoverContent>
-    </Popover>
   )
 }
 

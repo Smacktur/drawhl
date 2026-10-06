@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ReactFlow, ReactFlowProvider, useNodesState, type Node } from '@xyflow/react'
 import { useLayoutEffect } from 'react'
@@ -73,13 +74,15 @@ function renderGantt(host: Partial<ModuleHost> = {}) {
   const full: ModuleHost = { addTasks: vi.fn(), ejectCard: vi.fn(), ejectNote: vi.fn(), ...host }
   render(
     <div style={{ width: 1200, height: 800 }}>
-      <ReactFlowProvider>
-        <TasksContext.Provider value={{ 'DEMO-1': task }}>
-          <ModuleHostContext.Provider value={full}>
-            <Board />
-          </ModuleHostContext.Provider>
-        </TasksContext.Provider>
-      </ReactFlowProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <ReactFlowProvider>
+          <TasksContext.Provider value={{ 'DEMO-1': task }}>
+            <ModuleHostContext.Provider value={full}>
+              <Board />
+            </ModuleHostContext.Provider>
+          </TasksContext.Provider>
+        </ReactFlowProvider>
+      </QueryClientProvider>
     </div>,
   )
   return full
@@ -98,7 +101,12 @@ test('shows task rows with live data and plain rows with their title', () => {
 
 test('adds a plain row and removes a row', () => {
   renderGantt()
-  fireEvent.click(screen.getByRole('button', { name: 'Row' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+  fireEvent.click(screen.getByRole('tab', { name: 'Plain task' }))
+  const field = screen.getByLabelText('Title')
+  fireEvent.change(field, { target: { value: 'Kickoff' } })
+  fireEvent.submit(field)
+  expect(rows().map((r) => r.title)).toContain('Kickoff')
   expect(rows()).toHaveLength(3)
   fireEvent.click(screen.getByRole('button', { name: 'Remove Design review' }))
   expect(rows().map((r) => r.id)).not.toContain('b')
@@ -153,7 +161,7 @@ test('rows nest under rows, show a summary bar and collapse', () => {
   expect(rows()[1].parent).toBe('a')
   expect(screen.getByRole('img', { name: /DEMO-1 .* summary/ })).toBeTruthy()
 
-  fireEvent.click(screen.getByRole('button', { name: 'Add a row under Design review' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Add a task under Design review' }))
   expect(rows().map((r) => r.parent)).toEqual([undefined, 'a', 'b'])
   fireEvent.blur(screen.getByLabelText('Row title'))
 
@@ -168,4 +176,19 @@ test('removing a parent keeps its children one level up', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Remove DEMO-1' }))
   expect(rows()).toEqual([expect.objectContaining({ id: 'b' })])
   expect(rows()[0].parent).toBeUndefined()
+})
+
+test('a task row links to the tracker from its own button only', () => {
+  renderGantt()
+  const link = screen.getByRole('link', { name: 'Open DEMO-1 in the tracker' })
+  expect(link.getAttribute('href')).toBe(task.url)
+  expect(screen.getByText('DEMO-1').closest('a')).toBeNull()
+})
+
+test('a task that becomes a parent keeps its key, title and status color', () => {
+  renderGantt()
+  fireEvent.click(screen.getByRole('button', { name: 'Indent Design review' }))
+  const summary = screen.getByRole('img', { name: /DEMO-1 .* summary/ })
+  expect(summary.textContent).toContain('Rotate the staging certificates')
+  expect(summary.className).toContain('bg-status-done')
 })

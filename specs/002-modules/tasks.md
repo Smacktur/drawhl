@@ -69,6 +69,7 @@ description: "Task list for Modules and the Gantt module"
 - [x] T023 [P] [US3b] Create `modules/gantt/tree.ts`: depths, visible rows, summary spans, move a subtree to an index and depth, indent, outdent, add a child, remove a row with its children moved up. Tests in `tree.test.ts`
 - [x] T024 [US3b] Label: indent by depth, collapse chevron, hover indent, outdent and "+ child"; row drag picks the depth from the horizontal offset; summary bars are not draggable; card drop becomes a sibling of the row above; eject and delete lift children (depends on T023)
 - [x] T025 [US3b] Smoke, `DESIGN.md`, `CHANGELOG.md`
+- [x] T025a [US3] [US3b] After review: tracker link only in the row's hover actions; task parents keep their key, title and status color on the summary bar; one "Add" with a tab per tracker and a "Plain task" tab
 
 **Checkpoint**: `make check`, `make smoke`, screenshot → G3.
 

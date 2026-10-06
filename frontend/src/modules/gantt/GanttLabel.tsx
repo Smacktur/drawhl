@@ -2,6 +2,7 @@ import { useReactFlow } from '@xyflow/react'
 import {
   ChevronDown,
   ChevronRight,
+  ExternalLink,
   GripVertical,
   ListIndentDecrease,
   ListIndentIncrease,
@@ -25,6 +26,8 @@ type Props = {
   depth: number
   hasChildren: boolean
   task?: Task
+  /** Where the task opens in the tracker; only from its own button, never from a drag. */
+  url?: string
   /** A row just added by the user opens with its title in edit mode. */
   fresh?: boolean
   onTitle: (title: string) => void
@@ -45,6 +48,7 @@ export function GanttLabel({
   depth,
   hasChildren,
   task,
+  url,
   fresh,
   onTitle,
   onRemove,
@@ -61,7 +65,7 @@ export function GanttLabel({
   const press = useRef<{ x: number; y: number; zoom: number } | null>(null)
 
   const down = (event: PointerEvent) => {
-    if ((event.target as Element).closest('button, input')) return
+    if ((event.target as Element).closest('a, button, input')) return
     event.currentTarget.setPointerCapture(event.pointerId)
     press.current = { x: event.clientX, y: event.clientY, zoom: getZoom() }
   }
@@ -172,7 +176,8 @@ export function GanttLabel({
         </span>
       )}
       <span className="bg-card ml-auto hidden shrink-0 items-center group-hover/label:flex">
-        <RowAction label={`Add a row under ${name}`} Icon={ListPlus} onClick={onAddChild} />
+        {url && <RowAction label={`Open ${name} in the tracker`} Icon={ExternalLink} href={url} />}
+        <RowAction label={`Add a task under ${name}`} Icon={ListPlus} onClick={onAddChild} />
         {depth > 0 && (
           <RowAction label={`Outdent ${name}`} Icon={ListIndentDecrease} onClick={onOutdent} />
         )}
@@ -187,19 +192,30 @@ function RowAction({
   label,
   Icon,
   onClick,
+  href,
 }: {
   label: string
   Icon: LucideIcon
-  onClick: () => void
+  onClick?: () => void
+  href?: string
 }) {
+  const className = 'text-muted-foreground hover:text-foreground rounded-sm p-0.5'
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={label}
+        title={label}
+        className={className}
+      >
+        <Icon className="size-3.5" />
+      </a>
+    )
+  }
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="text-muted-foreground hover:text-foreground rounded-sm p-0.5"
-    >
+    <button type="button" aria-label={label} title={label} onClick={onClick} className={className}>
       <Icon className="size-3.5" />
     </button>
   )

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ReactFlow, ReactFlowProvider, useNodesState } from '@xyflow/react'
 import { beforeAll, expect, test } from 'vitest'
@@ -42,9 +43,11 @@ function Board({ data }: { data: ModuleNodeType['data'] }) {
 function renderModule(data: ModuleNodeType['data']) {
   render(
     <div style={{ width: 1200, height: 800 }}>
-      <ReactFlowProvider>
-        <Board data={data} />
-      </ReactFlowProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <ReactFlowProvider>
+          <Board data={data} />
+        </ReactFlowProvider>
+      </QueryClientProvider>
     </div>,
   )
 }

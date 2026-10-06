@@ -43,24 +43,41 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
     )
   }
 
+  const missing = task?.state === 'not_found'
+  const live = task && !missing
+  const content = (
+    <>
+      {live && (
+        <span className="mr-1 opacity-80">
+          <TypeIcon typeName={task.type_name} />
+        </span>
+      )}
+      <span className="truncate">{label}</span>
+    </>
+  )
+
+  // A parent keeps its look (a task stays a task) and gains brackets; its dates follow its children.
   if (summary) {
     return (
       <div
         role="img"
         aria-label={`${label} summary`}
-        title={label}
+        title={live ? `${label} · ${task.status_name}` : label}
         className={cn(
-          'bg-foreground/70 absolute top-3 h-2 rounded-[2px]',
-          !box.clippedStart && 'rounded-bl-none',
-          !box.clippedEnd && 'rounded-br-none',
+          'absolute top-1 flex h-5 items-center rounded-[4px] px-1.5 text-[11px] leading-5 font-semibold whitespace-nowrap select-none',
+          live ? BAR_COLOR[task.status_category] : 'bg-foreground/75 text-background',
+          task?.status_category === 'done' && 'line-through',
+          box.clippedStart && 'rounded-l-none',
+          box.clippedEnd && 'rounded-r-none',
         )}
         style={{ left: box.left, width: Math.max(box.width, 4) }}
       >
+        {content}
         {!box.clippedStart && (
-          <span className="bg-foreground/70 absolute top-full left-0 h-1.5 w-1" />
+          <span className="bg-foreground/60 absolute top-full left-0 h-1.5 w-0.5" />
         )}
         {!box.clippedEnd && (
-          <span className="bg-foreground/70 absolute top-full right-0 h-1.5 w-1" />
+          <span className="bg-foreground/60 absolute top-full right-0 h-1.5 w-0.5" />
         )}
       </div>
     )
@@ -82,7 +99,6 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
   // Grips capture the pointer themselves; their moves bubble up to the bar's handlers.
   const handlers = { onPointerMove: move, onPointerUp: stop, onPointerCancel: stop }
 
-  const missing = task?.state === 'not_found'
   return (
     <div
       role="slider"
@@ -103,14 +119,9 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
         box.clippedEnd && 'rounded-r-none',
       )}
       style={{ left: box.left, width: Math.max(box.width, 4) }}
-      title={task && !missing ? `${label} · ${task.status_name}` : label}
+      title={live ? `${label} · ${task.status_name}` : label}
     >
-      {task && !missing && (
-        <span className="mr-1 opacity-80">
-          <TypeIcon typeName={task.type_name} />
-        </span>
-      )}
-      <span className="truncate">{label}</span>
+      {content}
       {!box.clippedStart && (
         <span
           aria-hidden
