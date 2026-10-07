@@ -1,4 +1,4 @@
-import { Minus, Plus, RotateCcw, SkipForward, Volume1 } from 'lucide-react'
+import { Minus, Plus, RotateCcw, SkipForward, Volume1, X } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -138,7 +138,7 @@ function MusicTab() {
     <div className="flex flex-col gap-2 text-[13px]">
       <ol className="-mx-1 flex max-h-[196px] flex-col gap-px overflow-y-auto" aria-label="Tracks">
         {player.tracks.map((track, i) => (
-          <li key={track.src}>
+          <li key={music.trackKey(track)} className="group/track relative">
             <button
               type="button"
               aria-current={i === player.index || undefined}
@@ -156,6 +156,16 @@ function MusicTab() {
                 </span>
               )}
             </button>
+            {track.id && (
+              <button
+                type="button"
+                aria-label={`Remove ${track.title}`}
+                onClick={() => music.removeOwnTrack(track.id!)}
+                className="text-muted-foreground bg-muted hover:text-foreground absolute top-1/2 right-1 grid h-5 w-8 justify-items-end pr-0.5 -translate-y-1/2 place-items-center rounded opacity-0 group-hover/track:opacity-100 focus-visible:opacity-100"
+              >
+                <X className="size-3" strokeWidth={1.75} />
+              </button>
+            )}
           </li>
         ))}
       </ol>
@@ -175,7 +185,7 @@ function MusicTab() {
         multiple
         hidden
         onChange={(event) => {
-          if (event.target.files) music.addFiles(event.target.files)
+          if (event.target.files) void music.addFiles(event.target.files)
           event.target.value = ''
         }}
       />
@@ -198,8 +208,8 @@ function MusicTab() {
         onChange={music.setPauseOnBreaks}
       />
       <p className="text-muted-foreground text-[11px]">
-        Tracks by HoliznaCC0 and omfgdude, CC0, via OpenGameArt. Your own files play in this tab
-        only and are never uploaded.
+        Tracks by HoliznaCC0 and omfgdude, CC0, via OpenGameArt. Your own files stay in this browser
+        and are never uploaded.
       </p>
     </div>
   )

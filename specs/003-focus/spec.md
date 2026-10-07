@@ -43,8 +43,9 @@ Under the dial, the player row shows the current track. The user plays and pause
 
 1. **Given** the capsule, **When** the user presses play in the player row, **Then** the current track plays and the row shows its title and author; at the end the next track starts, after the last one the first.
 2. **Given** the settings popover, **When** the user opens the Music tab, **Then** they see all built-in tracks with duration, the current one marked, volume, "Pause music on breaks", "Add your own tracks" and the credits.
-3. **Given** the Music tab, **When** the user adds audio files from disk, **Then** they join the list for this session and play from the browser; nothing is uploaded.
-4. **Given** "Pause music on breaks" on, **When** a break starts, **Then** music pauses and resumes when the next focus starts.
+3. **Given** the Music tab, **When** the user adds audio files from disk, **Then** they join the list, play from the browser and are kept in its IndexedDB, so they come back after a reload; nothing is uploaded.
+4. **Given** an own track in the list, **When** the user removes it, **Then** it leaves the list and the browser storage.
+5. **Given** "Pause music on breaks" on, **When** a break starts, **Then** music pauses and resumes when the next focus starts.
 
 ### Edge Cases
 
@@ -66,14 +67,14 @@ Under the dial, the player row shows the current track. The user plays and pause
 - **FR-005**: The end of a phase plays a chime and shows a browser notification, each optional.
 - **FR-006**: Settings and timer state live in the browser (`localStorage`); no backend change.
 - **FR-007**: A settings popover centered under the capsule with Timer and Music tabs.
-- **FR-008**: Seven built-in CC0 lofi tracks are bundled with the frontend; the user can add local files for the session.
+- **FR-008**: Seven built-in CC0 lofi tracks are bundled with the frontend; the user can add local files, kept in the browser's IndexedDB until removed.
 - **FR-009**: The capsule can be hidden and shown from the main menu.
 
 ### Key Entities
 
 - **Timer settings**: focus, short break, long break minutes, rounds before a long break, sound, notification, auto start.
 - **Timer state**: phase (focus, short, long), status (idle, running, paused, finished), end time or remaining time, round.
-- **Track**: title, author, duration, source (built-in file or local object URL).
+- **Track**: title, author, duration, source (built-in file or a file kept in IndexedDB).
 
 ## Success Criteria *(mandatory)*
 
