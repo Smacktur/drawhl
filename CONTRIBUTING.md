@@ -42,4 +42,4 @@ Using AI tools is fine. You are responsible for every line you submit: understan
 
 ## License
 
-drawhl is licensed under the [GNU AGPL v3](LICENSE). Before your first pull request is merged, you agree to the [Contributor License Agreement](CLA.md) by ticking its box in the PR template. You keep the copyright in your work; the CLA lets the maintainer also offer drawhl under other terms, such as a hosted version, while the code stays open under the AGPL. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+drawhl is licensed under the [GNU AGPL v3](LICENSE). On your first pull request, the CLA Assistant bot asks you to sign the [Contributor License Agreement](CLA.md): one click with your GitHub account, and it covers your future pull requests too. You keep the copyright in your work; the CLA lets the maintainer also offer drawhl under other terms, such as a hosted version, while the code stays open under the AGPL. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
