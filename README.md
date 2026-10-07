@@ -47,7 +47,7 @@ Open http://localhost:3000. A fresh install opens on a sample board built from d
 ## 🌟 Features
 
 - **Live task cards.** Each card shows type, key, title and status from your tracker. Statuses refresh every 30 s with one batched request per board, and closed tasks are struck through.
-- **Fast ways to add tasks.** By key (`DEV-12`), by link, several at once, or by query (JQL in Jira) with suggestions for fields and values. New cards land in a neat grid.
+- **Fast ways to add tasks.** By key (`DEV-12`), by link, several at once, or by query (JQL in Jira) with suggestions for fields and values. Or just paste: links copied from your tracker tabs become cards, any other text becomes a note. New cards land in a neat grid.
 - **A real whiteboard.** Frames, sticky notes, text and arrows. Drag cards in and out of frames; moving a frame moves everything inside.
 - **Details on demand.** Click a card for assignee, priority, last update and a link to the task. Collapse cards to one line when the board gets busy.
 - **Gantt module.** Drop cards onto a timeline to plan them as bars with live status, nest them into stages, mark milestones and draw dependency lines that turn amber when a task starts too early. Plan dates stay on the board.

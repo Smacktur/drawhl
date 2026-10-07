@@ -10,9 +10,18 @@ export type Snippet = { nodes: AppNode[]; edges: AppEdge[]; tasks: Record<string
 
 // In memory rather than the system clipboard, so copied items also paste into another board.
 let buffer: Snippet | null = null
+// Written to the system clipboard too, so a paste can tell this copy from text copied later.
+let bufferId: string | null = null
 
+/** Keeps the snippet and returns the id that marks it on the system clipboard. */
 export function setClipboard(snippet: Snippet) {
   buffer = snippet
+  bufferId = newId()
+  return bufferId
+}
+
+export function clipboardId() {
+  return bufferId
 }
 
 export function getClipboard() {

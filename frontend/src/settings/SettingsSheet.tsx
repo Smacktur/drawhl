@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Settings as SettingsIcon } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { getSettings, saveSettings, testJira, type Settings } from '@/api/settings'
+import { readPasteAs, writePasteAs, type PasteAs } from '@/canvas/paste'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -161,6 +162,35 @@ function SettingsForm({ settings }: { settings: Settings }) {
   )
 }
 
+// Kept in this browser, not on the server, like the other view preferences.
+function PasteSetting() {
+  const [value, setValue] = useState<PasteAs>(readPasteAs)
+  return (
+    <fieldset className="flex flex-col gap-2 px-4 text-[14px]">
+      <legend className="mb-2 font-medium">Paste text as</legend>
+      <RadioGroup
+        value={value}
+        onValueChange={(next) => {
+          setValue(next as PasteAs)
+          writePasteAs(next as PasteAs)
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <RadioGroupItem value="text" id="paste-text" />
+          <Label htmlFor="paste-text">Text</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <RadioGroupItem value="sticky" id="paste-sticky" />
+          <Label htmlFor="paste-sticky">Sticky note</Label>
+        </div>
+      </RadioGroup>
+      <p className="text-muted-foreground text-[13px]">
+        Task keys and links always become cards. Saved in this browser.
+      </p>
+    </fieldset>
+  )
+}
+
 // Without `open` it renders its own button; with it the caller opens it (e.g. from a menu).
 export function SettingsSheet({
   open,
@@ -191,6 +221,7 @@ export function SettingsSheet({
           </Alert>
         )}
         {settings.isSuccess && <SettingsForm settings={settings.data} />}
+        <PasteSetting />
       </SheetContent>
     </Sheet>
   )
