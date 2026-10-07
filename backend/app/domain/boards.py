@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated, Any, Literal
 
 from pydantic import (
@@ -14,6 +15,7 @@ from app.domain.errors import NotFound, ValidationFailed
 from app.domain.modules import KIND_PATTERN, module_keys, validate_module
 from app.domain.ports import BoardRepo, SnapshotRepo
 from app.domain.tasks import KEY_RE, Task
+from app.domain.welcome import WELCOME_NAME, welcome_doc
 
 MAX_NODES = 2000
 
@@ -216,6 +218,16 @@ def task_keys(doc: BoardDoc) -> list[str]:
         elif isinstance(node, ModuleNode):
             keys |= module_keys(node.data.kind, node.data.content)
     return sorted(keys)
+
+
+def list_boards(boards: BoardRepo, now: datetime) -> list[BoardSummary]:
+    """Boards by last change; a fresh install gets the welcome board on its first read."""
+    listed = boards.list()
+    if not listed:
+        doc = BoardDoc.model_validate(welcome_doc(now))
+        first = boards.create_first(WELCOME_NAME, doc)
+        listed = [first] if first else []
+    return listed
 
 
 def create_board(name: str, boards: BoardRepo) -> BoardSummary:

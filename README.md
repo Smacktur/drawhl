@@ -42,7 +42,7 @@ cd drawhl
 docker compose up --build
 ```
 
-Open http://localhost:3000. A fresh install runs on built-in demo tasks: pick the card tool at the bottom and add `DEMO-1`, or type `project = DEMO` to add all twelve.
+Open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it.
 
 ## 🌟 Features
 

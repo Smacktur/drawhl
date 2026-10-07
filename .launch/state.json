@@ -30,7 +30,8 @@
     "search",
     "search-preview",
     "search-filters",
-    "search-commands"
+    "search-commands",
+    "welcome-board"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -74,7 +75,8 @@
     "G3_search-filters": "approved",
     "G3_search-commands": "approved",
     "G1_first-run": "approved",
-    "G2_first-run": "approved"
+    "G2_first-run": "approved",
+    "G3_welcome-board": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
