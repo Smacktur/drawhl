@@ -11,6 +11,14 @@ export interface Track {
   duration?: number
   /** Set for the user's own tracks, which live in IndexedDB. */
   id?: string
+  /** An own track the browser refused to keep; it plays until the tab closes. */
+  unsaved?: boolean
+}
+
+export interface StorageInfo {
+  /** Bytes of own tracks kept in this browser. */
+  bytes: number
+  protection: library.Protection
 }
 
 export const trackKey = (track: Track) => track.id ?? track.src
@@ -42,6 +50,10 @@ export interface MusicState {
   playing: boolean
   volume: number
   pauseOnBreaks: boolean
+  /** Known once own tracks exist. */
+  storage?: StorageInfo
+  /** Why the last added files could not be kept, for the Music tab. */
+  saveError?: string
 }
 
 const KEY = 'drawhl.music'
@@ -205,6 +217,24 @@ function fromStored(stored: library.StoredTrack): Track {
   }
 }
 
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  const mb = bytes / (1024 * 1024)
+  return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`
+}
+
+async function refreshStorage(ask = false) {
+  try {
+    const stored = await library.listTracks()
+    const bytes = stored.reduce((sum, track) => sum + (track.size ?? track.file.size ?? 0), 0)
+    set({
+      storage: stored.length ? { bytes, protection: await library.protection(ask) } : undefined,
+    })
+  } catch {
+    set({ storage: undefined })
+  }
+}
+
 /** Brings back the user's own tracks saved in earlier visits. */
 export async function restoreOwnTracks() {
   if (restored) return
@@ -219,6 +249,7 @@ export async function restoreOwnTracks() {
   const known = new Set(tracks.map(trackKey))
   const own = stored.filter((s) => !known.has(s.id)).map(fromStored)
   if (own.length === 0) return
+  void refreshStorage()
   const merged = [...tracks, ...own]
   const savedIndex = merged.findIndex((track) => trackKey(track) === saved)
   set({ tracks: merged, index: !playing && savedIndex >= 0 ? savedIndex : index })
@@ -233,13 +264,31 @@ export async function addFiles(files: Iterable<File>) {
     id: newId(),
     title: titleFromFile(file.name),
     file,
+    size: file.size,
     added: added + i,
   }))
   // A blocked or full storage still lets the files play until the tab closes.
-  await Promise.all(stored.map((s) => library.saveTrack(s).catch(() => {})))
-  const tracks = [...current().tracks, ...stored.map(fromStored)]
-  set({ tracks })
+  const results = await Promise.allSettled(stored.map((s) => library.saveTrack(s)))
+  const failed = results.flatMap((result, i) =>
+    result.status === 'rejected' ? [{ title: stored[i].title, error: result.reason }] : [],
+  )
+  const own = stored.map((s, i) => ({
+    ...fromStored(s),
+    unsaved: results[i].status === 'rejected',
+  }))
+  const tracks = [...current().tracks, ...own]
+  const why = failed.some((f) => library.isQuotaError(f.error))
+    ? 'browser storage is full'
+    : 'the browser blocks storage for this site'
+  set({
+    tracks,
+    saveError: failed.length
+      ? `Couldn't keep ${failed.map((f) => f.title).join(', ')}: ${why}. ${failed.length > 1 ? 'They play' : 'It plays'} until you close the tab.`
+      : undefined,
+  })
   pick(tracks.length - stored.length)
+  // Asking once own files exist: browsers grant it to sites that keep the user's data.
+  await refreshStorage(true)
 }
 
 /** Deletes one of the user's own tracks from the list and from the browser. */
@@ -248,8 +297,12 @@ export function removeOwnTrack(id: string) {
   const at = tracks.findIndex((track) => track.id === id)
   if (at < 0) return
   URL.revokeObjectURL(tracks[at].src)
-  void library.removeTrack(id).catch(() => {})
+  void library
+    .removeTrack(id)
+    .catch(() => {})
+    .then(() => refreshStorage())
   const rest = tracks.filter((_, i) => i !== at)
+  if (!rest.some((track) => track.unsaved)) set({ saveError: undefined })
   if (at === index) {
     audio?.pause()
     set({ tracks: rest, index: 0, playing: false })

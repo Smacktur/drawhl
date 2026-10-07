@@ -51,3 +51,15 @@ description: "Task list for Focus timer and music"
 - [x] T013 [US2] Spec, `DESIGN.md`, `CHANGELOG.md`, `THIRD_PARTY.md`; check in the running stack
 
 **Checkpoint**: `make check`, check in the running stack → G3.
+
+## Phase 4: Slice 18 `feat/focus-storage-status` — honest storage status (US2)
+
+**Goal**: the user knows whether their own tracks are safe.
+
+**Independent Test**: add a file on localhost: the Music tab shows its size and "Protected from automatic cleanup" (or why not); with storage full, the tab names the file that was not kept.
+
+- [x] T014 [P] [US2] `focus/library.ts`: `protection(ask)` with `navigator.storage.persisted` and `persist`, `isQuotaError`, size stored with each track. Tests
+- [x] T015 [US2] `focus/music.ts` and the Music tab: request protection on the first add, used space and protection line, "this tab only" on tracks the browser refused, error naming the files and the cause. Tests in `focus/music-storage.test.ts` (depends on T014)
+- [x] T016 [US2] Spec edge cases, `DESIGN.md`, `CHANGELOG.md`; check in the running stack
+
+**Checkpoint**: `make check`, check in the running stack → G3.

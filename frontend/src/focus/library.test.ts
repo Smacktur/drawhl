@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
-import { beforeEach, expect, it } from 'vitest'
-import { listTracks, removeTrack, saveTrack } from './library'
+import { beforeEach, expect, it, vi } from 'vitest'
+import { listTracks, protection, removeTrack, saveTrack } from './library'
 
 beforeEach(async () => {
   for (const track of await listTracks()) await removeTrack(track.id)
@@ -18,4 +18,19 @@ it('updates and removes a track', async () => {
   expect(await listTracks()).toMatchObject([{ id: 'a', duration: 90 }])
   await removeTrack('a')
   expect(await listTracks()).toEqual([])
+})
+
+it('asks the browser to protect the files only when told to', async () => {
+  const persist = vi.fn(() => Promise.resolve(true))
+  vi.stubGlobal('navigator', { storage: { persisted: () => Promise.resolve(false), persist } })
+  expect(await protection()).toBe('unprotected')
+  expect(persist).not.toHaveBeenCalled()
+  expect(await protection(true)).toBe('protected')
+  vi.unstubAllGlobals()
+})
+
+it('reports no protection where the browser has no storage manager', async () => {
+  vi.stubGlobal('navigator', {})
+  expect(await protection(true)).toBe('unavailable')
+  vi.unstubAllGlobals()
 })
