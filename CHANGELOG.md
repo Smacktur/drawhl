@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Focus timer: a pomodoro capsule at the top center of the screen. Start 25 minutes of focus with one click; a chime and a browser notification mark the end, then a 5 minute break, and a 15 minute one after every fourth round. The capsule's color shows the state: gray at rest, green warming to raspberry as the focus runs out, blue on pause, lavender on a break; hover its icon for the state and round. The sliders button sets the lengths, rounds, sound, notification and auto start, and skips or resets the cycle. The countdown survives a reload. Hide it from the main menu.
 - Arrows can point at a spot instead of an element: drag an arrow from a handle and release it over empty space. Its free end shows a dot on hover; drag it to point elsewhere. Deleting the arrow removes its free end too.
 - Smart guides: a dragged element snaps to the edges and centers of the others on screen and to an equal gap in a row or column, with dashed alignment lines and gap markers like in Miro. Resizing snaps to the width or height of the others and marks each element of that size. Hold Alt to move or resize freely. The sticky color bar and module controls hide while you drag.
 - About button in the bottom left: what drawhl is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.

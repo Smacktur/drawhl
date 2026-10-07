@@ -53,12 +53,14 @@ Dark theme:
 - Icons: lucide, stroke 1.75.
 - Jira card: one inline flow like the Confluence issue macro: type icon, key (link to Jira), title, status lozenge. Long titles wrap from the left edge and are cut at 120 characters so the lozenge stays visible. States: collapsed (icon, key, lozenge; the key is plain text so the whole card opens the mini-card), inline (with title), expanded (popover on click: assignee, priority, updated, "Collapse card" and "Open in Jira"). Closed task: key struck through, title muted.
 - Sync indicator in the top right: a 10px dot and "Synced 12s ago", never error text. Dot: green when every tracker syncs, amber when some fail, red when none sync or the drawhl server does not answer (`--sync-ok`, `--sync-partial`, `--destructive`). Clicking it opens a `Popover` below with one row per tracker: dot, name, "Synced N ago", and the reason with the next try under a failing one.
+- Focus capsule: floating, top center, 264px wide, the same size in every state. One block with two sections: a 56px dial with a 26px top radius over a 36px row on `--card`, 12px radius at the bottom. Dial: state icon in a round tint on the left (timer idle, target focus, cup break, pause, bell when a phase ends), `MM:SS` in 28px JetBrains Mono tabular, round dots under it, a round 34px play button in the dial's ink on the right. Only the state icon has a tooltip ("Focus · round 2 of 4"), styled like the Gantt date tooltip. The dial fill is a slow two-hue gradient at the status lozenge lightness (`--focus-fill-l`, deep tints in the dark theme): idle gray, focus from green (hue 150) through sand and peach to raspberry (hue 8) by progress, paused blue, break lavender; a finished focus pulses a raspberry ring three times. The row shows what comes next and a sliders button that opens a `Popover` centered under the whole capsule (200ms fade, scale and slide): skip and reset, steppers for lengths and rounds, switches for sound, notification and auto start. Shown or hidden with "Focus timer" in the main menu.
 - About: icon button in the bottom left, same surface as the top bar; a small `--primary` dot on it when a newer release exists. A `Popover` above it: name and running version (links to its release), an accent block "vX is available" with "See what's new" and "How to upgrade" when there is one, one-line description, links to GitHub, documentation and issues, license.
 
 ## Motion
 - Card expand and collapse 120ms ease-out, popover 100ms fade-scale.
 - Status change: the lozenge softly highlights once (400ms).
 - Pan and zoom with no inertia effects beyond the xyflow defaults.
+- Focus capsule: the dial gradient drifts over 9s and stops while idle or paused; the end of a focus pulses three times.
 - `prefers-reduced-motion`: all animations except pan are disabled.
 
 ## Copy

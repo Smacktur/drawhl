@@ -3,6 +3,8 @@ import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react
 import { listBoards } from '@/api/boards'
 import { NewBoardForm } from '@/board/NewBoardForm'
 import { AboutButton } from '@/board/AboutButton'
+import { FocusCapsule } from '@/focus/FocusCapsule'
+import { useFocusVisible } from '@/focus/store'
 import { TopBar } from '@/board/TopBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -37,6 +39,7 @@ export default function App() {
   const [boardId, setBoardId] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : readBoardId(),
   )
+  const focusVisible = useFocusVisible()
   const boards = useQuery({ queryKey: ['boards'], queryFn: listBoards, enabled: mounted })
 
   const known = boards.data?.find((board) => board.id === boardId)
@@ -67,6 +70,7 @@ export default function App() {
         </Suspense>
       )}
       {boards.data && <TopBar boards={boards.data} current={current} onSelect={setBoardId} />}
+      {focusVisible && <FocusCapsule />}
       <AboutButton />
     </main>
   )
