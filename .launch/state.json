@@ -19,7 +19,8 @@
     "gantt-tree",
     "smart-guides",
     "dangling-arrow",
-    "gantt-milestones"
+    "gantt-milestones",
+    "focus-timer"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -46,7 +47,8 @@
     "G3_dangling-arrow": "approved",
     "G3_gantt-milestones": "approved",
     "G1_focus": "approved",
-    "G2_focus": "approved"
+    "G2_focus": "approved",
+    "G3_focus-timer": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
