@@ -39,3 +39,15 @@ description: "Task list for Focus timer and music"
 - [x] T010 [US2] `DESIGN.md`, `CHANGELOG.md`, README; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
+
+## Phase 3: Slice 17 `feat/focus-own-tracks` — own tracks survive a reload (US2)
+
+**Goal**: files added from disk stay in the browser until removed.
+
+**Independent Test**: add two audio files, reload: both are in the list and the last picked one is current; remove one, reload: it is gone.
+
+- [x] T011 [P] [US2] `focus/library.ts`: IndexedDB store `tracks` with list, save, remove. Tests in `focus/library.test.ts` with `fake-indexeddb`
+- [x] T012 [US2] `focus/music.ts`: save added files, restore them on start, remember the current track by key, read an own track's length when it plays, remove a track; remove button on own tracks in the Music tab. Tests (depends on T011)
+- [x] T013 [US2] Spec, `DESIGN.md`, `CHANGELOG.md`, `THIRD_PARTY.md`; check in the running stack
+
+**Checkpoint**: `make check`, check in the running stack → G3.

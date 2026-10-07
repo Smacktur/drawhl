@@ -1,14 +1,19 @@
 import { useSyncExternalStore } from 'react'
+import { newId } from '@/lib/id'
+import * as library from './library'
 import type { Mode } from './timer'
 
 export interface Track {
   title: string
   author: string
   src: string
-  /** Seconds; unknown for the user's own files. */
+  /** Seconds; read from the file once it plays for the user's own tracks. */
   duration?: number
-  own?: boolean
+  /** Set for the user's own tracks, which live in IndexedDB. */
+  id?: string
 }
+
+export const trackKey = (track: Track) => track.id ?? track.src
 
 // CC0 tracks from OpenGameArt, see THIRD_PARTY.md.
 export const BUILT_IN: Track[] = [
@@ -71,8 +76,11 @@ function load(): MusicState {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null')
     if (!raw || typeof raw !== 'object') return fresh
-    const index =
-      Number.isInteger(raw.index) && raw.index >= 0 && raw.index < BUILT_IN.length ? raw.index : 0
+    saved = typeof raw.current === 'string' ? raw.current : null
+    const index = Math.max(
+      0,
+      BUILT_IN.findIndex((track) => track.src === saved),
+    )
     const volume =
       typeof raw.volume === 'number' ? Math.min(1, Math.max(0, raw.volume)) : fresh.volume
     return { ...fresh, index, volume, pauseOnBreaks: raw.pauseOnBreaks !== false }
@@ -82,6 +90,9 @@ function load(): MusicState {
 }
 
 let state: MusicState | null = null
+// The track the user last picked, kept until their own tracks come back from IndexedDB.
+let saved: string | null = null
+let restored = false
 let audio: HTMLAudioElement | null = null
 let heldForBreak = false
 const listeners = new Set<() => void>()
@@ -94,10 +105,12 @@ function current(): MusicState {
 function set(patch: Partial<MusicState>) {
   state = { ...current(), ...patch }
   try {
-    // Own files are object URLs that die with the page, so only a built-in track is remembered.
     const { index, volume, pauseOnBreaks, tracks } = state
-    const saved = tracks[index]?.own ? 0 : index
-    localStorage.setItem(KEY, JSON.stringify({ index: saved, volume, pauseOnBreaks }))
+    const track = tracks[index]
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ current: track && trackKey(track), volume, pauseOnBreaks }),
+    )
   } catch {
     // Storage blocked: settings live for this page.
   }
@@ -109,12 +122,27 @@ function player(): HTMLAudioElement {
     audio = new Audio()
     audio.preload = 'none'
     audio.addEventListener('ended', () => pick(nextIndex(current().index, current().tracks.length)))
+    audio.addEventListener('loadedmetadata', rememberDuration)
     audio.addEventListener(
       'pause',
       () => current().playing && !audio?.ended && set({ playing: false }),
     )
   }
   return audio
+}
+
+// Own files have no known length until the browser reads them.
+function rememberDuration() {
+  const { tracks, index } = current()
+  const track = tracks[index]
+  const seconds = audio?.duration
+  if (!track?.id || track.duration !== undefined || !seconds || !Number.isFinite(seconds)) return
+  set({ tracks: tracks.map((t, i) => (i === index ? { ...t, duration: seconds } : t)) })
+  void library
+    .listTracks()
+    .then((stored) => stored.find((s) => s.id === track.id))
+    .then((stored) => stored && library.saveTrack({ ...stored, duration: seconds }))
+    .catch(() => {})
 }
 
 function loadTrack(index: number) {
@@ -167,19 +195,68 @@ export function setPauseOnBreaks(pauseOnBreaks: boolean) {
   set({ pauseOnBreaks })
 }
 
-export function addFiles(files: Iterable<File>) {
-  const own: Track[] = [...files]
-    .filter((file) => file.type.startsWith('audio/'))
-    .map((file) => ({
-      title: titleFromFile(file.name),
-      author: 'Your file',
-      src: URL.createObjectURL(file),
-      own: true,
-    }))
+function fromStored(stored: library.StoredTrack): Track {
+  return {
+    id: stored.id,
+    title: stored.title,
+    author: 'Your file',
+    src: URL.createObjectURL(stored.file),
+    duration: stored.duration,
+  }
+}
+
+/** Brings back the user's own tracks saved in earlier visits. */
+export async function restoreOwnTracks() {
+  if (restored) return
+  restored = true
+  let stored: library.StoredTrack[]
+  try {
+    stored = await library.listTracks()
+  } catch {
+    return
+  }
+  const { tracks, playing, index } = current()
+  const known = new Set(tracks.map(trackKey))
+  const own = stored.filter((s) => !known.has(s.id)).map(fromStored)
   if (own.length === 0) return
-  const tracks = [...current().tracks, ...own]
+  const merged = [...tracks, ...own]
+  const savedIndex = merged.findIndex((track) => trackKey(track) === saved)
+  set({ tracks: merged, index: !playing && savedIndex >= 0 ? savedIndex : index })
+}
+
+/** Adds audio files from disk, keeps them in this browser and plays the first one. */
+export async function addFiles(files: Iterable<File>) {
+  const audioFiles = [...files].filter((file) => file.type.startsWith('audio/'))
+  if (audioFiles.length === 0) return
+  const added = Date.now()
+  const stored = audioFiles.map((file, i) => ({
+    id: newId(),
+    title: titleFromFile(file.name),
+    file,
+    added: added + i,
+  }))
+  // A blocked or full storage still lets the files play until the tab closes.
+  await Promise.all(stored.map((s) => library.saveTrack(s).catch(() => {})))
+  const tracks = [...current().tracks, ...stored.map(fromStored)]
   set({ tracks })
-  pick(tracks.length - own.length)
+  pick(tracks.length - stored.length)
+}
+
+/** Deletes one of the user's own tracks from the list and from the browser. */
+export function removeOwnTrack(id: string) {
+  const { tracks, index, playing } = current()
+  const at = tracks.findIndex((track) => track.id === id)
+  if (at < 0) return
+  URL.revokeObjectURL(tracks[at].src)
+  void library.removeTrack(id).catch(() => {})
+  const rest = tracks.filter((_, i) => i !== at)
+  if (at === index) {
+    audio?.pause()
+    set({ tracks: rest, index: 0, playing: false })
+    if (playing) play()
+  } else {
+    set({ tracks: rest, index: at < index ? index - 1 : index })
+  }
 }
 
 /** Pauses music when a break starts and brings it back with the next focus. */
@@ -198,6 +275,7 @@ export function followTimer(mode: Mode) {
 
 function subscribe(listener: () => void) {
   listeners.add(listener)
+  void restoreOwnTracks()
   return () => listeners.delete(listener)
 }
 
@@ -219,4 +297,6 @@ export function resetMusic() {
   audio = null
   heldForBreak = false
   state = null
+  saved = null
+  restored = false
 }

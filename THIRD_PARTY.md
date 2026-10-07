@@ -20,6 +20,7 @@
 | React Flow (@xyflow/react) | MIT | Infinite canvas, nodes and edges |
 | IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font |
 | JetBrains Mono (@fontsource-variable/jetbrains-mono) | OFL-1.1 | Monospace font for task keys |
+| fake-indexeddb | Apache-2.0 | IndexedDB in frontend tests (dev only) |
 | class-variance-authority, tw-animate-css | Apache-2.0 / MIT | Component variants, animations |
 | TanStack Query | MIT | Server state |
 | zod | MIT | API response validation |

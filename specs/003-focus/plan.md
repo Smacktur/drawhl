@@ -14,7 +14,7 @@ A frontend-only feature. A pure timer state machine with the end time stored in 
 
 **Primary Dependencies**: existing only (radix popover, lucide icons). Web Audio, Notification and HTMLAudioElement from the browser.
 
-**Storage**: `localStorage` keys `drawhl.focus` (settings and timer state) and `drawhl.music` (track, volume, pause on breaks)
+**Storage**: `localStorage` keys `drawhl.focus` (settings and timer state) and `drawhl.music` (current track, volume, pause on breaks); the user's own audio files in IndexedDB `drawhl`, store `tracks`. Not the backend: the files are the user's, can be large, and the promise is that they never leave the device
 
 **Testing**: vitest for the state machine, colors and the capsule; Playwright run against the stack for the screenshot
 
@@ -44,6 +44,7 @@ frontend/src/focus/
   FocusCapsule.tsx  dial and player row
   FocusSettings.tsx popover with Timer and Music tabs
   music.ts          built-in playlist, useMusic()
+  library.ts        own tracks in IndexedDB: list, save, remove
 frontend/public/music/  7 MP3 files
 ```
 
