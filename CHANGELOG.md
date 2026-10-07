@@ -28,6 +28,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Changed
 
+- Panels, menus and dialogs scroll with thin scrollbars in the theme's colors instead of the browser's default bars.
 - drawhl is now licensed under the GNU AGPL v3 (`AGPL-3.0-only`) instead of MIT. Using and self-hosting it stays free; if you modify drawhl and offer it over a network, you share your changes under the same license. Contributions need the [CLA](CLA.md), and the name and logo follow [TRADEMARKS.md](TRADEMARKS.md). Releases up to `v2026.10.6` remain available under MIT.
 - The Theme item in the main menu has an icon.
 - The sync indicator shows only a colored dot and the last sync time: green when every tracker syncs, amber when some fail, red when none do. Click it to see each tracker with its last sync and the reason it fails.

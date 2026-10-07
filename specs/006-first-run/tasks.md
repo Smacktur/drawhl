@@ -35,8 +35,8 @@ description: "Task list for First run and polish"
 
 ## Phase 3: Slice 28 `feat/scrollbars` — scrollbars in the app's style (US3)
 
-- [ ] T008 [US3] `index.css`: thin themed scrollbars for Firefox and Chromium in both themes; check shortcuts, timer list, JQL suggestions, search, settings
-- [ ] T009 [US3] `DESIGN.md`, `CHANGELOG.md`; screenshot
+- [x] T008 [US3] `index.css`: thin themed scrollbars for Firefox and Chromium in both themes; check shortcuts, timer list, JQL suggestions, search, settings
+- [x] T009 [US3] `DESIGN.md`, `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
 

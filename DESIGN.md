@@ -21,6 +21,7 @@ Light theme (default; Light, Dark or System from the main menu, stored in the br
 - `--destructive` `oklch(0.58 0.2 27)`
 - Statuses, by Jira category: To Do `oklch(0.93 0.006 260)` on `oklch(0.42 0.01 260)`; In Progress `oklch(0.93 0.04 255)` on `oklch(0.45 0.13 255)`; Done `oklch(0.93 0.06 150)` on `oklch(0.42 0.11 150)`
 - Sticky note and frame colors: 6 muted hues with the same lightness `L 0.94`, `C 0.05`
+- Scrollbars: thin everywhere, thumb `--muted-foreground` at 35%, 60% on hover, transparent track; never the browser's default bars.
 - Sticky text: 14px, shrinking with no lower bound so the whole text always fits the note, never scrolled or cut, like Miro. At 2000 characters input stops and a lucide `Ban` sign at 60% of the note, in `--sticky-foreground`, fades out over 0.9 s.
 - Timers: `--timer` `oklch(0.82 0.16 75)` with `--timer-foreground` `oklch(0.3 0.07 60)`, the only saturated fill on the canvas, so waiting spots stand out; `--timer-fired` `oklch(0.66 0.19 30)` with near-white text; the same in both themes
 

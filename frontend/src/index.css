@@ -182,6 +182,32 @@
   html {
     @apply font-sans;
   }
+  /* Thin scrollbars in theme colors instead of the browser's default bars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 35%, transparent) transparent;
+  }
+  *:hover {
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 60%, transparent) transparent;
+  }
+  /* Safari before scrollbar-color support. */
+  @supports not (scrollbar-color: auto) {
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      border: 2px solid transparent;
+      border-radius: 9999px;
+      background: color-mix(in oklch, var(--muted-foreground) 35%, transparent) padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+    }
+  }
 }
 
 /* Legal pages: markdown rendered by scripts/prerender.js, served without JS. */
