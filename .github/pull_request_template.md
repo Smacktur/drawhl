@@ -13,3 +13,4 @@
 - [ ] `CHANGELOG.md` updated under `Unreleased` (user-visible changes)
 - [ ] New dependencies listed in `THIRD_PARTY.md`, licenses compatible (`make licenses`)
 - [ ] Substantial AI-generated code is mentioned above
+- [ ] I agree to the [CLA](https://github.com/Smacktur/drawhl/blob/main/CLA.md) for this and future contributions

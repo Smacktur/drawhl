@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/Smacktur/drawhl/actions/workflows/ci.yml"><img src="https://github.com/Smacktur/drawhl/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License: AGPL-3.0"></a>
   <a href="https://github.com/Smacktur/drawhl/releases"><img src="https://img.shields.io/github/v/release/Smacktur/drawhl" alt="Release"></a>
 </p>
 
@@ -200,4 +200,11 @@ make help     # all commands
 
 ## 📝 License
 
-[MIT](LICENSE) © The drawhl Authors. Third-party components: [THIRD_PARTY.md](THIRD_PARTY.md).
+[GNU AGPL v3](LICENSE) (`AGPL-3.0-only`) © The drawhl Authors. Third-party components: [THIRD_PARTY.md](THIRD_PARTY.md).
+
+- Anyone may use, self-host and modify drawhl, privately or inside a company, for free.
+- If you change drawhl and let people use the changed version over a network, you must offer them its source code under the same license.
+- The name and logo are not covered by the license: see [TRADEMARKS.md](TRADEMARKS.md).
+- Need other terms, for example to embed drawhl in a closed product? Email smacktur@gmail.com.
+
+Releases up to and including `v2026.10.6` were published under the MIT License and stay available under it.

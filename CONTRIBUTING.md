@@ -31,7 +31,7 @@ Optional: `pre-commit install` runs fast checks on commit and `make check` on pu
 2. Add or update tests for behaviour changes; `make check` must pass.
 3. Use [Conventional Commits](https://www.conventionalcommits.org/): `feat: …`, `fix: …`, `docs: …`.
 4. Update `CHANGELOG.md` under `Unreleased` for user-visible changes.
-5. New dependency → a row in `THIRD_PARTY.md`; its license must be compatible with MIT (`make licenses`).
+5. New dependency → a row in `THIRD_PARTY.md`; its license must be permissive or weak copyleft (`make licenses`); GPL-family licenses are not accepted, they would block dual licensing.
 6. Fill in the PR template. A maintainer reviews; CI must be green before merge.
 
 Code style follows [docs/playbook/04-coding-standards.md](docs/playbook/04-coding-standards.md); formatters and linters (`make fmt`) settle the rest.
@@ -42,4 +42,4 @@ Using AI tools is fine. You are responsible for every line you submit: understan
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE). Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+drawhl is licensed under the [GNU AGPL v3](LICENSE). Before your first pull request is merged, you agree to the [Contributor License Agreement](CLA.md) by ticking its box in the PR template. You keep the copyright in your work; the CLA lets the maintainer also offer drawhl under other terms, such as a hosted version, while the code stays open under the AGPL. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).

@@ -13,7 +13,7 @@ Profile: **oss** ([strategy](docs/playbook/01-strategy.md)). Research: [docs/res
 6. **Disclose third-party code** in `THIRD_PARTY.md` (libraries, models, datasets).
 7. No `git push --force`, `reset --hard`, or deleting branches and tags unless the human explicitly asks.
 8. **The repository goes public with its whole history.** No tokens, internal URLs, colleagues' names, real data or screenshots of work systems in commits, tests or fixtures — only made-up data.
-9. **Licenses.** A new dependency must be compatible with MIT (`make licenses`); no proprietary SDKs that need a production key. A user-visible change gets a line in `CHANGELOG.md` (`Unreleased`).
+9. **Licenses.** The project is AGPL-3.0-only. A new dependency must be permissive or weak copyleft (`make licenses`), so the code can still be dual licensed; no proprietary SDKs that need a production key. A user-visible change gets a line in `CHANGELOG.md` (`Unreleased`).
 10. **Everything in the repository is in English**: code, docs, specs, commits, PRs, UI text.
 
 ## Principles
@@ -55,7 +55,7 @@ Dependencies: `api → domain ← adapters`. The domain does not import FastAPI 
 | Command | What it does |
 |---|---|
 | `make check` | lint + tests — the gate before merge |
-| `make licenses` | dependency licenses compatible with MIT |
+| `make licenses` | dependency licenses compatible with AGPL-3.0 and dual licensing |
 | `make up` / `make down` | start / stop compose |
 | `make smoke` | core scenario against the running stack |
 | `make dev-api` / `make dev-web` | local run with hot reload |
