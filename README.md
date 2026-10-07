@@ -18,7 +18,7 @@
   <a href="https://smacktur.github.io/drawhl/"><img src="https://img.shields.io/badge/docs-user%20guide-8A2BE2" alt="Docs"></a>
 </p>
 
-![A drawhl board: three frames of task cards with live statuses, sticky notes and arrows](docs/assets/board.png)
+![A drawhl board: frames of live task cards with timers, sticky notes, arrows, a Gantt release plan and the focus timer](docs/assets/board.png)
 
 drawhl is an open-source, self-hosted whiteboard where the tasks from your tracker live as cards. Put them in frames, circle a group, leave a sticky note beside it and draw arrows between them. Statuses update on their own while the board is open, so the board stays true without manual upkeep.
 
