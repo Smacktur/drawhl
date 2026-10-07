@@ -24,7 +24,8 @@
     "focus-music",
     "focus-own-tracks",
     "focus-storage-status",
-    "timers"
+    "timers",
+    "timer-list"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -58,7 +59,8 @@
     "G3_focus-storage-status": "approved",
     "G1_timers": "approved",
     "G2_timers": "approved",
-    "G3_timers": "approved"
+    "G3_timers": "approved",
+    "G3_timer-list": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
