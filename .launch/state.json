@@ -28,7 +28,8 @@
     "timer-list",
     "timer-triggers",
     "search",
-    "search-preview"
+    "search-preview",
+    "search-filters"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -68,7 +69,8 @@
     "G1_search": "approved",
     "G2_search": "approved",
     "G3_search": "approved",
-    "G3_search-preview": "approved"
+    "G3_search-preview": "approved",
+    "G3_search-filters": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",

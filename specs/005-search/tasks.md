@@ -36,9 +36,9 @@ description: "Task list for Search on the board"
 
 ## Phase 3: Slice 24 `feat/search-filters` — filters (US3)
 
-- [ ] T009 [US3] `search/query.ts`: parse `@`, `status:`, `type:`, `priority:`, `#`; value suggestions with counts. Tests
-- [ ] T010 [US3] Chips in the input, Tab to insert, Backspace to edit. Tests
-- [ ] T011 [US3] `DESIGN.md`, `CHANGELOG.md`; screenshot
+- [x] T009 [US3] (suggestion counts follow the chips; filters match Gantt task rows too) `search/query.ts`: parse `@`, `status:`, `type:`, `priority:`, `#`; value suggestions with counts. Tests
+- [x] T010 [US3] Chips in the input, Tab to insert, Backspace to edit. Tests
+- [x] T011 [US3] `DESIGN.md`, `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
 

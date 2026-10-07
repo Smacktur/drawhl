@@ -93,6 +93,52 @@ test('cards are found by status, assignee, type and priority', () => {
   expect(ids('deploy')).toEqual(['s', 't'])
 })
 
+test('filters narrow to tasks; values of one field are alternatives, fields add up', () => {
+  const index = buildIndex(
+    [
+      ...nodes,
+      { id: 'd', type: 'jira_card', position: at, data: { key: 'DEMO-2' } },
+      { id: 'x', type: 'jira_card', position: at, data: { key: 'DEMO-3' } },
+    ],
+    {
+      ...tasks,
+      'DEMO-2': task('DEMO-2', 'Ship docs', { assignee_name: 'Oleg Smirnov', status_name: 'Done' }),
+      'DEMO-3': task('DEMO-3', 'Fix login', { assignee_name: 'Oleg Smirnov' }),
+    },
+  )
+  const ids = (text: string, chips = []) =>
+    viewFor(index, text, [], chips).groups.flatMap((g) => g.entries.map((e) => e.id))
+  expect(ids('@anna ')).toEqual(['c', 'g:0'])
+  expect(ids('@oleg status:prog ')).toEqual(['x'])
+  expect(ids('@anna @oleg login ')).toEqual(['c', 'g:0', 'x'])
+  expect(ids('login', [{ field: 'assignee', value: 'Oleg Smirnov' }] as never)).toEqual(['x'])
+  expect(ids('#')).toEqual(['f', 'g'])
+  expect(ids('#q4')).toEqual(['g'])
+})
+
+test('suggests values while a filter is typed, one per task', () => {
+  const view = viewFor(buildIndex(nodes, tasks), '@an', [])
+  expect(view.groups).toEqual([])
+  expect(view.suggestions).toEqual({
+    field: 'assignee',
+    values: [{ value: 'Anna Lee', count: 1 }],
+  })
+})
+
+test('suggestions count only tasks that pass the chips', () => {
+  const index = buildIndex(
+    nodes.concat({ id: 'd', type: 'jira_card', position: at, data: { key: 'DEMO-2' } }),
+    {
+      ...tasks,
+      'DEMO-2': task('DEMO-2', 'Ship docs', { assignee_name: 'Oleg Smirnov', type_name: 'Task' }),
+    },
+  )
+  const types = (chips: { field: 'assignee'; value: string }[]) =>
+    viewFor(index, 'type:', [], chips).suggestions?.values.map((v) => v.value)
+  expect(types([])).toEqual(['Bug', 'Task'])
+  expect(types([{ field: 'assignee', value: 'Oleg Smirnov' }])).toEqual(['Task'])
+})
+
 test('an empty query lists recent jumps that still exist, then frames', () => {
   const view = viewFor(buildIndex(nodes, tasks), '', ['t', 'gone', 's'])
   expect(view.groups.map((g) => [g.title, g.entries.map((e) => e.id)])).toEqual([
