@@ -15,13 +15,16 @@
   <a href="https://github.com/Smacktur/drawhl/actions/workflows/ci.yml"><img src="https://github.com/Smacktur/drawhl/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License: AGPL-3.0"></a>
   <a href="https://github.com/Smacktur/drawhl/releases"><img src="https://img.shields.io/github/v/release/Smacktur/drawhl" alt="Release"></a>
+  <a href="https://smacktur.github.io/drawhl/"><img src="https://img.shields.io/badge/docs-user%20guide-8A2BE2" alt="Docs"></a>
 </p>
 
-![A drawhl board: three frames of task cards with live statuses, sticky notes and arrows](docs/assets/board.png)
+![A drawhl board: frames of live task cards with timers, sticky notes, arrows, a Gantt release plan and the focus timer](docs/assets/board.png)
 
 drawhl is an open-source, self-hosted whiteboard where the tasks from your tracker live as cards. Put them in frames, circle a group, leave a sticky note beside it and draw arrows between them. Statuses update on their own while the board is open, so the board stays true without manual upkeep.
 
 It is for people who keep a lot of work in their head and think spatially: leads, managers, anyone juggling tasks across projects. Lists and kanban boards show a long column; drawhl lets you lay the same tasks out the way you think about them.
+
+The [user guide](https://smacktur.github.io/drawhl/) covers every feature and how to self-host drawhl.
 
 > drawhl is young. Jira Data Center is the first tracker; Linear, Plane, Todoist and others are next. Ideas and bug reports are welcome in [issues](https://github.com/Smacktur/drawhl/issues).
 
@@ -43,21 +46,21 @@ cd drawhl
 docker compose up --build
 ```
 
-Open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it.
+Open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
 
 ## 🌟 Features
 
-- **Live task cards.** Each card shows type, key, title and status from your tracker. Statuses refresh every 30 s with one batched request per board, and closed tasks are struck through.
+- **Live task cards.** Each card shows type, key, title and status from your tracker. Statuses refresh every 30 s with one batched request per board, and closed tasks are struck through. A colored dot in the corner shows whether every tracker syncs and, on click, why one fails.
 - **Fast ways to add tasks.** By key (`DEV-12`), by link, several at once, or by query (JQL in Jira) with suggestions for fields and values. Or just paste: links copied from your tracker tabs become cards, any other text becomes a note. New cards land in a neat grid.
-- **A real whiteboard.** Frames, sticky notes, text and arrows. Drag cards in and out of frames; moving a frame moves everything inside.
+- **A real whiteboard.** Frames, sticky notes, text and arrows, which can also point at an empty spot. Drag cards in and out of frames; moving a frame moves everything inside. Smart guides snap what you drag or resize to the edges, centers and gaps of its neighbors, and long text in a sticky note shrinks to fit.
 - **Details on demand.** Click a card for assignee, priority, last update and a link to the task. Collapse cards to one line when the board gets busy.
-- **Gantt module.** Drop cards onto a timeline to plan them as bars with live status, nest them into stages, mark milestones and draw dependency lines that turn amber when a task starts too early. Plan dates stay on the board.
-- **Timers.** Put a small countdown cube next to a card you are waiting on, with a note on what for. It goes off with a browser notification and a chime while drawhl is open, and moves and disappears with its card.
+- **Gantt module.** The first board module. Drop cards onto a timeline to plan them as bars with live status, nest them into stages, mark milestones and draw dependency lines that turn amber when a task starts too early. Plan dates stay on the board.
+- **Timers.** Put a small countdown cube next to a card you are waiting on, with a note on what for. It goes off after a set time or as soon as the task leaves its status in the tracker, with a browser notification and a chime while drawhl is open. Timers move and disappear with their card, and a list in the top bar shows every timer on the board.
 - **Focus timer.** A pomodoro capsule at the top of the screen: 25 minutes of focus, 5 minute breaks and a long one after every fourth round, with a chime and a browser notification at the end. Its color warms from green to raspberry as the time runs out. Lengths are adjustable, and the countdown survives a reload. Under the timer, a small player with seven built-in lofi tracks (CC0) or your own audio files, kept in your browser; it can pause itself on breaks.
 - **Several boards.** Saved on the server and reopened exactly as you left them.
 - **Search.** `⌘K` finds any text on the board, cards by key, title, status or assignee included, and moves the board to it. Filters like `@anna` or `status:review`, and app commands and other boards in the same palette.
 - **Keyboard first.** Undo and redo, copy and paste, duplicate, shortcuts for every tool (press `?`), light and dark theme.
-- **Yours to keep.** One SQLite file, no telemetry, no account, no cloud.
+- **Yours to keep.** One SQLite file, no telemetry, no account, no cloud. The About panel tells you when a new release is out.
 
 ## 🔌 Task trackers
 
@@ -88,7 +91,7 @@ drawhl uses your own personal access token, so a Jira admin doesn't need to set 
 3. In Jira, open your profile → Personal Access Tokens → Create token.
 4. In drawhl, open the menu → Settings, choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
 
-Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again.
+Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://smacktur.github.io/drawhl/jira-data-center/).
 
 ## 🗺️ Roadmap
 
@@ -152,6 +155,8 @@ All data is one SQLite file in `./data`, which survives rebuilds and upgrades.
 - **Upgrade from images:** `docker compose -f compose.release.yml pull && docker compose -f compose.release.yml up -d`. Pin a version with `TAG=2026.10.6`.
 - **Upgrade from source:** `git pull && docker compose up --build -d`.
 
+More in the [data and upgrades guide](https://smacktur.github.io/drawhl/data-and-upgrades/).
+
 ## 🛡️ Security and privacy
 
 drawhl is a single-user app and **has no login yet**. Anyone who can open its URL sees your boards and can search your tracker with your token. Run it on your own machine or home network, or reach it through a VPN such as Tailscale. If you expose it beyond that, put it behind a reverse proxy that adds authentication.
@@ -191,7 +196,7 @@ Details: [docs/architecture.md](docs/architecture.md).
 
 ## 🤝 Contributing
 
-Bug reports, ideas and pull requests are welcome, and a new tracker provider is a great first contribution. Start with [CONTRIBUTING.md](CONTRIBUTING.md). Everyone follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+Bug reports, ideas and pull requests are welcome, and a new tracker provider is a great first contribution. Start with [CONTRIBUTING.md](CONTRIBUTING.md). On your first pull request a bot asks you to sign the [CLA](CLA.md), once. Everyone follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ```bash
 make up       # whole stack in Docker
