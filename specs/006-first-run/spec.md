@@ -30,17 +30,18 @@ Someone runs `docker compose up` for the first time and opens drawhl. Instead of
 
 ### User Story 2 - Sticky text fits the note (Priority: P2)
 
-A long note no longer spills out under the sticky. As the user types, the text gets smaller to stay inside, like in Miro.
+A long note no longer spills out under the sticky. As the user types, the text keeps getting smaller so it always stays inside, like in Miro. There is no scroll: when the note reaches its character limit, typing stops and a "no entry" sign flashes over the note.
 
 **Why this priority**: The most visible rough edge on a board full of notes; draft idea 8.
 
-**Independent Test**: type a paragraph into a default sticky: the font steps down and the text stays inside; delete most of it: the font grows back. Resize the sticky: the font follows.
+**Independent Test**: type a paragraph into a default sticky: the font shrinks and the text stays inside; delete most of it: the font grows back. Resize the sticky: the font follows. Paste a long text: it stops at the limit and the sign flashes.
 
 **Acceptance Scenarios**:
 
-1. **Given** a sticky, **When** its text grows past the note while typing or viewing, **Then** the font shrinks from 16 px in steps down to 10 px until the text fits; it grows back when the text gets shorter or the note bigger.
-2. **Given** text that does not fit even at 10 px, **Then** it is cut at the bottom edge with a fade, and the full text shows while editing, with a scroll inside the note.
-3. **Given** a board with many stickies, **Then** fitting does not make panning or zooming stutter: it runs only when a note's text or size changes.
+1. **Given** a sticky, **When** its text grows past the note while typing or viewing, **Then** the font shrinks from 16 px until the whole text fits, with no lower bound; it grows back when the text gets shorter or the note bigger. The note never scrolls and never cuts text.
+2. **Given** a sticky with 2000 characters, **When** the user types or pastes more, **Then** the extra characters are not added and a large "no entry" sign flashes over the note for about a second.
+3. **Given** an older sticky with more than 2000 characters, **Then** it shows all its text fitted, and it can be shortened but not lengthened.
+4. **Given** a board with many stickies, **Then** fitting does not make panning or zooming stutter: it runs only when a note's text or size changes.
 
 ---
 
@@ -59,13 +60,13 @@ Panels, menus and dialogs scroll with thin scrollbars in the theme's colors inst
 
 ---
 
-### User Story 4 - Paste text onto the board (Priority: P4)
+### User Story 4 - Paste text and task links onto the board (Priority: P4)
 
-The user copies a line from a chat or a doc and presses `⌘V` over the board: a text element with that text appears under the pointer. A setting makes pasted text a sticky note instead.
+The user copies a line from a chat or a doc and presses `⌘V` over the board: a text element with that text appears under the pointer. A setting makes pasted text a sticky note instead. When the clipboard holds only task links or keys, for example the URLs of ten open tracker tabs, the paste adds a card for each, laid out in a grid, without opening the Jira card tool.
 
-**Why this priority**: A fast way to bring notes in; today pasting outside text does nothing. Draft idea 5.
+**Why this priority**: A fast way to bring notes and tasks in; today pasting outside text does nothing. Draft ideas 5 and 13.
 
-**Independent Test**: copy "Ask Sam about the proxy" from another app, hover the board, press `⌘V`: a text element with it appears at the pointer, selected. Switch "Paste text as" to sticky note in Settings: the next paste makes a sticky. Copy a card inside drawhl and paste: the card is pasted, as today.
+**Independent Test**: copy "Ask Sam about the proxy" from another app, hover the board, press `⌘V`: a text element with it appears at the pointer, selected. Switch "Paste text as" to sticky note in Settings: the next paste makes a sticky. Copy three lines `https://jira.example.com/browse/DEMO-1`, `DEMO-2`, `https://jira.example.com/browse/DEMO-3` and paste: three DEMO cards in a grid at the pointer. Copy a card inside drawhl and paste: the card is pasted, as today.
 
 **Acceptance Scenarios**:
 
@@ -73,6 +74,8 @@ The user copies a line from a chat or a doc and presses `⌘V` over the board: a
 2. **Given** the setting "Paste text as: Sticky note", **Then** the paste creates a yellow sticky instead.
 3. **Given** the user copied elements in drawhl last, **When** they paste, **Then** the elements are pasted as today, not their text.
 4. **Given** a paste into a text field, the search palette or a dialog, **Then** the field gets the text as usual and nothing is added to the board.
+5. **Given** clipboard text where every item, split by lines, spaces or commas, is a task key or a task link of a connected tracker, **When** the user pastes over the board, **Then** a card is added for each, up to 50, in the same grid as adding several keys; keys that fail show an error toast with the list, the rest are added.
+6. **Given** text that mixes task links with other words, **Then** it is pasted as text, links included.
 
 ### Edge Cases
 
@@ -89,9 +92,9 @@ The user copies a line from a chat or a doc and presses `⌘V` over the board: a
 - **FR-001**: The server MUST create the welcome board at most once per database, only when the database has no boards and was never seeded, and remember that it did.
 - **FR-002**: The welcome board MUST pass the same validation as a saved board and use only demo task keys and made-up text.
 - **FR-003**: The welcome board's dates (Gantt bars, milestone, timer) MUST be computed from the creation date.
-- **FR-004**: A sticky's font MUST shrink from 16 px to no less than 10 px to fit its text, and grow back when there is room.
+- **FR-004**: A sticky's font MUST shrink from 16 px with no lower bound so its whole text fits, and grow back when there is room; a sticky MUST NOT accept more than 2000 characters from the UI.
 - **FR-005**: Every scrolling area of the app MUST use the themed thin scrollbar.
-- **FR-006**: Pasting plain text over the board MUST add a text element, or a sticky note when the setting says so; pasting copied drawhl elements MUST keep working.
+- **FR-006**: Pasting over the board MUST be decided in this order: copied drawhl elements, then task keys and links (cards), then plain text (a text element, or a sticky note when the setting says so). New kinds of paste plug in as another step in this order.
 - **FR-007**: The "Paste text as" setting MUST be stored in the browser and default to text.
 
 ### Key Entities
@@ -102,14 +105,15 @@ The user copies a line from a chat or a doc and presses `⌘V` over the board: a
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: A fresh `docker compose up` shows a populated board in the first screen, without any click.
-- **SC-002**: No text overflows a sticky at its default size up to about 400 characters.
+- **SC-002**: No text overflows a sticky at any size and length.
 - **SC-003**: No default browser scrollbar is visible anywhere in the app in Chrome and Firefox on Windows.
-- **SC-004**: Outside text reaches the board with one paste.
+- **SC-004**: Outside text and a batch of task links reach the board with one paste.
 
 ## Assumptions
 
 - The welcome board is in English, like the rest of the UI.
 - Fit-to-note applies to sticky notes only; free text elements grow as today.
+- The 2000 character limit is a UI rule; the server keeps accepting up to 5000 so older boards still load.
 - The paste setting lives in the browser like the other UI preferences, not on the server.
 
 ## Out of scope
@@ -117,4 +121,5 @@ The user copies a line from a chat or a doc and presses `⌘V` over the board: a
 - A home page with boards and folders (draft idea 32).
 - An interactive tour or tooltips that walk the user through the board.
 - Pasting images, files or rich text.
+- Links of trackers other than the connected one; they arrive with their providers.
 - Re-creating the welcome board on demand.

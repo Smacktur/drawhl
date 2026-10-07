@@ -27,8 +27,8 @@ description: "Task list for First run and polish"
 
 ## Phase 2: Slice 27 `feat/sticky-fit` — sticky text fits the note (US2)
 
-- [ ] T005 [P] [US2] `canvas/fit.ts`: largest step from 16 to 10 px that fits. Tests
-- [ ] T006 [US2] `StickyNode.tsx`: fit on text and size change, fade over the minimum, scroll while editing. Tests
+- [ ] T005 [P] [US2] `canvas/fit.ts`: largest font size from 16 px down that fits, no lower bound. Tests
+- [ ] T006 [US2] `StickyNode.tsx`: fit on text and size change, 2000 character limit with the "no entry" flash. Tests
 - [ ] T007 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
@@ -40,9 +40,9 @@ description: "Task list for First run and polish"
 
 **Checkpoint**: `make check`, screenshot → G3.
 
-## Phase 4: Slice 29 `feat/paste-text` — paste text onto the board (US4)
+## Phase 4: Slice 29 `feat/paste-text` — paste text and task links onto the board (US4)
 
-- [ ] T010 [P] [US4] `canvas/paste.ts`: clipboard marker on copy, outside text to a text or sticky node at the pointer, ignore editable targets. Tests
+- [ ] T010 [P] [US4] `canvas/paste.ts`: ordered steps (drawhl elements by clipboard marker, task keys and links to cards, plain text to a text or sticky node), ignore editable targets. Tests
 - [ ] T011 [US4] Canvas wires the native `paste` event; "Paste text as" in Settings, stored in `localStorage`. Tests
 - [ ] T012 [US4] `CHANGELOG.md`, README; screenshot
 

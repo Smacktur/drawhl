@@ -48,11 +48,11 @@ frontend/src/settings/SettingsSheet.tsx   "Paste text as" control
 
 Seed: `list_boards` reads the list; when it is empty and `welcome_seeded` is unset, it sets the flag first and then creates the board inside one SQLite transaction (`BEGIN IMMEDIATE`), so two concurrent requests create one board. A non-empty list on first read sets the flag without seeding, which covers upgrades. The welcome doc is validated with `check_doc` in a test; the frontend fits the view when it opens a board at version 1, that is never saved since it was created; for a new empty board this does nothing.
 
-Sticky fit: after the text or size changes, measure `scrollHeight` against the note's inner height and pick the largest size from 16, 14, 12, 11, 10 that fits; the size is a CSS variable on the node, not saved in the doc. Over the minimum: `overflow: hidden` with a bottom fade mask; while editing, the textarea scrolls.
+Sticky fit: after the text or size changes, binary-search the largest font size from 16 px down that makes `scrollHeight` fit the note's inner height; the size is a CSS variable on the node, not saved in the doc. The textarea has `maxLength` 2000; an input or paste that hits it triggers the "no entry" flash (a lucide `Ban` icon over the note, CSS fade).
 
 Scrollbars: `scrollbar-width: thin` and `scrollbar-color` on `*` for Firefox, `::-webkit-scrollbar` rules for Chromium and Safari, colors from `--muted-foreground` with alpha, transparent track.
 
-Paste: copy also writes `application/x-drawhl` with an id to the system clipboard through the `copy` event; the `paste` event checks it first. If it matches the in-memory buffer, elements are pasted as today; otherwise `text/plain` makes a text or sticky node. Paste inside editable targets is ignored by the board.
+Paste: one native `paste` handler runs an ordered list of steps; the first that takes the clipboard wins. 1) Copied drawhl elements: copy also writes `application/x-drawhl` with an id through the `copy` event; when it matches the in-memory buffer, elements are pasted as today. 2) Task keys and links: split `text/plain` by lines, spaces and commas; when every item parses as a key or a link of the connected tracker (the same parser as the Jira card input's "several keys" mode), the existing add-several flow adds the cards in a grid at the pointer. 3) Plain text: a text or sticky node. Draft idea 13's other trackers plug into step 2 through their providers. Paste inside editable targets is ignored by the board.
 
 ## Risks
 
