@@ -1,15 +1,16 @@
 import { useOnViewportChange, useReactFlow, useStore, type NodeProps } from '@xyflow/react'
-import { AlarmClock, BellRing, Check, Eye } from 'lucide-react'
+import { AlarmClock, BellRing, Check, Eye, Repeat } from 'lucide-react'
 import { memo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { takeFresh } from '@/canvas/editing'
+import { useTask } from '@/canvas/tasks-context'
 import type { TimerData, TimerNode as TimerNodeType } from '@/canvas/types'
 import { cn } from '@/lib/utils'
 import { holderLabel } from './attach'
 import { useNow } from './clock'
 import { useFlashing } from './fly'
 import { formatDue, formatLeft, formatLeftLong } from './time'
-import { goesOffAt, timerState, type TimerState } from './timer'
+import { describeWatch, goesOffAt, timerState, type TimerState } from './timer'
 import { TimerEditor } from './TimerEditor'
 
 // A press that moves further than this is a drag, not a click that opens the popover.
@@ -25,6 +26,10 @@ const ICONS: Record<TimerState, typeof AlarmClock> = {
 
 function hint(data: TimerData, state: TimerState, now: number) {
   const at = goesOffAt(data)
+  if (data.watch && state !== 'done') {
+    const watch = describeWatch(data.watch)
+    return state === 'fired' ? watch : `Goes off ${watch}`
+  }
   if (at === null) return 'Waiting'
   if (state === 'fired') return `Went off ${formatDue(at)}`
   if (state === 'done') return 'Done'
@@ -38,6 +43,12 @@ function TimerNodeView({ id, data, parentId, selected, dragging }: NodeProps<Tim
     const parent = parentId ? s.nodeLookup.get(parentId) : undefined
     return parent && holderLabel(parent)
   })
+  // Only a Jira card's key is a holder label without spaces.
+  const cardKey = useStore((s) => {
+    const parent = parentId ? s.nodeLookup.get(parentId) : undefined
+    return parent?.type === 'jira_card' ? (parent.data as { key: string }).key : ''
+  })
+  const task = useTask(cardKey)
   const flashing = useFlashing(id)
   const [open, setOpen] = useState(() => takeFresh(id))
   const pressedAt = useRef<{ x: number; y: number } | null>(null)
@@ -74,6 +85,13 @@ function TimerNodeView({ id, data, parentId, selected, dragging }: NodeProps<Tim
           )}
         >
           <Icon className="size-3.5" strokeWidth={2} />
+          {data.repeat && !data.watch && state !== 'done' && (
+            <Repeat
+              aria-label="Repeats"
+              className="bg-card text-foreground absolute -top-1.5 -right-1.5 size-3.5 rounded-full border p-0.5"
+              strokeWidth={2.5}
+            />
+          )}
           {left && (
             <span className="font-mono text-[11px] leading-none font-semibold tabular-nums">
               {left}
@@ -94,6 +112,7 @@ function TimerNodeView({ id, data, parentId, selected, dragging }: NodeProps<Tim
         <TimerEditor
           data={data}
           holder={holder}
+          task={task?.state === 'ok' ? { key: task.key, status: task.status_name } : undefined}
           onChange={(next) => updateNodeData(id, next, { replace: true })}
           onDelete={() => void deleteElements({ nodes: [{ id }] })}
         />

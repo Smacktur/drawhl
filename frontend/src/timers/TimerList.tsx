@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatClock, formatDue, formatLeft } from './time'
-import { SNOOZES, type TimerState } from './timer'
+import { describeWatch, SNOOZES, type TimerState } from './timer'
 import { setTimerPanelOpen, useTimerPanelOpen } from './panel'
 import { groupTimers, sameDay } from './groups'
 import type { TimerEntry } from './useTimers'
@@ -17,6 +17,7 @@ const ICONS: Record<TimerState, typeof AlarmClock> = {
 }
 
 function when(timer: TimerEntry, now: number) {
+  if (timer.watch && timer.state !== 'done') return describeWatch(timer.watch)
   if (timer.state === 'fired') return `Went off at ${formatClock(timer.at!)}`
   if (timer.state === 'done') return 'Done'
   if (timer.at === null) return 'Waiting'

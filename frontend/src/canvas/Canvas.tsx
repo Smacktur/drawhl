@@ -61,7 +61,7 @@ import { askNotify, primeAudio } from '@/focus/alerts'
 import { BESIDE, dropTimers, holdsTimers, TIMER_SIZE } from '@/timers/attach'
 import { flyTo } from '@/timers/fly'
 import { BoardTimers } from '@/timers/BoardTimers'
-import { newTimer } from '@/timers/timer'
+import { newTimer, waitsForStatus } from '@/timers/timer'
 import { TimerNode } from '@/timers/TimerNode'
 import { useTheme } from '@/lib/theme'
 
@@ -102,7 +102,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   const [tool, setTool] = useState<Tool>('select')
   const [connecting, setConnecting] = useState(false)
   const [menuTarget, setMenuTarget] = useState<MenuTarget | null>(null)
-  const refresh = useRefresh(board.id)
+  const refresh = useRefresh(board.id, { background: waitsForStatus(nodes) })
   const tasks = useMemo(
     () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
     [board.tasks, added, refresh.data],
@@ -228,10 +228,15 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     )
   }
 
-  const updateTimer = (id: string, change: (data: TimerData) => TimerData) =>
-    setNodes((current) =>
-      current.map((n) => (n.id === id && n.type === 'timer' ? { ...n, data: change(n.data) } : n)),
-    )
+  const updateTimer = useCallback(
+    (id: string, change: (data: TimerData) => TimerData) =>
+      setNodes((current) =>
+        current.map((n) =>
+          n.id === id && n.type === 'timer' ? { ...n, data: change(n.data) } : n,
+        ),
+      ),
+    [setNodes],
+  )
   const openTimer = useCallback((id: string) => flyTo(flow, id), [flow])
 
   const placeAt = (kind: PlaceTool, screen: XYPosition) => {
@@ -523,7 +528,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           </div>
         </CanvasContextMenu>
       </ModuleHostContext.Provider>
-      <BoardTimers nodes={nodes} onOpen={openTimer} onChange={updateTimer}>
+      <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
         <RefreshIndicator
           sources={refresh.data?.sources ?? []}
           serverError={refresh.error}

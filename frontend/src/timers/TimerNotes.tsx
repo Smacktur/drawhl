@@ -1,7 +1,7 @@
 import { BellRing, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatClock } from './time'
-import { SNOOZES } from './timer'
+import { describeWatch, SNOOZES } from './timer'
 import type { FiredTimer } from './useTimers'
 
 const SHOWN = 3
@@ -55,7 +55,10 @@ export function TimerNotes({ fired, missed, onDismissMissed, onOpen, onDone, onS
             <span className="min-w-0 flex-1">
               <span className="block truncate font-medium">{timer.note || 'Timer'}</span>
               <span className="text-muted-foreground block truncate text-[12px]">
-                {[timer.holder && `On ${timer.holder}`, `Went off at ${formatClock(timer.at)}`]
+                {[
+                  timer.holder && `On ${timer.holder}`,
+                  timer.watch ? describeWatch(timer.watch) : `Went off at ${formatClock(timer.at)}`,
+                ]
                   .filter(Boolean)
                   .join(' · ')}
               </span>

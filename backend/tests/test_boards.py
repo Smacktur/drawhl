@@ -58,7 +58,9 @@ def test_timer_attaches_to_an_element_even_inside_a_frame():
             frame("f"),
             card("a", "DEV-1", parent="f"),
             timer("t", parent="a", note="ping QA", dueAt="2026-10-25T12:00:00Z", repeat="daily"),
-            timer("u", parent="f", watch={"key": "DEV-1", "status": "In Review"}),
+            timer(
+                "u", parent="f", watch={"key": "DEV-1", "status": "In Review", "changedTo": "Done"}
+            ),
             timer("v"),
         ]
     )

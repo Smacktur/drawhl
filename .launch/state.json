@@ -25,7 +25,8 @@
     "focus-own-tracks",
     "focus-storage-status",
     "timers",
-    "timer-list"
+    "timer-list",
+    "timer-triggers"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -60,7 +61,8 @@
     "G1_timers": "approved",
     "G2_timers": "approved",
     "G3_timers": "approved",
-    "G3_timer-list": "approved"
+    "G3_timer-list": "approved",
+    "G3_timer-triggers": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
