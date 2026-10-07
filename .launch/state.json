@@ -1,6 +1,6 @@
 {
   "profile": "oss",
-  "phase": "spec",
+  "phase": "build",
   "feature": "specs/005-search",
   "slices_done": [
     "card-on-board",
@@ -63,7 +63,8 @@
     "G3_timers": "approved",
     "G3_timer-list": "approved",
     "G3_timer-triggers": "approved",
-    "G1_search": "approved"
+    "G1_search": "approved",
+    "G2_search": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -71,6 +72,6 @@
     "2026-10-06 G1 modules: owner approved a module host with Gantt as the first module; plan dates on the board only, Jira dates later. Spec 002 awaits G2.",
     "2026-10-07 G1 and G2 focus: owner asked for a pomodoro timer with lofi music, picked the capsule design and told the agent to proceed without waiting. Music: 7 CC0 tracks from OpenGameArt, Pixabay rejected by license.",
     "2026-10-07 G1 and G2 timers: owner shaped idea 10 (cube timers attached to elements, list of the current board, status and repeat triggers) and told the agent to build; notifications only while drawhl is open.",
-    "2026-10-07 G1 search: owner asked for a Spotlight-like palette on Cmd+K and Cmd+F and took all extras: preview and highlight, filters, commands and boards, layout fallback and recent jumps. Spec 005 awaits G2."
+    "2026-10-07 G1 search: owner asked for a Spotlight-like palette on Cmd+K and Cmd+F and took all extras: preview and highlight, filters, commands and boards, layout fallback and recent jumps. Owner approved spec 005 (G2) and asked for a fast search; no list virtualization needed with 50 rows."
   ]
 }
