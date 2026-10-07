@@ -99,6 +99,10 @@
   --sticky-blue: oklch(0.94 0.05 240);
   --sticky-green: oklch(0.94 0.05 150);
   --sticky-foreground: oklch(0.24 0.01 260);
+  /* Focus capsule dial: hue and chroma come from the timer state, lightness from the theme. */
+  --focus-fill-l: 0.945;
+  --focus-ink-l: 0.4;
+  --focus-chroma-k: 1;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -139,6 +143,9 @@
   --sync-ok: oklch(0.72 0.17 150);
   --sync-partial: oklch(0.82 0.15 80);
   --warning: oklch(0.78 0.15 60);
+  --focus-fill-l: 0.32;
+  --focus-ink-l: 0.9;
+  --focus-chroma-k: 0.9;
   --status-new: oklch(0.93 0.006 260);
   --status-new-foreground: oklch(0.42 0.01 260);
   --status-progress: oklch(0.93 0.04 255);
@@ -240,8 +247,55 @@
   pointer-events: none;
 }
 
+/* Focus capsule: the dial drifts between two hues of its state; done pulses three times. */
+.focus-dial {
+  --focus-fill: oklch(
+    var(--focus-fill-l) calc(var(--focus-c) * var(--focus-chroma-k)) var(--focus-h)
+  );
+  --focus-fill-2: oklch(
+    var(--focus-fill-l) calc(var(--focus-c) * var(--focus-chroma-k) * 1.15) var(--focus-h2)
+  );
+  --focus-ink: oklch(var(--focus-ink-l) calc(var(--focus-c) * 2.2) var(--focus-h));
+  --focus-ink-soft: oklch(var(--focus-ink-l) calc(var(--focus-c) * 1.6) var(--focus-h) / 0.6);
+  --focus-tint: oklch(var(--focus-ink-l) var(--focus-c) var(--focus-h) / 0.08);
+  --focus-edge: oklch(calc(var(--focus-fill-l) - 0.06) calc(var(--focus-c) * 1.4) var(--focus-h));
+  color: var(--focus-ink);
+  background: linear-gradient(100deg, var(--focus-fill), var(--focus-fill-2), var(--focus-fill));
+  background-size: 220% 100%;
+  border-bottom: 1px solid var(--focus-edge);
+  animation: focus-drift 9s ease-in-out infinite alternate;
+  transition: color 600ms ease;
+}
+.focus-dial[data-mode='idle'],
+.focus-dial[data-mode='paused'] {
+  animation-play-state: paused;
+}
+.focus-capsule:has(.focus-dial[data-mode='done']) {
+  animation: focus-ring 1.6s ease-out 3;
+}
+@keyframes focus-drift {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+@keyframes focus-ring {
+  from {
+    box-shadow: 0 0 0 0 oklch(0.65 0.15 5 / 0.45);
+  }
+  to {
+    box-shadow: 0 0 0 12px oklch(0.65 0.15 5 / 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .react-flow__handle {
     transition: none;
+  }
+  .focus-dial,
+  .focus-capsule:has(.focus-dial[data-mode='done']) {
+    animation: none;
   }
 }

@@ -9,6 +9,7 @@ import {
   Settings,
   Sun,
   SunMoon,
+  Timer,
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -19,6 +20,7 @@ import { ShortcutsDialog } from '@/board/ShortcutsDialog'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuRadioGroup,
@@ -30,6 +32,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { setFocusVisible, useFocusVisible } from '@/focus/store'
 import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
 import { SettingsSheet } from '@/settings/SettingsSheet'
@@ -48,6 +51,7 @@ type Props = {
 
 export function TopBar({ boards, current, onSelect }: Props) {
   const { theme, setTheme } = useTheme()
+  const focusVisible = useFocusVisible()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
@@ -93,6 +97,10 @@ export function TopBar({ boards, current, onSelect }: Props) {
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          <DropdownMenuCheckboxItem checked={focusVisible} onCheckedChange={setFocusVisible}>
+            <Timer strokeWidth={1.75} />
+            Focus timer
+          </DropdownMenuCheckboxItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />

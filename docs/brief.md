@@ -41,6 +41,7 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 
 **Next** (after ship, [specs/002-modules](../specs/002-modules/spec.md))
 - Modules: interactive blocks on the canvas, added from a picker, built on one module host so new kinds plug in. First module: Gantt with live task bars, scale, quarters, milestones and dependency lines. Plan dates live on the board only.
+- Focus timer and background music ([specs/003-focus](../specs/003-focus/spec.md)): a pomodoro capsule over the board with built-in CC0 lofi tracks and the user's own files; browser-only, no backend.
 
 **Won't**
 - Real-time collaborative editing, board sharing
