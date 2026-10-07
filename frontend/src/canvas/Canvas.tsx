@@ -228,10 +228,15 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     )
   }
 
-  const updateTimer = (id: string, change: (data: TimerData) => TimerData) =>
-    setNodes((current) =>
-      current.map((n) => (n.id === id && n.type === 'timer' ? { ...n, data: change(n.data) } : n)),
-    )
+  const updateTimer = useCallback(
+    (id: string, change: (data: TimerData) => TimerData) =>
+      setNodes((current) =>
+        current.map((n) =>
+          n.id === id && n.type === 'timer' ? { ...n, data: change(n.data) } : n,
+        ),
+      ),
+    [setNodes],
+  )
   const openTimer = useCallback((id: string) => flyTo(flow, id), [flow])
 
   const placeAt = (kind: PlaceTool, screen: XYPosition) => {
@@ -523,7 +528,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           </div>
         </CanvasContextMenu>
       </ModuleHostContext.Provider>
-      <BoardTimers nodes={nodes} onOpen={openTimer} onChange={updateTimer}>
+      <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
         <RefreshIndicator
           sources={refresh.data?.sources ?? []}
           serverError={refresh.error}

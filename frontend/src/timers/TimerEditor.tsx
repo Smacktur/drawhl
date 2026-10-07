@@ -8,18 +8,69 @@ import { notifyPermission } from '@/focus/alerts'
 import { cn } from '@/lib/utils'
 import { useNow } from './clock'
 import { formatDue, formatLeftLong, parseWhen, PRESETS, WHEN_HINT } from './time'
-import { finish, goesOffAt, setDue, snooze, SNOOZES, timerState } from './timer'
+import {
+  DEFAULT_MS,
+  describeWatch,
+  finish,
+  goesOffAt,
+  REPEATS,
+  setDue,
+  setRepeat,
+  snooze,
+  SNOOZES,
+  timerState,
+  watchStatus,
+} from './timer'
 
 type Props = {
   data: TimerData
   /** The element the timer is attached to, as the timer names it. */
   holder?: string
+  /** The Jira card the timer is attached to and its current status, when it is loaded. */
+  task?: { key: string; status: string }
   onChange: (data: TimerData) => void
   onDelete: () => void
 }
 
+type Choice<T> = { value: T; label: string }
+
+function Segmented<T>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string
+  options: Choice<T>[]
+  value: T
+  onChange: (value: T) => void
+}) {
+  return (
+    <div role="group" aria-label={label} className="bg-muted flex gap-0.5 rounded-md p-0.5">
+      {options.map((option) => (
+        <Button
+          key={option.label}
+          type="button"
+          size="xs"
+          variant={option.value === value ? 'outline' : 'ghost'}
+          aria-pressed={option.value === value}
+          className={cn('flex-1 font-normal', option.value === value && 'bg-card shadow-xs')}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+const MODES: Choice<'time' | 'status'>[] = [
+  { value: 'time', label: 'At a time' },
+  { value: 'status', label: 'When the status changes' },
+]
+
 /** Popover content of a timer: what it waits for and when it goes off. */
-export function TimerEditor({ data, holder, onChange, onDelete }: Props) {
+export function TimerEditor({ data, holder, task, onChange, onDelete }: Props) {
   const now = useNow()
   const id = useId()
   const [input, setInput] = useState('')
@@ -39,17 +90,31 @@ export function TimerEditor({ data, holder, onChange, onDelete }: Props) {
     apply(input)
   }
 
-  const line = typed
-    ? 'error' in typed
-      ? typed.error
-      : `Goes off ${formatDue(typed.at)} · in ${formatLeftLong(typed.at - now)}. Press Enter to set.`
-    : at === null
-      ? 'Waiting.'
-      : state === 'fired'
-        ? `Went off ${formatDue(at)}.`
-        : state === 'done'
-          ? `Done. Was set for ${formatDue(at)}.`
-          : `Goes off ${formatDue(at)} · in ${formatLeftLong(at - now)}.`
+  const watch = data.watch
+  const repeat = REPEATS.find((r) => r.value === data.repeat)!
+  const series = data.repeat ? ` · ${repeat.label}` : ''
+  const line = watch
+    ? state === 'fired'
+      ? `${describeWatch(watch)}.`
+      : state === 'done'
+        ? `Done. ${describeWatch(watch)}.`
+        : `Goes off ${describeWatch(watch)}.`
+    : typed
+      ? 'error' in typed
+        ? typed.error
+        : `Goes off ${formatDue(typed.at)} · in ${formatLeftLong(typed.at - now)}. Press Enter to set.`
+      : at === null
+        ? 'Waiting.'
+        : state === 'fired'
+          ? `Went off ${formatDue(at)}${series}.`
+          : state === 'done'
+            ? `Done. Was set for ${formatDue(at)}.`
+            : `Goes off ${formatDue(at)} · in ${formatLeftLong(at - now)}${series}.`
+
+  const setMode = (mode: 'time' | 'status') => {
+    if (mode === 'status' && task) onChange(watchStatus(data, task.key, task.status))
+    if (mode === 'time' && watch) onChange(setDue(data, now + DEFAULT_MS))
+  }
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -64,32 +129,48 @@ export function TimerEditor({ data, holder, onChange, onDelete }: Props) {
         autoFocus
         className="min-h-0 resize-none text-[14px] md:text-[14px]"
       />
-      <form onSubmit={submit} className="flex flex-col gap-1.5">
-        <label htmlFor={id} className="text-muted-foreground text-[13px]">
-          Goes off in or at
-        </label>
-        <Input
-          id={id}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder={WHEN_HINT}
-          autoComplete="off"
-          spellCheck={false}
+      {(task || watch) && (
+        <Segmented
+          label="Goes off"
+          options={MODES}
+          value={watch ? 'status' : 'time'}
+          onChange={setMode}
         />
-        <div className="flex flex-wrap gap-1">
-          {PRESETS.map((preset) => (
-            <Button
-              key={preset.label}
-              type="button"
-              variant="outline"
-              size="xs"
-              onClick={() => apply(preset.input)}
-            >
-              {preset.label}
-            </Button>
-          ))}
-        </div>
-      </form>
+      )}
+      {!watch && (
+        <form onSubmit={submit} className="flex flex-col gap-1.5">
+          <label htmlFor={id} className="text-muted-foreground text-[13px]">
+            Goes off in or at
+          </label>
+          <Input
+            id={id}
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder={WHEN_HINT}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <div className="flex flex-wrap gap-1">
+            {PRESETS.map((preset) => (
+              <Button
+                key={preset.label}
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={() => apply(preset.input)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+          <Segmented
+            label="Repeat"
+            options={REPEATS}
+            value={data.repeat}
+            onChange={(value) => onChange(setRepeat(data, value))}
+          />
+        </form>
+      )}
       <p
         role="status"
         className={cn(
@@ -107,7 +188,7 @@ export function TimerEditor({ data, holder, onChange, onDelete }: Props) {
       <div className="flex items-center gap-1 border-t pt-2">
         {state === 'fired' && (
           <>
-            <Button size="sm" onClick={() => onChange(finish(data))}>
+            <Button size="sm" onClick={() => onChange(finish(data, now))}>
               Done
             </Button>
             {SNOOZES.map(({ label, ms }) => (
@@ -123,8 +204,8 @@ export function TimerEditor({ data, holder, onChange, onDelete }: Props) {
           </>
         )}
         {(state === 'running' || state === 'soon' || state === 'watching') && (
-          <Button size="sm" variant="ghost" onClick={() => onChange(finish(data))}>
-            Mark done
+          <Button size="sm" variant="ghost" onClick={() => onChange(finish(data, now))}>
+            {data.repeat && !watch ? 'Skip to the next time' : 'Mark done'}
           </Button>
         )}
         <Button

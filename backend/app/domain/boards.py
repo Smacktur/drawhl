@@ -113,6 +113,7 @@ class AnchorNode(_NodeBase):
 class TimerWatch(_Strict):
     key: str
     status: str = Field(max_length=200)
+    changedTo: str | None = Field(default=None, max_length=200)  # noqa: N815
 
     @field_validator("key")
     @classmethod

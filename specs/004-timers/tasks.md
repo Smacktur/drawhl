@@ -44,8 +44,8 @@ description: "Task list for Timers on the board"
 
 **Independent Test**: see US3 in [spec.md](spec.md).
 
-- [ ] T009 [US3] `timers/timer.ts`: watch state, going off on a new status, next time of a series. Tests
-- [ ] T010 [US3] Editor: "When the status changes" on Jira cards, repeat choice; eye and loop marks on the cube; `useTimers` writes the moment a status timer goes off. Tests
-- [ ] T011 [US3] `DESIGN.md`, `CHANGELOG.md`; check against the mock tracker
+- [x] T009 [US3] `timers/timer.ts`: watch state, going off on a new status, next time of a series. Tests
+- [x] T010 [US3] Editor: "When the status changes" on Jira cards, repeat choice; eye and loop marks on the cube; `useTimers` writes the moment a status timer goes off. Tests
+- [x] T011 [US3] `DESIGN.md`, `CHANGELOG.md`; check against the mock tracker (the local stack ran on a real Jira, so the status flip is covered by the hook test and the UI was checked with seeded timers)
 
 **Checkpoint**: `make check`, check in the running stack → G3.

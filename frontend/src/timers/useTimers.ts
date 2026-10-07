@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { AppNode, TimerNode } from '@/canvas/types'
+import type { Task } from '@/api/tasks'
+import type { AppNode, TimerData, TimerNode } from '@/canvas/types'
 import { chime, primeAudio } from '@/focus/alerts'
 import { alertKey, markNotified, notifyTimer, wasNotified } from './alerts'
 import { holderLabel } from './attach'
 import { useNow } from './clock'
 import { formatClock } from './time'
-import { goesOffAt, timerState, type TimerState } from './timer'
+import { checkStatus, describeWatch, goesOffAt, timerState, type TimerState } from './timer'
 
 export type TimerEntry = {
   id: string
@@ -14,6 +15,7 @@ export type TimerEntry = {
   /** When it goes off next; null while it waits for a status. */
   at: number | null
   holder?: string
+  watch?: TimerData['watch']
 }
 export type FiredTimer = TimerEntry & { at: number }
 
@@ -30,16 +32,24 @@ export function listTimers(nodes: AppNode[], now: number): TimerEntry[] {
         state: timerState(n.data, now),
         at: goesOffAt(n.data),
         holder: parent && holderLabel(parent),
+        watch: n.data.watch,
       }
     })
     .sort((a, b) => (a.at ?? Infinity) - (b.at ?? Infinity))
 }
 
+type Options = {
+  tasks: Record<string, Task>
+  onOpen: (id: string) => void
+  onChange: (id: string, change: (data: TimerData) => TimerData) => void
+}
+
 /**
  * Timers that went off on this board: alerts each once, with a chime and a browser
  * notification while the board is open, quietly for those that went off while it was closed.
+ * Status timers go off when the board's refresh shows their task in another status.
  */
-export function useTimers(nodes: AppNode[], onOpen: (id: string) => void) {
+export function useTimers(nodes: AppNode[], { tasks, onOpen, onChange }: Options) {
   const now = useNow()
   const [openedAt] = useState(() => Date.now())
   const [missed, setMissed] = useState(0)
@@ -64,13 +74,26 @@ export function useTimers(nodes: AppNode[], onOpen: (id: string) => void) {
     const live = fresh.filter((t) => t.at >= openedAt)
     if (live.length > 0) chime()
     for (const t of live) {
-      const body = [t.holder && `On ${t.holder}`, `Set for ${formatClock(t.at)}`]
+      const body = [
+        t.holder && `On ${t.holder}`,
+        t.watch ? describeWatch(t.watch) : `Set for ${formatClock(t.at)}`,
+      ]
       notifyTimer(t.id, t.note || 'Timer', body.filter(Boolean).join(' · '), () =>
         onOpenRef.current(t.id),
       )
     }
     // firedKey changes exactly when the set of timers that went off changes; openedAt never does.
   }, [firedKey, openedAt])
+
+  useEffect(() => {
+    for (const node of nodes) {
+      if (node.type !== 'timer' || !node.data.watch) continue
+      const task = tasks[node.data.watch.key]
+      if (checkStatus(node.data, task, Date.now())) {
+        onChange(node.id, (data) => checkStatus(data, task, Date.now()) ?? data)
+      }
+    }
+  }, [nodes, tasks, onChange])
 
   useEffect(() => {
     const base = document.title

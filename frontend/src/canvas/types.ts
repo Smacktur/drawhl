@@ -27,7 +27,8 @@ export type TimerData = {
   dueAt?: string | null
   snoozedUntil?: string
   repeat?: TimerRepeat
-  watch?: { key: string; status: string }
+  /** A status timer: goes off when the task leaves `status`; `changedTo` is set when it does. */
+  watch?: { key: string; status: string; changedTo?: string }
   done?: boolean
 }
 // A reminder; its parent, when it is not a frame, is the element it is attached to.

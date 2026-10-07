@@ -1,7 +1,15 @@
-import type { TimerData } from '@/canvas/types'
+import type { Task } from '@/api/tasks'
+import type { TimerData, TimerRepeat } from '@/canvas/types'
 
 export const SOON_MS = 5 * 60_000
 export const DEFAULT_MS = 30 * 60_000
+export const REPEATS: { value: TimerRepeat | undefined; label: string }[] = [
+  { value: undefined, label: 'Once' },
+  { value: 'daily', label: 'Every day' },
+  { value: 'weekdays', label: 'Weekdays' },
+  { value: 'weekly', label: 'Every week' },
+]
+
 export const SNOOZES = [
   { label: '+10 min', ms: 10 * 60_000 },
   { label: '+1 hour', ms: 60 * 60_000 },
@@ -29,9 +37,48 @@ export function timerState(data: TimerData, now: number): TimerState {
   return at - now <= SOON_MS ? 'soon' : 'running'
 }
 
+/** A clock timer at this moment; it stops waiting for a status. */
 export function setDue(data: TimerData, at: number): TimerData {
-  const { snoozedUntil: _snooze, done: _done, ...rest } = data
+  const { snoozedUntil: _snooze, done: _done, watch: _watch, ...rest } = data
   return { ...rest, dueAt: iso(at) }
+}
+
+export function setRepeat(data: TimerData, repeat: TimerRepeat | undefined): TimerData {
+  const { repeat: _old, ...rest } = data
+  return repeat ? { ...rest, repeat } : rest
+}
+
+/** A timer that goes off when the task leaves its current status. */
+export function watchStatus(data: TimerData, key: string, status: string): TimerData {
+  const { snoozedUntil: _snooze, done: _done, repeat: _repeat, ...rest } = data
+  return { ...rest, dueAt: null, watch: { key, status } }
+}
+
+/** The status timer goes off now if the board sees the task in another status. */
+export function checkStatus(data: TimerData, task: Task | undefined, now: number) {
+  const watch = data.watch
+  if (!watch || data.done || data.dueAt || !task || task.state !== 'ok') return null
+  if (task.status_name === watch.status) return null
+  return { ...data, dueAt: iso(now), watch: { ...watch, changedTo: task.status_name } }
+}
+
+/** What a status timer waits for or saw. */
+export function describeWatch(watch: NonNullable<TimerData['watch']>) {
+  return watch.changedTo
+    ? `${watch.key} moved to ${watch.changedTo}`
+    : `when ${watch.key} leaves ${watch.status}`
+}
+
+/** The first time of the series after now, counting from the set time. */
+export function nextRepeat(dueAt: number, repeat: TimerRepeat, now: number) {
+  const next = new Date(dueAt)
+  // Calendar days, not 24 h steps, so the clock time holds across daylight saving changes.
+  const step = () => next.setDate(next.getDate() + (repeat === 'weekly' ? 7 : 1))
+  do {
+    step()
+    while (repeat === 'weekdays' && (next.getDay() === 0 || next.getDay() === 6)) step()
+  } while (next.getTime() <= now)
+  return next.getTime()
 }
 
 export function snooze(data: TimerData, ms: number, now: number): TimerData {
@@ -39,7 +86,11 @@ export function snooze(data: TimerData, ms: number, now: number): TimerData {
   return { ...rest, snoozedUntil: iso(now + ms) }
 }
 
-export function finish(data: TimerData): TimerData {
+/** Done: a repeating timer moves on to its next time, any other one stops. */
+export function finish(data: TimerData, now: number): TimerData {
   const { snoozedUntil: _snooze, ...rest } = data
+  if (data.repeat && data.dueAt && !data.watch) {
+    return { ...rest, dueAt: iso(nextRepeat(Date.parse(data.dueAt), data.repeat, now)) }
+  }
   return { ...rest, done: true }
 }

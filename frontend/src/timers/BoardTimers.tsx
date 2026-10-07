@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { Task } from '@/api/tasks'
 import type { AppNode, TimerData } from '@/canvas/types'
 import { useNow } from './clock'
 import { useTimerPanelOpen } from './panel'
@@ -9,6 +10,7 @@ import { useTimers } from './useTimers'
 
 type Props = {
   nodes: AppNode[]
+  tasks: Record<string, Task>
   onOpen: (id: string) => void
   onChange: (id: string, change: (data: TimerData) => TimerData) => void
   /** Sits right of the timer button in the top right row: the sync indicator. */
@@ -16,11 +18,11 @@ type Props = {
 }
 
 // Its own component, so the once-a-second tick re-renders only the timer UI, not the board.
-export function BoardTimers({ nodes, onOpen, onChange, children }: Props) {
+export function BoardTimers({ nodes, tasks, onOpen, onChange, children }: Props) {
   const now = useNow()
-  const { timers, fired, missed, dismissMissed } = useTimers(nodes, onOpen)
+  const { timers, fired, missed, dismissMissed } = useTimers(nodes, { tasks, onOpen, onChange })
   const panelOpen = useTimerPanelOpen()
-  const onDone = (id: string) => onChange(id, finish)
+  const onDone = (id: string) => onChange(id, (data) => finish(data, Date.now()))
   const onSnooze = (id: string, ms: number) => onChange(id, (data) => snooze(data, ms, Date.now()))
 
   return (
