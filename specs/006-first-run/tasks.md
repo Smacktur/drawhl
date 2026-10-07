@@ -27,9 +27,9 @@ description: "Task list for First run and polish"
 
 ## Phase 2: Slice 27 `feat/sticky-fit` — sticky text fits the note (US2)
 
-- [ ] T005 [P] [US2] `canvas/fit.ts`: largest font size from 16 px down that fits, no lower bound. Tests
-- [ ] T006 [US2] `StickyNode.tsx`: fit on text and size change, 2000 character limit with the "no entry" flash. Tests
-- [ ] T007 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
+- [x] T005 [P] [US2] `canvas/fit.ts`: largest font size from 14 px down that fits, no lower bound. Tests
+- [x] T006 [US2] `StickyNode.tsx`: fit on text and size change, 2000 character limit with the "no entry" flash. Tests
+- [x] T007 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
 

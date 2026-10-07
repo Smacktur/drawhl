@@ -48,7 +48,7 @@ frontend/src/settings/SettingsSheet.tsx   "Paste text as" control
 
 Seed: `list_boards` reads the list; when it is empty and `welcome_seeded` is unset, it sets the flag first and then creates the board inside one SQLite transaction (`BEGIN IMMEDIATE`), so two concurrent requests create one board. A non-empty list on first read sets the flag without seeding, which covers upgrades. The welcome doc is validated with `check_doc` in a test; the frontend fits the view when it opens a board at version 1, that is never saved since it was created; for a new empty board this does nothing.
 
-Sticky fit: after the text or size changes, binary-search the largest font size from 16 px down that makes `scrollHeight` fit the note's inner height; the size is a CSS variable on the node, not saved in the doc. The textarea has `maxLength` 2000; an input or paste that hits it triggers the "no entry" flash (a lucide `Ban` icon over the note, CSS fade).
+Sticky fit: after the text or size changes, binary-search the largest font size from 14 px down that makes `scrollHeight` fit the note's inner height; the size is a CSS variable on the node, not saved in the doc. The textarea has `maxLength` 2000; an input or paste that hits it triggers the "no entry" flash (a lucide `Ban` icon over the note, CSS fade).
 
 Scrollbars: `scrollbar-width: thin` and `scrollbar-color` on `*` for Firefox, `::-webkit-scrollbar` rules for Chromium and Safari, colors from `--muted-foreground` with alpha, transparent track.
 
