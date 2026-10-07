@@ -342,7 +342,8 @@
   color: var(--muted-foreground);
   box-shadow: none;
 }
-.timer-cube[data-flash] {
+/* After the pulse rule, so a cube the board moved to flashes even when it has gone off. */
+.react-flow__node .timer-cube[data-flash] {
   animation: timer-flash 400ms ease-in-out 3;
 }
 @keyframes timer-ring {
@@ -363,8 +364,8 @@
   .react-flow__handle {
     transition: none;
   }
-  .timer-cube[data-state='fired'],
-  .timer-cube[data-flash] {
+  .react-flow__node .timer-cube[data-state='fired'],
+  .react-flow__node .timer-cube[data-flash] {
     animation: none;
   }
   .focus-dial,

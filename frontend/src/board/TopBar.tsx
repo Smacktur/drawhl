@@ -7,6 +7,7 @@ import {
   Pencil,
   Plus,
   Settings,
+  AlarmClock,
   Sun,
   SunMoon,
   Timer,
@@ -33,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { setFocusVisible, useFocusVisible } from '@/focus/store'
+import { setTimerPanelOpen } from '@/timers/panel'
 import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
 import { SettingsSheet } from '@/settings/SettingsSheet'
@@ -97,6 +99,12 @@ export function TopBar({ boards, current, onSelect }: Props) {
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          {current && (
+            <DropdownMenuItem onSelect={() => setTimerPanelOpen(true)}>
+              <AlarmClock strokeWidth={1.75} />
+              Timers
+            </DropdownMenuItem>
+          )}
           <DropdownMenuCheckboxItem checked={focusVisible} onCheckedChange={setFocusVisible}>
             <Timer strokeWidth={1.75} />
             Focus timer

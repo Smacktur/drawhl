@@ -5,9 +5,35 @@ import { alertKey, markNotified, notifyTimer, wasNotified } from './alerts'
 import { holderLabel } from './attach'
 import { useNow } from './clock'
 import { formatClock } from './time'
-import { goesOffAt, timerState } from './timer'
+import { goesOffAt, timerState, type TimerState } from './timer'
 
-export type FiredTimer = { id: string; note: string; at: number; holder?: string }
+export type TimerEntry = {
+  id: string
+  note: string
+  state: TimerState
+  /** When it goes off next; null while it waits for a status. */
+  at: number | null
+  holder?: string
+}
+export type FiredTimer = TimerEntry & { at: number }
+
+/** Every timer of the board with its state, soonest first. */
+export function listTimers(nodes: AppNode[], now: number): TimerEntry[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]))
+  return nodes
+    .filter((n): n is TimerNode => n.type === 'timer')
+    .map((n) => {
+      const parent = n.parentId ? byId.get(n.parentId) : undefined
+      return {
+        id: n.id,
+        note: n.data.note,
+        state: timerState(n.data, now),
+        at: goesOffAt(n.data),
+        holder: parent && holderLabel(parent),
+      }
+    })
+    .sort((a, b) => (a.at ?? Infinity) - (b.at ?? Infinity))
+}
 
 /**
  * Timers that went off on this board: alerts each once, with a chime and a browser
@@ -19,21 +45,8 @@ export function useTimers(nodes: AppNode[], onOpen: (id: string) => void) {
   const [missed, setMissed] = useState(0)
   const onOpenRef = useRef(onOpen)
 
-  const fired = useMemo(() => {
-    const byId = new Map(nodes.map((n) => [n.id, n]))
-    return nodes
-      .filter((n): n is TimerNode => n.type === 'timer' && timerState(n.data, now) === 'fired')
-      .map((n) => {
-        const parent = n.parentId ? byId.get(n.parentId) : undefined
-        return {
-          id: n.id,
-          note: n.data.note,
-          at: goesOffAt(n.data)!,
-          holder: parent && holderLabel(parent),
-        }
-      })
-      .sort((a, b) => a.at - b.at)
-  }, [nodes, now])
+  const timers = useMemo(() => listTimers(nodes, now), [nodes, now])
+  const fired = useMemo(() => timers.filter((t): t is FiredTimer => t.state === 'fired'), [timers])
   const firedKey = fired.map((t) => alertKey(t.id, t.at)).join()
   const firedRef = useRef(fired)
 
@@ -73,5 +86,5 @@ export function useTimers(nodes: AppNode[], onOpen: (id: string) => void) {
     return () => window.removeEventListener('pointerdown', primeAudio)
   }, [])
 
-  return { fired, missed, dismissMissed: () => setMissed(0) }
+  return { timers, fired, missed, dismissMissed: () => setMissed(0) }
 }
