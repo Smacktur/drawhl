@@ -4,7 +4,7 @@ Version 1.0. Based on the Apache Software Foundation Individual Contributor Lice
 
 This agreement is between you and the maintainer of drawhl, the owner of the GitHub account [Smacktur](https://github.com/Smacktur) ("the Maintainer"). It lets the Maintainer keep drawhl open source under the GNU AGPL v3 and also offer it under other terms, for example a hosted service or a commercial license.
 
-You accept this agreement for all your present and future Contributions by opening a pull request with the box "I agree to the CLA" ticked, or by signing it through a CLA bot when the repository uses one.
+You accept this agreement for all your present and future Contributions by signing it through CLA Assistant, which asks you to on your first pull request.
 
 ## 1. Definitions
 
