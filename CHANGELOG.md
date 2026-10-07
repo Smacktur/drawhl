@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.7] - 2026-10-07
+
 ### Added
 
 - User guide at [smacktur.github.io/drawhl](https://smacktur.github.io/drawhl/): quick start, adding tasks, search, Gantt, timers, keyboard shortcuts and self-hosting. It is written in `docs/guide/` and published on every change to `main`.
