@@ -51,12 +51,19 @@ import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
 import { useHistory } from '@/canvas/useHistory'
-import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType } from '@/canvas/types'
+import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { ModuleHostContext } from '@/modules/host-context'
 import { findModule } from '@/modules/registry'
 import type { ModuleHost } from '@/modules/types'
 import { useShortcut } from '@/lib/shortcuts'
+import { askNotify, primeAudio } from '@/focus/alerts'
+import { BESIDE, dropTimers, holdsTimers, TIMER_SIZE } from '@/timers/attach'
+import { flyTo } from '@/timers/fly'
+import { finish, newTimer, snooze } from '@/timers/timer'
+import { TimerNode } from '@/timers/TimerNode'
+import { TimerNotes } from '@/timers/TimerNotes'
+import { useTimers } from '@/timers/useTimers'
 import { useTheme } from '@/lib/theme'
 
 const nodeTypes = {
@@ -66,6 +73,7 @@ const nodeTypes = {
   text: TextNode,
   module: ModuleNode,
   anchor: AnchorNode,
+  timer: TimerNode,
 }
 const defaultEdgeOptions = { markerEnd: { type: MarkerType.ArrowClosed } }
 
@@ -100,12 +108,10 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
     [board.tasks, added, refresh.data],
   )
-  const { screenToFlowPosition, deleteElements, getNodes, getEdges } = useReactFlow<
-    AppNode,
-    AppEdge
-  >()
+  const flow = useReactFlow<AppNode, AppEdge>()
+  const { screenToFlowPosition, deleteElements, getNodes, getEdges } = flow
   const theme = useTheme().resolved
-  const placing = tool === 'frame' || tool === 'sticky' || tool === 'text'
+  const placing = tool === 'frame' || tool === 'sticky' || tool === 'text' || tool === 'timer'
   // Last pointer position over the canvas, where pasted items land.
   const pointer = useRef<XYPosition | null>(null)
   // Screen point where the current arrow drag started.
@@ -203,7 +209,35 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setEdges((current) => current.map((e) => ({ ...e, selected: true })))
   })
 
+  // A timer placed on an element attaches to it; on an empty spot it stays free.
+  const addTimer = (at: { screen: XYPosition } | { holder: AppNode }) => {
+    // Clicks are the gestures browsers need for the permission prompt and for sound.
+    void askNotify()
+    primeAudio()
+    const id = newId()
+    const base = { id, type: 'timer', width: TIMER_SIZE, height: TIMER_SIZE } as const
+    const data = newTimer(Date.now())
+    markFresh(id)
+    if ('holder' in at) {
+      const node: AppNode = { ...base, parentId: at.holder.id, position: BESIDE, data }
+      return setNodes((current) => [...current, node])
+    }
+    const point = screenToFlowPosition(at.screen)
+    const position = { x: point.x - TIMER_SIZE / 2, y: point.y - TIMER_SIZE / 2 }
+    setNodes((current) =>
+      reparent(dropTimers([...current, { ...base, position, data }], [id]), [id]),
+    )
+  }
+
+  const updateTimer = (id: string, change: (data: TimerData) => TimerData) =>
+    setNodes((current) =>
+      current.map((n) => (n.id === id && n.type === 'timer' ? { ...n, data: change(n.data) } : n)),
+    )
+  const openTimer = useCallback((id: string) => flyTo(flow, id), [flow])
+  const timers = useTimers(nodes, openTimer)
+
   const placeAt = (kind: PlaceTool, screen: XYPosition) => {
+    if (kind === 'timer') return addTimer({ screen })
     const { width, height, data } = NEW_NODES[kind]
     const point = screenToFlowPosition(screen)
     const node = {
@@ -234,10 +268,8 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
       const orphans = new Set(orphanAnchors(kept, edgesLeft).map((n) => n.id))
       kept = kept.filter((n) => !orphans.has(n.id))
     }
-    const next = reparent(
-      kept,
-      ids.filter((id) => !result?.absorbed.has(id)),
-    )
+    const left = ids.filter((id) => !result?.absorbed.has(id))
+    const next = reparent(dropTimers(kept, left), left)
     // The store still says dragging, and xyflow puts a dragging node into every marquee.
     setNodes(next.map((n) => (n.dragging ? { ...n, dragging: false } : n)))
   }
@@ -336,6 +368,9 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
       ),
     )
 
+  const selected = nodes.filter((n) => n.selected)
+  const timerHolder = selected.length === 1 && holdsTimers(selected[0]) ? selected[0] : undefined
+
   const deleteSelection = () =>
     void deleteElements({
       nodes: nodes.filter((n) => n.selected),
@@ -412,6 +447,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           onDelete={deleteSelection}
           cards={cardCounts}
           onCollapse={setCollapsed}
+          onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
         >
           <div
             className="absolute inset-0"
@@ -495,6 +531,14 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
         refreshing={refresh.isFetching}
         onRefresh={() => void refresh.refetch()}
+      />
+      <TimerNotes
+        fired={timers.fired}
+        missed={timers.missed}
+        onDismissMissed={timers.dismissMissed}
+        onOpen={openTimer}
+        onDone={(id) => updateTimer(id, finish)}
+        onSnooze={(id, ms) => updateTimer(id, (data) => snooze(data, ms, Date.now()))}
       />
       {saveError && (
         <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">

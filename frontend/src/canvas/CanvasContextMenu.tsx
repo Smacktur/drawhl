@@ -1,4 +1,13 @@
-import { Frame, Maximize2, Minimize2, StickyNote, TicketPlus, Trash2, Type } from 'lucide-react'
+import {
+  AlarmClock,
+  Frame,
+  Maximize2,
+  Minimize2,
+  StickyNote,
+  TicketPlus,
+  Trash2,
+  Type,
+} from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import type { XYPosition } from '@xyflow/react'
 import type { Task } from '@/api/tasks'
@@ -14,7 +23,7 @@ import { AddCardForm } from '@/canvas/Toolbar'
 import { MODULES } from '@/modules/registry'
 
 export type MenuTarget = { kind: 'pane'; point: XYPosition } | { kind: 'selection' }
-export type PlaceTool = 'frame' | 'sticky' | 'text'
+export type PlaceTool = 'frame' | 'sticky' | 'text' | 'timer'
 
 type Props = {
   target: MenuTarget | null
@@ -25,6 +34,8 @@ type Props = {
   /** How many selected cards are expanded and collapsed, for the collapse items. */
   cards: { expanded: number; collapsed: number }
   onCollapse: (collapsed: boolean) => void
+  /** Set when the selection is one element a timer can attach to. */
+  onAddTimer?: () => void
   children: ReactNode
 }
 
@@ -32,6 +43,7 @@ const PLACE: { tool: PlaceTool; label: string; Icon: typeof Frame }[] = [
   { tool: 'frame', label: 'Add frame', Icon: Frame },
   { tool: 'sticky', label: 'Add sticky note', Icon: StickyNote },
   { tool: 'text', label: 'Add text', Icon: Type },
+  { tool: 'timer', label: 'Add timer', Icon: AlarmClock },
 ]
 
 const CANVAS_TARGETS =
@@ -46,6 +58,7 @@ export function CanvasContextMenu({
   onDelete,
   cards,
   onCollapse,
+  onAddTimer,
   children,
 }: Props) {
   // Screen point where "Add Jira card" opens its input; the card lands there too.
@@ -109,6 +122,12 @@ export function CanvasContextMenu({
                 <ContextMenuItem onSelect={() => onCollapse(false)}>
                   <Maximize2 strokeWidth={1.75} />
                   {cards.collapsed > 1 ? 'Expand cards' : 'Expand card'}
+                </ContextMenuItem>
+              )}
+              {onAddTimer && (
+                <ContextMenuItem onSelect={later(onAddTimer)}>
+                  <AlarmClock strokeWidth={1.75} />
+                  Add timer
                 </ContextMenuItem>
               )}
               <ContextMenuItem variant="destructive" onSelect={later(onDelete)}>

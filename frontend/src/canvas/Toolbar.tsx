@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import {
+  AlarmClock,
   Frame,
   Hand,
   LayoutTemplate,
@@ -18,7 +19,7 @@ import { ModulePicker } from '@/modules/ModulePicker'
 import { JqlInput, keepOpenWhileSuggesting, useJqlCount } from '@/canvas/JqlInput'
 import { SHORTCUTS, useShortcut, withShortcut } from '@/lib/shortcuts'
 
-export type Tool = 'select' | 'hand' | 'frame' | 'sticky' | 'text'
+export type Tool = 'select' | 'hand' | 'frame' | 'sticky' | 'text' | 'timer'
 
 const TOOLS: { tool: Tool; Icon: LucideIcon }[] = [
   { tool: 'select', Icon: MousePointer2 },
@@ -26,6 +27,7 @@ const TOOLS: { tool: Tool; Icon: LucideIcon }[] = [
   { tool: 'frame', Icon: Frame },
   { tool: 'sticky', Icon: StickyNote },
   { tool: 'text', Icon: Type },
+  { tool: 'timer', Icon: AlarmClock },
 ]
 
 const MAX_REFS = 50
@@ -179,6 +181,7 @@ export function Toolbar({ tool, onTool, onAddCards, onAddModule }: Props) {
   useShortcut('frame', () => onTool('frame'))
   useShortcut('sticky', () => onTool('sticky'))
   useShortcut('text', () => onTool('text'))
+  useShortcut('timer', () => onTool('timer'))
   useShortcut('card', () => setOpen(true))
   useShortcut('module', () => setModulesOpen(true))
 

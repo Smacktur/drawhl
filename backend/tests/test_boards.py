@@ -45,6 +45,51 @@ def test_arrow_can_end_at_an_anchor():
     assert task_keys(board) == ["DEV-1"]
 
 
+def timer(node_id, parent=None, **data):
+    node = {"id": node_id, "type": "timer", "position": {"x": 0, "y": 0}, "data": data}
+    if parent:
+        node["parentId"] = parent
+    return node
+
+
+def test_timer_attaches_to_an_element_even_inside_a_frame():
+    board = doc(
+        [
+            frame("f"),
+            card("a", "DEV-1", parent="f"),
+            timer("t", parent="a", note="ping QA", dueAt="2026-10-25T12:00:00Z", repeat="daily"),
+            timer("u", parent="f", watch={"key": "DEV-1", "status": "In Review"}),
+            timer("v"),
+        ]
+    )
+    check_doc(board)
+    assert task_keys(board) == ["DEV-1"]
+
+
+@pytest.mark.parametrize(
+    "nodes",
+    [
+        [timer("t", parent="a"), card("a", "DEV-1")],
+        [timer("t"), timer("u", parent="t")],
+        [{"id": "p", "type": "anchor", "position": {"x": 0, "y": 0}, "data": {}}, timer("t", "p")],
+        [timer("t"), card("a", "DEV-1", parent="t")],
+    ],
+    ids=["before parent", "on a timer", "on an anchor", "card in a timer"],
+)
+def test_timer_nesting_rules(nodes):
+    with pytest.raises(ValidationFailed):
+        check_doc(doc(nodes))
+
+
+def test_timer_schema_limits():
+    with pytest.raises(ValidationError):
+        doc([timer("t", note="x" * 501)])
+    with pytest.raises(ValidationError):
+        doc([timer("t", dueAt="2026-10-25T12:00:00")])
+    with pytest.raises(ValidationError):
+        doc([timer("t", repeat="hourly")])
+
+
 @pytest.mark.parametrize(
     ("nodes", "edges"),
     [

@@ -103,6 +103,11 @@
   --focus-fill-l: 0.945;
   --focus-ink-l: 0.4;
   --focus-chroma-k: 1;
+  /* Timers: a saturated amber no other element uses, coral once they go off. */
+  --timer: oklch(0.82 0.16 75);
+  --timer-foreground: oklch(0.3 0.07 60);
+  --timer-fired: oklch(0.66 0.19 30);
+  --timer-fired-foreground: oklch(0.99 0.01 30);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -313,9 +318,54 @@
   }
 }
 
+/* Timer cube: amber while it runs, a ring in the last minutes, coral and pulsing once it goes off. */
+.timer-cube {
+  background: var(--timer);
+  color: var(--timer-foreground);
+  box-shadow: 0 1px 2px oklch(0.3 0.07 60 / 0.25);
+  cursor: pointer;
+}
+.timer-cube[data-state='soon'] {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--timer-fired);
+}
+.timer-cube[data-state='fired'] {
+  background: var(--timer-fired);
+  color: var(--timer-fired-foreground);
+}
+.react-flow__node .timer-cube[data-state='fired'] {
+  animation: timer-ring 1.6s ease-out infinite;
+}
+.timer-cube[data-state='done'] {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  box-shadow: none;
+}
+.timer-cube[data-flash] {
+  animation: timer-flash 400ms ease-in-out 3;
+}
+@keyframes timer-ring {
+  from {
+    box-shadow: 0 0 0 0 oklch(0.66 0.19 30 / 0.5);
+  }
+  to {
+    box-shadow: 0 0 0 14px oklch(0.66 0.19 30 / 0);
+  }
+}
+@keyframes timer-flash {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .react-flow__handle {
     transition: none;
+  }
+  .timer-cube[data-state='fired'],
+  .timer-cube[data-flash] {
+    animation: none;
   }
   .focus-dial,
   .focus-eq[data-playing] i,

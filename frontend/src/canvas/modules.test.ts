@@ -51,3 +51,19 @@ test('several cards dropped together all land in the same gantt', () => {
   const rows = (result.nodes[0].data as { content: typeof content }).content.rows
   expect(rows.map((r: { key?: string }) => r.key).sort()).toEqual(['DEMO-1', 'DEMO-2'])
 })
+
+test('a timer on an absorbed card comes free at the same place', () => {
+  const timer: AppNode = {
+    id: 't',
+    type: 'timer',
+    parentId: 'a',
+    position: { x: -46, y: 0 },
+    width: 40,
+    height: 40,
+    data: { note: '' },
+  }
+  const result = absorbCards([gantt, card('a', 'DEMO-1', 1400, 150), timer], ['a'])!
+  expect(result.nodes.map((n) => n.id)).toEqual(['g', 't'])
+  expect(result.nodes[1].parentId).toBeUndefined()
+  expect(result.nodes[1].position).toEqual({ x: 1354, y: 150 })
+})

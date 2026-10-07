@@ -20,5 +20,19 @@ export type ModuleNode = Node<ModuleData, 'module'>
 // The free end of an arrow that points somewhere instead of at an element.
 export type AnchorNode = Node<Record<string, never>, 'anchor'>
 
-export type AppNode = JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode | AnchorNode
+export type TimerRepeat = 'daily' | 'weekdays' | 'weekly'
+export type TimerData = {
+  note: string
+  /** ISO moment; null for a status timer that has not gone off yet. */
+  dueAt?: string | null
+  snoozedUntil?: string
+  repeat?: TimerRepeat
+  watch?: { key: string; status: string }
+  done?: boolean
+}
+// A reminder; its parent, when it is not a frame, is the element it is attached to.
+export type TimerNode = Node<TimerData, 'timer'>
+
+export type AppNode =
+  JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode | AnchorNode | TimerNode
 export type AppEdge = Edge
