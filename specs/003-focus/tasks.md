@@ -33,9 +33,9 @@ description: "Task list for Focus timer and music"
 
 **Independent Test**: see US2 in [spec.md](spec.md).
 
-- [ ] T007 [P] [US2] Re-encode 7 CC0 tracks to MP3 112 kbps into `frontend/public/music/`; `THIRD_PARTY.md` credits
-- [ ] T008 [US2] `focus/music.ts`: playlist, play, pause, next, pick, volume, local files as object URLs, pause on breaks. Tests
-- [ ] T009 [US2] Player row in the capsule and the Music tab in settings (depends on T008)
-- [ ] T010 [US2] `DESIGN.md`, `CHANGELOG.md`, README; screenshot
+- [x] T007 [P] [US2] Re-encode 7 CC0 tracks to MP3 112 kbps into `frontend/public/music/`; `THIRD_PARTY.md` credits; the large-file hook skips that folder
+- [x] T008 [US2] `focus/music.ts`: playlist, play, pause, next, pick, volume, local files as object URLs, pause on breaks. Tests
+- [x] T009 [US2] Player row in the capsule and the Music tab in settings (depends on T008)
+- [x] T010 [US2] `DESIGN.md`, `CHANGELOG.md`, README; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.

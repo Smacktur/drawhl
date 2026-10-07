@@ -20,7 +20,8 @@
     "smart-guides",
     "dangling-arrow",
     "gantt-milestones",
-    "focus-timer"
+    "focus-timer",
+    "focus-music"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -48,7 +49,8 @@
     "G3_gantt-milestones": "approved",
     "G1_focus": "approved",
     "G2_focus": "approved",
-    "G3_focus-timer": "approved"
+    "G3_focus-timer": "approved",
+    "G3_focus-music": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",

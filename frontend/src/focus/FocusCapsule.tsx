@@ -4,16 +4,18 @@ import {
   Coffee,
   Pause,
   Play,
+  SkipForward,
   SlidersHorizontal,
   Target,
   Timer,
 } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { askNotify, primeAudio } from './alerts'
 import { FocusSettings } from './FocusSettings'
+import * as music from './music'
 import { updateTimer, useFocus } from './store'
-import { describe, formatClock, nextPhase, pause, play, view, type Mode } from './timer'
+import { describe, formatClock, pause, play, view, type Mode } from './timer'
 import { tone } from './tone'
 
 const ICONS: Record<Mode, typeof Timer> = {
@@ -25,7 +27,8 @@ const ICONS: Record<Mode, typeof Timer> = {
   rested: Bell,
 }
 
-const PHASE_LABEL = { focus: 'Focus', short: 'Short break', long: 'Long break' } as const
+const DECK_BUTTON =
+  'text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground grid size-[26px] shrink-0 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50'
 
 export function FocusCapsule() {
   const { settings, timer, now } = useFocus()
@@ -34,8 +37,10 @@ export function FocusCapsule() {
   const label = describe(timer, settings, v.mode)
   const Icon = ICONS[v.mode]
   const running = timer.status === 'running'
-  const following = nextPhase(timer, settings)
-  const upNext = `${PHASE_LABEL[following.phase]} · ${settings[following.phase]} min`
+  const player = music.useMusic()
+  const track = player.tracks[player.index]
+
+  useEffect(() => music.followTimer(v.mode), [v.mode])
 
   function onPlay() {
     if (running) {
@@ -113,16 +118,41 @@ export function FocusCapsule() {
               )}
             </button>
           </div>
-          <div className="flex h-9 items-center gap-1 pr-1.5 pl-3.5">
-            <span className="text-muted-foreground min-w-0 flex-1 truncate text-[12px]">
-              Next: {upNext}
+          <div className="flex h-9 items-center gap-0.5 pr-1.5 pl-3.5">
+            <span
+              aria-hidden
+              data-playing={player.playing || undefined}
+              className="focus-eq text-muted-foreground data-playing:text-foreground flex h-[11px] w-[13px] shrink-0 items-end gap-0.5"
+            >
+              <i />
+              <i />
+              <i />
             </span>
+            <span className="ml-1.5 min-w-0 flex-1 truncate text-[12px]">
+              {track.title} <span className="text-muted-foreground">· {track.author}</span>
+            </span>
+            <button
+              type="button"
+              onClick={music.toggle}
+              aria-label={player.playing ? 'Pause music' : 'Play music'}
+              className={DECK_BUTTON}
+            >
+              {player.playing ? (
+                <Pause className="size-3.5" fill="currentColor" strokeWidth={0} />
+              ) : (
+                <Play className="size-3.5" fill="currentColor" strokeWidth={0} />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={music.next}
+              aria-label="Next track"
+              className={DECK_BUTTON}
+            >
+              <SkipForward className="size-3.5" strokeWidth={1.75} />
+            </button>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                aria-label="Focus settings"
-                className="text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground grid size-[26px] place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
+              <button type="button" aria-label="Focus settings" className={DECK_BUTTON}>
                 <SlidersHorizontal className="size-[15px]" strokeWidth={1.75} />
               </button>
             </PopoverTrigger>
