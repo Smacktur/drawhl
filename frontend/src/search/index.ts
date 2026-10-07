@@ -151,7 +151,12 @@ function pushModule(
   })
 }
 
-export type Results = { entries: Entry[]; total: number }
+export type Results = {
+  entries: Entry[]
+  total: number
+  /** Nodes of every match, not only the shown ones, without repeats. */
+  targets: string[]
+}
 
 /** Matching entries, best first, at most `limit` of them. */
 export function search(index: Entry[], query: string[], limit = 50): Results {
@@ -161,5 +166,9 @@ export function search(index: Entry[], query: string[], limit = 50): Results {
     if (r >= 0) hits.push({ entry, rank: r })
   }
   hits.sort((a, b) => a.rank - b.rank || a.entry.order - b.entry.order)
-  return { entries: hits.slice(0, limit).map((hit) => hit.entry), total: hits.length }
+  return {
+    entries: hits.slice(0, limit).map((hit) => hit.entry),
+    total: hits.length,
+    targets: [...new Set(hits.map((hit) => hit.entry.target))],
+  }
 }

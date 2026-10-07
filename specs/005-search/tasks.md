@@ -28,9 +28,9 @@ description: "Task list for Search on the board"
 
 ## Phase 2: Slice 23 `feat/search-preview` — preview and highlight (US2)
 
-- [ ] T006 [US2] Preview on keyboard pick, viewport restore on cancel. Tests
-- [ ] T007 [US2] Matches ringed and the rest faded on the canvas; `⌘Enter` and "Select all N" select matches and fit them. Tests
-- [ ] T008 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
+- [x] T006 [US2] (the preview centers the element under the palette, not behind it; no backdrop) Preview on keyboard pick, viewport restore on cancel. Tests
+- [x] T007 [US2] Matches ringed and the rest faded on the canvas; `⌘Enter` and "Select all N" select matches and fit them. Tests
+- [x] T008 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
 

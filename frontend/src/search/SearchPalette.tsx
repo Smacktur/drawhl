@@ -21,7 +21,7 @@ import {
 import { TypeIcon } from '@/canvas/nodes/TaskBits'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Kbd } from '@/components/ui/kbd'
-import { SHORTCUTS } from '@/lib/shortcuts'
+import { formatShortcut, SHORTCUTS } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 import { findModule } from '@/modules/registry'
 import type { Entry } from './index'
@@ -93,7 +93,15 @@ type Props = {
   index: Entry[]
   recent: string[]
   onChoose: (entry: Entry) => void
+  /** The row picked with the keyboard, after a short rest: the board looks at it. */
+  onPreview?: (entry: Entry) => void
+  /** Nodes of every match of the current query, lit on the board. */
+  onTargets?: (ids: string[]) => void
+  onSelectAll?: (ids: string[]) => void
 }
+
+// Holding an arrow key skims rows; the board moves only once the pick rests.
+const PREVIEW_DELAY_MS = 120
 
 export function SearchPalette({ open, onOpenChange, ...rest }: Props) {
   return (
@@ -101,7 +109,9 @@ export function SearchPalette({ open, onOpenChange, ...rest }: Props) {
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
-        className="top-[18%] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-[560px]"
+        // The board stays clear behind the palette: matches light up on it and previews move it.
+        overlayClassName="bg-transparent supports-backdrop-filter:backdrop-blur-none"
+        className="top-[18%] translate-y-0 gap-0 overflow-hidden p-0 shadow-xl sm:max-w-[560px]"
       >
         <DialogTitle className="sr-only">Search the board</DialogTitle>
         <PaletteBody onClose={() => onOpenChange(false)} {...rest} />
@@ -116,6 +126,9 @@ function PaletteBody({
   index,
   recent,
   onChoose,
+  onPreview,
+  onTargets,
+  onSelectAll,
   onClose,
 }: Omit<Props, 'open' | 'onOpenChange'> & { onClose: () => void }) {
   const [text, setText] = useState('')
@@ -127,16 +140,35 @@ function PaletteBody({
   const listId = useId()
   const optionId = (i: number) => `${listId}-${i}`
   const current = Math.min(active, rows.length - 1)
+  const picked = rows[current]
+  // True once the pick moved by keyboard since the last keystroke in the input.
+  const browsing = useRef(false)
 
   useEffect(() => {
     list.current?.querySelector(`[data-index="${current}"]`)?.scrollIntoView?.({ block: 'nearest' })
   }, [current])
 
+  useEffect(() => {
+    if (!browsing.current || !picked) return
+    const timer = setTimeout(() => onPreview?.(picked), PREVIEW_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [picked, onPreview])
+
+  useEffect(() => onTargets?.(view.targets), [view.targets, onTargets])
+
+  const selectAll = () => {
+    if (view.targets.length) onSelectAll?.(view.targets)
+  }
+
   const onKeyDown = (event: KeyboardEvent) => {
     const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0
     if (step && rows.length) {
       event.preventDefault()
+      browsing.current = true
       setActive((current + step + rows.length) % rows.length)
+    } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault()
+      selectAll()
     } else if (event.key === 'Enter' && rows[current]) {
       event.preventDefault()
       onChoose(rows[current])
@@ -166,6 +198,7 @@ function PaletteBody({
           onChange={(event) => {
             setText(event.target.value)
             setActive(0)
+            browsing.current = false
           }}
           onKeyDown={onKeyDown}
         />
@@ -204,7 +237,11 @@ function PaletteBody({
                   )}
                   // Keeps focus in the input, so typing goes on after a click elsewhere in the list.
                   onMouseDown={(event) => event.preventDefault()}
-                  onMouseMove={() => at !== current && setActive(at)}
+                  onMouseMove={() => {
+                    if (at === current) return
+                    browsing.current = false
+                    setActive(at)
+                  }}
                   onClick={() => onChoose(entry)}
                 >
                   <Row entry={entry} query={view.query} />
@@ -237,6 +274,17 @@ function PaletteBody({
         <span className="flex items-center gap-1">
           <Kbd>Esc</Kbd> Close
         </span>
+        {onSelectAll && view.targets.length > 0 && (
+          <button
+            type="button"
+            className="hover:text-foreground ml-auto flex items-center gap-1 rounded-sm"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={selectAll}
+          >
+            Select all {view.targets.length}
+            <Kbd>{formatShortcut('selectMatches')[0].join('')}</Kbd>
+          </button>
+        )}
       </div>
     </>
   )

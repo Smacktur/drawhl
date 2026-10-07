@@ -61,6 +61,7 @@ import { askNotify, primeAudio } from '@/focus/alerts'
 import { BESIDE, dropTimers, holdsTimers, TIMER_SIZE } from '@/timers/attach'
 import { flyTo, useFlashingId } from '@/canvas/fly'
 import { BoardSearch } from '@/search/BoardSearch'
+import { useSearchHits } from '@/search/palette'
 import { BoardTimers } from '@/timers/BoardTimers'
 import { newTimer, waitsForStatus } from '@/timers/timer'
 import { TimerNode } from '@/timers/TimerNode'
@@ -120,17 +121,24 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   useShortcut('cancel', () => setTool('select'), { preventDefault: false })
 
   const flashId = useFlashingId()
+  const hits = useSearchHits()
   const shown = useMemo(() => {
     const raised = raiseAnchors(nodes, edges)
-    // A timer flashes its own cube; any other node the board moved to flashes its frame.
-    if (!flashId) return raised
+    if (!flashId && !hits) return raised
     return {
       ...raised,
-      nodes: raised.nodes.map((n) =>
-        n.id === flashId && n.type !== 'timer' ? { ...n, className: 'node-flash' } : n,
-      ),
+      nodes: raised.nodes.map((n) => {
+        // A timer flashes its own cube; any other node the board moved to flashes its frame.
+        const flash = n.id === flashId && n.type !== 'timer'
+        const hit = hits?.has(n.id)
+        if (!flash && !hit) return n
+        return {
+          ...n,
+          className: [flash && 'node-flash', hit && 'search-hit'].filter(Boolean).join(' '),
+        }
+      }),
     }
-  }, [nodes, edges, flashId])
+  }, [nodes, edges, flashId, hits])
   const history = useHistory(nodes, edges, setNodes, setEdges)
   const guides = useGuides(onNodesChange)
   useShortcut('undo', history.undo)
@@ -368,6 +376,12 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setEdges((current) => current.map((e) => ({ ...e, selected: kind === 'edge' && e.id === id })))
   }
 
+  const selectNodes = (ids: string[]) => {
+    const picked = new Set(ids)
+    setNodes((current) => current.map((n) => ({ ...n, selected: picked.has(n.id) })))
+    setEdges((current) => current.map((e) => ({ ...e, selected: false })))
+  }
+
   const jumpTo = (id: string) => {
     selectOnly(id, 'node')
     flyTo(flow, id)
@@ -521,6 +535,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
               nodesDraggable={!placing}
               className={[
                 connecting && 'connecting',
+                hits && 'searching',
                 placing && 'cursor-crosshair',
                 tool === 'hand' && 'cursor-grab',
               ]
@@ -554,7 +569,13 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           onRefresh={() => void refresh.refetch()}
         />
       </BoardTimers>
-      <BoardSearch boardId={board.id} nodes={nodes} tasks={tasks} onJump={jumpTo} />
+      <BoardSearch
+        boardId={board.id}
+        nodes={nodes}
+        tasks={tasks}
+        onJump={jumpTo}
+        onSelect={selectNodes}
+      />
       {saveError && (
         <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
           <AlertDescription>Not saved: {saveError}</AlertDescription>

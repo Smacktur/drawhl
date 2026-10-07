@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { expect, test, vi } from 'vitest'
+import { act } from 'react'
+import { afterEach, expect, test, vi } from 'vitest'
 import type { AppNode } from '@/canvas/types'
 import { buildIndex } from './index'
 import { SearchPalette } from './SearchPalette'
@@ -24,6 +25,9 @@ const index = buildIndex(
 function setup(recent: string[] = []) {
   const onChoose = vi.fn()
   const onOpenChange = vi.fn()
+  const onPreview = vi.fn()
+  const onTargets = vi.fn()
+  const onSelectAll = vi.fn()
   render(
     <SearchPalette
       open
@@ -31,10 +35,13 @@ function setup(recent: string[] = []) {
       index={index}
       recent={recent}
       onChoose={onChoose}
+      onPreview={onPreview}
+      onTargets={onTargets}
+      onSelectAll={onSelectAll}
     />,
   )
   const input = screen.getByRole('combobox', { name: 'Search the board' })
-  return { input, onChoose, onOpenChange }
+  return { input, onChoose, onOpenChange, onPreview, onTargets, onSelectAll }
 }
 
 const options = () => screen.queryAllByRole('option').map((o) => o.textContent)
@@ -83,4 +90,35 @@ test('the search shortcut closes the open palette', () => {
   const { input, onOpenChange } = setup()
   fireEvent.keyDown(input, { key: 'k', metaKey: true })
   expect(onOpenChange).toHaveBeenCalledWith(false)
+})
+
+afterEach(() => vi.useRealTimers())
+
+test('the board previews the row picked by keyboard once the pick rests', () => {
+  vi.useFakeTimers()
+  const { input, onPreview } = setup()
+  fireEvent.change(input, { target: { value: 'deploy' } })
+  act(() => vi.advanceTimersByTime(500))
+  expect(onPreview).not.toHaveBeenCalled()
+  fireEvent.keyDown(input, { key: 'ArrowDown' })
+  fireEvent.keyDown(input, { key: 'ArrowDown' })
+  act(() => vi.advanceTimersByTime(50))
+  expect(onPreview).not.toHaveBeenCalled()
+  act(() => vi.advanceTimersByTime(100))
+  expect(onPreview).toHaveBeenCalledTimes(1)
+  expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ id: 'b' }))
+  fireEvent.mouseMove(screen.getAllByRole('option')[1])
+  act(() => vi.advanceTimersByTime(500))
+  expect(onPreview).toHaveBeenCalledTimes(1)
+})
+
+test('reports every match to light up and selects them all with mod+Enter', () => {
+  const { input, onTargets, onSelectAll } = setup()
+  expect(onTargets).toHaveBeenLastCalledWith([])
+  fireEvent.change(input, { target: { value: 'deploy' } })
+  expect(onTargets).toHaveBeenLastCalledWith(['b', 'a'])
+  fireEvent.keyDown(input, { key: 'Enter', metaKey: true })
+  expect(onSelectAll).toHaveBeenCalledWith(['b', 'a'])
+  fireEvent.click(screen.getByRole('button', { name: /Select all 2/ }))
+  expect(onSelectAll).toHaveBeenCalledTimes(2)
 })
