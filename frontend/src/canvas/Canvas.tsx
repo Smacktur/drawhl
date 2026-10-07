@@ -60,10 +60,9 @@ import { useShortcut } from '@/lib/shortcuts'
 import { askNotify, primeAudio } from '@/focus/alerts'
 import { BESIDE, dropTimers, holdsTimers, TIMER_SIZE } from '@/timers/attach'
 import { flyTo } from '@/timers/fly'
-import { finish, newTimer, snooze } from '@/timers/timer'
+import { BoardTimers } from '@/timers/BoardTimers'
+import { newTimer } from '@/timers/timer'
 import { TimerNode } from '@/timers/TimerNode'
-import { TimerNotes } from '@/timers/TimerNotes'
-import { useTimers } from '@/timers/useTimers'
 import { useTheme } from '@/lib/theme'
 
 const nodeTypes = {
@@ -234,7 +233,6 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
       current.map((n) => (n.id === id && n.type === 'timer' ? { ...n, data: change(n.data) } : n)),
     )
   const openTimer = useCallback((id: string) => flyTo(flow, id), [flow])
-  const timers = useTimers(nodes, openTimer)
 
   const placeAt = (kind: PlaceTool, screen: XYPosition) => {
     if (kind === 'timer') return addTimer({ screen })
@@ -525,21 +523,15 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           </div>
         </CanvasContextMenu>
       </ModuleHostContext.Provider>
-      <RefreshIndicator
-        sources={refresh.data?.sources ?? []}
-        serverError={refresh.error}
-        syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
-        refreshing={refresh.isFetching}
-        onRefresh={() => void refresh.refetch()}
-      />
-      <TimerNotes
-        fired={timers.fired}
-        missed={timers.missed}
-        onDismissMissed={timers.dismissMissed}
-        onOpen={openTimer}
-        onDone={(id) => updateTimer(id, finish)}
-        onSnooze={(id, ms) => updateTimer(id, (data) => snooze(data, ms, Date.now()))}
-      />
+      <BoardTimers nodes={nodes} onOpen={openTimer} onChange={updateTimer}>
+        <RefreshIndicator
+          sources={refresh.data?.sources ?? []}
+          serverError={refresh.error}
+          syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
+          refreshing={refresh.isFetching}
+          onRefresh={() => void refresh.refetch()}
+        />
+      </BoardTimers>
       {saveError && (
         <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
           <AlertDescription>Not saved: {saveError}</AlertDescription>

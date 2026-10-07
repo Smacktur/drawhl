@@ -79,7 +79,7 @@ export function RefreshIndicator({ sources, serverError, syncedAt, refreshing, o
   const health = syncHealth(sources, serverError)
 
   return (
-    <div className="bg-card absolute top-4 right-4 z-10 flex items-center gap-1 rounded-lg border p-1 text-[13px] shadow-md">
+    <div className="bg-card flex items-center gap-1 rounded-lg border p-1 text-[13px] shadow-md">
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="font-normal" aria-label="Sync status">

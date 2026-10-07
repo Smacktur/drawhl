@@ -33,8 +33,8 @@ description: "Task list for Timers on the board"
 
 **Independent Test**: see US2 in [spec.md](spec.md).
 
-- [ ] T007 [US2] `timers/TimerList.tsx`: button with counts and the next-timer tooltip, non-modal panel with groups, fly and flash on click, Done and +10 min in rows; "Timers" in the main menu. Tests
-- [ ] T008 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
+- [x] T007 [US2] `timers/TimerList.tsx`: button with counts and the next-timer tooltip, non-modal panel with groups, fly and flash on click, Done and +10 min in rows; "Timers" in the main menu. Tests
+- [x] T008 [US2] `DESIGN.md`, `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.
 
