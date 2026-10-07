@@ -58,7 +58,7 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 
 - Backend: FastAPI
 - Frontend: React/TS + `@xyflow/react`
-- Profile: `oss`, MIT license, self-host (`compose.release.yml`)
+- Profile: `oss`, AGPL-3.0-only license with a CLA (dual licensing kept open for a hosted version), self-host (`compose.release.yml`)
 - LLM: none
 
 ## Risks

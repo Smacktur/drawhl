@@ -111,7 +111,7 @@ export function AboutButton() {
             Report a bug or idea
           </AboutLink>
         </nav>
-        <p className="text-muted-foreground border-t pt-2 text-[12px]">MIT license</p>
+        <p className="text-muted-foreground border-t pt-2 text-[12px]">AGPL-3.0 license</p>
       </PopoverContent>
     </Popover>
   )

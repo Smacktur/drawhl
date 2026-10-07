@@ -7,7 +7,7 @@ description: 'Open-source infinite canvas for your tasks: live cards from your t
     arranged the way you think'
 frontend: true
 github_owner: Smacktur
-license: MIT
+license: AGPL-3.0
 llm: false
 profile: oss
 project_name: drawhl

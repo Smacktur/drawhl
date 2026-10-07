@@ -47,10 +47,11 @@ check: lint test  ## gate before every merge to main
 smoke:  ## main scenario against a running stack (make up first; stage-smoke for stage)
 	docker compose exec -T api python - < scripts/smoke.py
 
-# Permissive and weak-copyleft only; anything else (GPL, SSPL, BUSL, custom "see LICENSE") fails.
+# Permissive and weak-copyleft only, so the maintainer can still relicense the code under the CLA;
+# GPL-family, SSPL, BUSL, custom "see LICENSE" fail.
 NPM_LICENSES := MIT;MIT-0;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;CC0-1.0;CC-BY-4.0;BlueOak-1.0.0;Unlicense;OFL-1.1;Python-2.0;MPL-2.0
 
-licenses:  ## fail on dependency licenses incompatible with MIT
+licenses:  ## fail on dependency licenses that block AGPL-3.0 and dual licensing
 	cd backend && uv run -q --with pip-licenses pip-licenses --from=mixed --partial-match \
 		--fail-on="GPL;SSPL;Server Side Public;Business Source;BUSL;Commons Clause;Elastic License" >/dev/null
 	cd frontend && npx --yes license-checker-rseidelsohn --production --excludePrivatePackages --summary \

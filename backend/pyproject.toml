@@ -2,6 +2,7 @@
 name = "drawhl-api"
 version = "0.1.0"
 requires-python = ">=3.12"
+license = "AGPL-3.0-only"
 dependencies = [
     "fastapi>=0.141",
     "uvicorn[standard]>=0.54",

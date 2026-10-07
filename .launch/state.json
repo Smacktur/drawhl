@@ -81,6 +81,7 @@
     "2026-10-07 G1 and G2 focus: owner asked for a pomodoro timer with lofi music, picked the capsule design and told the agent to proceed without waiting. Music: 7 CC0 tracks from OpenGameArt, Pixabay rejected by license.",
     "2026-10-07 G1 and G2 timers: owner shaped idea 10 (cube timers attached to elements, list of the current board, status and repeat triggers) and told the agent to build; notifications only while drawhl is open.",
     "2026-10-07 G1 search: owner asked for a Spotlight-like palette on Cmd+K and Cmd+F and took all extras: preview and highlight, filters, commands and boards, layout fallback and recent jumps. Owner approved spec 005 (G2) and asked for a fast search; no list virtualization needed with 50 rows.",
-    "2026-10-07 search: spec 005 done in 4 slices (search, preview, filters, commands); owner added Cmd+P for the command palette."
+    "2026-10-07 search: spec 005 done in 4 slices (search, preview, filters, commands); owner added Cmd+P for the command palette.",
+    "2026-10-07 legal: owner chose AGPL-3.0-only over MIT to keep a future hosted version and enterprise terms open; CLA (checkbox in the PR template, bot before the first outside PR), TRADEMARKS.md, releases up to v2026.10.6 stay MIT."
   ]
 }

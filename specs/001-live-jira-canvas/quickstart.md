@@ -43,5 +43,5 @@ Delete the board from the board menu afterwards.
 
 ```bash
 make check      # lint + tests, includes the token-leak test
-make licenses   # httpx, cryptography, @xyflow/react are MIT-compatible
+make licenses   # httpx, cryptography, @xyflow/react are permissive
 ```
