@@ -52,6 +52,8 @@ Under the dial, the player row shows the current track. The user plays and pause
 - The board changes or no board exists: the capsule stays, the timer is not tied to a board.
 - Two tabs open: each shows the same stored state after reload; live sync between tabs is not in scope.
 - Notifications denied or unsupported: the notification toggle shows why and the chime still plays.
+- Browser storage is full or blocked: an added file still plays until the tab closes, its row says "this tab only", and the Music tab names the file and the cause.
+- Browser data is cleared, Safari removes data of a site not opened for 7 days, or drawhl is opened on another address: own tracks are gone and must be added again. The Music tab shows how much space own tracks take and whether the browser protects them from automatic cleanup; protection is requested when the first own track is added and needs HTTPS or localhost.
 - Browser blocks autoplay: music starts only from a click, which the play button always is.
 - Settings out of range are clamped: focus 1–90 min, breaks 1–60 min, rounds 2–8.
 - `prefers-reduced-motion`: no gradient drift, no pulse, no popover slide.

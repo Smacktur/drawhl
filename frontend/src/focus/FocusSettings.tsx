@@ -1,8 +1,9 @@
 import { Minus, Plus, RotateCcw, SkipForward, Volume1, X } from 'lucide-react'
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { askNotify, notifyPermission, type NotifyPermission } from './alerts'
+import type * as library from './library'
 import * as music from './music'
 import { updateSettings, updateTimer, useFocus } from './store'
 import { LIMITS, reset, skip, type TimerSettings } from './timer'
@@ -131,12 +132,28 @@ function TimerTab() {
   )
 }
 
+const PROTECTION: Record<library.Protection, string> = {
+  protected: 'Protected from automatic cleanup.',
+  unprotected: 'The browser may clear them when disk space runs low.',
+  unavailable: 'Open drawhl over HTTPS or on localhost to protect them from cleanup.',
+}
+
 function MusicTab() {
   const player = music.useMusic()
   const files = useRef<HTMLInputElement>(null)
+  const list = useRef<HTMLOListElement>(null)
+
+  // A track added at the end of a long list is the current one, so keep it in view.
+  useEffect(() => {
+    list.current?.querySelector('[aria-current]')?.scrollIntoView?.({ block: 'nearest' })
+  }, [player.index, player.tracks.length])
   return (
     <div className="flex flex-col gap-2 text-[13px]">
-      <ol className="-mx-1 flex max-h-[196px] flex-col gap-px overflow-y-auto" aria-label="Tracks">
+      <ol
+        ref={list}
+        className="-mx-1 flex max-h-[196px] flex-col gap-px overflow-y-auto"
+        aria-label="Tracks"
+      >
         {player.tracks.map((track, i) => (
           <li key={music.trackKey(track)} className="group/track relative">
             <button
@@ -148,7 +165,10 @@ function MusicTab() {
               <span className="text-muted-foreground w-4 font-mono tabular-nums">{i + 1}</span>
               <span className="min-w-0 flex-1 truncate">
                 {track.title}{' '}
-                <span className="text-muted-foreground font-normal">· {track.author}</span>
+                <span className="text-muted-foreground font-normal">
+                  · {track.author}
+                  {track.unsaved && ', this tab only'}
+                </span>
               </span>
               {track.duration !== undefined && (
                 <span className="text-muted-foreground font-mono font-normal tabular-nums">
@@ -178,6 +198,17 @@ function MusicTab() {
         <Plus strokeWidth={1.75} />
         Add your own tracks
       </Button>
+      {player.saveError && (
+        <p role="alert" className="text-destructive text-[12px] leading-snug">
+          {player.saveError}
+        </p>
+      )}
+      {player.storage && (
+        <p className="text-muted-foreground text-[12px] leading-snug">
+          Your files: {music.formatBytes(player.storage.bytes)} in this browser.{' '}
+          {PROTECTION[player.storage.protection]}
+        </p>
+      )}
       <input
         ref={files}
         type="file"

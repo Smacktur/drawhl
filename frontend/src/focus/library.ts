@@ -3,6 +3,8 @@ export interface StoredTrack {
   id: string
   title: string
   file: Blob
+  /** Bytes, stored next to the file so counting usage does not read every file. */
+  size?: number
   /** Seconds, when the browser could read it. */
   duration?: number
   added: number
@@ -49,4 +51,24 @@ export async function saveTrack(track: StoredTrack): Promise<void> {
 
 export async function removeTrack(id: string): Promise<void> {
   await run('readwrite', (store) => store.delete(id))
+}
+
+/** Whether the browser keeps this site's data when disk space runs low. */
+export type Protection = 'protected' | 'unprotected' | 'unavailable'
+
+// StorageManager exists only on HTTPS and localhost, so plain HTTP gets 'unavailable'.
+export async function protection(ask = false): Promise<Protection> {
+  const storage = typeof navigator === 'undefined' ? undefined : navigator.storage
+  if (!storage?.persisted) return 'unavailable'
+  try {
+    if (await storage.persisted()) return 'protected'
+    if (ask && storage.persist && (await storage.persist())) return 'protected'
+    return 'unprotected'
+  } catch {
+    return 'unavailable'
+  }
+}
+
+export function isQuotaError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'QuotaExceededError'
 }

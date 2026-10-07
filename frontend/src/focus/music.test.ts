@@ -61,12 +61,18 @@ it('keeps own files in the browser and brings them back after a reload', async (
   ])
   expect(play).toHaveBeenCalledTimes(1)
   expect(await listTracks()).toMatchObject([{ title: 'my mix' }])
+  expect(music.formatBytes(1)).toBe('1 KB')
+  expect(music.formatBytes(25 * 1024 * 1024)).toBe('25 MB')
 
   music.resetMusic()
   const { result } = renderHook(() => music.useMusic())
   await waitFor(() => expect(result.current.tracks).toHaveLength(8))
   // The own track was playing, so the player comes back on it.
   expect(result.current.tracks[result.current.index]).toMatchObject({ title: 'my mix' })
+  // jsdom has no StorageManager, like a site on plain HTTP.
+  await waitFor(() =>
+    expect(result.current.storage).toEqual({ bytes: 1, protection: 'unavailable' }),
+  )
 })
 
 it('removes an own track from the list and the browser', async () => {
