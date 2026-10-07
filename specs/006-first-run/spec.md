@@ -38,7 +38,7 @@ A long note no longer spills out under the sticky. As the user types, the text k
 
 **Acceptance Scenarios**:
 
-1. **Given** a sticky, **When** its text grows past the note while typing or viewing, **Then** the font shrinks from 16 px until the whole text fits, with no lower bound; it grows back when the text gets shorter or the note bigger. The note never scrolls and never cuts text.
+1. **Given** a sticky, **When** its text grows past the note while typing or viewing, **Then** the font shrinks from 14 px, the usual size, until the whole text fits, with no lower bound; it grows back when the text gets shorter or the note bigger. The note never scrolls and never cuts text.
 2. **Given** a sticky with 2000 characters, **When** the user types or pastes more, **Then** the extra characters are not added and a large "no entry" sign flashes over the note for about a second.
 3. **Given** an older sticky with more than 2000 characters, **Then** it shows all its text fitted, and it can be shortened but not lengthened.
 4. **Given** a board with many stickies, **Then** fitting does not make panning or zooming stutter: it runs only when a note's text or size changes.
@@ -92,7 +92,7 @@ The user copies a line from a chat or a doc and presses `⌘V` over the board: a
 - **FR-001**: The server MUST create the welcome board at most once per database, only when the database has no boards and was never seeded, and remember that it did.
 - **FR-002**: The welcome board MUST pass the same validation as a saved board and use only demo task keys and made-up text.
 - **FR-003**: The welcome board's dates (Gantt bars, milestone, timer) MUST be computed from the creation date.
-- **FR-004**: A sticky's font MUST shrink from 16 px with no lower bound so its whole text fits, and grow back when there is room; a sticky MUST NOT accept more than 2000 characters from the UI.
+- **FR-004**: A sticky's font MUST shrink from 14 px with no lower bound so its whole text fits, and grow back when there is room; a sticky MUST NOT accept more than 2000 characters from the UI.
 - **FR-005**: Every scrolling area of the app MUST use the themed thin scrollbar.
 - **FR-006**: Pasting over the board MUST be decided in this order: copied drawhl elements, then task keys and links (cards), then plain text (a text element, or a sticky note when the setting says so). New kinds of paste plug in as another step in this order.
 - **FR-007**: The "Paste text as" setting MUST be stored in the browser and default to text.

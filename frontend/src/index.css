@@ -384,6 +384,26 @@
   }
 }
 
+/* A sticky at its character limit: a "no entry" sign that fades out. */
+.sticky-blocked {
+  color: var(--sticky-foreground);
+  opacity: 0;
+  animation: sticky-blocked 900ms ease-out;
+}
+@keyframes sticky-blocked {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  25% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .react-flow__handle {
     transition: none;
