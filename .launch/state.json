@@ -73,7 +73,8 @@
     "G3_search-preview": "approved",
     "G3_search-filters": "approved",
     "G3_search-commands": "approved",
-    "G1_first-run": "approved"
+    "G1_first-run": "approved",
+    "G2_first-run": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -85,6 +86,7 @@
     "2026-10-07 search: spec 005 done in 4 slices (search, preview, filters, commands); owner added Cmd+P for the command palette.",
     "2026-10-07 legal: owner chose AGPL-3.0-only over MIT to keep a future hosted version and enterprise terms open; CLA (checkbox in the PR template, bot before the first outside PR), TRADEMARKS.md, releases up to v2026.10.6 stay MIT.",
     "2026-10-07 legal: CLA Assistant (cla-assistant.io) linked to the repo with the CLA gist, allowlist Smacktur and *[bot]; the PR template checkbox removed, signing goes through the bot only.",
-    "2026-10-07 G1 first-run: owner approved a 5-step launch plan (first-run polish, one-click deploy with an instance password, public web demo, Jira Cloud then GitHub Issues, launch kit) and moved the instance password and Jira Cloud out of Won't. Spec 006 covers step 1: welcome board, sticky fit, scrollbars, paste text."
+    "2026-10-07 G1 first-run: owner approved a 5-step launch plan (first-run polish, one-click deploy with an instance password, public web demo, Jira Cloud then GitHub Issues, launch kit) and moved the instance password and Jira Cloud out of Won't. Spec 006 covers step 1: welcome board, sticky fit, scrollbars, paste text.",
+    "2026-10-07 G2 first-run: owner approved spec 006; sticky text shrinks with no floor and stops at 2000 characters like Miro, paste turns task links into cards (draft idea 13, Jira first)."
   ]
 }

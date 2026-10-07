@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-07
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description: "Before showing drawhl on Hacker News, Reddit and Product Hunt: a fresh install should open on a board that shows what drawhl can do, not an empty canvas, and the rough edges people hit first should go." Step 4 of the launch plan agreed with the owner on 2026-10-07; the polish items are draft ideas 5, 8 and 10 of the owner's list.
 
