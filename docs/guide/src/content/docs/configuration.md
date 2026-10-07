@@ -1,8 +1,5 @@
 ---
 title: Configuration
-category:
-  uri: Self-hosting
-position: 1
 ---
 
 Everything works without a `.env` file. To override defaults, copy [`.env.example`](https://github.com/Smacktur/drawhl/blob/main/.env.example) to `.env` next to the compose file and edit it.

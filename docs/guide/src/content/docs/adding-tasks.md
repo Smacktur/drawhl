@@ -1,8 +1,5 @@
 ---
 title: Adding tasks
-category:
-  uri: Using drawhl
-position: 0
 ---
 
 Each card shows the task's type, key, title and status from your tracker. Statuses refresh every 30 seconds with one batched request per board, and closed tasks are struck through.

@@ -1,8 +1,5 @@
 ---
 title: Data, backups and upgrades
-category:
-  uri: Self-hosting
-position: 2
 ---
 
 All data is one SQLite file in `./data`, which survives rebuilds and upgrades.

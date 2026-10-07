@@ -35,7 +35,8 @@
     "sticky-fit",
     "scrollbars",
     "paste-text",
-    "docs-site"
+    "docs-site",
+    "docs-starlight"
   ],
   "gates": {
     "G1_scope": "approved",
