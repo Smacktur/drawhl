@@ -11,7 +11,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { resolveTask, searchTasks, type Task } from '@/api/tasks'
+import { searchTasks, type Task } from '@/api/tasks'
+import { errorMessage, MAX_REFS, REF_RE, resolveAll, splitRefs, type Resolved } from '@/canvas/refs'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
@@ -40,24 +41,8 @@ const PLACE_COMMANDS = [
   { tool: 'timer', title: 'Add timer', Icon: AlarmClock },
 ] as const
 
-const MAX_REFS = 50
-// Each key is one Jira request; a few at a time stays clear of rate limits.
-const CONCURRENCY = 4
-
-type Resolved = {
-  tasks: Task[]
-  failed: { ref: string; message: string }[]
-  /** Set for a JQL query: how many tasks matched, including the ones past the limit. */
-  total?: number
-}
-
 // Input with a JQL operator that is not just keys and links is a query; a lone typo stays a key.
-const REF_RE = /^([A-Za-z][A-Za-z0-9_]+-\d+|https?:\/\/\S+)$/
 const JQL_OPERATOR = /[=~<>!]|\b(in|is|was|changed)\b/i
-
-function splitRefs(input: string) {
-  return [...new Set(input.split(/[\s,;]+/).filter(Boolean))]
-}
 
 export function isJql(input: string) {
   const refs = splitRefs(input)
@@ -68,31 +53,6 @@ async function addFromInput(input: string): Promise<Resolved> {
   if (!isJql(input)) return resolveAll(splitRefs(input))
   const { tasks, total } = await searchTasks(input.trim(), MAX_REFS)
   return { tasks, failed: [], total }
-}
-
-async function resolveAll(refs: string[]): Promise<Resolved> {
-  const results: PromiseSettledResult<Task>[] = []
-  let next = 0
-  const worker = async () => {
-    while (next < refs.length) {
-      const i = next++
-      results[i] = await resolveTask(refs[i]).then(
-        (value) => ({ status: 'fulfilled', value }) as const,
-        (reason: unknown) => ({ status: 'rejected', reason }) as const,
-      )
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, refs.length) }, worker))
-  const resolved: Resolved = { tasks: [], failed: [] }
-  results.forEach((result, i) => {
-    if (result.status === 'fulfilled') resolved.tasks.push(result.value)
-    else resolved.failed.push({ ref: refs[i], message: errorMessage(result.reason) })
-  })
-  return resolved
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Could not add the card'
 }
 
 /** Takes keys, links or a JQL query; keys that fail stay in the field with their errors. */

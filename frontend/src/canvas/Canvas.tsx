@@ -15,7 +15,7 @@ import {
   type OnBeforeDelete,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -26,6 +26,7 @@ import { CanvasContextMenu, type MenuTarget, type PlaceTool } from '@/canvas/Can
 import {
   cloneSnippet,
   copySelection,
+  clipboardId,
   getClipboard,
   setClipboard,
   snippetOrigin,
@@ -53,6 +54,9 @@ import { useGuides } from '@/canvas/useGuides'
 import { useHistory } from '@/canvas/useHistory'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
 import { newId } from '@/lib/id'
+import { STICKY_MAX_CHARS } from '@/canvas/fit'
+import { CLIPBOARD_MARKER, classifyPaste, isEditable, readPasteAs } from '@/canvas/paste'
+import { resolveAll } from '@/canvas/refs'
 import { ModuleHostContext } from '@/modules/host-context'
 import { findModule } from '@/modules/registry'
 import type { ModuleHost } from '@/modules/types'
@@ -91,6 +95,8 @@ const MIN_ARROW = 16
 
 // Leaves room for the top bar, the focus capsule and the toolbar over the board.
 const FIT_NEW_BOARD = { padding: 0.16, maxZoom: 1 }
+// Long enough to read a few failed keys.
+const PASTE_ERROR_MS = 8000
 const viewportCenter = () => ({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
 const NEW_NODES = {
@@ -197,30 +203,76 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setEdges((current) => [...current.map((e) => ({ ...e, selected: false })), ...copy.edges])
   }
 
-  // Copy and paste only take over the keys when there is something to copy or paste,
-  // so copying text elsewhere on the page keeps working.
-  useShortcut(
-    'copy',
-    (event) => {
-      const snippet = copySelection(nodes, edges, tasks)
-      if (!snippet) return
-      event.preventDefault()
-      setClipboard(snippet)
-    },
-    { preventDefault: false },
-  )
-  useShortcut(
-    'paste',
-    (event) => {
-      const snippet = getClipboard()
-      if (!snippet) return
-      event.preventDefault()
-      const target = screenToFlowPosition(pointer.current ?? viewportCenter())
-      const origin = snippetOrigin(snippet)
-      insert(snippet, { x: target.x - origin.x, y: target.y - origin.y })
-    },
-    { preventDefault: false },
-  )
+  const addPastedNote = (text: string, screen: XYPosition) => {
+    const kind = readPasteAs()
+    const { width, height, data } = NEW_NODES[kind]
+    const point = screenToFlowPosition(screen)
+    const node = {
+      id: newId(),
+      type: kind,
+      position: { x: point.x - width / 2, y: point.y - (height ?? 0) / 2 },
+      width,
+      ...(height ? { height } : { initialHeight: 28 }),
+      selected: true,
+      data: { ...data, text: kind === 'sticky' ? text.slice(0, STICKY_MAX_CHARS) : text },
+    } as AppNode
+    setNodes((current) =>
+      reparent([...current.map((n) => ({ ...n, selected: false })), node], [node.id]),
+    )
+  }
+
+  const [pasteError, setPasteError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!pasteError) return
+    const timeout = setTimeout(() => setPasteError(null), PASTE_ERROR_MS)
+    return () => clearTimeout(timeout)
+  }, [pasteError])
+
+  // Native clipboard events rather than shortcuts: only they can read and write the
+  // system clipboard. Both step aside for text fields, dialogs and selected page text.
+  const clipboard = useRef<Record<'copy' | 'paste', (event: ClipboardEvent) => void>>(null)
+  useEffect(() => {
+    clipboard.current = {
+      copy: (event) => {
+        if (isEditable(event.target) || !window.getSelection()?.isCollapsed) return
+        const snippet = copySelection(getNodes(), getEdges(), tasks)
+        if (!snippet) return
+        event.preventDefault()
+        event.clipboardData?.setData(CLIPBOARD_MARKER, setClipboard(snippet))
+      },
+      paste: (event) => {
+        if (isEditable(event.target) || !event.clipboardData) return
+        const paste = classifyPaste(event.clipboardData, clipboardId())
+        if (!paste) return
+        event.preventDefault()
+        const screen = pointer.current ?? viewportCenter()
+        const snippet = getClipboard()
+        if (paste.kind === 'elements' && snippet) {
+          const target = screenToFlowPosition(screen)
+          const origin = snippetOrigin(snippet)
+          insert(snippet, { x: target.x - origin.x, y: target.y - origin.y })
+        } else if (paste.kind === 'refs') {
+          void resolveAll(paste.refs).then(({ tasks: found, failed }) => {
+            if (found.length > 0) addCards(found, screen)
+            if (failed.length > 0)
+              setPasteError(failed.map((f) => `${f.ref}: ${f.message}`).join('\n'))
+          })
+        } else if (paste.kind === 'text') {
+          addPastedNote(paste.text, screen)
+        }
+      },
+    }
+  })
+  useEffect(() => {
+    const copy = (event: ClipboardEvent) => clipboard.current?.copy(event)
+    const paste = (event: ClipboardEvent) => clipboard.current?.paste(event)
+    document.addEventListener('copy', copy)
+    document.addEventListener('paste', paste)
+    return () => {
+      document.removeEventListener('copy', copy)
+      document.removeEventListener('paste', paste)
+    }
+  }, [])
   useShortcut('duplicate', () => {
     const snippet = copySelection(nodes, edges, tasks)
     if (snippet) insert(snippet, { x: DUPLICATE_OFFSET, y: DUPLICATE_OFFSET })
@@ -581,6 +633,13 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         onJump={jumpTo}
         onSelect={selectNodes}
       />
+      {pasteError && (
+        <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
+          <AlertDescription className="whitespace-pre-line">
+            {`Not added:\n${pasteError}`}
+          </AlertDescription>
+        </Alert>
+      )}
       {saveError && (
         <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
           <AlertDescription>Not saved: {saveError}</AlertDescription>
