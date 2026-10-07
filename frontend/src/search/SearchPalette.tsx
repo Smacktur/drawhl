@@ -26,10 +26,11 @@ import { Kbd } from '@/components/ui/kbd'
 import { formatShortcut, SHORTCUTS } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 import { findModule } from '@/modules/registry'
+import type { Command } from './commands'
 import type { Entry } from './index'
 import { highlight, snippet, type Range } from './match'
 import { dropLastToken, FIELD_TITLES, filterText, MARKERS, type Filter } from './query'
-import { suggestionsFor, taskFacets, viewFor } from './view'
+import { suggestionsFor, taskFacets, viewFor, type View } from './view'
 
 const ICONS: Record<Exclude<Entry['kind'], 'card' | 'module'>, LucideIcon> = {
   sticky: StickyNote,
@@ -125,12 +126,41 @@ function Option({
   )
 }
 
+const rowsOf = (view: View): (Entry | Command)[] => [
+  ...view.groups.flatMap((group) => group.entries),
+  ...view.commands,
+]
+
+const isCommand = (item: Entry | Command): item is Command => 'run' in item
+
+function CommandRow({ command, query }: { command: Command; query: string[] }) {
+  const { Icon } = command
+  return (
+    <>
+      <Icon aria-hidden className="size-3.5 shrink-0" strokeWidth={1.75} />
+      <span className="flex-1 truncate">
+        <Marked text={command.title} ranges={highlight(command.title, query)} />
+      </span>
+      {command.shortcut && (
+        <span className="flex shrink-0 gap-1">
+          {formatShortcut(command.shortcut)[0].map((key) => (
+            <Kbd key={key}>{key}</Kbd>
+          ))}
+        </span>
+      )}
+    </>
+  )
+}
+
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   index: Entry[]
   recent: string[]
   onChoose: (entry: Entry) => void
+  /** App commands and boards the palette offers next to the board's elements. */
+  commands?: readonly Command[]
+  onRun?: (command: Command) => void
   /** The row picked with the keyboard, after a short rest: the board looks at it. */
   onPreview?: (entry: Entry) => void
   /** Nodes of every match of the current query, lit on the board. */
@@ -164,6 +194,8 @@ function PaletteBody({
   index,
   recent,
   onChoose,
+  commands = [],
+  onRun,
   onPreview,
   onTargets,
   onSelectAll,
@@ -174,23 +206,24 @@ function PaletteBody({
   const [active, setActive] = useState(0)
   const deferred = useDeferredValue(text)
   const view = useMemo(
-    () => viewFor(index, deferred, recent, chips),
-    [index, deferred, recent, chips],
+    () => viewFor(index, deferred, recent, chips, commands),
+    [index, deferred, recent, chips, commands],
   )
   const facets = useMemo(() => taskFacets(index, chips), [index, chips])
   // From the live text, not the deferred one: Tab right after typing must find them.
   const suggestions = useMemo(() => suggestionsFor(facets, text), [facets, text])
-  const rows = useMemo(
-    () => (suggestions ? [] : view.groups.flatMap((group) => group.entries)),
-    [view, suggestions],
-  )
+  const rows = useMemo(() => (suggestions ? [] : rowsOf(view)), [view, suggestions])
+  const commandGroups = (['Commands', 'Boards'] as const)
+    .map((title) => ({ title, commands: view.commands.filter((c) => c.group === title) }))
+    .filter((group) => group.commands.length > 0)
   const count = suggestions ? suggestions.values.length : rows.length
   const input = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const listId = useId()
   const optionId = (i: number) => `${listId}-${i}`
   const current = Math.min(active, count - 1)
-  const picked = suggestions ? undefined : rows[current]
+  const row = suggestions ? undefined : rows[current]
+  const picked = row && !isCommand(row) ? row : undefined
   // True once the pick moved by keyboard since the last keystroke in the input.
   const browsing = useRef(false)
 
@@ -225,8 +258,14 @@ function PaletteBody({
     input.current?.focus()
   }
 
+  const choose = (item: Entry | Command) => (isCommand(item) ? onRun?.(item) : onChoose(item))
+
+  // Keys right after typing must act on what was typed, not on the deferred list.
+  const freshView = () => (deferred === text ? view : viewFor(index, text, recent, chips, commands))
+
   const selectAll = () => {
-    if (view.targets.length) onSelectAll?.(view.targets)
+    const { targets } = freshView()
+    if (targets.length) onSelectAll?.(targets)
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -243,9 +282,11 @@ function PaletteBody({
     } else if (event.key === 'Enter' && mod) {
       event.preventDefault()
       selectAll()
-    } else if (event.key === 'Enter' && rows[current]) {
+    } else if (event.key === 'Enter' && !suggestions) {
+      const fresh = deferred === text ? row : rowsOf(freshView())[0]
+      if (!fresh) return
       event.preventDefault()
-      onChoose(rows[current])
+      choose(fresh)
     } else if (event.key === 'Backspace' && chips.length && !text) {
       // The last chip turns back into text, ready to edit.
       event.preventDefault()
@@ -367,6 +408,26 @@ function PaletteBody({
               })}
             </div>
           ))}
+        {commandGroups.map((group) => (
+          <div key={group.title} role="group" aria-label={group.title}>
+            <div className="text-muted-foreground px-2.5 pt-2 pb-1 text-[12px]">{group.title}</div>
+            {group.commands.map((command) => {
+              const at = i++
+              return (
+                <Option
+                  key={command.id}
+                  id={optionId(at)}
+                  at={at}
+                  active={at === current}
+                  onHover={hover}
+                  onPick={() => choose(command)}
+                >
+                  <CommandRow command={command} query={view.query} />
+                </Option>
+              )
+            })}
+          </div>
+        ))}
         {!suggestions && view.more > 0 && (
           <p className="text-muted-foreground px-2.5 py-1.5 text-[12px]">
             {view.more} more. Type more to narrow down.
@@ -385,7 +446,8 @@ function PaletteBody({
       {!typed && (
         <p className="text-muted-foreground border-t px-4 py-2 text-[12px]">
           Filter with <code>@name</code>, <code>status:</code>, <code>type:</code>,{' '}
-          <code>priority:</code>, or start with <code>#</code> for frames.
+          <code>priority:</code>. Start with <code>#</code> for frames, <code>&gt;</code> for
+          commands.
         </p>
       )}
       <div className="text-muted-foreground flex items-center gap-4 border-t px-4 py-2 text-[12px]">

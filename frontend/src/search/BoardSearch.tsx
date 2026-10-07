@@ -4,6 +4,7 @@ import type { Task } from '@/api/tasks'
 import { flyTo, reducedMotion } from '@/canvas/fly'
 import type { AppNode } from '@/canvas/types'
 import { useShortcut } from '@/lib/shortcuts'
+import { useCommandList, type Command } from './commands'
 import { buildIndex, type Entry } from './index'
 import { setSearchHits, setSearchOpen, useSearchOpen } from './palette'
 import { pushRecent, readRecent } from './recent'
@@ -32,6 +33,7 @@ type Props = {
 
 export function BoardSearch({ boardId, nodes, tasks, onJump, onSelect }: Props) {
   const open = useSearchOpen()
+  const commands = useCommandList()
   const flow = useReactFlow()
   useShortcut('search', () => setSearchOpen(true))
   // Built only while the palette is open, so editing the board costs nothing extra.
@@ -72,6 +74,12 @@ export function BoardSearch({ boardId, nodes, tasks, onJump, onSelect }: Props) 
     if (back) void flow.setViewport(back, { duration: reducedMotion() ? 0 : 300 })
   }
 
+  // Runs after the palette is gone, so a dialog the command opens takes the focus.
+  const run = (command: Command) => {
+    finish()
+    setTimeout(command.run, 0)
+  }
+
   const choose = (entry: Entry) => {
     finish()
     pushRecent(boardId, entry.id)
@@ -96,6 +104,8 @@ export function BoardSearch({ boardId, nodes, tasks, onJump, onSelect }: Props) 
       index={index}
       recent={recent}
       onChoose={choose}
+      commands={commands}
+      onRun={run}
       onPreview={preview}
       onTargets={setSearchHits}
       onSelectAll={selectAll}

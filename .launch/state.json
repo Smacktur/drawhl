@@ -29,7 +29,8 @@
     "timer-triggers",
     "search",
     "search-preview",
-    "search-filters"
+    "search-filters",
+    "search-commands"
   ],
   "gates": {
     "G1_scope": "approved",
