@@ -346,6 +346,16 @@
 .react-flow__node .timer-cube[data-flash] {
   animation: timer-flash 400ms ease-in-out 3;
 }
+/* Any other node the board moved to: a ring that blinks three times. */
+.react-flow__node.node-flash {
+  border-radius: var(--radius);
+  animation: node-flash 400ms ease-in-out 3;
+}
+@keyframes node-flash {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 45%, transparent);
+  }
+}
 @keyframes timer-ring {
   from {
     box-shadow: 0 0 0 0 oklch(0.66 0.19 30 / 0.5);
@@ -365,7 +375,8 @@
     transition: none;
   }
   .react-flow__node .timer-cube[data-state='fired'],
-  .react-flow__node .timer-cube[data-flash] {
+  .react-flow__node .timer-cube[data-flash],
+  .react-flow__node.node-flash {
     animation: none;
   }
   .focus-dial,

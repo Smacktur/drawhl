@@ -6,6 +6,7 @@ import {
   Moon,
   Pencil,
   Plus,
+  Search,
   Settings,
   AlarmClock,
   Sun,
@@ -34,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { setFocusVisible, useFocusVisible } from '@/focus/store'
+import { setSearchOpen } from '@/search/palette'
 import { setTimerPanelOpen } from '@/timers/panel'
 import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
@@ -71,6 +73,13 @@ export function TopBar({ boards, current, onSelect }: Props) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
+          {current && (
+            <DropdownMenuItem onSelect={() => setSearchOpen(true)}>
+              <Search strokeWidth={1.75} />
+              Search
+              <DropdownMenuShortcut>{formatShortcut('search')[0]}</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
             <Settings strokeWidth={1.75} />
             Settings

@@ -18,4 +18,8 @@ export const gantt = defineModule({
   View: GanttModule,
   Controls: GanttControls,
   acceptCard,
+  searchable: (content) => [
+    ...content.rows.map((row) => ({ kind: 'row' as const, key: row.key, text: row.title })),
+    ...content.milestones.map((m) => ({ kind: 'milestone' as const, text: m.title })),
+  ],
 })

@@ -54,6 +54,7 @@ Open http://localhost:3000. A fresh install runs on built-in demo tasks: pick th
 - **Timers.** Put a small countdown cube next to a card you are waiting on, with a note on what for. It goes off with a browser notification and a chime while drawhl is open, and moves and disappears with its card.
 - **Focus timer.** A pomodoro capsule at the top of the screen: 25 minutes of focus, 5 minute breaks and a long one after every fourth round, with a chime and a browser notification at the end. Its color warms from green to raspberry as the time runs out. Lengths are adjustable, and the countdown survives a reload. Under the timer, a small player with seven built-in lofi tracks (CC0) or your own audio files, kept in your browser; it can pause itself on breaks.
 - **Several boards.** Saved on the server and reopened exactly as you left them.
+- **Search.** `⌘K` finds any text on the board, cards by key, title, status or assignee included, and moves the board to it.
 - **Keyboard first.** Undo and redo, copy and paste, duplicate, shortcuts for every tool (press `?`), light and dark theme.
 - **Yours to keep.** One SQLite file, no telemetry, no account, no cloud.
 

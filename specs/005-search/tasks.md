@@ -18,11 +18,11 @@ description: "Task list for Search on the board"
 
 **Independent Test**: see US1 in [spec.md](spec.md).
 
-- [ ] T001 [P] [US1] `search/index.ts`: entries for every node kind, Gantt rows and milestones, context and jump target. Tests
-- [ ] T002 [P] [US1] `search/match.ts`, `search/layout.ts`: normalize, multi-word match, rank, highlight ranges, snippet, layout fallback. Tests
-- [ ] T003 [US1] `canvas/fly.ts`: `flyTo` moved from timers, fit for big elements, flash for any node. Tests
-- [ ] T004 [US1] `search/SearchPalette.tsx`, `BoardSearch.tsx`, `palette.ts`, `recent.ts`: dialog, results, keyboard, jump and select, recent and frames on empty input; `⌘K` and `⌘F` in the shortcut registry, "Search" in the main menu. Tests
-- [ ] T005 [US1] `DESIGN.md`, `CHANGELOG.md`, README; screenshot in light and dark
+- [x] T001 [P] [US1] `search/index.ts`: entries for every node kind, Gantt rows and milestones, context and jump target. Tests
+- [x] T002 [P] [US1] `search/match.ts`, `search/layout.ts`: normalize, multi-word match, rank, highlight ranges, snippet, layout fallback. Tests
+- [x] T003 [US1] (modules list their texts through `ModuleDef.searchable`) `canvas/fly.ts`: `flyTo` moved from timers, fit for big elements, flash for any node. Tests
+- [x] T004 [US1] `search/SearchPalette.tsx`, `BoardSearch.tsx`, `palette.ts`, `recent.ts`: dialog, results, keyboard, jump and select, recent and frames on empty input; `⌘K` and `⌘F` in the shortcut registry, "Search" in the main menu. Tests
+- [x] T005 [US1] `DESIGN.md`, `CHANGELOG.md`, README; screenshot in light and dark
 
 **Checkpoint**: `make check`, screenshot → G3.
 
