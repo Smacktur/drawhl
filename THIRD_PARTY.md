@@ -55,6 +55,7 @@ Bundled in `frontend/public/music/`, re-encoded to MP3 112 kbps. All CC0 (public
 | Lofi Hip Hop Loop | omfgdude | CC0 | [OpenGameArt](https://opengameart.org/content/lofi-hip-hop-loop) |
 
 - Project skeleton and methodology — [launchpad](https://github.com/Smacktur/launchpad).
+- User guide publishing — [rdme](https://github.com/readmeio/rdme) (MIT), a GitHub Action in CI only, not shipped.
 
 ## AI development tools
 
