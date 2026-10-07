@@ -1,6 +1,7 @@
 from typing import Annotated, Any, Literal
 
 from pydantic import (
+    AwareDatetime,
     BaseModel,
     ConfigDict,
     Field,
@@ -109,8 +110,36 @@ class AnchorNode(_NodeBase):
     data: AnchorData = Field(default_factory=AnchorData)
 
 
+class TimerWatch(_Strict):
+    key: str
+    status: str = Field(max_length=200)
+
+    @field_validator("key")
+    @classmethod
+    def _key(cls, value: str) -> str:
+        if not KEY_RE.match(value):
+            raise ValueError("invalid issue key")
+        return value
+
+
+class TimerData(_Strict):
+    note: str = Field(default="", max_length=500)
+    dueAt: AwareDatetime | None = None  # noqa: N815 - mirrors the frontend
+    snoozedUntil: AwareDatetime | None = None  # noqa: N815
+    repeat: Literal["daily", "weekdays", "weekly"] | None = None
+    watch: TimerWatch | None = None
+    done: bool = False
+
+
+class TimerNode(_NodeBase):
+    """A reminder; its parent, when set, is the element it is attached to."""
+
+    type: Literal["timer"]
+    data: TimerData
+
+
 Node = Annotated[
-    JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode | AnchorNode,
+    JiraCardNode | FrameNode | StickyNode | TextNode | ModuleNode | AnchorNode | TimerNode,
     Field(discriminator="type"),
 ]
 
@@ -159,7 +188,10 @@ def check_doc(doc: BoardDoc) -> None:
     for node in doc.nodes:
         if node.id in seen:
             raise ValidationFailed(f"duplicate node id {node.id}")
-        if node.parentId is not None:
+        if node.parentId is not None and node.type == "timer":
+            if seen.get(node.parentId) in (None, "anchor", "timer"):
+                raise ValidationFailed(f"timer {node.id} must follow the element it is attached to")
+        elif node.parentId is not None:
             if node.type in ("frame", "module"):
                 raise ValidationFailed(f"{node.type}s cannot be nested")
             if seen.get(node.parentId) != "frame":

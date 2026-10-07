@@ -1,4 +1,4 @@
-import { absolute } from '@/canvas/frames'
+import { absolute, detach } from '@/canvas/frames'
 import type { AppNode } from '@/canvas/types'
 import { findModule } from '@/modules/registry'
 
@@ -56,7 +56,9 @@ export function absorbCards(nodes: AppNode[], droppedIds: string[]) {
       .map((n) =>
         n.type === 'module' && contents.has(n.id)
           ? { ...n, data: { ...n.data, content: contents.get(n.id) } }
-          : n,
+          : n.parentId && absorbed.has(n.parentId)
+            ? detach(n, byId)
+            : n,
       ),
   }
 }
