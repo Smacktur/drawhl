@@ -100,7 +100,7 @@ The palette becomes the one entry to the app. Typing "time" also offers "Show ti
 - **FR-004**: A jump moves the board, selects only the element and flashes it; recent jumps (up to 5 per board) are kept in `localStorage`.
 - **FR-005**: Preview follows the picked result and is undone on Esc; matches are ringed and the rest faded while the palette is open; `⌘Enter` selects all matches.
 - **FR-006**: Filters `@`, `status:`, `type:`, `priority:` and `#` with value suggestions from the board.
-- **FR-007**: Commands and other boards in the palette, with `>` for commands only.
+- **FR-007**: Commands and other boards in the palette, with `>` for commands only; `⌘P` and `⌘⇧P` (`Ctrl` elsewhere) and "Commands" in the main menu open the palette with `>` typed, like an editor's command palette.
 
 ### Key Entities
 

@@ -209,3 +209,29 @@ test('Enter right after typing acts on the typed text, not a stale list', () => 
   fireEvent.keyDown(input, { key: 'Enter' })
   expect(onChoose).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'c' }))
 })
+
+test('opens on commands with a prefix; mod+P narrows to commands, then closes', () => {
+  const onOpenChange = vi.fn()
+  render(
+    <SearchPalette
+      open
+      onOpenChange={onOpenChange}
+      index={index}
+      recent={[]}
+      initialText=">"
+      onChoose={vi.fn()}
+      commands={[{ id: 's', title: 'Settings', group: 'Commands', Icon: StickyNote, run: vi.fn() }]}
+      onRun={vi.fn()}
+    />,
+  )
+  const input = screen.getByRole('combobox', { name: 'Search the board' })
+  expect(input).toHaveValue('>')
+  expect(options()).toEqual(['Settings'])
+
+  fireEvent.change(input, { target: { value: 'lunch' } })
+  fireEvent.keyDown(input, { key: 'p', metaKey: true })
+  expect(input).toHaveValue('>lunch')
+  expect(onOpenChange).not.toHaveBeenCalled()
+  fireEvent.keyDown(input, { key: 'p', metaKey: true, shiftKey: true })
+  expect(onOpenChange).toHaveBeenCalledWith(false)
+})

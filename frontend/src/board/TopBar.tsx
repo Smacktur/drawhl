@@ -9,6 +9,7 @@ import {
   Plus,
   Search,
   Settings,
+  SquareChevronRight,
   AlarmClock,
   Sun,
   SunMoon,
@@ -37,7 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { setFocusVisible, useFocusVisible } from '@/focus/store'
 import { useCommands } from '@/search/commands'
-import { setSearchOpen } from '@/search/palette'
+import { COMMANDS_PREFIX, setSearchOpen } from '@/search/palette'
 import { setTimerPanelOpen } from '@/timers/panel'
 import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
@@ -156,6 +157,13 @@ export function TopBar({ boards, current, onSelect }: Props) {
               <Search strokeWidth={1.75} />
               Search
               <DropdownMenuShortcut>{formatShortcut('search')[0]}</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
+          {current && (
+            <DropdownMenuItem onSelect={() => setSearchOpen(true, COMMANDS_PREFIX)}>
+              <SquareChevronRight strokeWidth={1.75} />
+              Commands
+              <DropdownMenuShortcut>{formatShortcut('commands')[0]}</DropdownMenuShortcut>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>

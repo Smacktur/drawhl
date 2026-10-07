@@ -157,6 +157,8 @@ type Props = {
   onOpenChange: (open: boolean) => void
   index: Entry[]
   recent: string[]
+  /** What the input holds when the palette opens. */
+  initialText?: string
   onChoose: (entry: Entry) => void
   /** App commands and boards the palette offers next to the board's elements. */
   commands?: readonly Command[]
@@ -188,11 +190,14 @@ export function SearchPalette({ open, onOpenChange, ...rest }: Props) {
   )
 }
 
-const TOGGLE_KEYS = new Set(SHORTCUTS.search.keys.split(',').map((combo) => combo.trim().at(-1)))
+const lastKeys = (keys: string) => new Set(keys.split(',').map((combo) => combo.trim().at(-1)))
+const SEARCH_KEYS = lastKeys(SHORTCUTS.search.keys)
+const COMMAND_KEYS = lastKeys(SHORTCUTS.commands.keys)
 
 function PaletteBody({
   index,
   recent,
+  initialText = '',
   onChoose,
   commands = [],
   onRun,
@@ -201,7 +206,7 @@ function PaletteBody({
   onSelectAll,
   onClose,
 }: Omit<Props, 'open' | 'onOpenChange'> & { onClose: () => void }) {
-  const [text, setText] = useState('')
+  const [text, setText] = useState(initialText)
   const [chips, setChips] = useState<Filter[]>([])
   const [active, setActive] = useState(0)
   const deferred = useDeferredValue(text)
@@ -292,10 +297,15 @@ function PaletteBody({
       event.preventDefault()
       edit(filterText(chips[chips.length - 1]))
       setChips(chips.slice(0, -1))
-    } else if (mod && TOGGLE_KEYS.has(event.key.toLowerCase())) {
-      // The board shortcut is off while a dialog is open, so the palette closes itself.
+    } else if (mod && SEARCH_KEYS.has(event.key.toLowerCase())) {
+      // The board shortcuts are off while a dialog is open, so the palette handles its own.
       event.preventDefault()
       onClose()
+    } else if (mod && COMMAND_KEYS.has(event.key.toLowerCase())) {
+      // Like an editor: the first press narrows to commands, the second one closes.
+      event.preventDefault()
+      if (text.trimStart().startsWith('>')) onClose()
+      else edit(`>${text}`)
     }
   }
 
