@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- User guide at [drawhl.readme.io](https://drawhl.readme.io/docs/getting-started): quick start, adding tasks, search, Gantt, timers, keyboard shortcuts and self-hosting. It is written in `docs/guide/` and published on every change to `main`.
 - Paste onto the board: `⌘V` over the board turns copied text into a text element at the pointer, or a sticky note if you pick that under "Paste text as" in Settings. When the clipboard holds only task keys or task links, for example the URLs of several open Jira tabs, each one becomes a card, up to 50 in a grid; keys that cannot be added are listed in a short notice. Elements copied in drawhl paste as before.
 - Long text in a sticky note gets smaller as you type so it always stays inside the note, and grows back when you delete or make the note bigger. A note holds up to 2000 characters: past that, typing and pasting stop and a "no entry" sign flashes over it. Older, longer notes still show in full.
 - A fresh install opens on "Welcome to drawhl", a sample board with demo task cards in frames, sticky notes on what to try, arrows, a Gantt with a milestone and a dependency, and a timer. Everything on it can be moved, edited or deleted, and once deleted it does not come back. Upgrades keep their boards and get no sample. A board that was never saved opens fitted to the screen.

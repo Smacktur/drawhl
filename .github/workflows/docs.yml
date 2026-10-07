@@ -1,0 +1,16 @@
+# Publish the user guide in docs/guide to drawhl.readme.io when it changes on main.
+name: docs
+on:
+  push:
+    branches: [main]
+    paths: ["docs/guide/**"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: readmeio/rdme@v10
+        with:
+          rdme: docs upload docs/guide --key=${{ secrets.README_API_KEY }}

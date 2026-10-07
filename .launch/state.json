@@ -34,7 +34,8 @@
     "welcome-board",
     "sticky-fit",
     "scrollbars",
-    "paste-text"
+    "paste-text",
+    "docs-site"
   ],
   "gates": {
     "G1_scope": "approved",

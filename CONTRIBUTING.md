@@ -30,7 +30,7 @@ Optional: `pre-commit install` runs fast checks on commit and `make check` on pu
 1. Branch from `main`, keep the change focused on one thing.
 2. Add or update tests for behaviour changes; `make check` must pass.
 3. Use [Conventional Commits](https://www.conventionalcommits.org/): `feat: …`, `fix: …`, `docs: …`.
-4. Update `CHANGELOG.md` under `Unreleased` for user-visible changes.
+4. Update `CHANGELOG.md` under `Unreleased` for user-visible changes, and the user guide in `docs/guide/` when the change alters how something is used; it publishes to [drawhl.readme.io](https://drawhl.readme.io) on merge.
 5. New dependency → a row in `THIRD_PARTY.md`; its license must be permissive or weak copyleft (`make licenses`); GPL-family licenses are not accepted, they would block dual licensing.
 6. Fill in the PR template. A maintainer reviews; CI must be green before merge.
 
