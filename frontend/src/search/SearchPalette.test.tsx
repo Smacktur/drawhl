@@ -224,8 +224,11 @@ test('opens on commands with a prefix; mod+P narrows to commands, then closes', 
       onRun={vi.fn()}
     />,
   )
-  const input = screen.getByRole('combobox', { name: 'Search the board' })
+  const input = screen.getByRole<HTMLInputElement>('combobox', { name: 'Search the board' })
   expect(input).toHaveValue('>')
+  expect(input).toHaveFocus()
+  // The caret waits after the prefix, so typing adds to it instead of replacing it.
+  expect([input.selectionStart, input.selectionEnd]).toEqual([1, 1])
   expect(options()).toEqual(['Settings'])
 
   fireEvent.change(input, { target: { value: 'lunch' } })

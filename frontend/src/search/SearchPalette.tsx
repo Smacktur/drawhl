@@ -179,6 +179,8 @@ export function SearchPalette({ open, onOpenChange, ...rest }: Props) {
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
+        // Radix selects the input's text on open, and the first key would erase a typed `>`.
+        onOpenAutoFocus={(event) => event.preventDefault()}
         // The board stays clear behind the palette: matches light up on it and previews move it.
         overlayClassName="bg-transparent supports-backdrop-filter:backdrop-blur-none"
         className="top-[18%] translate-y-0 gap-0 overflow-hidden p-0 shadow-xl sm:max-w-[560px]"
@@ -342,6 +344,7 @@ function PaletteBody({
         ))}
         <input
           ref={input}
+          autoFocus
           role="combobox"
           aria-label="Search the board"
           aria-expanded={count > 0}
