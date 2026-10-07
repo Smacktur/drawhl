@@ -1,8 +1,5 @@
 ---
 title: Quick start
-category:
-  uri: Getting Started
-position: 1
 ---
 
 You need Docker with Compose.
@@ -29,4 +26,4 @@ docker compose up --build
 
 Open http://localhost:3000. A fresh install opens on a sample board built from demo tasks. Move things around, then add more with the card tool at the bottom: type `DEMO-5` for one task, or `project = DEMO` for all twelve. Delete the sample board when you are done with it.
 
-No keys or accounts are needed for the demo. To see your real tasks, [connect Jira Data Center](jira-data-center).
+No keys or accounts are needed for the demo. To see your real tasks, [connect Jira Data Center](../jira-data-center/).

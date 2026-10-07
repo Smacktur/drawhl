@@ -1,8 +1,5 @@
 ---
 title: Security and privacy
-category:
-  uri: Self-hosting
-position: 3
 ---
 
 drawhl is a single-user app and **has no login yet**. Anyone who can open its URL sees your boards and can search your tracker with your token. Run it on your own machine or home network, or reach it through a VPN such as Tailscale. If you expose it beyond that, put it behind a reverse proxy that adds authentication.

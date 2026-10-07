@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const REPO = 'https://github.com/Smacktur/drawhl'
-const UPGRADE_DOCS = `${REPO}#-data-backups-and-upgrades`
+const DOCS = 'https://smacktur.github.io/drawhl'
+const UPGRADE_DOCS = `${DOCS}/data-and-upgrades/`
 
 // lucide dropped brand icons, so this is the Octicons mark (MIT).
 function GitHubIcon(props: ComponentProps<'svg'>) {
@@ -104,7 +105,7 @@ export function AboutButton() {
           <AboutLink href={REPO} icon={<GitHubIcon />}>
             Source code on GitHub
           </AboutLink>
-          <AboutLink href={`${REPO}#readme`} icon={<BookOpen strokeWidth={1.75} />}>
+          <AboutLink href={DOCS} icon={<BookOpen strokeWidth={1.75} />}>
             Documentation
           </AboutLink>
           <AboutLink href={`${REPO}/issues`} icon={<Bug strokeWidth={1.75} />}>

@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="#-quick-start"><b>Quick start</b></a> •
-  <a href="https://drawhl.readme.io/docs/getting-started"><b>Docs</b></a> •
+  <a href="https://smacktur.github.io/drawhl/"><b>Docs</b></a> •
   <a href="#-features"><b>Features</b></a> •
   <a href="#-task-trackers"><b>Trackers</b></a> •
   <a href="#%EF%B8%8F-roadmap"><b>Roadmap</b></a> •

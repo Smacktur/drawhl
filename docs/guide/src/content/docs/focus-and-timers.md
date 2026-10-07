@@ -1,8 +1,5 @@
 ---
 title: Timers and focus
-category:
-  uri: Using drawhl
-position: 3
 ---
 
 ## Timers

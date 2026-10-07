@@ -1,8 +1,5 @@
 ---
 title: Keyboard shortcuts
-category:
-  uri: Using drawhl
-position: 4
 ---
 
 Press `?` in the app to see this list. `⌘` is `Ctrl` on Windows and Linux.

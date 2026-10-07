@@ -1,8 +1,5 @@
 ---
 title: Gantt module
-category:
-  uri: Using drawhl
-position: 2
 ---
 
 Add a Gantt from the modules tool (`M`) to plan tasks on a timeline right on the board.

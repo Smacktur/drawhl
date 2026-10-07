@@ -1,8 +1,5 @@
 ---
 title: Connect Jira Data Center
-category:
-  uri: Self-hosting
-position: 0
 ---
 
 drawhl supports Jira Data Center and Server 8.14 and later. It uses your own personal access token, so a Jira admin doesn't need to set anything up.
@@ -19,7 +16,7 @@ drawhl supports Jira Data Center and Server 8.14 and later. It uses your own per
 
 Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again.
 
-Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too. For a corporate certificate authority, see `JIRA_CA_BUNDLE` in [Configuration](configuration).
+Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too. For a corporate certificate authority, see `JIRA_CA_BUNDLE` in [Configuration](../configuration/).
 
 ## Other trackers
 
