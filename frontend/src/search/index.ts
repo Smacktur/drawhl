@@ -3,6 +3,7 @@ import type { AppNode, FrameData, ModuleData } from '@/canvas/types'
 import { findModule } from '@/modules/registry'
 import { holderLabel } from '@/timers/attach'
 import { normalize, rank, type Searchable } from './match'
+import { compileFilters, FIELDS, passes, type Facets, type Filter } from './query'
 
 export type EntryKind =
   'card' | 'sticky' | 'text' | 'frame' | 'timer' | 'module' | 'row' | 'milestone'
@@ -22,6 +23,9 @@ export type Entry = Searchable & {
   typeName?: string
   /** Module kind for the module icon. */
   module?: string
+  /** Task fields that filters look at, as shown and normalized. */
+  facets?: Facets
+  facetKeys?: Facets
   order: number
 }
 
@@ -36,10 +40,19 @@ function join(...parts: (string | null | undefined)[]) {
   return parts.filter(Boolean).join(' · ')
 }
 
-// Fields of a live task that are searched but not shown in the row.
-function taskFields(task: Task | undefined) {
-  if (task?.state !== 'ok') return []
-  return [task.status_name, task.assignee_name ?? '', task.type_name, task.priority_name ?? '']
+// Fields of a live task that are searched and filtered by but not shown in the row.
+function taskFacets(task: Task | undefined) {
+  if (task?.state !== 'ok') return {}
+  const facets: Facets = {
+    assignee: task.assignee_name ?? undefined,
+    status: task.status_name,
+    type: task.type_name,
+    priority: task.priority_name ?? undefined,
+  }
+  const facetKeys: Facets = Object.fromEntries(
+    FIELDS.flatMap((field) => (facets[field] ? [[field, normalize(facets[field])]] : [])),
+  )
+  return { facets, facetKeys, extra: FIELDS.map((field) => facets[field] ?? '') }
 }
 
 /** Every searchable text of the board, in board order. */
@@ -89,7 +102,7 @@ export function buildIndex(nodes: AppNode[], tasks: Record<string, Task>): Entry
           text: task && !live ? 'Not found' : (live?.summary ?? ''),
           context: join(live?.status_name, live?.assignee_name, frameOf(node)),
           typeName: live?.type_name,
-          extra: taskFields(task),
+          ...taskFacets(task),
         })
         break
       }
@@ -146,10 +159,12 @@ function pushModule(
       text,
       context: `in ${name}`,
       typeName: task?.type_name,
-      extra: taskFields(task),
+      ...taskFacets(task),
     })
   })
 }
+
+export type Scope = { filters?: Filter[]; framesOnly?: boolean }
 
 export type Results = {
   entries: Entry[]
@@ -159,9 +174,17 @@ export type Results = {
 }
 
 /** Matching entries, best first, at most `limit` of them. */
-export function search(index: Entry[], query: string[], limit = 50): Results {
+export function search(
+  index: Entry[],
+  query: string[],
+  { filters = [], framesOnly = false }: Scope = {},
+  limit = 50,
+): Results {
+  const compiled = compileFilters(filters)
   const hits: { entry: Entry; rank: number }[] = []
   for (const entry of index) {
+    if (framesOnly && entry.kind !== 'frame' && entry.kind !== 'module') continue
+    if (!passes(entry.facetKeys, compiled)) continue
     const r = rank(entry, query)
     if (r >= 0) hits.push({ entry, rank: r })
   }

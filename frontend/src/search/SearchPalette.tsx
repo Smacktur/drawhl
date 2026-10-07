@@ -7,6 +7,7 @@ import {
   Search,
   StickyNote,
   Type,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -17,6 +18,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from 'react'
 import { TypeIcon } from '@/canvas/nodes/TaskBits'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -26,7 +28,8 @@ import { cn } from '@/lib/utils'
 import { findModule } from '@/modules/registry'
 import type { Entry } from './index'
 import { highlight, snippet, type Range } from './match'
-import { viewFor } from './view'
+import { dropLastToken, FIELD_TITLES, filterText, MARKERS, type Filter } from './query'
+import { suggestionsFor, taskFacets, viewFor } from './view'
 
 const ICONS: Record<Exclude<Entry['kind'], 'card' | 'module'>, LucideIcon> = {
   sticky: StickyNote,
@@ -87,6 +90,41 @@ function Row({ entry, query }: { entry: Entry; query: string[] }) {
   )
 }
 
+function Option({
+  id,
+  at,
+  active,
+  onHover,
+  onPick,
+  children,
+}: {
+  id: string
+  at: number
+  active: boolean
+  onHover: (at: number) => void
+  onPick: () => void
+  children: ReactNode
+}) {
+  return (
+    <div
+      id={id}
+      data-index={at}
+      role="option"
+      aria-selected={active}
+      className={cn(
+        'flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[14px]',
+        active && 'bg-accent',
+      )}
+      // Keeps focus in the input, so typing goes on after a click elsewhere in the list.
+      onMouseDown={(event) => event.preventDefault()}
+      onMouseMove={() => onHover(at)}
+      onClick={onPick}
+    >
+      {children}
+    </div>
+  )
+}
+
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -132,15 +170,27 @@ function PaletteBody({
   onClose,
 }: Omit<Props, 'open' | 'onOpenChange'> & { onClose: () => void }) {
   const [text, setText] = useState('')
+  const [chips, setChips] = useState<Filter[]>([])
   const [active, setActive] = useState(0)
   const deferred = useDeferredValue(text)
-  const view = useMemo(() => viewFor(index, deferred, recent), [index, deferred, recent])
-  const rows = useMemo(() => view.groups.flatMap((group) => group.entries), [view])
+  const view = useMemo(
+    () => viewFor(index, deferred, recent, chips),
+    [index, deferred, recent, chips],
+  )
+  const facets = useMemo(() => taskFacets(index, chips), [index, chips])
+  // From the live text, not the deferred one: Tab right after typing must find them.
+  const suggestions = useMemo(() => suggestionsFor(facets, text), [facets, text])
+  const rows = useMemo(
+    () => (suggestions ? [] : view.groups.flatMap((group) => group.entries)),
+    [view, suggestions],
+  )
+  const count = suggestions ? suggestions.values.length : rows.length
+  const input = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const listId = useId()
   const optionId = (i: number) => `${listId}-${i}`
-  const current = Math.min(active, rows.length - 1)
-  const picked = rows[current]
+  const current = Math.min(active, count - 1)
+  const picked = suggestions ? undefined : rows[current]
   // True once the pick moved by keyboard since the last keystroke in the input.
   const browsing = useRef(false)
 
@@ -156,50 +206,104 @@ function PaletteBody({
 
   useEffect(() => onTargets?.(view.targets), [view.targets, onTargets])
 
+  const edit = (next: string) => {
+    setText(next)
+    setActive(0)
+    browsing.current = false
+  }
+
+  // The typed filter at the end of the input becomes a chip with the picked value.
+  const pickValue = (value: string) => {
+    if (!suggestions) return
+    setChips([...chips, { field: suggestions.field, value }])
+    edit(dropLastToken(text))
+    input.current?.focus()
+  }
+
+  const removeChip = (at: number) => {
+    setChips(chips.filter((_, i) => i !== at))
+    input.current?.focus()
+  }
+
   const selectAll = () => {
     if (view.targets.length) onSelectAll?.(view.targets)
   }
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0
-    if (step && rows.length) {
+    const mod = event.metaKey || event.ctrlKey
+    if (step && count) {
       event.preventDefault()
       browsing.current = true
-      setActive((current + step + rows.length) % rows.length)
-    } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      setActive((current + step + count) % count)
+    } else if (suggestions && (event.key === 'Tab' || event.key === 'Enter')) {
+      event.preventDefault()
+      const value = suggestions.values[current]?.value
+      if (value) pickValue(value)
+    } else if (event.key === 'Enter' && mod) {
       event.preventDefault()
       selectAll()
     } else if (event.key === 'Enter' && rows[current]) {
       event.preventDefault()
       onChoose(rows[current])
-    } else if ((event.metaKey || event.ctrlKey) && TOGGLE_KEYS.has(event.key.toLowerCase())) {
+    } else if (event.key === 'Backspace' && chips.length && !text) {
+      // The last chip turns back into text, ready to edit.
+      event.preventDefault()
+      edit(filterText(chips[chips.length - 1]))
+      setChips(chips.slice(0, -1))
+    } else if (mod && TOGGLE_KEYS.has(event.key.toLowerCase())) {
       // The board shortcut is off while a dialog is open, so the palette closes itself.
       event.preventDefault()
       onClose()
     }
   }
 
+  const hover = (at: number) => {
+    if (at === current) return
+    browsing.current = false
+    setActive(at)
+  }
+
+  const typed = [...chips.map(filterText), deferred.trim()].filter(Boolean).join(' ')
   let i = 0
   return (
     <>
-      <div className="flex items-center gap-2 border-b px-4">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b px-4 py-1">
         <Search aria-hidden className="text-muted-foreground size-4" strokeWidth={1.75} />
+        {chips.map((chip, at) => (
+          <span
+            key={`${chip.field}:${chip.value}:${at}`}
+            className="bg-accent text-foreground flex h-6 items-center gap-1 rounded-sm pr-0.5 pl-1.5 text-[13px]"
+          >
+            <span className="text-muted-foreground">{MARKERS[chip.field]}</span>
+            {chip.value}
+            <button
+              type="button"
+              // Tab picks a suggested value in the palette, so it never stops on chips.
+              tabIndex={-1}
+              aria-label={`Remove ${FIELD_TITLES[chip.field].toLowerCase()} ${chip.value}`}
+              className="text-muted-foreground hover:text-foreground rounded-sm p-0.5"
+              onClick={() => removeChip(at)}
+            >
+              <X className="size-3" strokeWidth={2} />
+            </button>
+          </span>
+        ))}
         <input
+          ref={input}
           role="combobox"
           aria-label="Search the board"
-          aria-expanded={rows.length > 0}
+          aria-expanded={count > 0}
           aria-controls={listId}
-          aria-activedescendant={rows.length ? optionId(current) : undefined}
+          aria-activedescendant={count ? optionId(current) : undefined}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Search notes, cards, frames, timers…"
-          className="placeholder:text-muted-foreground h-12 flex-1 bg-transparent text-[15px] outline-none"
+          placeholder={
+            chips.length ? 'Add words or filters…' : 'Search notes, cards, frames, timers…'
+          }
+          className="placeholder:text-muted-foreground h-10 min-w-40 flex-1 bg-transparent text-[15px] outline-none"
           value={text}
-          onChange={(event) => {
-            setText(event.target.value)
-            setActive(0)
-            browsing.current = false
-          }}
+          onChange={(event) => edit(event.target.value)}
           onKeyDown={onKeyDown}
         />
       </div>
@@ -212,55 +316,76 @@ function PaletteBody({
         ref={list}
         id={listId}
         role="listbox"
-        aria-label="Results"
+        aria-label={suggestions ? FIELD_TITLES[suggestions.field] : 'Results'}
         className="max-h-[min(60vh,420px)] overflow-y-auto p-1.5 empty:hidden"
       >
-        {view.groups.map((group) => (
-          <div key={group.title ?? 'results'} role="group" aria-label={group.title}>
-            {group.title && (
-              <div className="text-muted-foreground px-2.5 pt-2 pb-1 text-[12px]">
-                {group.title}
-              </div>
-            )}
-            {group.entries.map((entry) => {
-              const at = i++
-              return (
-                <div
-                  key={`${group.title}:${entry.id}`}
-                  id={optionId(at)}
-                  data-index={at}
-                  role="option"
-                  aria-selected={at === current}
-                  className={cn(
-                    'flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[14px]',
-                    at === current && 'bg-accent',
-                  )}
-                  // Keeps focus in the input, so typing goes on after a click elsewhere in the list.
-                  onMouseDown={(event) => event.preventDefault()}
-                  onMouseMove={() => {
-                    if (at === current) return
-                    browsing.current = false
-                    setActive(at)
-                  }}
-                  onClick={() => onChoose(entry)}
-                >
-                  <Row entry={entry} query={view.query} />
-                </div>
-              )
-            })}
+        {suggestions && suggestions.values.length > 0 && (
+          <div role="group" aria-label={FIELD_TITLES[suggestions.field]}>
+            <div className="text-muted-foreground px-2.5 pt-2 pb-1 text-[12px]">
+              {FIELD_TITLES[suggestions.field]}
+            </div>
+            {suggestions.values.map(({ value, count: tasks }, at) => (
+              <Option
+                key={value}
+                id={optionId(at)}
+                at={at}
+                active={at === current}
+                onHover={hover}
+                onPick={() => pickValue(value)}
+              >
+                <span className="text-muted-foreground shrink-0 text-[12px]">
+                  {MARKERS[suggestions.field]}
+                </span>
+                <span className="flex-1 truncate">{value}</span>
+                <span className="text-muted-foreground text-[12px] tabular-nums">{tasks}</span>
+              </Option>
+            ))}
           </div>
-        ))}
-        {view.more > 0 && (
+        )}
+        {!suggestions &&
+          view.groups.map((group) => (
+            <div key={group.title ?? 'results'} role="group" aria-label={group.title}>
+              {group.title && (
+                <div className="text-muted-foreground px-2.5 pt-2 pb-1 text-[12px]">
+                  {group.title}
+                </div>
+              )}
+              {group.entries.map((entry) => {
+                const at = i++
+                return (
+                  <Option
+                    key={`${group.title}:${entry.id}`}
+                    id={optionId(at)}
+                    at={at}
+                    active={at === current}
+                    onHover={hover}
+                    onPick={() => onChoose(entry)}
+                  >
+                    <Row entry={entry} query={view.query} />
+                  </Option>
+                )
+              })}
+            </div>
+          ))}
+        {!suggestions && view.more > 0 && (
           <p className="text-muted-foreground px-2.5 py-1.5 text-[12px]">
             {view.more} more. Type more to narrow down.
           </p>
         )}
       </div>
-      {rows.length === 0 && (
+      {count === 0 && (
         <p className="text-muted-foreground px-4 py-6 text-center text-[14px]">
-          {view.query.length
-            ? `Nothing on this board matches "${deferred.trim()}".`
-            : 'Type to find sticky notes, cards, frames, timers and Gantt rows.'}
+          {suggestions
+            ? `No ${FIELD_TITLES[suggestions.field].toLowerCase()} on this board matches.`
+            : typed
+              ? `Nothing on this board matches "${typed}".`
+              : 'Type to find sticky notes, cards, frames, timers and Gantt rows.'}
+        </p>
+      )}
+      {!typed && (
+        <p className="text-muted-foreground border-t px-4 py-2 text-[12px]">
+          Filter with <code>@name</code>, <code>status:</code>, <code>type:</code>,{' '}
+          <code>priority:</code>, or start with <code>#</code> for frames.
         </p>
       )}
       <div className="text-muted-foreground flex items-center gap-4 border-t px-4 py-2 text-[12px]">
@@ -269,7 +394,7 @@ function PaletteBody({
           <Kbd>↓</Kbd> Move
         </span>
         <span className="flex items-center gap-1">
-          <Kbd>↵</Kbd> Open
+          <Kbd>{suggestions ? 'Tab' : '↵'}</Kbd> {suggestions ? 'Add filter' : 'Open'}
         </span>
         <span className="flex items-center gap-1">
           <Kbd>Esc</Kbd> Close

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { act } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
+import type { Task } from '@/api/tasks'
 import type { AppNode } from '@/canvas/types'
 import { buildIndex } from './index'
 import { SearchPalette } from './SearchPalette'
@@ -12,14 +13,38 @@ const sticky = (id: string, text: string): AppNode => ({
   position: at,
   data: { text, color: 'yellow' },
 })
+const card = (id: string, key: string): AppNode => ({
+  id,
+  type: 'jira_card',
+  position: at,
+  data: { key },
+})
+const task = (key: string, summary: string, assignee: string): Task => ({
+  key,
+  state: 'ok',
+  summary,
+  status_name: 'In Progress',
+  status_category: 'indeterminate',
+  type_name: 'Task',
+  assignee_name: assignee,
+  priority_name: null,
+  updated: null,
+  url: `https://jira.example.com/browse/${key}`,
+  fetched_at: '2026-10-07T09:00:00Z',
+})
 const index = buildIndex(
   [
+    card('k1', 'DEMO-1'),
+    card('k2', 'DEMO-2'),
     { id: 'f', type: 'frame', position: at, data: { title: 'Sprint 12' } },
     sticky('a', 'Ping QA after deploy'),
     sticky('b', 'Deploy window on Friday'),
     sticky('c', 'Lunch'),
   ],
-  {},
+  {
+    'DEMO-1': task('DEMO-1', 'Plan the release', 'Anna Lee'),
+    'DEMO-2': task('DEMO-2', 'Fix login', 'Oleg Smirnov'),
+  },
 )
 
 function setup(recent: string[] = []) {
@@ -121,4 +146,27 @@ test('reports every match to light up and selects them all with mod+Enter', () =
   expect(onSelectAll).toHaveBeenCalledWith(['b', 'a'])
   fireEvent.click(screen.getByRole('button', { name: /Select all 2/ }))
   expect(onSelectAll).toHaveBeenCalledTimes(2)
+})
+
+test('a typed filter suggests values, Tab turns one into a chip, Backspace edits it', () => {
+  const { input } = setup()
+  fireEvent.change(input, { target: { value: '@an' } })
+  expect(screen.getByRole('group', { name: 'Assignee' })).toHaveTextContent('Anna Lee')
+  fireEvent.keyDown(input, { key: 'Tab' })
+  expect(input).toHaveValue('')
+  expect(screen.getByRole('button', { name: 'Remove assignee Anna Lee' })).toBeInTheDocument()
+  expect(options()).toEqual([expect.stringContaining('Plan the release')])
+
+  fireEvent.keyDown(input, { key: 'Backspace' })
+  expect(input).toHaveValue('@"Anna Lee"')
+  expect(screen.queryByRole('button', { name: /Remove/ })).toBeNull()
+})
+
+test('a chip is removed with its button', () => {
+  const { input } = setup()
+  fireEvent.change(input, { target: { value: '@ole' } })
+  fireEvent.click(screen.getByRole('option'))
+  expect(options()).toEqual([expect.stringContaining('Fix login')])
+  fireEvent.click(screen.getByRole('button', { name: 'Remove assignee Oleg Smirnov' }))
+  expect(screen.getByRole('group', { name: 'Frames' })).toBeInTheDocument()
 })
