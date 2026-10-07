@@ -18,12 +18,12 @@ description: "Task list for Timers on the board"
 
 **Independent Test**: see US1 in [spec.md](spec.md).
 
-- [ ] T001 [P] [US1] Backend: `TimerNode` in `domain/boards.py`, a timer may nest in any element except an anchor or a timer. Tests in `tests/test_boards.py`
-- [ ] T002 [P] [US1] `timers/time.ts` and `timers/timer.ts`: parse durations and dates, format time left and the due moment, state, snooze, done. Tests
-- [ ] T003 [US1] `canvas/frames.ts`: parent chain in `absolute`, timers last in `framesFirst`, frame deletion keeps children's timers; `timers/attach.ts`: attach on drop, stay near the parent, detach; free timers of cards absorbed by a module. Tests
-- [ ] T004 [US1] `timers/TimerNode.tsx` and `TimerEditor.tsx`: the cube with tooltip, popover with note, input, presets, due line, Done, Delete; Timer tool `R`, "Add timer" in both context menus. Tests (depends on T002, T003)
-- [ ] T005 [US1] `timers/useTimers.ts`, `alerts.ts`, `TimerNotes.tsx`, `fly.ts`: ticker, notification with click-to-fly, chime, title count, corner notes with Done, +10 min, +1 hour, missed-while-closed note. Tests
-- [ ] T006 [US1] `DESIGN.md`, `CHANGELOG.md`, README; screenshot in light and dark
+- [x] T001 [P] [US1] Backend: `TimerNode` in `domain/boards.py`, a timer may nest in any element except an anchor or a timer. Tests in `tests/test_boards.py`
+- [x] T002 [P] [US1] `timers/time.ts` and `timers/timer.ts`: parse durations and dates, format time left and the due moment, state, snooze, done. Tests
+- [x] T003 [US1] (timers attach left of the element's top edge, not the right corner: that spot stays put when a card collapses) `canvas/frames.ts`: parent chain in `absolute`, timers last in `framesFirst`, frame deletion keeps children's timers; `timers/attach.ts`: attach on drop, stay near the parent, detach; free timers of cards absorbed by a module. Tests
+- [x] T004 [US1] `timers/TimerNode.tsx` and `TimerEditor.tsx`: the cube with tooltip, popover with note, input, presets, due line, Done, Delete; Timer tool `R`, "Add timer" in both context menus. Tests (depends on T002, T003)
+- [x] T005 [US1] `timers/useTimers.ts`, `alerts.ts`, `TimerNotes.tsx`, `fly.ts`: ticker, notification with click-to-fly, chime, title count, corner notes with Done, +10 min, +1 hour, missed-while-closed note. Tests
+- [x] T006 [US1] `DESIGN.md`, `CHANGELOG.md`, README; screenshot in light and dark
 
 **Checkpoint**: `make check`, screenshot → G3.
 
