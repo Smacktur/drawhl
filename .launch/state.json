@@ -32,7 +32,8 @@
     "search-filters",
     "search-commands",
     "welcome-board",
-    "sticky-fit"
+    "sticky-fit",
+    "scrollbars"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -78,7 +79,8 @@
     "G1_first-run": "approved",
     "G2_first-run": "approved",
     "G3_welcome-board": "approved",
-    "G3_sticky-fit": "approved"
+    "G3_sticky-fit": "approved",
+    "G3_scrollbars": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
