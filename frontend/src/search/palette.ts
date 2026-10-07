@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react'
 
 // Shared by the board's shortcut and the main menu, which live in different trees.
 let open = false
+// Text the palette starts with: `>` for commands.
+let prefix = ''
 const listeners = new Set<() => void>()
 
 function subscribe(listener: () => void) {
@@ -9,11 +11,18 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
-export function setSearchOpen(next: boolean) {
+export function setSearchOpen(next: boolean, start = '') {
   if (open === next) return
   open = next
+  if (next) prefix = start
   for (const listener of listeners) listener()
 }
+
+/** What the palette opened with; read when its input mounts. */
+export const searchPrefix = () => prefix
+
+/** Opens the palette on commands and boards only, like `⌘⇧P` in an editor. */
+export const COMMANDS_PREFIX = '>'
 
 export function useSearchOpen() {
   return useSyncExternalStore(

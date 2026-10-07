@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { ModulePicker } from '@/modules/ModulePicker'
+import { MODULES } from '@/modules/registry'
+import { useCommands } from '@/search/commands'
 import { JqlInput, keepOpenWhileSuggesting, useJqlCount } from '@/canvas/JqlInput'
 import { SHORTCUTS, useShortcut, withShortcut } from '@/lib/shortcuts'
 
@@ -29,6 +31,14 @@ const TOOLS: { tool: Tool; Icon: LucideIcon }[] = [
   { tool: 'text', Icon: Type },
   { tool: 'timer', Icon: AlarmClock },
 ]
+
+// Tools that place an element; the palette offers them as "Add …".
+const PLACE_COMMANDS = [
+  { tool: 'sticky', title: 'Add sticky note', Icon: StickyNote },
+  { tool: 'text', title: 'Add text', Icon: Type },
+  { tool: 'frame', title: 'Add frame', Icon: Frame },
+  { tool: 'timer', title: 'Add timer', Icon: AlarmClock },
+] as const
 
 const MAX_REFS = 50
 // Each key is one Jira request; a few at a time stays clear of rate limits.
@@ -184,6 +194,41 @@ export function Toolbar({ tool, onTool, onAddCards, onAddModule }: Props) {
   useShortcut('timer', () => onTool('timer'))
   useShortcut('card', () => setOpen(true))
   useShortcut('module', () => setModulesOpen(true))
+  useCommands([
+    ...PLACE_COMMANDS.map(({ tool: value, title, Icon }) => ({
+      id: `tool:${value}`,
+      title,
+      group: 'Commands' as const,
+      Icon,
+      shortcut: value,
+      run: () => onTool(value),
+    })),
+    {
+      id: 'tool:card',
+      title: 'Add Jira card',
+      group: 'Commands',
+      Icon: TicketPlus,
+      shortcut: 'card',
+      keywords: 'task issue key jql',
+      run: () => setOpen(true),
+    },
+    {
+      id: 'tool:module',
+      title: 'Add module',
+      group: 'Commands',
+      Icon: LayoutTemplate,
+      shortcut: 'module',
+      run: () => setModulesOpen(true),
+    },
+    ...MODULES.map((def) => ({
+      id: `module:${def.kind}`,
+      title: `Add ${def.name}`,
+      group: 'Commands' as const,
+      Icon: def.Icon,
+      keywords: 'module',
+      run: () => onAddModule(def.kind),
+    })),
+  ])
 
   return (
     <div className="bg-card absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-lg border p-1 shadow-md">

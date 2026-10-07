@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-07
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description: "Board search like Spotlight or Raycast: Cmd+K opens an input in the middle of the screen, typing finds any text on the board, click or Enter moves to it." Shaped with the owner: live preview while browsing results, matches lit on the canvas and selectable at once, filters by assignee, status, type and frames, app commands and other boards in the same palette, wrong keyboard layout forgiven, recent jumps.
 
@@ -75,10 +75,10 @@ The palette becomes the one entry to the app. Typing "time" also offers "Show ti
 
 **Acceptance Scenarios**:
 
-1. **Given** a query, **Then** under board results the palette lists matching commands: Add Jira card, Add sticky note, Add text, Add frame, Add timer, Add module, Show timers, Show focus timer, Switch to light, dark or system theme, Keyboard shortcuts, Settings, New board, each with its shortcut.
+1. **Given** a query, **Then** under board results the palette lists matching commands: Add Jira card, Add sticky note, Add text, Add frame, Add timer, Add module, Add Gantt (and any other module), Show timers, Show or Hide focus timer, Switch to light, dark or system theme, Keyboard shortcuts, Settings, New board, Rename board, each with its shortcut.
 2. **Given** a query, **Then** other boards whose name matches are listed as "Go to board <name>"; Enter opens that board.
 3. **Given** `>` at the start, **Then** only commands and boards are listed; with an empty query after it, all of them.
-4. **Given** a command, **When** chosen, **Then** the palette closes and the command runs as if from its button; tools act at the viewport center when placing needs a spot.
+4. **Given** a command, **When** chosen, **Then** the palette closes and the command runs as if from its button or shortcut: an "Add" command picks the tool, the next click places the element; a module is added at the viewport center.
 
 ### Edge Cases
 
@@ -100,7 +100,7 @@ The palette becomes the one entry to the app. Typing "time" also offers "Show ti
 - **FR-004**: A jump moves the board, selects only the element and flashes it; recent jumps (up to 5 per board) are kept in `localStorage`.
 - **FR-005**: Preview follows the picked result and is undone on Esc; matches are ringed and the rest faded while the palette is open; `⌘Enter` selects all matches.
 - **FR-006**: Filters `@`, `status:`, `type:`, `priority:` and `#` with value suggestions from the board.
-- **FR-007**: Commands and other boards in the palette, with `>` for commands only.
+- **FR-007**: Commands and other boards in the palette, with `>` for commands only; `⌘P` and `⌘⇧P` (`Ctrl` elsewhere) and "Commands" in the main menu open the palette with `>` typed, like an editor's command palette.
 
 ### Key Entities
 

@@ -1,6 +1,7 @@
 import {
   ChevronDown,
   Keyboard,
+  LayoutDashboard,
   Menu,
   Monitor,
   Moon,
@@ -8,6 +9,7 @@ import {
   Plus,
   Search,
   Settings,
+  SquareChevronRight,
   AlarmClock,
   Sun,
   SunMoon,
@@ -35,7 +37,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { setFocusVisible, useFocusVisible } from '@/focus/store'
-import { setSearchOpen } from '@/search/palette'
+import { useCommands } from '@/search/commands'
+import { COMMANDS_PREFIX, setSearchOpen } from '@/search/palette'
 import { setTimerPanelOpen } from '@/timers/panel'
 import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
@@ -63,6 +66,82 @@ export function TopBar({ boards, current, onSelect }: Props) {
   const [deleting, setDeleting] = useState<BoardSummary | null>(null)
 
   useShortcut('help', () => setShortcutsOpen(true))
+  useCommands([
+    ...(current
+      ? [
+          {
+            id: 'app:timers',
+            title: 'Show timers',
+            group: 'Commands' as const,
+            Icon: AlarmClock,
+            keywords: 'reminders',
+            run: () => setTimerPanelOpen(true),
+          },
+        ]
+      : []),
+    {
+      id: 'app:focus',
+      title: focusVisible ? 'Hide focus timer' : 'Show focus timer',
+      group: 'Commands',
+      Icon: Timer,
+      keywords: 'pomodoro music lofi',
+      run: () => setFocusVisible(!focusVisible),
+    },
+    ...themes.map(({ value, label, Icon }) => ({
+      id: `app:theme:${value}`,
+      title: `Switch to ${label.toLowerCase()} theme`,
+      group: 'Commands' as const,
+      Icon,
+      keywords: 'appearance mode',
+      run: () => setTheme(value),
+    })),
+    {
+      id: 'app:shortcuts',
+      title: 'Keyboard shortcuts',
+      group: 'Commands',
+      Icon: Keyboard,
+      shortcut: 'help',
+      keywords: 'hotkeys keys help',
+      run: () => setShortcutsOpen(true),
+    },
+    {
+      id: 'app:settings',
+      title: 'Settings',
+      group: 'Commands',
+      Icon: Settings,
+      keywords: 'jira token connection preferences',
+      run: () => setSettingsOpen(true),
+    },
+    {
+      id: 'app:new-board',
+      title: 'New board',
+      group: 'Commands',
+      Icon: Plus,
+      keywords: 'create add',
+      run: () => setCreating(true),
+    },
+    ...(current
+      ? [
+          {
+            id: 'app:rename-board',
+            title: 'Rename board',
+            group: 'Commands' as const,
+            Icon: Pencil,
+            run: () => setRenaming(true),
+          },
+        ]
+      : []),
+    ...boards
+      .filter((board) => board.id !== current?.id)
+      .map((board) => ({
+        id: `board:${board.id}`,
+        title: `Go to board ${board.name}`,
+        group: 'Boards' as const,
+        Icon: LayoutDashboard,
+        keywords: 'open switch',
+        run: () => onSelect(board.id),
+      })),
+  ])
 
   return (
     <div className="bg-card absolute top-4 left-4 z-10 flex items-center gap-1 rounded-lg border p-1 shadow-md">
@@ -78,6 +157,13 @@ export function TopBar({ boards, current, onSelect }: Props) {
               <Search strokeWidth={1.75} />
               Search
               <DropdownMenuShortcut>{formatShortcut('search')[0]}</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
+          {current && (
+            <DropdownMenuItem onSelect={() => setSearchOpen(true, COMMANDS_PREFIX)}>
+              <SquareChevronRight strokeWidth={1.75} />
+              Commands
+              <DropdownMenuShortcut>{formatShortcut('commands')[0]}</DropdownMenuShortcut>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>

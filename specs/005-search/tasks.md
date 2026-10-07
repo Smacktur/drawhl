@@ -44,7 +44,7 @@ description: "Task list for Search on the board"
 
 ## Phase 4: Slice 25 `feat/search-commands` — commands and boards (US4)
 
-- [ ] T012 [US4] `search/commands.ts`: commands with shortcuts wired to the toolbar, top bar and panels; other boards by name; `>` prefix. Tests
-- [ ] T013 [US4] `DESIGN.md`, `CHANGELOG.md`, README; screenshot
+- [x] T012 [US4] (the toolbar and top bar register their own commands with `useCommands`; Enter and Cmd+Enter use the live text, not the deferred list) `search/commands.ts`: commands with shortcuts wired to the toolbar, top bar and panels; other boards by name; `>` prefix. Tests
+- [x] T013 [US4] `DESIGN.md`, `CHANGELOG.md`, README; screenshot
 
 **Checkpoint**: `make check`, screenshot → G3.

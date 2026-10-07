@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import { StickyNote } from 'lucide-react'
 import { act } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import type { Task } from '@/api/tasks'
@@ -169,4 +170,71 @@ test('a chip is removed with its button', () => {
   expect(options()).toEqual([expect.stringContaining('Fix login')])
   fireEvent.click(screen.getByRole('button', { name: 'Remove assignee Oleg Smirnov' }))
   expect(screen.getByRole('group', { name: 'Frames' })).toBeInTheDocument()
+})
+
+test('a command runs from the palette', () => {
+  const run = vi.fn()
+  const onRun = vi.fn((command) => command.run())
+  render(
+    <SearchPalette
+      open
+      onOpenChange={vi.fn()}
+      index={index}
+      recent={[]}
+      onChoose={vi.fn()}
+      commands={[
+        {
+          id: 's',
+          title: 'Add sticky note',
+          group: 'Commands',
+          Icon: StickyNote,
+          shortcut: 'sticky',
+          run,
+        },
+      ]}
+      onRun={onRun}
+    />,
+  )
+  const input = screen.getByRole('combobox', { name: 'Search the board' })
+  fireEvent.change(input, { target: { value: 'sticky' } })
+  expect(screen.getByRole('group', { name: 'Commands' })).toHaveTextContent('Add sticky noteN')
+  fireEvent.keyDown(input, { key: 'Enter' })
+  expect(run).toHaveBeenCalled()
+})
+
+test('Enter right after typing acts on the typed text, not a stale list', () => {
+  const { input, onChoose } = setup()
+  fireEvent.change(input, { target: { value: 'deploy' } })
+  fireEvent.change(input, { target: { value: 'lunch' } })
+  fireEvent.keyDown(input, { key: 'Enter' })
+  expect(onChoose).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'c' }))
+})
+
+test('opens on commands with a prefix; mod+P narrows to commands, then closes', () => {
+  const onOpenChange = vi.fn()
+  render(
+    <SearchPalette
+      open
+      onOpenChange={onOpenChange}
+      index={index}
+      recent={[]}
+      initialText=">"
+      onChoose={vi.fn()}
+      commands={[{ id: 's', title: 'Settings', group: 'Commands', Icon: StickyNote, run: vi.fn() }]}
+      onRun={vi.fn()}
+    />,
+  )
+  const input = screen.getByRole<HTMLInputElement>('combobox', { name: 'Search the board' })
+  expect(input).toHaveValue('>')
+  expect(input).toHaveFocus()
+  // The caret waits after the prefix, so typing adds to it instead of replacing it.
+  expect([input.selectionStart, input.selectionEnd]).toEqual([1, 1])
+  expect(options()).toEqual(['Settings'])
+
+  fireEvent.change(input, { target: { value: 'lunch' } })
+  fireEvent.keyDown(input, { key: 'p', metaKey: true })
+  expect(input).toHaveValue('>lunch')
+  expect(onOpenChange).not.toHaveBeenCalled()
+  fireEvent.keyDown(input, { key: 'p', metaKey: true, shiftKey: true })
+  expect(onOpenChange).toHaveBeenCalledWith(false)
 })

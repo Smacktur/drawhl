@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react'
 import { expect, test } from 'vitest'
 import type { Task } from '@/api/tasks'
 import type { AppNode } from '@/canvas/types'
@@ -137,6 +138,24 @@ test('suggestions count only tasks that pass the chips', () => {
     viewFor(index, 'type:', [], chips).suggestions?.values.map((v) => v.value)
   expect(types([])).toEqual(['Bug', 'Task'])
   expect(types([{ field: 'assignee', value: 'Oleg Smirnov' }])).toEqual(['Task'])
+})
+
+test('commands and boards join a plain query; > lists only them', () => {
+  const run = () => {}
+  const commands = [
+    { id: 'a', title: 'Add sticky note', group: 'Commands' as const, Icon: Plus, run },
+    { id: 'b', title: 'Go to board Release', group: 'Boards' as const, Icon: Plus, run },
+    { id: 'c', title: 'Settings', group: 'Commands' as const, Icon: Plus, run },
+  ]
+  const index = buildIndex(nodes, tasks)
+  const view = (text: string) => viewFor(index, text, [], [], commands)
+  expect(view('release').commands.map((c) => c.id)).toEqual(['b'])
+  expect(view('beta').groups[0].entries.map((e) => e.id)).toEqual(['g:2'])
+  expect(view('@anna release').commands).toEqual([])
+  expect(view('>').commands.map((c) => c.id)).toEqual(['a', 'c', 'b'])
+  expect(view('> sett').commands.map((c) => c.id)).toEqual(['c'])
+  expect(view('> sett').groups).toEqual([])
+  expect(view('ыуеештпы').fallback).toBe('settings')
 })
 
 test('an empty query lists recent jumps that still exist, then frames', () => {
