@@ -22,7 +22,8 @@
     "gantt-milestones",
     "focus-timer",
     "focus-music",
-    "focus-own-tracks"
+    "focus-own-tracks",
+    "focus-storage-status"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -52,7 +53,8 @@
     "G2_focus": "approved",
     "G3_focus-timer": "approved",
     "G3_focus-music": "approved",
-    "G3_focus-own-tracks": "approved"
+    "G3_focus-own-tracks": "approved",
+    "G3_focus-storage-status": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
