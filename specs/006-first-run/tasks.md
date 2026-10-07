@@ -18,10 +18,10 @@ description: "Task list for First run and polish"
 
 **Independent Test**: see US1 in [spec.md](spec.md).
 
-- [ ] T001 [P] [US1] `domain/welcome.py`: `welcome_doc(today)` with frames, notes, DEMO cards, arrows, Gantt with milestone and dependency, timer. Tests: passes `check_doc`, dates from today, demo keys only
-- [ ] T002 [US1] `domain/boards.py` `list_boards`: seed once on an empty never-seeded database, flag on upgrade, one board under concurrent calls; `api/boards.py` uses it. Tests
-- [ ] T003 [US1] Frontend: fit the view when a board opens at version 1 (never saved). Tests
-- [ ] T004 [US1] `CHANGELOG.md`, README quick start; screenshot of a fresh install in light and dark
+- [x] T001 [P] [US1] `domain/welcome.py`: `welcome_doc(today)` with frames, notes, DEMO cards, arrows, Gantt with milestone and dependency, timer. Tests: passes `check_doc`, dates from today, demo keys only
+- [x] T002 [US1] `domain/boards.py` `list_boards`: seed once on an empty never-seeded database, flag on upgrade, one board under concurrent calls; `api/boards.py` uses it. Tests
+- [x] T003 [US1] Frontend: fit the view when a board opens at version 1 (never saved). Tests
+- [x] T004 [US1] `CHANGELOG.md`, README quick start; screenshot of a fresh install in light and dark
 
 **Checkpoint**: `make check`, screenshot → G3.
 

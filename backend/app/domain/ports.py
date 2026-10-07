@@ -45,6 +45,10 @@ class BoardRepo(Protocol):
 
     def create(self, name: str, doc: BoardDoc) -> BoardSummary: ...
 
+    def create_first(self, name: str, doc: BoardDoc) -> BoardSummary | None:
+        """Creates the board only on a store that never had a board."""
+        ...
+
     def get(self, board_id: str) -> BoardRecord | None: ...
 
     def save(self, board_id: str, version: int, doc: BoardDoc) -> int:

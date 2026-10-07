@@ -89,6 +89,8 @@ const MIN_FRAME = { width: 160, height: 120 }
 // An arrow released closer than this to where it started was a click on the handle, not a drag.
 const MIN_ARROW = 16
 
+// Leaves room for the top bar, the focus capsule and the toolbar over the board.
+const FIT_NEW_BOARD = { padding: 0.16, maxZoom: 1 }
 const viewportCenter = () => ({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
 const NEW_NODES = {
@@ -522,6 +524,9 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
               defaultEdgeOptions={defaultEdgeOptions}
               connectionMode={ConnectionMode.Loose}
               defaultViewport={board.doc.viewport}
+              // A board nobody has saved yet, like the welcome board, opens showing all of it.
+              fitView={board.version === 1}
+              fitViewOptions={FIT_NEW_BOARD}
               onlyRenderVisibleElements
               colorMode={theme}
               proOptions={{ hideAttribution: true }}

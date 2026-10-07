@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
@@ -42,7 +43,7 @@ class RefreshOut(BaseModel):
 
 @router.get("")
 def list_boards(boards: Boards) -> BoardList:
-    return BoardList(boards=boards.list())
+    return BoardList(boards=service.list_boards(boards, datetime.now(UTC)))
 
 
 @router.post("", status_code=201)

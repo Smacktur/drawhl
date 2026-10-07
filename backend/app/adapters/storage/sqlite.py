@@ -14,6 +14,9 @@ MIGRATIONS = sorted(
     for path in (Path(__file__).parent / "migrations").glob("*.sql")
 )
 
+# Set by the first board ever created, so deleting every board does not bring the welcome back.
+_SEEDED = "welcome_seeded"
+
 
 class Database:
     """One shared connection guarded by a lock: enough for a single-user app."""
@@ -69,13 +72,24 @@ class SqliteBoardRepo:
         return [BoardSummary(**dict(row)) for row in rows]
 
     def create(self, name: str, doc: BoardDoc) -> BoardSummary:
-        board_id, now = uuid.uuid4().hex, now_iso()
         with self._db.transaction() as conn:
-            conn.execute(
-                "INSERT INTO boards (id, name, doc, version, created_at, updated_at)"
-                " VALUES (?, ?, ?, 1, ?, ?)",
-                (board_id, name, doc.model_dump_json(exclude_none=True), now, now),
-            )
+            return self._insert(conn, name, doc)
+
+    def create_first(self, name: str, doc: BoardDoc) -> BoardSummary | None:
+        with self._db.transaction() as conn:
+            if conn.execute("SELECT 1 FROM settings WHERE key = ?", (_SEEDED,)).fetchone():
+                return None
+            return self._insert(conn, name, doc)
+
+    @staticmethod
+    def _insert(conn: sqlite3.Connection, name: str, doc: BoardDoc) -> BoardSummary:
+        board_id, now = uuid.uuid4().hex, now_iso()
+        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, '1')", (_SEEDED,))
+        conn.execute(
+            "INSERT INTO boards (id, name, doc, version, created_at, updated_at)"
+            " VALUES (?, ?, ?, 1, ?, ?)",
+            (board_id, name, doc.model_dump_json(exclude_none=True), now, now),
+        )
         return BoardSummary(id=board_id, name=name, updated_at=now)
 
     def get(self, board_id: str) -> BoardRecord | None:
