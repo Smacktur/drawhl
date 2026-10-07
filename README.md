@@ -51,7 +51,7 @@ Open http://localhost:3000. A fresh install runs on built-in demo tasks: pick th
 - **A real whiteboard.** Frames, sticky notes, text and arrows. Drag cards in and out of frames; moving a frame moves everything inside.
 - **Details on demand.** Click a card for assignee, priority, last update and a link to the task. Collapse cards to one line when the board gets busy.
 - **Gantt module.** Drop cards onto a timeline to plan them as bars with live status, nest them into stages, mark milestones and draw dependency lines that turn amber when a task starts too early. Plan dates stay on the board.
-- **Focus timer.** A pomodoro capsule at the top of the screen: 25 minutes of focus, 5 minute breaks and a long one after every fourth round, with a chime and a browser notification at the end. Its color warms from green to raspberry as the time runs out. Lengths are adjustable, and the countdown survives a reload.
+- **Focus timer.** A pomodoro capsule at the top of the screen: 25 minutes of focus, 5 minute breaks and a long one after every fourth round, with a chime and a browser notification at the end. Its color warms from green to raspberry as the time runs out. Lengths are adjustable, and the countdown survives a reload. Under the timer, a small player with seven built-in lofi tracks (CC0) or your own audio files; it can pause itself on breaks.
 - **Several boards.** Saved on the server and reopened exactly as you left them.
 - **Keyboard first.** Undo and redo, copy and paste, duplicate, shortcuts for every tool (press `?`), light and dark theme.
 - **Yours to keep.** One SQLite file, no telemetry, no account, no cloud.

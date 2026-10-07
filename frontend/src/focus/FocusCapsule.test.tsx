@@ -29,6 +29,12 @@ it('starts, counts down in minutes and seconds, and pauses', () => {
   expect(screen.getByRole('timer')).toHaveTextContent('23:59')
 })
 
+it('shows the current track under the dial', () => {
+  render(<FocusCapsule />)
+  expect(screen.getByText('Laundry On The Wire')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Play music' })).toBeInTheDocument()
+})
+
 it('keeps the countdown across a reload', () => {
   const first = render(<FocusCapsule />)
   fireEvent.click(screen.getByRole('button', { name: 'Start' }))
@@ -40,11 +46,10 @@ it('keeps the countdown across a reload', () => {
   expect(screen.getByRole('timer')).toHaveTextContent('20:00')
 })
 
-it('shows the end of a focus and what comes next', () => {
+it('shows the end of a focus', () => {
   render(<FocusCapsule />)
   fireEvent.click(screen.getByRole('button', { name: 'Start' }))
   act(() => vi.advanceTimersByTime(25 * 60_000))
   expect(screen.getByRole('timer')).toHaveTextContent('00:00')
   expect(screen.getByRole('img', { name: 'Focus done · take a short break' })).toBeInTheDocument()
-  expect(screen.getByText('Next: Short break · 5 min')).toBeInTheDocument()
 })

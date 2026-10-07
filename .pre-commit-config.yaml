@@ -13,7 +13,8 @@ repos:
     hooks:
       - { id: trailing-whitespace }
       - { id: end-of-file-fixer }
-      - { id: check-added-large-files, args: ["--maxkb=2000"] }
+      # Bundled CC0 music tracks are 2-3 MB each, so they skip the size check.
+      - { id: check-added-large-files, args: ["--maxkb=2000"], exclude: ^frontend/public/music/ }
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.9
     hooks:

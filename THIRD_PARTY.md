@@ -43,6 +43,16 @@ Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.j
 
 ## Templates
 
+## Music
+
+Bundled in `frontend/public/music/`, re-encoded to MP3 112 kbps. All CC0 (public domain), no attribution required; credited anyway.
+
+| Track | Author | License | Source |
+|---|---|---|---|
+| Laundry On The Wire, Keeping Cool, First Snow, 2 Hour Delay | HoliznaCC0 | CC0 | [Lo-Fi and Chill collection](https://opengameart.org/node/161819) |
+| Families, Autumn | HoliznaCC0 | CC0 | [Chill Beats Collection](https://opengameart.org/content/chill-beats-collection) |
+| Lofi Hip Hop Loop | omfgdude | CC0 | [OpenGameArt](https://opengameart.org/content/lofi-hip-hop-loop) |
+
 - Project skeleton and methodology — [launchpad](https://github.com/Smacktur/launchpad).
 
 ## AI development tools

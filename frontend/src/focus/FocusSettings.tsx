@@ -1,8 +1,9 @@
-import { Minus, Plus, RotateCcw, SkipForward } from 'lucide-react'
-import { useId, useState } from 'react'
+import { Minus, Plus, RotateCcw, SkipForward, Volume1 } from 'lucide-react'
+import { useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { askNotify, notifyPermission, type NotifyPermission } from './alerts'
+import * as music from './music'
 import { updateSettings, updateTimer, useFocus } from './store'
 import { LIMITS, reset, skip, type TimerSettings } from './timer'
 
@@ -72,7 +73,7 @@ const BLOCKED: Partial<Record<NotifyPermission, string>> = {
   unsupported: 'This browser does not show notifications.',
 }
 
-export function FocusSettings() {
+function TimerTab() {
   const { settings } = useFocus()
   const [permission, setPermission] = useState(notifyPermission)
   const set = (patch: Partial<TimerSettings>) => updateSettings(patch)
@@ -126,6 +127,114 @@ export function FocusSettings() {
         checked={settings.autoStart}
         onChange={(autoStart) => set({ autoStart })}
       />
+    </div>
+  )
+}
+
+function MusicTab() {
+  const player = music.useMusic()
+  const files = useRef<HTMLInputElement>(null)
+  return (
+    <div className="flex flex-col gap-2 text-[13px]">
+      <ol className="-mx-1 flex max-h-[196px] flex-col gap-px overflow-y-auto" aria-label="Tracks">
+        {player.tracks.map((track, i) => (
+          <li key={track.src}>
+            <button
+              type="button"
+              aria-current={i === player.index || undefined}
+              onClick={() => music.pick(i)}
+              className="hover:bg-muted aria-current:bg-muted flex w-full items-center gap-2 rounded px-1.5 py-1 text-left text-[12px] aria-current:font-semibold"
+            >
+              <span className="text-muted-foreground w-4 font-mono tabular-nums">{i + 1}</span>
+              <span className="min-w-0 flex-1 truncate">
+                {track.title}{' '}
+                <span className="text-muted-foreground font-normal">· {track.author}</span>
+              </span>
+              {track.duration !== undefined && (
+                <span className="text-muted-foreground font-mono font-normal tabular-nums">
+                  {music.formatDuration(track.duration)}
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ol>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground -mx-1 justify-start"
+        onClick={() => files.current?.click()}
+      >
+        <Plus strokeWidth={1.75} />
+        Add your own tracks
+      </Button>
+      <input
+        ref={files}
+        type="file"
+        accept="audio/*"
+        multiple
+        hidden
+        onChange={(event) => {
+          if (event.target.files) music.addFiles(event.target.files)
+          event.target.value = ''
+        }}
+      />
+      <div className="bg-border h-px" />
+      <label className="text-muted-foreground flex items-center gap-2">
+        <Volume1 className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+        <span className="sr-only">Volume</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(player.volume * 100)}
+          onChange={(event) => music.setVolume(Number(event.target.value) / 100)}
+          className="accent-muted-foreground h-4 flex-1"
+        />
+      </label>
+      <Toggle
+        label="Pause music on breaks"
+        checked={player.pauseOnBreaks}
+        onChange={music.setPauseOnBreaks}
+      />
+      <p className="text-muted-foreground text-[11px]">
+        Tracks by HoliznaCC0 and omfgdude, CC0, via OpenGameArt. Your own files play in this tab
+        only and are never uploaded.
+      </p>
+    </div>
+  )
+}
+
+const TABS = [
+  { id: 'timer', label: 'Timer', Panel: TimerTab },
+  { id: 'music', label: 'Music', Panel: MusicTab },
+] as const
+
+export function FocusSettings() {
+  const [tab, setTab] = useState<(typeof TABS)[number]['id']>('timer')
+  const id = useId()
+  const { Panel } = TABS.find((t) => t.id === tab)!
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div role="tablist" className="bg-muted flex gap-0.5 rounded-md p-0.5">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            id={`${id}-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`${id}-panel`}
+            onClick={() => setTab(t.id)}
+            className="text-muted-foreground aria-selected:bg-card aria-selected:text-foreground flex-1 rounded px-2 py-0.5 text-[12px] aria-selected:shadow-xs"
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}`}>
+        <Panel />
+      </div>
     </div>
   )
 }
