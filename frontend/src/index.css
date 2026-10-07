@@ -346,6 +346,20 @@
 .react-flow__node .timer-cube[data-flash] {
   animation: timer-flash 400ms ease-in-out 3;
 }
+/* While searching, matches are ringed and everything else steps back. */
+.react-flow.searching .react-flow__node,
+.react-flow.searching .react-flow__edge {
+  transition: opacity 150ms ease-out;
+}
+.react-flow.searching .react-flow__node:not(.search-hit),
+.react-flow.searching .react-flow__edge {
+  opacity: 0.35;
+}
+.react-flow__node.search-hit {
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
 /* Any other node the board moved to: a ring that blinks three times. */
 .react-flow__node.node-flash {
   border-radius: var(--radius);
@@ -378,6 +392,10 @@
   .react-flow__node .timer-cube[data-flash],
   .react-flow__node.node-flash {
     animation: none;
+  }
+  .react-flow.searching .react-flow__node,
+  .react-flow.searching .react-flow__edge {
+    transition: none;
   }
   .focus-dial,
   .focus-eq[data-playing] i,

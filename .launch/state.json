@@ -27,7 +27,8 @@
     "timers",
     "timer-list",
     "timer-triggers",
-    "search"
+    "search",
+    "search-preview"
   ],
   "gates": {
     "G1_scope": "approved",

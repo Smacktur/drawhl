@@ -22,3 +22,24 @@ export function useSearchOpen() {
     () => false,
   )
 }
+
+// Nodes of the current matches; null while nothing is searched, so the board is not dimmed.
+let hits: ReadonlySet<string> | null = null
+const hitListeners = new Set<() => void>()
+
+export function setSearchHits(ids: string[] | null) {
+  if (!hits && !ids?.length) return
+  hits = ids?.length ? new Set(ids) : null
+  for (const listener of hitListeners) listener()
+}
+
+export function useSearchHits() {
+  return useSyncExternalStore(
+    (listener) => {
+      hitListeners.add(listener)
+      return () => hitListeners.delete(listener)
+    },
+    () => hits,
+    () => null,
+  )
+}

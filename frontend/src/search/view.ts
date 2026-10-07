@@ -10,6 +10,8 @@ export type View = {
   query: string[]
   /** Matches past the shown rows. */
   more: number
+  /** Nodes of every match, lit on the board; empty without a query. */
+  targets: string[]
   /** Set when the query found nothing and the other keyboard layout did. */
   fallback?: string
 }
@@ -28,6 +30,7 @@ export function viewFor(index: Entry[], text: string, recent: string[]): View {
       ].filter((group) => group.entries.length > 0),
       query,
       more: 0,
+      targets: [],
     }
   }
   let found = search(index, query)
@@ -46,6 +49,7 @@ export function viewFor(index: Entry[], text: string, recent: string[]): View {
     groups: found.entries.length ? [{ entries: found.entries }] : [],
     query: shown,
     more: found.total - found.entries.length,
+    targets: found.targets,
     fallback,
   }
 }

@@ -51,15 +51,23 @@ export function zoomFor(width: number, height: number, current: number, min = MI
   return Math.min(Math.max(current, min), fit)
 }
 
-/** Moves the board to a node and flashes it; `flash: false` only looks. */
-export function flyTo(flow: Flow, id: string, { flash = true, minZoom = MIN_ZOOM } = {}) {
+/**
+ * Moves the board to a node and flashes it; `flash: false` only looks.
+ * `offsetY` puts the node that many screen pixels below the window center.
+ */
+export function flyTo(
+  flow: Flow,
+  id: string,
+  { flash = true, minZoom = MIN_ZOOM, offsetY = 0 } = {},
+) {
   const node = flow.getInternalNode(id)
   if (!node) return
   const { x, y } = node.internals.positionAbsolute
   const width = node.measured.width ?? node.width ?? 0
   const height = node.measured.height ?? node.height ?? 0
-  void flow.setCenter(x + width / 2, y + height / 2, {
-    zoom: zoomFor(width, height, flow.getZoom(), minZoom),
+  const zoom = zoomFor(width, height, flow.getZoom(), minZoom)
+  void flow.setCenter(x + width / 2, y + height / 2 - offsetY / zoom, {
+    zoom,
     duration: reducedMotion() ? 0 : 400,
   })
   if (!flash) return
