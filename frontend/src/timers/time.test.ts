@@ -69,7 +69,8 @@ describe('formatting', () => {
     expect(formatLeftLong(18 * 86_400_000)).toBe('18 days')
   })
 
-  it('shows the moment in the locale', () => {
-    expect(formatDue(local(10, 25, 15, 30), 'ru-RU')).toBe('вс, 25.10.2026, 15:30')
+  it('shows the moment in English with a 24-hour clock', () => {
+    expect(formatDue(local(10, 25, 15, 30))).toBe('Sun, 25.10.2026, 15:30')
+    expect(formatDue(local(10, 8, 9, 5))).toBe('Thu, 08.10.2026, 09:05')
   })
 })

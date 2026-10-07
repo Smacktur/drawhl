@@ -24,7 +24,7 @@ The user waits for something on a task: an answer, a deploy, a review. They drop
 2. **Given** the Timer tool, **When** the user clicks an empty spot (or "Add timer" on the canvas menu), **Then** a free cube is placed there.
 3. **Given** a cube, **When** it is dropped onto an element, **Then** it attaches to that element beside its top edge; dropped near its element (within 48 px) it stays attached where it was dropped; dropped further away it becomes free.
 4. **Given** an attached timer, **When** its element is deleted, **Then** the timer is deleted too; a free timer is never deleted with other elements, and a timer in a deleted frame stays like other frame children.
-5. **Given** the popover, **When** the user types a duration or a date and time or picks a preset, **Then** the line under it reads "Goes off Sun, 25/10/2026, 15:30 · in 18 days" in the user's locale ("вс, 25.10.2026, 15:30" in Russian), or names what could not be read.
+5. **Given** the popover, **When** the user types a duration or a date and time or picks a preset, **Then** the line under it reads "Goes off Sun, 25.10.2026, 15:30 · in 18 days" (English and 24-hour whatever the browser locale), or names what could not be read.
 6. **Given** a running timer, **Then** the cube shows the time left in one short unit ("45s", "28m", "3h", "2d") and, under 5 minutes, a ring; hovering it shows the note, the exact time and the time left.
 7. **Given** a running timer, **When** its time comes while the board is open, **Then** a browser notification (if allowed) and a chime play once per tab, the cube turns coral with a bell and pulses, the tab title starts with the count of timers that went off, and a note at the top right of the board shows the timer with Done, +10 min and +1 hour.
 8. **Given** a notification, **When** the user clicks it, **Then** the tab comes to front and the board moves to the timer.
@@ -105,7 +105,7 @@ A timer on a Jira card can wait for the task instead of the clock: "Goes off whe
 
 - Timers go off only while drawhl is open in some tab; a closed browser gets them on the next open (US1 scenario 9). Web Push is a separate idea.
 - The list covers the current board only.
-- Times are stored as UTC moments and shown in the browser's locale and time zone.
+- Times are stored as UTC moments and shown in the browser's time zone; the text stays English.
 
 ## Out of scope
 

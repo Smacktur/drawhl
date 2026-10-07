@@ -120,19 +120,19 @@ export function formatLeftLong(ms: number) {
   return `${days} ${days === 1 ? 'day' : 'days'}`
 }
 
-/** The moment in the user's locale and time zone: "Sun, 25.10.2026, 15:30" in Russian. */
-export function formatDue(at: number, locale?: string) {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(at)
+const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const pad = (n: number) => String(n).padStart(2, '0')
+
+// The UI is English whatever the browser locale; the time zone is the user's.
+/** The moment as "Sun, 25.10.2026, 15:30". */
+export function formatDue(at: number) {
+  const d = new Date(at)
+  const date = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
+  return `${WEEKDAY_NAMES[d.getDay()]}, ${date}, ${formatClock(at)}`
 }
 
-/** Clock time only, for notes about a timer that went off today. */
-export function formatClock(at: number, locale?: string) {
-  return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(at)
+/** Clock time only, 24-hour: "15:30". */
+export function formatClock(at: number) {
+  const d = new Date(at)
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
