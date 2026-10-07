@@ -62,6 +62,15 @@ export function checkStatus(data: TimerData, task: Task | undefined, now: number
   return { ...data, dueAt: iso(now), watch: { ...watch, changedTo: task.status_name } }
 }
 
+/** True when a status timer still waits: the board then keeps polling in a background tab. */
+export function waitsForStatus(nodes: { type?: string; data: unknown }[]) {
+  return nodes.some((n) => {
+    if (n.type !== 'timer') return false
+    const data = n.data as TimerData
+    return Boolean(data.watch && !data.done && !data.dueAt)
+  })
+}
+
 /** What a status timer waits for or saw. */
 export function describeWatch(watch: NonNullable<TimerData['watch']>) {
   return watch.changedTo

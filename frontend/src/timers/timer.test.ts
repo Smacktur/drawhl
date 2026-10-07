@@ -11,6 +11,7 @@ import {
   setRepeat,
   snooze,
   timerState,
+  waitsForStatus,
   watchStatus,
 } from './timer'
 
@@ -94,6 +95,15 @@ describe('status timer', () => {
     expect(describeWatch(fired.watch!)).toBe('DEMO-1 moved to Done')
     expect(checkStatus(fired, task('In Progress'), NOW + MIN)).toBeNull()
     expect(finish(fired, NOW)).toMatchObject({ done: true })
+  })
+
+  it('keeps the board polling in the background only while one waits', () => {
+    const waiting = watchStatus(newTimer(NOW), 'DEMO-1', 'In Review')
+    const node = (data: object) => ({ type: 'timer', data })
+    expect(waitsForStatus([node(newTimer(NOW))])).toBe(false)
+    expect(waitsForStatus([node(newTimer(NOW)), node(waiting)])).toBe(true)
+    expect(waitsForStatus([node(checkStatus(waiting, task('Done'), NOW)!)])).toBe(false)
+    expect(waitsForStatus([node(finish(waiting, NOW))])).toBe(false)
   })
 
   it('a time set later turns it back into a clock timer', () => {

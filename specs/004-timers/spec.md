@@ -71,7 +71,7 @@ A timer on a Jira card can wait for the task instead of the clock: "Goes off whe
 
 - Notifications denied or unsupported: the popover says so once; the chime, the coral cube, the title and the corner note still work.
 - Several tabs on the same board: each shows a notification for the same timer with the same tag, so the browser shows one; writes that collide go through the usual conflict reload.
-- Background tabs: timers are checked once a second while visible and at least once a minute in the background; the time goes from the stored moment, so nothing drifts.
+- Background tabs: timers are checked once a second while visible and at least once a minute in the background; the time goes from the stored moment, so nothing drifts. The board's refresh normally pauses in a background tab; while a status timer waits it keeps polling, so the timer goes off while the user is in the tracker's tab.
 - A timer attached to a card that a module takes in (a Gantt row): it becomes free at the same place.
 - A timer is copied, pasted and duplicated with its element; undo and redo cover every timer change.
 - A status timer on a card that is not found or not loaded yet: it waits; the cube does not go off on missing data.
