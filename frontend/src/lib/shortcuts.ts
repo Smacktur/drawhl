@@ -13,6 +13,7 @@ type Shortcut = {
 /** Every keyboard shortcut in one place: the help dialog lists them and tooltips show them. */
 export const SHORTCUTS = {
   help: { keys: 'shift+slash', display: '?', label: 'Keyboard shortcuts', group: 'General' },
+  search: { keys: 'mod+k, mod+f', label: 'Search the board', group: 'General' },
   select: { keys: 'v', label: 'Select', group: 'Tools' },
   hand: { keys: 'h', label: 'Hand', group: 'Tools' },
   frame: { keys: 'f', label: 'Frame', group: 'Tools' },

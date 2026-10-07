@@ -59,7 +59,8 @@ import type { ModuleHost } from '@/modules/types'
 import { useShortcut } from '@/lib/shortcuts'
 import { askNotify, primeAudio } from '@/focus/alerts'
 import { BESIDE, dropTimers, holdsTimers, TIMER_SIZE } from '@/timers/attach'
-import { flyTo } from '@/timers/fly'
+import { flyTo, useFlashingId } from '@/canvas/fly'
+import { BoardSearch } from '@/search/BoardSearch'
 import { BoardTimers } from '@/timers/BoardTimers'
 import { newTimer, waitsForStatus } from '@/timers/timer'
 import { TimerNode } from '@/timers/TimerNode'
@@ -118,7 +119,18 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
 
   useShortcut('cancel', () => setTool('select'), { preventDefault: false })
 
-  const shown = useMemo(() => raiseAnchors(nodes, edges), [nodes, edges])
+  const flashId = useFlashingId()
+  const shown = useMemo(() => {
+    const raised = raiseAnchors(nodes, edges)
+    // A timer flashes its own cube; any other node the board moved to flashes its frame.
+    if (!flashId) return raised
+    return {
+      ...raised,
+      nodes: raised.nodes.map((n) =>
+        n.id === flashId && n.type !== 'timer' ? { ...n, className: 'node-flash' } : n,
+      ),
+    }
+  }, [nodes, edges, flashId])
   const history = useHistory(nodes, edges, setNodes, setEdges)
   const guides = useGuides(onNodesChange)
   useShortcut('undo', history.undo)
@@ -356,6 +368,11 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     setEdges((current) => current.map((e) => ({ ...e, selected: kind === 'edge' && e.id === id })))
   }
 
+  const jumpTo = (id: string) => {
+    selectOnly(id, 'node')
+    flyTo(flow, id)
+  }
+
   const selectedCards = nodes.filter(
     (n): n is JiraCardNodeType => n.selected === true && n.type === 'jira_card',
   )
@@ -537,6 +554,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
           onRefresh={() => void refresh.refetch()}
         />
       </BoardTimers>
+      <BoardSearch boardId={board.id} nodes={nodes} tasks={tasks} onJump={jumpTo} />
       {saveError && (
         <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
           <AlertDescription>Not saved: {saveError}</AlertDescription>

@@ -1,0 +1,73 @@
+import type { InternalNode, SetCenter } from '@xyflow/react'
+import { useSyncExternalStore } from 'react'
+
+const FLASH_MS = 1200
+// At least this zoom, so a 40px cube is easy to see after the move.
+const MIN_ZOOM = 0.8
+// A bigger element is zoomed out until it fits this share of the window.
+const FIT_SHARE = 0.8
+
+let flashing: string | null = null
+const listeners = new Set<() => void>()
+
+function emit() {
+  for (const listener of listeners) listener()
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+/** The node the board just moved to, for a short moment. */
+export function useFlashingId() {
+  return useSyncExternalStore(
+    subscribe,
+    () => flashing,
+    () => null,
+  )
+}
+
+/** True for a short moment after the board moved to this node. */
+export function useFlashing(id: string) {
+  return useFlashingId() === id
+}
+
+type Flow = {
+  getInternalNode: (id: string) => InternalNode | undefined
+  getZoom: () => number
+  setCenter: SetCenter
+}
+
+export const reducedMotion = () =>
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+/** Zoom that shows the whole box at no less than `min`, unless it is too big for the window. */
+export function zoomFor(width: number, height: number, current: number, min = MIN_ZOOM) {
+  const fit = Math.min(
+    (window.innerWidth * FIT_SHARE) / Math.max(width, 1),
+    (window.innerHeight * FIT_SHARE) / Math.max(height, 1),
+  )
+  return Math.min(Math.max(current, min), fit)
+}
+
+/** Moves the board to a node and flashes it; `flash: false` only looks. */
+export function flyTo(flow: Flow, id: string, { flash = true, minZoom = MIN_ZOOM } = {}) {
+  const node = flow.getInternalNode(id)
+  if (!node) return
+  const { x, y } = node.internals.positionAbsolute
+  const width = node.measured.width ?? node.width ?? 0
+  const height = node.measured.height ?? node.height ?? 0
+  void flow.setCenter(x + width / 2, y + height / 2, {
+    zoom: zoomFor(width, height, flow.getZoom(), minZoom),
+    duration: reducedMotion() ? 0 : 400,
+  })
+  if (!flash) return
+  flashing = id
+  emit()
+  setTimeout(() => {
+    if (flashing !== id) return
+    flashing = null
+    emit()
+  }, FLASH_MS)
+}

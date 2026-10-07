@@ -46,7 +46,12 @@ export type ModuleDef<C> = {
    * Null leaves the card on the board.
    */
   acceptCard?: (content: C, key: string, at: XYPosition, width: number) => C | null
+  /** Texts inside the content that board search finds; a jump goes to the module. */
+  searchable?: (content: C) => ModuleText[]
 }
+
+/** A text inside a module; `key` is a live task whose summary is searched too. */
+export type ModuleText = { kind: 'row' | 'milestone'; key?: string; text: string }
 
 /** Keeps each definition typed against its own content while the list stays uniform. */
 export function defineModule<C>(def: ModuleDef<C>): ModuleDef<unknown> {
