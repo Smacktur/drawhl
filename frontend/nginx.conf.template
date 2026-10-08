@@ -2,8 +2,12 @@ server {
     listen 3000;
     root /usr/share/nginx/html;
 
+    # The API gets a new IP on every redeploy (Railway, Render); re-resolve instead of caching it at start.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+
     location /api/ {
-        proxy_pass http://api:8000;
+        set $api http://${API_UPSTREAM};
+        proxy_pass $api;
         proxy_set_header Host $host;
         proxy_set_header X-Request-Id $request_id;
     }
