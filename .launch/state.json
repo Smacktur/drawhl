@@ -36,7 +36,8 @@
     "scrollbars",
     "paste-text",
     "docs-site",
-    "docs-starlight"
+    "docs-starlight",
+    "instance-password"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -86,7 +87,8 @@
     "G3_scrollbars": "approved",
     "G3_paste-text": "approved",
     "G1_teams": "approved",
-    "G2_instance-password": "approved"
+    "G2_instance-password": "approved",
+    "G3_instance-password": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
