@@ -55,6 +55,7 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigat
 
 const KEY_NAMES: Record<string, string> = {
   mod: isMac ? '⌘' : 'Ctrl',
+  ctrl: isMac ? '⌃' : 'Ctrl',
   shift: 'Shift',
   alt: isMac ? '⌥' : 'Alt',
   escape: 'Esc',
