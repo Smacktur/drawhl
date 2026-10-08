@@ -1,4 +1,6 @@
-FROM node:22-alpine AS build
+# Static files are the same on every platform: build them once natively, not under QEMU,
+# where npm ci can hang for the arm64 image.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
