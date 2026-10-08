@@ -4,6 +4,7 @@ import { getAuthStatus } from '@/api/auth'
 import { listBoards } from '@/api/boards'
 import { AUTH_REQUIRED_EVENT } from '@/api/client'
 import { SignIn } from '@/auth/SignIn'
+import { SettingsDialog } from '@/settings/SettingsDialog'
 import { NewBoardForm } from '@/board/NewBoardForm'
 import { AboutButton } from '@/board/AboutButton'
 import { FocusCapsule } from '@/focus/FocusCapsule'
@@ -126,6 +127,7 @@ export default function App() {
       {boards.data && <TopBar boards={boards.data} current={current} onSelect={setBoardId} />}
       {focusVisible && <FocusCapsule />}
       {signedIn && <AboutButton />}
+      {signedIn && <SettingsDialog />}
     </main>
   )
 }

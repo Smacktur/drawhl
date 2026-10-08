@@ -17,4 +17,4 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 
 To trust a corporate CA, put the bundle in `./data` (for example `data/corp-ca.pem`) and set `JIRA_CA_BUNDLE=data/corp-ca.pem`.
 
-The refresh interval is set in Settings, not in the environment.
+The refresh interval is set in Settings → Task source, not in the environment.

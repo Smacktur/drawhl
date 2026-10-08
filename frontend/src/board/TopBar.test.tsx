@@ -82,3 +82,25 @@ test('deletes a board only after confirming', async () => {
   )
   vi.unstubAllGlobals()
 })
+
+test('shows who is signed in and opens settings with mod+comma', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () =>
+      Response.json({
+        signed_in: true,
+        me: { id: 'u1', username: 'ann', name: 'Ann Lee', role: 'member' },
+      }),
+    ),
+  )
+  renderBar()
+  fireEvent.keyDown(screen.getByRole('button', { name: 'Main menu' }), { key: 'Enter' })
+  expect(await screen.findByText('Ann Lee')).toBeInTheDocument()
+  expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeInTheDocument()
+  fireEvent.keyDown(document.body, { key: 'Escape' })
+  fireEvent.keyDown(document, { key: ',', code: 'Comma', metaKey: true, ctrlKey: true })
+  await waitFor(() =>
+    expect(new URL(window.location.href).searchParams.get('settings')).toBe('profile'),
+  )
+  vi.unstubAllGlobals()
+})

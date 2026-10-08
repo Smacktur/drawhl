@@ -1,7 +1,9 @@
 import {
   ChevronDown,
   Keyboard,
+  KeyRound,
   LayoutDashboard,
+  LogOut,
   Menu,
   Monitor,
   Moon,
@@ -16,7 +18,9 @@ import {
   Timer,
   Trash2,
 } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { getAuthStatus, signOut } from '@/api/auth'
 import type { BoardSummary } from '@/api/boards'
 import { DeleteBoardDialog, RenameBoardForm } from '@/board/BoardActions'
 import { NewBoardForm } from '@/board/NewBoardForm'
@@ -27,6 +31,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -42,7 +47,7 @@ import { COMMANDS_PREFIX, setSearchOpen } from '@/search/palette'
 import { setTimerPanelOpen } from '@/timers/panel'
 import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
-import { SettingsSheet } from '@/settings/SettingsSheet'
+import { openSettings } from '@/settings/store'
 
 const themes = [
   { value: 'light', label: 'Light', Icon: Sun },
@@ -59,13 +64,17 @@ type Props = {
 export function TopBar({ boards, current, onSelect }: Props) {
   const { theme, setTheme } = useTheme()
   const focusVisible = useFocusVisible()
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState<BoardSummary | null>(null)
 
+  const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me
+  // A reload drops every cached board and task along with the session.
+  const logout = useMutation({ mutationFn: signOut, onSuccess: () => window.location.reload() })
+
   useShortcut('help', () => setShortcutsOpen(true))
+  useShortcut('settings', () => openSettings())
   useCommands([
     ...(current
       ? [
@@ -106,11 +115,20 @@ export function TopBar({ boards, current, onSelect }: Props) {
     },
     {
       id: 'app:settings',
-      title: 'Settings',
+      title: 'Open settings',
       group: 'Commands',
       Icon: Settings,
-      keywords: 'jira token connection preferences',
-      run: () => setSettingsOpen(true),
+      shortcut: 'settings',
+      keywords: 'jira token connection preferences profile account',
+      run: () => openSettings(),
+    },
+    {
+      id: 'app:password',
+      title: 'Change password',
+      group: 'Commands',
+      Icon: KeyRound,
+      keywords: 'security account',
+      run: () => openSettings('security'),
     },
     {
       id: 'app:new-board',
@@ -151,7 +169,16 @@ export function TopBar({ boards, current, onSelect }: Props) {
             <Menu className="size-[18px]" strokeWidth={1.75} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
+        <DropdownMenuContent align="start" className="w-56">
+          {me && (
+            <>
+              <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
+                <span className="truncate font-medium">{me.name}</span>
+                <span className="text-muted-foreground truncate text-[12px]">{me.username}</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+            </>
+          )}
           {current && (
             <DropdownMenuItem onSelect={() => setSearchOpen(true)}>
               <Search strokeWidth={1.75} />
@@ -166,9 +193,10 @@ export function TopBar({ boards, current, onSelect }: Props) {
               <DropdownMenuShortcut>{formatShortcut('commands')[0]}</DropdownMenuShortcut>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+          <DropdownMenuItem onSelect={() => openSettings()}>
             <Settings strokeWidth={1.75} />
             Settings
+            <DropdownMenuShortcut>{formatShortcut('settings')[0]}</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setShortcutsOpen(true)}>
             <Keyboard strokeWidth={1.75} />
@@ -204,9 +232,13 @@ export function TopBar({ boards, current, onSelect }: Props) {
             <Timer strokeWidth={1.75} />
             Focus timer
           </DropdownMenuCheckboxItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => logout.mutate()} disabled={logout.isPending}>
+            <LogOut strokeWidth={1.75} />
+            Sign out
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <DeleteBoardDialog board={deleting} onOpenChange={(open) => !open && setDeleting(null)} />
 

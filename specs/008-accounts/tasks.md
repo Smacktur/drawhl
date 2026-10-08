@@ -29,11 +29,11 @@ description: "Task list for Accounts and roles"
 
 **Goal**: one window with sections replaces the side sheet, so People, My tracker and later sections have room.
 
-- [ ] T007 [US5] `DESIGN.md`: settings window entry (size, sidebar, groups, narrow screens); `/hallmark` pass before code
-- [ ] T008 [US5] `SettingsDialog.tsx` on shadcn `Dialog`: sidebar with "Account" (Profile, Security, Preferences) and "Instance" (Task source) groups, one section on the right, `?settings=<section>` in the URL, Esc closes, Back and Forward move between sections. Tests
-- [ ] T009 [US5] Move the forms out of `SettingsSheet.tsx` into sections: Profile (name, username), Security (password, sign out everywhere), Preferences (theme, paste as), Task source (provider, Jira, refresh interval); delete the sheet. Tests
-- [ ] T010 [US5] Main menu: a header with the person's name and username, "Settings" with `⌘,`, "Sign out" at the bottom; commands "Open settings", "Change password" in the palette. Tests
-- [ ] T011 [US5] Under 720px wide the window fills the screen and the sidebar turns into a section list that opens each section; docs (guide pages that say "Settings"); `CHANGELOG.md`; screenshot
+- [x] T007 [US5] `DESIGN.md`: settings window entry (size, sidebar, groups, narrow screens); `/hallmark` pass before code
+- [x] T008 [US5] `SettingsDialog.tsx` on shadcn `Dialog`: sidebar with "Account" (Profile, Security, Preferences) and "Instance" (Task source) groups, one section on the right, `?settings=<section>` in the URL, Esc closes, Back and Forward move between sections. Tests
+- [x] T009 [US5] Move the forms out of `SettingsSheet.tsx` into sections: Profile (name, username), Security (password, sign out everywhere), Preferences (theme, paste as), Task source (provider, Jira, refresh interval); delete the sheet. Tests
+- [x] T010 [US5] Main menu: a header with the person's name and username, "Settings" with `⌘,`, "Sign out" at the bottom; commands "Open settings", "Change password" in the palette. Tests
+- [x] T011 [US5] Under 720px wide the window fills the screen and the sidebar turns into a section list that opens each section; docs (guide pages that say "Settings"); `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, both themes, narrow window → G3.
 

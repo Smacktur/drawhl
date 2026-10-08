@@ -39,7 +39,8 @@
     "docs-starlight",
     "instance-password",
     "brand",
-    "accounts"
+    "accounts",
+    "settings"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -93,7 +94,8 @@
     "G3_instance-password": "approved",
     "G2_accounts": "approved",
     "G3_accounts": "approved",
-    "G2_settings": "approved"
+    "G2_settings": "approved",
+    "G3_settings": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
