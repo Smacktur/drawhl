@@ -9,6 +9,7 @@ from app.domain.errors import (
     DomainError,
     HostMismatch,
     InvalidJql,
+    InvalidPassword,
     InvalidRef,
     JiraNotConfigured,
     JiraRateLimited,
@@ -16,6 +17,7 @@ from app.domain.errors import (
     NotFound,
     SecretKeyMissing,
     TaskNotFound,
+    TooManyAttempts,
     ValidationFailed,
     VersionConflict,
 )
@@ -35,6 +37,8 @@ _STATUS = {
     JiraNotConfigured: 400,
     JiraUnauthorized: 401,
     JiraRateLimited: 429,
+    InvalidPassword: 401,
+    TooManyAttempts: 429,
 }
 
 
@@ -53,9 +57,8 @@ def error_body(code: str, message: str) -> dict:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def domain_error(_: Request, exc: DomainError) -> JSONResponse:
-        headers = (
-            {"retry-after": str(exc.retry_after)} if isinstance(exc, JiraRateLimited) else None
-        )
+        retry_after = getattr(exc, "retry_after", None)
+        headers = {"retry-after": str(retry_after)} if retry_after else None
         return JSONResponse(
             error_body(exc.code, exc.message), status_code=_status(exc), headers=headers
         )

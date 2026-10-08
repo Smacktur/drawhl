@@ -22,6 +22,9 @@ projects:
                 value: stage
               - key: LOG_LEVEL
                 value: info
+              # Set once by Render; stage-smoke reads it from SMOKE_PASSWORD.
+              - key: DRAWHL_PASSWORD
+                generateValue: true
 
           # Static site instead of the nginx container: free, never sleeps, served from CDN.
           # Free services cannot receive private network traffic, so /api goes through

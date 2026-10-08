@@ -77,16 +77,16 @@ def test_rate_limit_passes_retry_after(jira_client, fake_jira):
 
 def test_changed_secret_key_makes_token_unreadable(tmp_path, fake_jira):
     import httpx
-    from fastapi.testclient import TestClient
 
     from app.config import Settings
     from app.main import create_app
+    from tests.conftest import signed_in
 
     db = str(tmp_path / "app.db")
     transport = httpx.MockTransport(fake_jira)
-    first = TestClient(create_app(Settings(db_path=db, drawhl_secret_key="one"), transport))
+    first = signed_in(create_app(Settings(db_path=db, drawhl_secret_key="one"), transport))
     connect(first)
-    second = TestClient(create_app(Settings(db_path=db, drawhl_secret_key="two"), transport))
+    second = signed_in(create_app(Settings(db_path=db, drawhl_secret_key="two"), transport))
     assert second.get("/api/settings").json()["jira"]["token_state"] == "unreadable"
     response = second.post("/api/tasks/resolve", json={"ref": "DEV-1"})
     assert response.json()["error"]["code"] == "jira_not_configured"
@@ -105,11 +105,11 @@ def test_pasted_token_with_newline_works(jira_client):
 
 def test_empty_secret_key_is_not_configured(fake_jira):
     import httpx
-    from fastapi.testclient import TestClient
 
     from app.config import Settings
     from app.main import create_app
+    from tests.conftest import signed_in
 
     settings = Settings(db_path=":memory:", drawhl_secret_key="")
     app = create_app(settings, jira_transport=httpx.MockTransport(fake_jira))
-    assert TestClient(app).get("/api/settings").json()["secret_key_configured"] is False
+    assert signed_in(app).get("/api/settings").json()["secret_key_configured"] is False

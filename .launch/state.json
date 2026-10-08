@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/006-first-run",
+  "feature": "specs/007-instance-password",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -36,7 +36,8 @@
     "scrollbars",
     "paste-text",
     "docs-site",
-    "docs-starlight"
+    "docs-starlight",
+    "instance-password"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -84,7 +85,10 @@
     "G3_welcome-board": "approved",
     "G3_sticky-fit": "approved",
     "G3_scrollbars": "approved",
-    "G3_paste-text": "approved"
+    "G3_paste-text": "approved",
+    "G1_teams": "approved",
+    "G2_instance-password": "approved",
+    "G3_instance-password": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -98,6 +102,8 @@
     "2026-10-07 legal: CLA Assistant (cla-assistant.io) linked to the repo with the CLA gist, allowlist Smacktur and *[bot]; the PR template checkbox removed, signing goes through the bot only.",
     "2026-10-07 G1 first-run: owner approved a 5-step launch plan (first-run polish, one-click deploy with an instance password, public web demo, Jira Cloud then GitHub Issues, launch kit) and moved the instance password and Jira Cloud out of Won't. Spec 006 covers step 1: welcome board, sticky fit, scrollbars, paste text.",
     "2026-10-07 G2 first-run: owner approved spec 006; sticky text shrinks with no floor and stops at 2000 characters like Miro, paste turns task links into cards (draft idea 13, Jira first).",
-    "2026-10-08 first-run: spec 006 done; T013 QA and design review of a fresh install passed US1-US4 in both themes, one fix (Redo shortcut label), release images pull anonymously and start in about 20 s."
+    "2026-10-08 first-run: spec 006 done; T013 QA and design review of a fresh install passed US1-US4 in both themes, one fix (Redo shortcut label), release images pull anonymously and start in about 20 s.",
+    "2026-10-08 G1 teams: owner moved team mode out of Won't (accounts and roles, sharing, real-time, then OIDC SSO and Postgres; monolith stays) to win companies that want Miro inside their network. Order: instance password now (step 0, DRAWHL_PASSWORD becomes the first admin's password), then accounts and roles. Open core: everything AGPL except SSO, audit and SCIM, which go to an enterprise license. Spec 007 awaits G2.",
+    "2026-10-08 G2 instance-password: owner approved spec 007 with the password always on: generated into data/password and logged once when ENV has none; changing it signs out every browser."
   ]
 }

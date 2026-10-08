@@ -70,3 +70,15 @@ class JiraUnavailable(DependencyUnavailable):
 
 class JiraUnreachable(JiraUnavailable):
     """No answer at all (network, VPN, timeout): nothing reached Jira, so no backoff."""
+
+
+class InvalidPassword(DomainError):
+    code = "invalid_password"
+
+
+class TooManyAttempts(DomainError):
+    code = "too_many_attempts"
+
+    def __init__(self, message: str, retry_after: int) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after

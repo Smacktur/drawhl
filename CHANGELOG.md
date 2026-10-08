@@ -6,7 +6,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Password sign-in: every instance asks for a password before it shows boards or answers the API. Set it with `DRAWHL_PASSWORD`, or leave it empty and drawhl generates one on first start, prints it to the API log and saves it to `data/password`. The Railway template generates it too. A sign-in lasts 30 days; "Sign out" is in Settings. `/metrics` now needs a sign-in as well.
 - Deploy on Railway: a one-click template in the README and the quick start guide runs the released images with boards on a volume and a generated encryption key.
+
+### Fixed
+
+- A tab left open across an upgrade no longer goes blank when it opens a board: it reloads once to get the new version.
 
 ## [2026.10.8] - 2026-10-08
 

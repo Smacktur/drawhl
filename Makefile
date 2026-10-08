@@ -70,7 +70,7 @@ stage-validate:  ## validate render.yaml against Render (needs render CLI + REND
 stage-env:  ## push stage secrets (sync: false in render.yaml) from .env to Render, redeploy changed
 	python3 scripts/stage-env.py --deploy
 
-stage-smoke:  ## wake the free-tier API and run smoke against stage
+stage-smoke:  ## wake the free-tier API and run smoke against stage (needs SMOKE_PASSWORD)
 	curl -fsS --retry 12 --retry-delay 10 --retry-all-errors $(STAGE_API_URL)/health >/dev/null
 	SMOKE_API_URL=$(STAGE_API_URL) SMOKE_WEB_URL=$(STAGE_WEB_URL) python3 scripts/smoke.py
 

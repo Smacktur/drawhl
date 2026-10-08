@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Settings as SettingsIcon } from 'lucide-react'
+import { LogOut, Settings as SettingsIcon } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { signOut } from '@/api/auth'
 import { getSettings, saveSettings, testJira, type Settings } from '@/api/settings'
 import { readPasteAs, writePasteAs, type PasteAs } from '@/canvas/paste'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -191,6 +192,24 @@ function PasteSetting() {
   )
 }
 
+// A reload drops every cached board and task along with the session.
+function SignOut() {
+  const logout = useMutation({ mutationFn: signOut, onSuccess: () => window.location.reload() })
+  return (
+    <div className="mt-auto px-4 pb-4">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => logout.mutate()}
+        disabled={logout.isPending}
+      >
+        <LogOut strokeWidth={1.75} />
+        Sign out
+      </Button>
+    </div>
+  )
+}
+
 // Without `open` it renders its own button; with it the caller opens it (e.g. from a menu).
 export function SettingsSheet({
   open,
@@ -222,6 +241,7 @@ export function SettingsSheet({
         )}
         {settings.isSuccess && <SettingsForm settings={settings.data} />}
         <PasteSetting />
+        <SignOut />
       </SheetContent>
     </Sheet>
   )

@@ -1,6 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
+import { getAuthStatus } from '@/api/auth'
 import { listBoards } from '@/api/boards'
+import { AUTH_REQUIRED_EVENT } from '@/api/client'
+import { SignIn } from '@/auth/SignIn'
 import { NewBoardForm } from '@/board/NewBoardForm'
 import { AboutButton } from '@/board/AboutButton'
 import { FocusCapsule } from '@/focus/FocusCapsule'
@@ -9,8 +12,33 @@ import { TopBar } from '@/board/TopBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 
+const RELOADED = 'drawhl.reloadedForChunk'
+
+// A tab opened before an upgrade asks for a chunk the server no longer has; reload once to get the new build.
+function reloadOnce(error: unknown): Promise<never> {
+  try {
+    if (!sessionStorage.getItem(RELOADED)) {
+      sessionStorage.setItem(RELOADED, '1')
+      window.location.reload()
+      return new Promise(() => {})
+    }
+  } catch {
+    // Storage blocked: fall through and show the error instead of looping.
+  }
+  throw error
+}
+
 // xyflow needs the DOM, so the canvas is loaded only in the browser, never in prerender.
-const Canvas = lazy(() => import('@/canvas/Canvas'))
+const Canvas = lazy(() =>
+  import('@/canvas/Canvas').then((module) => {
+    try {
+      sessionStorage.removeItem(RELOADED)
+    } catch {
+      // Storage blocked: nothing to clear.
+    }
+    return module
+  }, reloadOnce),
+)
 
 const LAST_BOARD = 'drawhl.lastBoard'
 
@@ -40,7 +68,14 @@ export default function App() {
     typeof window === 'undefined' ? null : readBoardId(),
   )
   const focusVisible = useFocusVisible()
-  const boards = useQuery({ queryKey: ['boards'], queryFn: listBoards, enabled: mounted })
+  const queryClient = useQueryClient()
+  const auth = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus, enabled: mounted })
+  const signedIn = auth.data?.signed_in === true
+  const boards = useQuery({
+    queryKey: ['boards'],
+    queryFn: listBoards,
+    enabled: mounted && signedIn,
+  })
 
   const known = boards.data?.find((board) => board.id === boardId)
   const current = known ?? boards.data?.[0]
@@ -49,13 +84,39 @@ export default function App() {
     if (current) rememberBoard(current.id)
   }, [current])
 
+  useEffect(() => {
+    const signedOut = () => queryClient.setQueryData(['auth'], { signed_in: false })
+    window.addEventListener(AUTH_REQUIRED_EVENT, signedOut)
+    return () => window.removeEventListener(AUTH_REQUIRED_EVENT, signedOut)
+  }, [queryClient])
+
+  if (auth.data?.signed_in === false) {
+    return (
+      <main className="bg-background relative h-dvh w-full overflow-hidden">
+        <h1 className="sr-only">drawhl</h1>
+        <SignIn
+          onSignedIn={() => {
+            queryClient.setQueryData(['auth'], { signed_in: true })
+            void queryClient.invalidateQueries({
+              predicate: (query) => query.queryKey[0] !== 'auth',
+            })
+          }}
+        />
+      </main>
+    )
+  }
+
+  const error = auth.error ?? boards.error
+
   return (
     <main className="bg-background relative h-dvh w-full overflow-hidden">
       <h1 className="sr-only">drawhl</h1>
-      {(!mounted || boards.isPending) && <Skeleton className="absolute inset-0 rounded-none" />}
-      {boards.isError && (
+      {(!mounted || auth.isPending || (signedIn && boards.isPending)) && (
+        <Skeleton className="absolute inset-0 rounded-none" />
+      )}
+      {error && (
         <Alert variant="destructive" className="absolute top-20 left-1/2 w-96 -translate-x-1/2">
-          <AlertDescription>{boards.error.message}</AlertDescription>
+          <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       )}
       {boards.data?.length === 0 && (
@@ -71,7 +132,7 @@ export default function App() {
       )}
       {boards.data && <TopBar boards={boards.data} current={current} onSelect={setBoardId} />}
       {focusVisible && <FocusCapsule />}
-      <AboutButton />
+      {signedIn && <AboutButton />}
     </main>
   )
 }
