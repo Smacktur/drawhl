@@ -13,7 +13,7 @@
 This spec covers step 1. The others get their own specs; nothing here builds them, but the data model must not block them.
 
 1. **Accounts and roles** (this spec): people, sessions, a settings window, invites, board sharing, a tracker token per person.
-2. **Real-time** (spec 009): several people on one board at once with cursors and presence, on a CRDT (`yjs` in the browser, `pycrdt` and `pycrdt-websocket` on the server, both MIT). Until then two editors are kept apart by the existing `version_conflict` check.
+2. **Real-time** ([spec 009](../009-realtime/spec.md)): several people on one board at once with cursors and presence, on a CRDT (`yjs` in the browser, `pycrdt` and `pycrdt-websocket` on the server, both MIT). Until then two editors are kept apart by the existing `version_conflict` check.
 3. **OIDC SSO** (Keycloak, ADFS, Entra ID) through Authlib. Enterprise license, not AGPL.
 4. **Several trackers at once**: each person connects their own accounts (Jira, Jira Cloud, GitHub) and a card remembers its tracker, for companies where teams use different trackers. Until then one tracker serves the whole instance.
 5. **Postgres** as a second storage adapter next to SQLite, a Helm chart, backups. Several API replicas need Redis pub/sub for real-time fan-out.

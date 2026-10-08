@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/008-accounts",
+  "feature": "specs/009-realtime",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -125,6 +125,7 @@
     "2026-10-08 G2 accounts: owner approved spec 008 as written, including admins acting as owner on every board; no release between slices 37 and 39, so no member sees snapshots made with the admin's token.",
     "2026-10-08 accounts: slice 36 merged (PR 42). Owner asked for a settings window in spec 008; added as US5 and slice 37 feat/settings (a Dialog with sections, Figma and Notion style), later slices renumbered 38-40; awaits G2.",
     "2026-10-08 G2 settings: owner approved slice 37 settings window and a reset_password command in slice 38 for a locked-out only admin.",
-    "2026-10-09 accounts: spec 008 done in slices 36-41 (accounts, settings window, people, sharing, a tracker token per person, the tracker from the environment). Owner approved and asked to release team mode. Several trackers at once is a later spec."
+    "2026-10-09 accounts: spec 008 done in slices 36-41 (accounts, settings window, people, sharing, a tracker token per person, the tracker from the environment). Owner approved and asked to release team mode. Several trackers at once is a later spec.",
+    "2026-10-09 v2026.10.10 released with team mode (spec 008). Spec 009 real-time drafted as a skeleton with the decisions and constraints from the spec 008 session; next session fills requirements and tasks, then G2."
   ]
 }
