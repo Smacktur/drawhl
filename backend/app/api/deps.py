@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from app.domain.accounts import Accounts, Person
 from app.domain.errors import Forbidden
 from app.domain.invites import Invites
+from app.domain.members import BoardRole, Members
 from app.domain.ports import BoardRepo, DemoTasks, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
@@ -57,6 +58,19 @@ def current_admin(request: Request) -> Person:
     return person
 
 
+def members(request: Request) -> Members:
+    return request.app.state.members
+
+
+def board_role(needed: BoardRole):
+    """Dependency for a board route: the person's role on `board_id`, at least `needed`."""
+
+    def check(board_id: str, request: Request) -> BoardRole:
+        return members(request).require(current_person(request), board_id, needed)
+
+    return Depends(check)
+
+
 def invites(request: Request) -> Invites:
     return request.app.state.invites
 
@@ -66,3 +80,7 @@ AccountsDep = Annotated[Accounts, Depends(accounts)]
 SessionsDep = Annotated[Sessions, Depends(sessions)]
 CurrentAdmin = Annotated[Person, Depends(current_admin)]
 InvitesDep = Annotated[Invites, Depends(invites)]
+MembersDep = Annotated[Members, Depends(members)]
+CanView = Annotated[BoardRole, board_role("viewer")]
+CanEdit = Annotated[BoardRole, board_role("editor")]
+IsOwner = Annotated[BoardRole, board_role("owner")]

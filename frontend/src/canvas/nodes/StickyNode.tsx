@@ -6,6 +6,7 @@ import { EditableText } from '@/canvas/nodes/EditableText'
 import { Handles } from '@/canvas/nodes/Handles'
 import { STICKY_COLORS, type StickyNode as StickyNodeType } from '@/canvas/types'
 import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/canvas/readonly'
 
 const TEXT = 'sticky-text'
 
@@ -17,6 +18,7 @@ function StickyNodeView({
   width,
   height,
 }: NodeProps<StickyNodeType>) {
+  const readOnly = useReadOnly()
   const { updateNodeData } = useReactFlow()
   const box = useRef<HTMLDivElement>(null)
   const [fontSize, setFontSize] = useState(STICKY_FONT)
@@ -65,10 +67,10 @@ function StickyNodeView({
         if (field instanceof HTMLTextAreaElement && wouldExceed(field, added)) block()
       }}
     >
-      <NodeResizer isVisible={selected} minWidth={80} minHeight={60} />
+      <NodeResizer isVisible={selected && !readOnly} minWidth={80} minHeight={60} />
       <NodeToolbar
         // Hidden while dragging: it covers the guides and the elements next to it.
-        isVisible={dragging ? false : undefined}
+        isVisible={readOnly || dragging ? false : undefined}
         position={Position.Top}
         className="flex gap-1 rounded-md border bg-card p-1 shadow-md"
       >

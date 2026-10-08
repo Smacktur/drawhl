@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { getBoard, type Board } from '@/api/boards'
+import { canEdit, getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -55,6 +55,7 @@ import { useHistory } from '@/canvas/useHistory'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { STICKY_MAX_CHARS } from '@/canvas/fit'
+import { ReadOnlyContext } from '@/canvas/readonly'
 import { CLIPBOARD_MARKER, classifyPaste, isEditable, readPasteAs } from '@/canvas/paste'
 import { resolveAll } from '@/canvas/refs'
 import { ModuleHostContext } from '@/modules/host-context'
@@ -105,9 +106,19 @@ const NEW_NODES = {
   text: { width: 240, height: undefined, data: { text: '' } },
 } as const
 
-function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => void }) {
+function BoardCanvas({
+  board,
+  onConflict,
+  readOnly,
+  onForbidden,
+}: {
+  board: Board
+  onConflict: () => void
+  readOnly: boolean
+  onForbidden: () => void
+}) {
   const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange, setViewport, saveError } =
-    useBoardDoc(board, onConflict)
+    useBoardDoc(board, onConflict, readOnly, onForbidden)
   const [added, setAdded] = useState<Record<string, Task>>({})
   const [tool, setTool] = useState<Tool>('select')
   const [connecting, setConnecting] = useState(false)
@@ -149,8 +160,8 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
   }, [nodes, edges, flashId, hits])
   const history = useHistory(nodes, edges, setNodes, setEdges)
   const guides = useGuides(onNodesChange)
-  useShortcut('undo', history.undo)
-  useShortcut('redo', history.redo)
+  useShortcut('undo', history.undo, { enabled: !readOnly })
+  useShortcut('redo', history.redo, { enabled: !readOnly })
 
   // One card goes to the point or cascades from the viewport center; several form a grid there.
   const addCards = useCallback(
@@ -241,7 +252,7 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
         event.clipboardData?.setData(CLIPBOARD_MARKER, setClipboard(snippet))
       },
       paste: (event) => {
-        if (isEditable(event.target) || !event.clipboardData) return
+        if (readOnly || isEditable(event.target) || !event.clipboardData) return
         const paste = classifyPaste(event.clipboardData, clipboardId())
         if (!paste) return
         event.preventDefault()
@@ -273,10 +284,14 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
       document.removeEventListener('paste', paste)
     }
   }, [])
-  useShortcut('duplicate', () => {
-    const snippet = copySelection(nodes, edges, tasks)
-    if (snippet) insert(snippet, { x: DUPLICATE_OFFSET, y: DUPLICATE_OFFSET })
-  })
+  useShortcut(
+    'duplicate',
+    () => {
+      const snippet = copySelection(nodes, edges, tasks)
+      if (snippet) insert(snippet, { x: DUPLICATE_OFFSET, y: DUPLICATE_OFFSET })
+    },
+    { enabled: !readOnly },
+  )
   useShortcut('selectAll', () => {
     setNodes((current) => current.map((n) => ({ ...n, selected: true })))
     setEdges((current) => current.map((e) => ({ ...e, selected: true })))
@@ -524,133 +539,150 @@ function BoardCanvas({ board, onConflict }: { board: Board; onConflict: () => vo
     [setNodes, getNodes, getEdges],
   )
 
+  const surface = (
+    <div
+      className="absolute inset-0"
+      onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
+      onPointerLeave={() => (pointer.current = null)}
+      onPointerDownCapture={draw.onPointerDownCapture}
+    >
+      <ReactFlow
+        nodes={shown.nodes}
+        edges={shown.edges}
+        onNodesChange={guides.onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onConnectStart={(event) => {
+          setConnecting(true)
+          const { clientX, clientY } = 'touches' in event ? event.touches[0] : event
+          connectFrom.current = { x: clientX, y: clientY }
+        }}
+        onConnectEnd={onConnectEnd}
+        onNodeDragStop={(_, __, dragged) => dropNodes(dragged.map((n) => n.id))}
+        onBeforeDelete={onBeforeDelete}
+        onPaneClick={place}
+        onPaneContextMenu={(event) =>
+          !readOnly &&
+          setMenuTarget({ kind: 'pane', point: { x: event.clientX, y: event.clientY } })
+        }
+        onNodeContextMenu={(_, node) => {
+          if (readOnly) return
+          if (!node.selected) selectOnly(node.id, 'node')
+          setMenuTarget({ kind: 'selection' })
+        }}
+        onEdgeContextMenu={(_, edge) => {
+          if (readOnly) return
+          if (!edge.selected) selectOnly(edge.id, 'edge')
+          setMenuTarget({ kind: 'selection' })
+        }}
+        onSelectionContextMenu={() => !readOnly && setMenuTarget({ kind: 'selection' })}
+        onNodeClick={(event) => place(event)}
+        onMoveEnd={(_, viewport) => setViewport(viewport)}
+        nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        connectionMode={ConnectionMode.Loose}
+        defaultViewport={board.doc.viewport}
+        // A board nobody has saved yet, like the welcome board, opens showing all of it.
+        fitView={board.version === 1}
+        fitViewOptions={FIT_NEW_BOARD}
+        onlyRenderVisibleElements
+        colorMode={theme}
+        proOptions={{ hideAttribution: true }}
+        minZoom={0.1}
+        deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
+        multiSelectionKeyCode="Shift"
+        selectionOnDrag={tool === 'select'}
+        panOnDrag={tool === 'hand' ? true : [1]}
+        panOnScroll
+        elementsSelectable={!placing}
+        nodesDraggable={!placing && !readOnly}
+        nodesConnectable={!readOnly}
+        edgesReconnectable={!readOnly}
+        className={[
+          connecting && 'connecting',
+          hits && 'searching',
+          placing && 'cursor-crosshair',
+          tool === 'hand' && 'cursor-grab',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
+        <Controls showInteractive={false} position="bottom-right" />
+        <Guides guides={guides.guides} />
+      </ReactFlow>
+      {draw.preview && (
+        <div
+          className="border-primary bg-primary/5 pointer-events-none fixed rounded-sm border border-dashed"
+          style={{
+            left: draw.preview.x,
+            top: draw.preview.y,
+            width: draw.preview.width,
+            height: draw.preview.height,
+          }}
+        />
+      )}
+    </div>
+  )
+
   return (
     <TasksContext.Provider value={tasks}>
-      <ModuleHostContext.Provider value={moduleHost}>
-        <CanvasContextMenu
-          target={menuTarget}
-          onPlace={placeAt}
-          onAddCards={addCards}
-          onAddModule={addModule}
-          onDelete={deleteSelection}
-          cards={cardCounts}
-          onCollapse={setCollapsed}
-          onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
-        >
-          <div
-            className="absolute inset-0"
-            onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
-            onPointerLeave={() => (pointer.current = null)}
-            onPointerDownCapture={draw.onPointerDownCapture}
-          >
-            <ReactFlow
-              nodes={shown.nodes}
-              edges={shown.edges}
-              onNodesChange={guides.onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onConnectStart={(event) => {
-                setConnecting(true)
-                const { clientX, clientY } = 'touches' in event ? event.touches[0] : event
-                connectFrom.current = { x: clientX, y: clientY }
-              }}
-              onConnectEnd={onConnectEnd}
-              onNodeDragStop={(_, __, dragged) => dropNodes(dragged.map((n) => n.id))}
-              onBeforeDelete={onBeforeDelete}
-              onPaneClick={place}
-              onPaneContextMenu={(event) =>
-                setMenuTarget({ kind: 'pane', point: { x: event.clientX, y: event.clientY } })
-              }
-              onNodeContextMenu={(_, node) => {
-                if (!node.selected) selectOnly(node.id, 'node')
-                setMenuTarget({ kind: 'selection' })
-              }}
-              onEdgeContextMenu={(_, edge) => {
-                if (!edge.selected) selectOnly(edge.id, 'edge')
-                setMenuTarget({ kind: 'selection' })
-              }}
-              onSelectionContextMenu={() => setMenuTarget({ kind: 'selection' })}
-              onNodeClick={(event) => place(event)}
-              onMoveEnd={(_, viewport) => setViewport(viewport)}
-              nodeTypes={nodeTypes}
-              defaultEdgeOptions={defaultEdgeOptions}
-              connectionMode={ConnectionMode.Loose}
-              defaultViewport={board.doc.viewport}
-              // A board nobody has saved yet, like the welcome board, opens showing all of it.
-              fitView={board.version === 1}
-              fitViewOptions={FIT_NEW_BOARD}
-              onlyRenderVisibleElements
-              colorMode={theme}
-              proOptions={{ hideAttribution: true }}
-              minZoom={0.1}
-              deleteKeyCode={['Backspace', 'Delete']}
-              multiSelectionKeyCode="Shift"
-              selectionOnDrag={tool === 'select'}
-              panOnDrag={tool === 'hand' ? true : [1]}
-              panOnScroll
-              elementsSelectable={!placing}
-              nodesDraggable={!placing}
-              className={[
-                connecting && 'connecting',
-                hits && 'searching',
-                placing && 'cursor-crosshair',
-                tool === 'hand' && 'cursor-grab',
-              ]
-                .filter(Boolean)
-                .join(' ')}
+      <ReadOnlyContext.Provider value={readOnly}>
+        <ModuleHostContext.Provider value={moduleHost}>
+          {readOnly ? (
+            surface
+          ) : (
+            <CanvasContextMenu
+              target={menuTarget}
+              onPlace={placeAt}
+              onAddCards={addCards}
+              onAddModule={addModule}
+              onDelete={deleteSelection}
+              cards={cardCounts}
+              onCollapse={setCollapsed}
+              onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
             >
-              <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
-              <Controls showInteractive={false} position="bottom-right" />
-              <Guides guides={guides.guides} />
-            </ReactFlow>
-            {draw.preview && (
-              <div
-                className="border-primary bg-primary/5 pointer-events-none fixed rounded-sm border border-dashed"
-                style={{
-                  left: draw.preview.x,
-                  top: draw.preview.y,
-                  width: draw.preview.width,
-                  height: draw.preview.height,
-                }}
-              />
-            )}
-          </div>
-        </CanvasContextMenu>
-      </ModuleHostContext.Provider>
-      <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
-        <RefreshIndicator
-          sources={refresh.data?.sources ?? []}
-          serverError={refresh.error}
-          syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
-          refreshing={refresh.isFetching}
-          onRefresh={() => void refresh.refetch()}
+              {surface}
+            </CanvasContextMenu>
+          )}
+        </ModuleHostContext.Provider>
+        <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
+          <RefreshIndicator
+            sources={refresh.data?.sources ?? []}
+            serverError={refresh.error}
+            syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
+            refreshing={refresh.isFetching}
+            onRefresh={() => void refresh.refetch()}
+          />
+        </BoardTimers>
+        <BoardSearch
+          boardId={board.id}
+          nodes={nodes}
+          tasks={tasks}
+          onJump={jumpTo}
+          onSelect={selectNodes}
         />
-      </BoardTimers>
-      <BoardSearch
-        boardId={board.id}
-        nodes={nodes}
-        tasks={tasks}
-        onJump={jumpTo}
-        onSelect={selectNodes}
-      />
-      {pasteError && (
-        <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
-          <AlertDescription className="whitespace-pre-line">
-            {`Not added:\n${pasteError}`}
-          </AlertDescription>
-        </Alert>
-      )}
-      {saveError && (
-        <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
-          <AlertDescription>Not saved: {saveError}</AlertDescription>
-        </Alert>
-      )}
-      <Toolbar
-        tool={tool}
-        onTool={setTool}
-        onAddCards={addCards}
-        onAddModule={(kind) => addModule(kind, viewportCenter())}
-      />
+        {pasteError && (
+          <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
+            <AlertDescription className="whitespace-pre-line">
+              {`Not added:\n${pasteError}`}
+            </AlertDescription>
+          </Alert>
+        )}
+        {saveError && (
+          <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
+            <AlertDescription>Not saved: {saveError}</AlertDescription>
+          </Alert>
+        )}
+        {!readOnly && (
+          <Toolbar
+            tool={tool}
+            onTool={setTool}
+            onAddCards={addCards}
+            onAddModule={(kind) => addModule(kind, viewportCenter())}
+          />
+        )}
+      </ReadOnlyContext.Provider>
     </TasksContext.Provider>
   )
 }
@@ -669,6 +701,12 @@ export default function Canvas({ boardId }: { boardId: string }) {
     setConflict(true)
     void queryClient.invalidateQueries({ queryKey: ['board', boardId] })
   }, [queryClient, boardId])
+  // The owner took edit rights away while the board was open.
+  const [revoked, setRevoked] = useState(false)
+  const onForbidden = useCallback(() => {
+    setRevoked(true)
+    void queryClient.invalidateQueries({ queryKey: ['boards'] })
+  }, [queryClient])
 
   if (board.isPending) return <Skeleton className="absolute inset-0" />
   if (board.isError) {
@@ -690,10 +728,19 @@ export default function Canvas({ boardId }: { boardId: string }) {
           </Button>
         </Alert>
       )}
+      {revoked && (
+        <Alert className="absolute top-4 left-1/2 z-10 w-96 -translate-x-1/2">
+          <AlertDescription>
+            You can only view this board now. Your last change was not saved.
+          </AlertDescription>
+        </Alert>
+      )}
       <BoardCanvas
         key={`${board.data.id}:${board.data.version}`}
         board={board.data}
         onConflict={onConflict}
+        readOnly={revoked || !canEdit(board.data.my_role)}
+        onForbidden={onForbidden}
       />
     </ReactFlowProvider>
   )

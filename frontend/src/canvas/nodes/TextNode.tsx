@@ -4,8 +4,10 @@ import { EditableText } from '@/canvas/nodes/EditableText'
 import { Handles } from '@/canvas/nodes/Handles'
 import type { TextNode as TextNodeType } from '@/canvas/types'
 import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/canvas/readonly'
 
 function TextNodeView({ id, data, selected }: NodeProps<TextNodeType>) {
+  const readOnly = useReadOnly()
   return (
     <div
       className={cn(
@@ -13,7 +15,7 @@ function TextNodeView({ id, data, selected }: NodeProps<TextNodeType>) {
         selected && 'outline-primary outline-1',
       )}
     >
-      <NodeResizer isVisible={selected} minWidth={40} minHeight={24} />
+      <NodeResizer isVisible={selected && !readOnly} minWidth={40} minHeight={24} />
       <EditableText
         nodeId={id}
         value={data.text}

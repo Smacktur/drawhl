@@ -8,6 +8,8 @@ const board: Board = {
   id: 'b1',
   name: 'Q4',
   updated_at: '2026-10-05T00:00:00+00:00',
+  my_role: 'owner',
+  owner: { id: 'u1', name: 'Admin' },
   version: 1,
   doc: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
   tasks: {},
@@ -106,4 +108,24 @@ test('unmount sends the pending edit', async () => {
   unmount()
   await act(() => vi.advanceTimersByTimeAsync(0))
   expect(fetchMock).toHaveBeenCalledOnce()
+})
+
+test('a read-only board never saves', async () => {
+  const { result } = renderHook(() => useBoardDoc(board, vi.fn(), true))
+  act(() => result.current.setNodes([card('a')]))
+  await act(() => vi.advanceTimersByTimeAsync(2000))
+  expect(fetchMock).not.toHaveBeenCalled()
+})
+
+test('a 403 on save turns the board read-only instead of retrying', async () => {
+  fetchMock.mockResolvedValue(
+    respond(403, { error: { code: 'forbidden', message: 'You can only view this board.' } }),
+  )
+  const onForbidden = vi.fn()
+  const { result } = renderHook(() => useBoardDoc(board, vi.fn(), false, onForbidden))
+  act(() => result.current.setNodes([card('a')]))
+  await act(() => vi.advanceTimersByTimeAsync(5000))
+  expect(onForbidden).toHaveBeenCalledOnce()
+  expect(fetchMock).toHaveBeenCalledOnce()
+  expect(result.current.saveError).toBeNull()
 })

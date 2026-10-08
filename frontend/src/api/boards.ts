@@ -2,9 +2,23 @@ import { z } from 'zod'
 import { fetchJson } from '@/api/client'
 import { taskSchema } from '@/api/tasks'
 
-const summarySchema = z.object({ id: z.string(), name: z.string(), updated_at: z.string() })
+export const boardRoleSchema = z.enum(['owner', 'editor', 'viewer'])
+export type BoardRole = z.infer<typeof boardRoleSchema>
+const shareRoleSchema = z.enum(['editor', 'viewer'])
+export type ShareRole = z.infer<typeof shareRoleSchema>
+
+const summarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  updated_at: z.string(),
+  my_role: boardRoleSchema,
+  owner: z.object({ id: z.string(), name: z.string() }).nullable(),
+})
 
 export type BoardSummary = z.infer<typeof summarySchema>
+
+/** Whether the role lets the person change the board's content and name. */
+export const canEdit = (role: BoardRole) => role !== 'viewer'
 
 const xy = z.object({ x: z.number(), y: z.number() })
 
@@ -44,10 +58,58 @@ const boardSchema = summarySchema.extend({
 
 export type Board = z.infer<typeof boardSchema>
 
+const listSchema = z.object({ boards: z.array(summarySchema), all: z.array(summarySchema) })
+export type BoardList = z.infer<typeof listSchema>
+
+/** The person's boards, and for admins every other board in `all`. */
 export function listBoards() {
-  return fetchJson('/api/boards', z.object({ boards: z.array(summarySchema) })).then(
-    (body) => body.boards,
+  return fetchJson('/api/boards', listSchema)
+}
+
+const memberSchema = z.object({
+  user: z.object({ id: z.string(), username: z.string(), name: z.string() }),
+  role: boardRoleSchema,
+})
+export type Member = z.infer<typeof memberSchema>
+
+export function listMembers(boardId: string) {
+  return fetchJson(
+    `/api/boards/${boardId}/members`,
+    z.object({ members: z.array(memberSchema), everyone_role: shareRoleSchema.nullable() }),
   )
+}
+
+export function shareBoard(boardId: string, userId: string, role: ShareRole) {
+  return fetchJson(`/api/boards/${boardId}/members/${userId}`, memberSchema, {
+    method: 'PUT',
+    body: JSON.stringify({ role }),
+  })
+}
+
+export function unshareBoard(boardId: string, userId: string) {
+  return fetchJson(`/api/boards/${boardId}/members/${userId}`, z.null(), { method: 'DELETE' })
+}
+
+export function shareWithEveryone(boardId: string, role: ShareRole | null) {
+  return fetchJson(`/api/boards/${boardId}/everyone`, z.null(), {
+    method: 'PUT',
+    body: JSON.stringify({ role }),
+  })
+}
+
+export function transferBoard(boardId: string, userId: string) {
+  return fetchJson(`/api/boards/${boardId}/transfer`, z.null(), {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId }),
+  })
+}
+
+const directorySchema = z.object({
+  people: z.array(z.object({ id: z.string(), username: z.string(), name: z.string() })),
+})
+
+export function findPeople(query: string) {
+  return fetchJson(`/api/people/directory?q=${encodeURIComponent(query)}`, directorySchema)
 }
 
 export function createBoard(name: string) {

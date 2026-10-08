@@ -5,9 +5,10 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from app.domain.accounts import Person, PersonRecord, Role
-from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
+from app.domain.boards import BoardDoc, BoardRecord, BoardRow
 from app.domain.errors import NotFound, UsernameTaken, VersionConflict
 from app.domain.invites import Invite
+from app.domain.members import BoardRole, Member, MemberUser, ShareRole
 from app.domain.tasks import Task, now_iso
 
 # File names start with the schema version they produce: 001_init.sql → user_version 1.
@@ -15,9 +16,6 @@ MIGRATIONS = sorted(
     (int(path.name.split("_", 1)[0]), path)
     for path in (Path(__file__).parent / "migrations").glob("*.sql")
 )
-
-# Set by the first board ever created, so deleting every board does not bring the welcome back.
-_SEEDED = "welcome_seeded"
 
 
 class Database:
@@ -66,33 +64,55 @@ class SqliteBoardRepo:
     def __init__(self, db: Database) -> None:
         self._db = db
 
-    def list(self) -> list[BoardSummary]:
+    def listing(self, user_id: str, board_id: str | None = None) -> list[BoardRow]:
+        where = "WHERE b.id = ?" if board_id else ""
+        params = (user_id, board_id) if board_id else (user_id,)
         with self._db.transaction() as conn:
             rows = conn.execute(
-                "SELECT id, name, updated_at FROM boards ORDER BY updated_at DESC"
+                "SELECT b.id, b.name, b.updated_at, b.everyone_role, m.role AS member_role,"
+                " o.user_id AS owner_id, u.name AS owner_name FROM boards b"
+                " LEFT JOIN board_members m ON m.board_id = b.id AND m.user_id = ?"
+                " LEFT JOIN board_members o ON o.board_id = b.id AND o.role = 'owner'"
+                f" LEFT JOIN users u ON u.id = o.user_id {where} ORDER BY b.updated_at DESC",
+                params,
             ).fetchall()
-        return [BoardSummary(**dict(row)) for row in rows]
+        return [BoardRow(**dict(row)) for row in rows]
 
-    def create(self, name: str, doc: BoardDoc) -> BoardSummary:
+    def create(self, name: str, doc: BoardDoc, owner_id: str) -> str:
         with self._db.transaction() as conn:
-            return self._insert(conn, name, doc)
+            return self._insert(conn, name, doc, owner_id)
 
-    def create_first(self, name: str, doc: BoardDoc) -> BoardSummary | None:
+    def create_welcome(self, user_id: str, name: str, doc: BoardDoc) -> str | None:
         with self._db.transaction() as conn:
-            if conn.execute("SELECT 1 FROM settings WHERE key = ?", (_SEEDED,)).fetchone():
+            claimed = conn.execute(
+                "UPDATE users SET welcomed_at = ? WHERE id = ? AND welcomed_at IS NULL",
+                (now_iso(), user_id),
+            )
+            if claimed.rowcount == 0:
                 return None
-            return self._insert(conn, name, doc)
+            owns = conn.execute(
+                "SELECT 1 FROM board_members WHERE user_id = ? AND role = 'owner'", (user_id,)
+            ).fetchone()
+            return None if owns else self._insert(conn, name, doc, user_id)
 
     @staticmethod
-    def _insert(conn: sqlite3.Connection, name: str, doc: BoardDoc) -> BoardSummary:
+    def _insert(conn: sqlite3.Connection, name: str, doc: BoardDoc, owner_id: str) -> str:
         board_id, now = uuid.uuid4().hex, now_iso()
-        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, '1')", (_SEEDED,))
         conn.execute(
             "INSERT INTO boards (id, name, doc, version, created_at, updated_at)"
             " VALUES (?, ?, ?, 1, ?, ?)",
             (board_id, name, doc.model_dump_json(exclude_none=True), now, now),
         )
-        return BoardSummary(id=board_id, name=name, updated_at=now)
+        conn.execute(
+            "INSERT INTO board_members (board_id, user_id, role) VALUES (?, ?, 'owner')",
+            (board_id, owner_id),
+        )
+        # Someone who made a board of their own needs no welcome board later.
+        conn.execute(
+            "UPDATE users SET welcomed_at = ? WHERE id = ? AND welcomed_at IS NULL",
+            (now, owner_id),
+        )
+        return board_id
 
     def get(self, board_id: str) -> BoardRecord | None:
         with self._db.transaction() as conn:
@@ -123,18 +143,19 @@ class SqliteBoardRepo:
                 raise VersionConflict("board was changed elsewhere; reload it")
         return version + 1
 
-    def rename(self, board_id: str, name: str) -> BoardSummary:
-        now = now_iso()
+    def rename(self, board_id: str, name: str) -> None:
         with self._db.transaction() as conn:
             cursor = conn.execute(
-                "UPDATE boards SET name = ?, updated_at = ? WHERE id = ?", (name, now, board_id)
+                "UPDATE boards SET name = ?, updated_at = ? WHERE id = ?",
+                (name, now_iso(), board_id),
             )
         if cursor.rowcount == 0:
             raise NotFound("board not found")
-        return BoardSummary(id=board_id, name=name, updated_at=now)
 
     def delete(self, board_id: str) -> None:
         with self._db.transaction() as conn:
+            # Foreign keys are off in this SQLite connection, so members go by hand.
+            conn.execute("DELETE FROM board_members WHERE board_id = ?", (board_id,))
             cursor = conn.execute("DELETE FROM boards WHERE id = ?", (board_id,))
         if cursor.rowcount == 0:
             raise NotFound("board not found")
@@ -390,3 +411,96 @@ class SqliteInviteRepo:
                 (now, invite_id, now),
             )
         return cursor.rowcount == 1
+
+
+class SqliteMemberRepo:
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    def roles(
+        self, board_id: str, user_id: str
+    ) -> tuple[BoardRole | None, ShareRole | None] | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT m.role, b.everyone_role FROM boards b"
+                " LEFT JOIN board_members m ON m.board_id = b.id AND m.user_id = ?"
+                " WHERE b.id = ?",
+                (user_id, board_id),
+            ).fetchone()
+        return (row["role"], row["everyone_role"]) if row else None
+
+    def role(self, board_id: str, user_id: str) -> BoardRole | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT role FROM board_members WHERE board_id = ? AND user_id = ?",
+                (board_id, user_id),
+            ).fetchone()
+        return row["role"] if row else None
+
+    def members(self, board_id: str) -> list[Member]:
+        with self._db.transaction() as conn:
+            rows = conn.execute(
+                "SELECT u.id, u.username, u.name, m.role FROM board_members m"
+                " JOIN users u ON u.id = m.user_id WHERE m.board_id = ?"
+                " ORDER BY m.role = 'owner' DESC, lower(u.name)",
+                (board_id,),
+            ).fetchall()
+        return [
+            Member(
+                user=MemberUser(id=row["id"], username=row["username"], name=row["name"]),
+                role=row["role"],
+            )
+            for row in rows
+        ]
+
+    def everyone(self, board_id: str) -> ShareRole | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT everyone_role FROM boards WHERE id = ?", (board_id,)
+            ).fetchone()
+        return row["everyone_role"] if row else None
+
+    def set_role(self, board_id: str, user_id: str, role: BoardRole) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO board_members (board_id, user_id, role) VALUES (?, ?, ?)"
+                " ON CONFLICT (board_id, user_id) DO UPDATE SET role = excluded.role",
+                (board_id, user_id, role),
+            )
+
+    def remove(self, board_id: str, user_id: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "DELETE FROM board_members WHERE board_id = ? AND user_id = ?", (board_id, user_id)
+            )
+
+    def set_everyone(self, board_id: str, role: ShareRole | None) -> None:
+        with self._db.transaction() as conn:
+            conn.execute("UPDATE boards SET everyone_role = ? WHERE id = ?", (role, board_id))
+
+    def transfer(self, board_id: str, user_id: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "UPDATE board_members SET role = 'editor' WHERE board_id = ? AND role = 'owner'",
+                (board_id,),
+            )
+            conn.execute(
+                "INSERT INTO board_members (board_id, user_id, role) VALUES (?, ?, 'owner')"
+                " ON CONFLICT (board_id, user_id) DO UPDATE SET role = 'owner'",
+                (board_id, user_id),
+            )
+
+    def adopt_orphans(self, owner_id: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO board_members (board_id, user_id, role)"
+                " SELECT b.id, ?, 'owner' FROM boards b WHERE NOT EXISTS"
+                " (SELECT 1 FROM board_members m WHERE m.board_id = b.id AND m.role = 'owner')",
+                (owner_id,),
+            )
+            # An install that already had its welcome board does not get a second one.
+            conn.execute(
+                "UPDATE users SET welcomed_at = created_at WHERE id = ? AND welcomed_at IS NULL"
+                " AND EXISTS (SELECT 1 FROM settings WHERE key = 'welcome_seeded')",
+                (owner_id,),
+            )

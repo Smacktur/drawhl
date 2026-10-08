@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 from app.domain.accounts import Accounts
 from app.domain.errors import UsernameTaken
-from app.domain.ports import UserRepo
+from app.domain.ports import MemberRepo, UserRepo
 
 ADMIN = "admin"
 
@@ -17,3 +17,10 @@ def bootstrap_admin(accounts: Accounts, users: UserRepo, password: Callable[[], 
         # Another worker created the admin first.
         return False
     return True
+
+
+def adopt_orphans(users: UserRepo, members: MemberRepo) -> None:
+    """Boards from before accounts, or left without an owner, go to the first admin."""
+    admins = [p for p in users.list() if p.role == "admin" and not p.disabled]
+    if admins:
+        members.adopt_orphans(min(admins, key=lambda p: p.created_at).id)

@@ -100,6 +100,10 @@ class InviteExpired(DomainError):
     code = "invite_expired"
 
 
+class OwnerRequired(DomainError):
+    code = "owner_required"
+
+
 class TooManyAttempts(DomainError):
     code = "too_many_attempts"
 

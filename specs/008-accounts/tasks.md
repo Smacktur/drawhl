@@ -49,11 +49,11 @@ description: "Task list for Accounts and roles"
 
 ## Phase 4: Slice 39 `feat/sharing` — sharing a board (US3)
 
-- [ ] T017 [P] [US3] Welcome board per person, owned by them (US3 scenario 8). Migration `board_members`, `boards.everyone_role`; owners from the upgrade; `domain/members.py` effective role and `require`. Tests
-- [ ] T018 [US3] Every board route through `board_role(min_role)`; 404 for no role; admin "All boards". Access matrix test over every board route
-- [ ] T019 [US3] API members, everyone, transfer, `people/directory`. Tests
-- [ ] T020 [US3] Frontend: Share dialog in the top bar; "View only" badge and read-only canvas (toolbar, drag, paste, undo, module controls, timers); 403 on save turns the board read-only. Tests
-- [ ] T021 [US3] Smoke: viewer gets 403 on save; docs; screenshot
+- [x] T017 [P] [US3] Welcome board per person, owned by them (US3 scenario 8). Migration `board_members`, `boards.everyone_role`; owners from the upgrade; `domain/members.py` effective role and `require`. Tests
+- [x] T018 [US3] Every board route through `board_role(min_role)`; 404 for no role; admin "All boards". Access matrix test over every board route
+- [x] T019 [US3] API members, everyone, transfer, `people/directory`. Tests
+- [x] T020 [US3] Frontend: Share dialog in the top bar; "View only" badge and read-only canvas (toolbar, drag, paste, undo, module controls, timers); 403 on save turns the board read-only. Tests
+- [x] T021 [US3] Smoke: owner, members and everyone on a scratch board (the viewer's 403 is in the access matrix, so a run adds no person); docs; screenshot
 
 ## Phase 5: Slice 40 `feat/my-tracker` — a tracker token per person (US4)
 

@@ -16,6 +16,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - The main menu shows who is signed in and ends with "Sign out".
 - Settings → People for admins: invite people with a one-time link (7 days, no mail needed), make someone admin or member, disable them, or give them a password reset link (24 hours). Open links are listed and can be revoked.
 - `python -m app.reset_password <username>` in the api container prints a reset link for a locked-out admin.
+- Board sharing: each board has an owner. "Share" in the top bar adds people as editors or viewers, opens the board to everyone in drawhl, or hands it to a new owner. Viewers get a "View only" board with no toolbar, and the server refuses their saves. A board you cannot open is not in your list. Admins act as owner on every board and find the others under "All boards". Each new person gets their own welcome board.
+- API: `GET /api/boards` returns `{boards, all}`, and every board carries `my_role` and `owner`. New routes: `/api/boards/{id}/members`, `/everyone`, `/transfer`, and `/api/people/directory`.
 
 - A logo: the emblem is a dot grid where one dot grew into a card. The app has a favicon and a home screen icon, the sign-in screen and the About panel show the emblem, and the user guide shows the logo. Logo files, the app icon and social covers for GitHub and Product Hunt are in `brand/`.
 

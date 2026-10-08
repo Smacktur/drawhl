@@ -13,12 +13,12 @@ def db():
 
 def test_board_save_is_compare_and_set(db):
     repo = SqliteBoardRepo(db)
-    board = repo.create("Q4", BoardDoc())
-    assert repo.save(board.id, 1, BoardDoc()) == 2
+    board_id = repo.create("Q4", BoardDoc(), "owner")
+    assert repo.save(board_id, 1, BoardDoc()) == 2
     with pytest.raises(VersionConflict):
-        repo.save(board.id, 1, BoardDoc())
-    assert repo.get(board.id).version == 2
-    assert [b.name for b in repo.list()] == ["Q4"]
+        repo.save(board_id, 1, BoardDoc())
+    assert repo.get(board_id).version == 2
+    assert [b.name for b in repo.listing("owner")] == ["Q4"]
 
 
 def test_snapshots_upsert_by_key(db):
@@ -32,5 +32,5 @@ def test_snapshots_upsert_by_key(db):
 
 def test_migrations_run_once(tmp_path):
     path = str(tmp_path / "app.db")
-    SqliteBoardRepo(Database(path)).create("kept", BoardDoc())
-    assert [b.name for b in SqliteBoardRepo(Database(path)).list()] == ["kept"]
+    SqliteBoardRepo(Database(path)).create("kept", BoardDoc(), "owner")
+    assert [b.name for b in SqliteBoardRepo(Database(path)).listing("owner")] == ["kept"]

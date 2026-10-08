@@ -11,7 +11,9 @@ from pydantic import (
     model_validator,
 )
 
+from app.domain.accounts import Person
 from app.domain.errors import NotFound, ValidationFailed
+from app.domain.members import BoardRole, ShareRole, effective_role, granted_role
 from app.domain.modules import KIND_PATTERN, module_keys, validate_module
 from app.domain.ports import BoardRepo, SnapshotRepo
 from app.domain.tasks import KEY_RE, Task
@@ -167,13 +169,35 @@ class BoardDoc(_Strict):
     viewport: Viewport = Field(default_factory=Viewport)
 
 
+class BoardOwner(BaseModel):
+    id: str
+    name: str
+
+
 class BoardSummary(BaseModel):
     id: str
     name: str
     updated_at: str
+    my_role: BoardRole
+    owner: BoardOwner | None
 
 
-class BoardRecord(BoardSummary):
+class BoardRow(BaseModel):
+    """A board as storage sees it for one person, before roles are worked out."""
+
+    id: str
+    name: str
+    updated_at: str
+    member_role: BoardRole | None
+    everyone_role: ShareRole | None
+    owner_id: str | None
+    owner_name: str | None
+
+
+class BoardRecord(BaseModel):
+    id: str
+    name: str
+    updated_at: str
     version: int
     doc: BoardDoc
 
@@ -220,37 +244,69 @@ def task_keys(doc: BoardDoc) -> list[str]:
     return sorted(keys)
 
 
-def list_boards(boards: BoardRepo, now: datetime) -> list[BoardSummary]:
-    """Boards by last change; a fresh install gets the welcome board on its first read."""
-    listed = boards.list()
-    if not listed:
-        doc = BoardDoc.model_validate(welcome_doc(now))
-        first = boards.create_first(WELCOME_NAME, doc)
-        listed = [first] if first else []
-    return listed
+def _summary(row: BoardRow, role: BoardRole) -> BoardSummary:
+    owner = BoardOwner(id=row.owner_id, name=row.owner_name or "") if row.owner_id else None
+    return BoardSummary(
+        id=row.id, name=row.name, updated_at=row.updated_at, my_role=role, owner=owner
+    )
 
 
-def create_board(name: str, boards: BoardRepo) -> BoardSummary:
-    return boards.create(name, BoardDoc())
+def list_boards(
+    person: Person, boards: BoardRepo, now: datetime
+) -> tuple[list[BoardSummary], list[BoardSummary]]:
+    """The person's boards by last change, and for admins every other board.
+
+    A person gets their own welcome board on their first read.
+    """
+    doc = BoardDoc.model_validate(welcome_doc(now))
+    boards.create_welcome(person.id, WELCOME_NAME, doc)
+    mine: list[BoardSummary] = []
+    others: list[BoardSummary] = []
+    for row in boards.listing(person.id):
+        role = effective_role(person, row.member_role, row.everyone_role)
+        if role is None:
+            continue
+        # Admins act as owner everywhere; boards nobody shared with them sit apart.
+        shared = granted_role(row.member_role, row.everyone_role) is not None
+        (mine if shared else others).append(_summary(row, role))
+    return mine, others
 
 
-def get_board(board_id: str, boards: BoardRepo, snapshots: SnapshotRepo) -> BoardView:
+def summary(person: Person, board_id: str, boards: BoardRepo) -> BoardSummary:
+    rows = boards.listing(person.id, board_id)
+    if not rows:
+        raise NotFound("board not found")
+    row = rows[0]
+    role = effective_role(person, row.member_role, row.everyone_role)
+    if role is None:
+        raise NotFound("board not found")
+    return _summary(row, role)
+
+
+def create_board(person: Person, name: str, boards: BoardRepo) -> BoardSummary:
+    return summary(person, boards.create(name, BoardDoc(), person.id), boards)
+
+
+def get_board(
+    person: Person, role: BoardRole, board_id: str, boards: BoardRepo, snapshots: SnapshotRepo
+) -> BoardView:
     record = boards.get(board_id)
     if record is None:
         raise NotFound("board not found")
     tasks = snapshots.get_many(task_keys(record.doc))
+    info = summary(person, board_id, boards)
     return BoardView(
-        id=record.id,
-        name=record.name,
-        updated_at=record.updated_at,
+        **info.model_dump(exclude={"my_role"}),
+        my_role=role,
         version=record.version,
         doc=record.doc.model_dump(exclude_none=True),
         tasks=tasks,
     )
 
 
-def rename_board(board_id: str, name: str, boards: BoardRepo) -> BoardSummary:
-    return boards.rename(board_id, name)
+def rename_board(person: Person, board_id: str, name: str, boards: BoardRepo) -> BoardSummary:
+    boards.rename(board_id, name)
+    return summary(person, board_id, boards)
 
 
 def delete_board(board_id: str, boards: BoardRepo) -> None:
