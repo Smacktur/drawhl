@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.10] - 2026-10-08
+
 ### Changed
 
 - Sign-in asks for a username and a password. An upgraded instance creates the account `admin` with the instance password it had, so you sign in as `admin` and find every board and the tracker connection as before. After that `DRAWHL_PASSWORD` and `data/password` are no longer read.
