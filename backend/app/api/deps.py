@@ -1,7 +1,11 @@
-from fastapi import Request
+from typing import Annotated
 
+from fastapi import Depends, Request
+
+from app.domain.accounts import Accounts, Person
 from app.domain.ports import BoardRepo, DemoTasks, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService
+from app.domain.sessions import Sessions
 from app.domain.settings import SettingsService
 from app.domain.tasks import select_provider
 
@@ -29,3 +33,21 @@ def refresher(request: Request) -> RefreshService:
 
 def demo(request: Request) -> DemoTasks:
     return request.app.state.demo
+
+
+def accounts(request: Request) -> Accounts:
+    return request.app.state.accounts
+
+
+def sessions(request: Request) -> Sessions:
+    return request.app.state.sessions
+
+
+def current_person(request: Request) -> Person:
+    """Set by PasswordGate; every route outside its open paths has one."""
+    return request.state.person
+
+
+CurrentPerson = Annotated[Person, Depends(current_person)]
+AccountsDep = Annotated[Accounts, Depends(accounts)]
+SessionsDep = Annotated[Sessions, Depends(sessions)]

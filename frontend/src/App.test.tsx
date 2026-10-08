@@ -18,7 +18,7 @@ type Reply = { status: number; body: unknown }
 // The boards reply stands for every route except the auth ones.
 function mockFetch(status: number, body: unknown, auth: Partial<Record<string, Reply>> = {}) {
   const routes: Record<string, Reply> = {
-    '/api/auth/status': { status: 200, body: { signed_in: true } },
+    '/api/auth/status': { status: 200, body: { signed_in: true, me: null } },
     ...auth,
   }
   const fetch = vi.fn(async (path: string) => {
@@ -46,39 +46,46 @@ test('shows the unified API error message', async () => {
   expect(await screen.findByText('database is down')).toBeInTheDocument()
 })
 
-test('asks for the password and opens the boards after signing in', async () => {
-  const fetch = mockFetch(
-    200,
-    { boards: [] },
-    {
-      '/api/auth/status': { status: 200, body: { signed_in: false } },
-      '/api/auth/login': { status: 204, body: null },
-    },
-  )
+test('asks for username and password and opens the boards after signing in', async () => {
+  const me = { id: 'u1', username: 'admin', name: 'Admin', role: 'admin' }
+  let signedIn = false
+  const fetch = vi.fn(async (path: string, init?: RequestInit) => {
+    if (path === '/api/auth/login') {
+      expect(JSON.parse(String(init?.body))).toEqual({ username: 'admin', password: 'pw' })
+      signedIn = true
+      return new Response(null, { status: 204 })
+    }
+    if (path === '/api/auth/status')
+      return Response.json({ signed_in: signedIn, me: signedIn ? me : null })
+    return Response.json({ boards: [] })
+  })
+  vi.stubGlobal('fetch', fetch)
   renderApp()
   const password = await screen.findByLabelText('Password')
   expect(fetch.mock.calls.map(([path]) => path)).not.toContain('/api/boards')
+  fireEvent.change(screen.getByLabelText('Username'), { target: { value: ' admin ' } })
   fireEvent.change(password, { target: { value: 'pw' } })
   fireEvent.click(screen.getByRole('button', { name: /Sign in/ }))
   expect(await screen.findByText(/Create a board/)).toBeInTheDocument()
 })
 
-test('names a wrong password', async () => {
+test('names wrong credentials', async () => {
   mockFetch(
     200,
     { boards: [] },
     {
-      '/api/auth/status': { status: 200, body: { signed_in: false } },
+      '/api/auth/status': { status: 200, body: { signed_in: false, me: null } },
       '/api/auth/login': {
         status: 401,
-        body: { error: { code: 'invalid_password', message: 'wrong password' } },
+        body: { error: { code: 'invalid_credentials', message: 'wrong' } },
       },
     },
   )
   renderApp()
-  fireEvent.change(await screen.findByLabelText('Password'), { target: { value: 'nope' } })
+  fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'admin' } })
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'nope' } })
   fireEvent.click(screen.getByRole('button', { name: /Sign in/ }))
-  expect(await screen.findByText('Wrong password. Try again.')).toBeInTheDocument()
+  expect(await screen.findByText('Wrong username or password.')).toBeInTheDocument()
 })
 
 test('drops back to the sign-in screen when the session is gone', async () => {

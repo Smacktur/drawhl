@@ -67,7 +67,7 @@ Upgrade, done in code on first start after the migration (the admin's password i
 
 1. No row in `users` → create `admin` with role `admin` and the password from `DRAWHL_PASSWORD` or `data/password` (generate and log once if neither, as in spec 007).
 2. Every board without an owner gets `admin` as owner.
-3. The instance tracker token in `settings` (`jira.token`) moves to `user_credentials` for `admin`; the setting is deleted. `jira.base_url`, `provider`, `refresh_interval_s` stay in `settings` as instance settings.
+3. The instance tracker token in `settings` (`jira_token_enc`) moves to `user_credentials` for `admin`; the setting is deleted. `jira_base_url`, `provider`, `refresh_interval_s` stay in `settings` as instance settings.
 4. Rows of `task_snapshots` are copied to `task_snapshots_v2` with `admin`'s id (demo keys with `''`), then `task_snapshots` is dropped.
 5. `welcome_seeded` moves to a per-user marker (`users` row or a `user_settings` key), so each new person gets their own welcome board once.
 

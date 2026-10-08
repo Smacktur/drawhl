@@ -4,8 +4,9 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
+from app.domain.accounts import Person
 from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
-from app.domain.errors import NotFound, VersionConflict
+from app.domain.errors import NotFound, UsernameTaken, VersionConflict
 from app.domain.tasks import Task, now_iso
 
 # File names start with the schema version they produce: 001_init.sql → user_version 1.
@@ -183,3 +184,108 @@ class SqliteSettingsRepo:
                         " ON CONFLICT(key) DO UPDATE SET value = excluded.value",
                         (key, value),
                     )
+
+
+_PERSON = "u.id, u.username, u.name, u.role, u.disabled_at"
+
+
+def _person(row: sqlite3.Row) -> Person:
+    return Person(
+        id=row["id"],
+        username=row["username"],
+        name=row["name"],
+        role=row["role"],
+        disabled=row["disabled_at"] is not None,
+    )
+
+
+class SqliteUserRepo:
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    def count(self) -> int:
+        with self._db.transaction() as conn:
+            return conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+
+    def add(self, person: Person, password_hash: str) -> None:
+        try:
+            with self._db.transaction() as conn:
+                conn.execute(
+                    "INSERT INTO users (id, username, name, password_hash, role, created_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        person.id,
+                        person.username,
+                        person.name,
+                        password_hash,
+                        person.role,
+                        now_iso(),
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            raise UsernameTaken("This username is taken.") from error
+
+    def find(self, username: str) -> tuple[Person, str] | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                f"SELECT {_PERSON}, u.password_hash FROM users u"
+                " WHERE lower(u.username) = lower(?)",
+                (username,),
+            ).fetchone()
+        return (_person(row), row["password_hash"]) if row else None
+
+    def update(self, person: Person) -> None:
+        try:
+            with self._db.transaction() as conn:
+                conn.execute(
+                    "UPDATE users SET name = ?, username = ? WHERE id = ?",
+                    (person.name, person.username, person.id),
+                )
+        except sqlite3.IntegrityError as error:
+            raise UsernameTaken("This username is taken.") from error
+
+    def set_password(self, user_id: str, password_hash: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id)
+            )
+
+    def touch_sign_in(self, user_id: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute("UPDATE users SET last_sign_in_at = ? WHERE id = ?", (now_iso(), user_id))
+
+
+class SqliteSessionRepo:
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    def add(self, token_hash: str, user_id: str, expires_at: str, created_at: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO sessions (token_hash, user_id, expires_at, created_at)"
+                " VALUES (?, ?, ?, ?)",
+                (token_hash, user_id, expires_at, created_at),
+            )
+
+    def get(self, token_hash: str) -> tuple[Person, str] | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                f"SELECT {_PERSON}, s.expires_at FROM sessions s"
+                " JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?",
+                (token_hash,),
+            ).fetchone()
+        return (_person(row), row["expires_at"]) if row else None
+
+    def delete(self, token_hash: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+
+    def delete_for_user(self, user_id: str, keep: str | None) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "DELETE FROM sessions WHERE user_id = ? AND token_hash IS NOT ?", (user_id, keep)
+            )
+
+    def delete_expired(self, now: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute("DELETE FROM sessions WHERE expires_at <= ?", (now,))

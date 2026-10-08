@@ -72,8 +72,20 @@ class JiraUnreachable(JiraUnavailable):
     """No answer at all (network, VPN, timeout): nothing reached Jira, so no backoff."""
 
 
-class InvalidPassword(DomainError):
-    code = "invalid_password"
+class InvalidCredentials(DomainError):
+    code = "invalid_credentials"
+
+
+class AccountDisabled(DomainError):
+    code = "account_disabled"
+
+
+class UsernameTaken(DomainError):
+    code = "username_taken"
+
+
+class WeakPassword(DomainError):
+    code = "weak_password"
 
 
 class TooManyAttempts(DomainError):

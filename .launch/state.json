@@ -89,7 +89,8 @@
     "G3_paste-text": "approved",
     "G1_teams": "approved",
     "G2_instance-password": "approved",
-    "G3_instance-password": "approved"
+    "G3_instance-password": "approved",
+    "G2_accounts": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -107,6 +108,7 @@
     "2026-10-08 G1 teams: owner moved team mode out of Won't (accounts and roles, sharing, real-time, then OIDC SSO and Postgres; monolith stays) to win companies that want Miro inside their network. Order: instance password now (step 0, DRAWHL_PASSWORD becomes the first admin's password), then accounts and roles. Open core: everything AGPL except SSO, audit and SCIM, which go to an enterprise license. Spec 007 awaits G2.",
     "2026-10-08 G2 instance-password: owner approved spec 007 with the password always on: generated into data/password and logged once when ENV has none; changing it signs out every browser.",
     "2026-10-08 instance-password: spec 007 done; v2026.10.9 shipped with the password, the Railway template generates DRAWHL_PASSWORD (owner added it in the dashboard; the API cannot edit template variables). Releases now number YYYY.M.N; the web image builds its static files natively after an arm64 npm ci hang under QEMU. Next: team mode, accounts and roles.",
-    "2026-10-08 spec 008 accounts drafted for team mode step 1 (accounts, people and invites, sharing with roles, a tracker token and task cache per person) in 4 slices; awaits G2. Development continues in a new session from this spec."
+    "2026-10-08 spec 008 accounts drafted for team mode step 1 (accounts, people and invites, sharing with roles, a tracker token and task cache per person) in 4 slices; awaits G2. Development continues in a new session from this spec.",
+    "2026-10-08 G2 accounts: owner approved spec 008 as written, including admins acting as owner on every board; no release between slices 37 and 39, so no member sees snapshots made with the admin's token."
   ]
 }

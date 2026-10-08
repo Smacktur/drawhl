@@ -1,0 +1,168 @@
+import base64
+import hashlib
+import hmac
+import math
+import re
+import secrets
+import threading
+import uuid
+from collections import deque
+from functools import cache
+from typing import Literal
+
+from pydantic import BaseModel
+
+from app.domain.errors import (
+    AccountDisabled,
+    InvalidCredentials,
+    TooManyAttempts,
+    ValidationFailed,
+    WeakPassword,
+)
+from app.domain.ports import UserRepo
+from app.domain.sessions import Sessions
+
+Role = Literal["admin", "member"]
+
+USERNAME = re.compile(r"[A-Za-z0-9._-]{3,32}")
+MIN_PASSWORD = 10
+MAX_PASSWORD = 1024
+MAX_NAME = 64
+_SCRYPT = {"n": 2**14, "r": 8, "p": 1}
+
+PER_USERNAME_FAILURES = 10
+PER_USERNAME_WINDOW_S = 15 * 60.0
+# Backstop against guessing across many usernames; a per-IP limit is dodged by forging
+# X-Forwarded-For.
+INSTANCE_FAILURES = 30
+INSTANCE_WINDOW_S = 60.0
+
+
+class Person(BaseModel):
+    id: str
+    username: str
+    name: str
+    role: Role
+    disabled: bool = False
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.scrypt(password.encode(), salt=salt, **_SCRYPT)
+    params = "$".join(str(_SCRYPT[k]) for k in ("n", "r", "p"))
+    b64 = base64.b64encode
+    return f"scrypt${params}${b64(salt).decode()}${b64(digest).decode()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    try:
+        _, n, r, p, salt, digest = stored.split("$")
+        expected = base64.b64decode(digest)
+        actual = hashlib.scrypt(
+            password.encode(), salt=base64.b64decode(salt), n=int(n), r=int(r), p=int(p)
+        )
+    except ValueError:
+        return False
+    return hmac.compare_digest(actual, expected)
+
+
+@cache
+def _dummy_hash() -> str:
+    return hash_password(secrets.token_urlsafe(16))
+
+
+def check_username(value: str) -> str:
+    username = value.strip()
+    if not USERNAME.fullmatch(username):
+        raise ValidationFailed("username: 3 to 32 letters, digits, '.', '-' or '_'")
+    return username
+
+
+def check_name(value: str) -> str:
+    name = value.strip()
+    if not name or len(name) > MAX_NAME:
+        raise ValidationFailed(f"name: 1 to {MAX_NAME} characters")
+    return name
+
+
+def check_password(value: str) -> str:
+    if len(value) < MIN_PASSWORD or len(value) > MAX_PASSWORD:
+        raise WeakPassword(f"Use at least {MIN_PASSWORD} characters.")
+    return value
+
+
+class Limiter:
+    """Counts failures per key in a sliding window."""
+
+    def __init__(self, limit: int, window_s: float) -> None:
+        self._limit = limit
+        self._window_s = window_s
+        self._failures: dict[str, deque[float]] = {}
+        self._lock = threading.Lock()
+
+    def check(self, key: str, now: float) -> None:
+        with self._lock:
+            failures = self._failures.get(key)
+            if not failures:
+                return
+            while failures and failures[0] <= now - self._window_s:
+                failures.popleft()
+            if not failures:
+                del self._failures[key]
+            elif len(failures) >= self._limit:
+                wait = math.ceil(failures[0] + self._window_s - now)
+                raise TooManyAttempts("too many wrong passwords, try again later", max(wait, 1))
+
+    def fail(self, key: str, now: float) -> None:
+        with self._lock:
+            self._failures.setdefault(key, deque()).append(now)
+
+
+class Accounts:
+    def __init__(self, users: UserRepo, sessions: Sessions) -> None:
+        self._users = users
+        self._sessions = sessions
+        self._per_username = Limiter(PER_USERNAME_FAILURES, PER_USERNAME_WINDOW_S)
+        self._instance = Limiter(INSTANCE_FAILURES, INSTANCE_WINDOW_S)
+
+    def create(self, username: str, name: str, password: str, role: Role) -> Person:
+        person = Person(
+            id=uuid.uuid4().hex, username=check_username(username), name=check_name(name), role=role
+        )
+        self._users.add(person, hash_password(password))
+        return person
+
+    def sign_in(self, username: str, password: str, now: float) -> str:
+        key = username.strip().lower()
+        self._instance.check("", now)
+        self._per_username.check(key, now)
+        found = self._users.find(key)
+        # An unknown username costs a full hash too, so timing does not tell which exist.
+        valid = verify_password(password, found[1] if found else _dummy_hash())
+        if not found or not valid:
+            self._instance.fail("", now)
+            self._per_username.fail(key, now)
+            raise InvalidCredentials("Wrong username or password.")
+        person = found[0]
+        if person.disabled:
+            raise AccountDisabled("This account is disabled. Ask your admin.")
+        self._users.touch_sign_in(person.id)
+        return self._sessions.start(person.id, now)
+
+    def update(self, person: Person, name: str | None, username: str | None) -> Person:
+        changed = person.model_copy(
+            update={
+                "name": check_name(name) if name is not None else person.name,
+                "username": check_username(username) if username is not None else person.username,
+            }
+        )
+        self._users.update(changed)
+        self._sessions.forget(person.id)
+        return changed
+
+    def change_password(self, person: Person, current: str, new: str, keep_token: str) -> None:
+        found = self._users.find(person.username.lower())
+        if not found or not verify_password(current, found[1]):
+            raise InvalidCredentials("The current password is wrong.")
+        self._users.set_password(person.id, hash_password(check_password(new)))
+        self._sessions.end_all(person.id, keep_token=keep_token)

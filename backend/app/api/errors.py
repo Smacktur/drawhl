@@ -5,11 +5,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.domain.errors import (
+    AccountDisabled,
     DependencyUnavailable,
     DomainError,
     HostMismatch,
+    InvalidCredentials,
     InvalidJql,
-    InvalidPassword,
     InvalidRef,
     JiraNotConfigured,
     JiraRateLimited,
@@ -18,8 +19,10 @@ from app.domain.errors import (
     SecretKeyMissing,
     TaskNotFound,
     TooManyAttempts,
+    UsernameTaken,
     ValidationFailed,
     VersionConflict,
+    WeakPassword,
 )
 
 log = logging.getLogger(__name__)
@@ -37,7 +40,10 @@ _STATUS = {
     JiraNotConfigured: 400,
     JiraUnauthorized: 401,
     JiraRateLimited: 429,
-    InvalidPassword: 401,
+    InvalidCredentials: 401,
+    AccountDisabled: 403,
+    UsernameTaken: 409,
+    WeakPassword: 422,
     TooManyAttempts: 429,
 }
 

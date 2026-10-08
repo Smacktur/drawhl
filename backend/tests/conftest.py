@@ -14,10 +14,11 @@ def instance_password(monkeypatch):
     monkeypatch.setenv("DRAWHL_PASSWORD", PASSWORD)
 
 
-def signed_in(app) -> TestClient:
-    """A client that already passed the instance password gate."""
+def signed_in(app, username: str = "admin", password: str = PASSWORD) -> TestClient:
+    """A client with a session; by default the admin made from DRAWHL_PASSWORD."""
     client = TestClient(app)
-    assert client.post("/api/auth/login", json={"password": PASSWORD}).status_code == 204
+    response = client.post("/api/auth/login", json={"username": username, "password": password})
+    assert response.status_code == 204
     return client
 
 

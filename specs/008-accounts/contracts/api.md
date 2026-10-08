@@ -63,4 +63,4 @@ All existing board routes check the effective role: read routes (`GET /boards/{i
 
 ## Settings (changed)
 
-`GET /settings` returns the instance settings to everyone; `PUT /settings` (provider, Jira URL, refresh interval) needs admin. The `jira.token` field moves to `/me/tracker`.
+`GET /settings` returns the instance settings to everyone; `PUT /settings` (provider, Jira URL, refresh interval) needs admin. The `jira_token_enc` field moves to `/me/tracker`.
