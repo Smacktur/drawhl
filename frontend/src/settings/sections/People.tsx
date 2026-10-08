@@ -112,7 +112,13 @@ function PersonRow({
         {person.role === 'admin' && <Badge variant="secondary">Admin</Badge>}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${person.name}`}>
+            {/* Pulled out by its inner padding, so the dots line up with the Invite button. */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="-mr-1.5"
+              aria-label={`Actions for ${person.name}`}
+            >
               <Ellipsis strokeWidth={1.75} />
             </Button>
           </DropdownMenuTrigger>
@@ -154,7 +160,13 @@ function InviteRow({ invite }: { invite: Invite }) {
           Expires {formatDue(Date.parse(invite.expires_at))}
         </span>
       </div>
-      <Button variant="ghost" size="sm" onClick={() => revoke.mutate()} disabled={revoke.isPending}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-mr-2.5"
+        onClick={() => revoke.mutate()}
+        disabled={revoke.isPending}
+      >
         Revoke
       </Button>
     </li>
@@ -174,26 +186,26 @@ export function People({ me }: { me: Me }) {
   })
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-start gap-4">
-        <div className="flex-1">
-          <SectionHeader
-            title="People"
-            description="Who can sign in to this drawhl. Invite people with a link; no mail needed."
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" disabled={invite.isPending}>
-              <UserPlus strokeWidth={1.75} />
-              Invite
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => invite.mutate('member')}>As member</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => invite.mutate('admin')}>As admin</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <SectionHeader
+        title="People"
+        description="Who can sign in to this drawhl. Invite people with a link; no mail needed."
+        action={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" disabled={invite.isPending}>
+                <UserPlus strokeWidth={1.75} />
+                Invite
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => invite.mutate('member')}>
+                As member
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => invite.mutate('admin')}>As admin</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
       {invite.isError && <p className="text-destructive text-[13px]">{invite.error.message}</p>}
       {link && <LinkBox link={link} onDone={() => setLink(null)} />}
       {people.isPending && <p className="text-muted-foreground">Loading…</p>}

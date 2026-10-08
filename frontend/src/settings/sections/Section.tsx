@@ -1,9 +1,21 @@
 import type { ReactNode } from 'react'
 
-export function SectionHeader({ title, description }: { title: string; description: string }) {
+// The title row is as tall as the sidebar title and the close button, so all three line up.
+export function SectionHeader({
+  title,
+  description,
+  action,
+}: {
+  title: string
+  description: string
+  action?: ReactNode
+}) {
   return (
-    <header className="flex flex-col gap-1">
-      <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{title}</h2>
+    <header className="flex flex-col gap-0.5">
+      <div className="flex h-8 items-center justify-between gap-4">
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{title}</h2>
+        {action}
+      </div>
       <p className="text-muted-foreground text-[13px]">{description}</p>
     </header>
   )

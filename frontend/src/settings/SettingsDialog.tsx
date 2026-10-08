@@ -7,11 +7,18 @@ import {
   SlidersHorizontal,
   UserRound,
   Users,
+  X,
 } from 'lucide-react'
 import { useState, useSyncExternalStore, type ComponentType, type ReactNode } from 'react'
 import { getAuthStatus, type Me } from '@/api/auth'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from 'cn'
 import { People } from '@/settings/sections/People'
 import { Preferences } from '@/settings/sections/Preferences'
@@ -127,8 +134,10 @@ function SettingsBody({ me, section }: { me: Me; section: Section }) {
 
   if (narrow && listShown) {
     return (
-      <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
-        <DialogTitle className="text-[16px] font-semibold">Settings</DialogTitle>
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+        <DialogTitle className="flex h-8 items-center text-[16px] font-semibold">
+          Settings
+        </DialogTitle>
         <Nav groups={groups} current={entry.id} narrow onPick={pick} />
       </div>
     )
@@ -137,14 +146,16 @@ function SettingsBody({ me, section }: { me: Me; section: Section }) {
   return (
     <>
       {!narrow && (
-        <aside className="bg-muted/40 flex w-52 shrink-0 flex-col gap-4 border-r p-3">
-          <DialogTitle className="px-2 pt-1 text-[16px] font-semibold">Settings</DialogTitle>
+        <aside className="bg-muted/40 flex w-52 shrink-0 flex-col gap-4 border-r px-3 pt-4 pb-3">
+          <DialogTitle className="flex h-8 items-center px-2 text-[16px] font-semibold">
+            Settings
+          </DialogTitle>
           <Nav groups={groups} current={entry.id} narrow={false} onPick={pick} />
         </aside>
       )}
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         {narrow && (
-          <div className="flex items-center gap-1 border-b px-2 py-2">
+          <div className="flex h-16 shrink-0 items-center border-b px-2 pr-14">
             <Button variant="ghost" size="sm" onClick={() => setListShown(true)}>
               <ChevronLeft strokeWidth={1.75} />
               Settings
@@ -152,7 +163,8 @@ function SettingsBody({ me, section }: { me: Me; section: Section }) {
             <DialogTitle className="sr-only">Settings</DialogTitle>
           </div>
         )}
-        <div className="w-full max-w-xl p-6 text-[14px] max-sm:p-4">
+        {/* Equal side gutters wide enough for the close button, so actions end on one edge. */}
+        <div className="w-full px-14 pt-4 pb-10 text-[14px] max-[719px]:px-4">
           {/* Keyed so a section's unsaved fields start fresh when the person changes. */}
           <div key={`${me.id}:${entry.id}`}>{entry.render(me)}</div>
         </div>
@@ -169,6 +181,7 @@ export function SettingsDialog() {
   return (
     <Dialog open={section !== null && !!me} onOpenChange={(open) => !open && openSettings(null)}>
       <DialogContent
+        showCloseButton={false}
         // Focus stays on the window, so no ring lands on the first section on open.
         onOpenAutoFocus={(event) => event.preventDefault()}
         className={cn(
@@ -176,6 +189,11 @@ export function SettingsDialog() {
           'max-[719px]:h-dvh max-[719px]:max-w-none max-[719px]:rounded-none',
         )}
       >
+        <DialogClose asChild>
+          <Button variant="ghost" size="icon" className="absolute top-4 right-4" aria-label="Close">
+            <X strokeWidth={1.75} />
+          </Button>
+        </DialogClose>
         <DialogDescription className="sr-only">
           Your account, preferences and the settings of this drawhl.
         </DialogDescription>
