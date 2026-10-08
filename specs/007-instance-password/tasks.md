@@ -1,0 +1,28 @@
+---
+description: "Task list for Instance password"
+---
+
+# Tasks: Instance password
+
+**Input**: [spec.md](spec.md), [plan.md](plan.md)
+
+**Tests**: included: token and middleware in pytest; sign-in screen in vitest; curl over every route; screenshot of the sign-in screen.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- Backend paths under `backend/app/`, frontend paths under `frontend/src/`
+
+## Phase 1: Slice 35 `feat/instance-password` — a public instance asks for a password (US1, US2) 🎯
+
+**Goal**: with `DRAWHL_PASSWORD` set, nothing is readable without signing in.
+
+**Independent Test**: see US1 and US2 in [spec.md](spec.md).
+
+- [ ] T001 [P] [US1] `config.py` `drawhl_password`; `domain/session.py` issue and verify; `domain/attempts.py` limiter. Tests: expiry, tamper, password change, 5 failures then 429
+- [ ] T002 [US1] `api/auth.py` status, login, logout; `api/gate.py` middleware wired in `main.py` only when the password is set. Tests: open paths, 401 on every other route, gate off without ENV
+- [ ] T003 [US1] `nginx.conf.template` passes `X-Forwarded-Proto`; `Secure` cookie behind HTTPS. Test with the header
+- [ ] T004 [US1] Frontend: `api/auth.ts`, `auth/SignIn.tsx`, boot check and drop back on `auth_required`, "Sign out" in Settings. Tests
+- [ ] T005 [US2] Railway template variable `DRAWHL_PASSWORD=${{secret(20)}}`, template README; `.env.example`, README, quick-start guide, `CHANGELOG.md`
+- [ ] T006 [US1] curl over every route with and without a session; screenshot of the sign-in screen in light and dark; deploy from the template and sign in
+
+**Checkpoint**: `make check`, curl list, screenshot → G3.

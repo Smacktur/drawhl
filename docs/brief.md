@@ -42,14 +42,15 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 **Next** (after ship, [specs/002-modules](../specs/002-modules/spec.md))
 - Modules: interactive blocks on the canvas, added from a picker, built on one module host so new kinds plug in. First module: Gantt with live task bars, scale, quarters, milestones and dependency lines. Plan dates live on the board only.
 - Focus timer and background music ([specs/003-focus](../specs/003-focus/spec.md)): a pomodoro capsule over the board with built-in CC0 lofi tracks and the user's own files; browser-only, no backend.
+- Instance password ([specs/007-instance-password](../specs/007-instance-password/spec.md)): one optional password from ENV closes a public instance; the Railway template generates it.
+- Team mode, for companies that want a Miro-like board inside their network: accounts and roles with a Jira PAT per user, board sharing, real-time editing with cursors (CRDT), then OIDC SSO and Postgres. Stays a monolith. Accounts, sharing and real-time are AGPL; SSO, audit and SCIM go to an enterprise license.
 
 **Won't**
-- Real-time collaborative editing, board sharing
 - Jira Cloud, Confluence, Todoist (only a hook in the provider interface)
 - Two-way sync: changing status and editing a task from the board
 - Jira webhooks
 - Freehand drawing and arbitrary shapes other than sticky note and frame
-- Auth, roles, multi-user (one user per instance), payments, admin panel
+- Payments
 - i18n: English-only interface
 - LLM
 - Mobile version

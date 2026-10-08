@@ -1,0 +1,62 @@
+# Feature Specification: Instance password
+
+**Feature Branch**: `007-instance-password`
+
+**Created**: 2026-10-08
+
+**Status**: Draft
+
+**Input**: User description: "We added the Deploy on Railway button, so anyone can bring up an instance and it is visible to the whole internet." Step 2 of the launch plan (one-click deploy with an instance password), approved at G1 on 2026-10-07. Step 0 of team mode, approved at G1 on 2026-10-08: `DRAWHL_PASSWORD` later becomes the first admin's password, so this work carries over.
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - A public instance asks for a password (Priority: P1)
+
+Someone deploys drawhl from the Railway template. The template generates a password. When they open the public URL, they see a sign-in screen with one password field instead of their boards. After entering the password they get the app as today and stay signed in on that browser for 30 days. A stranger who finds the URL sees only the sign-in screen, and every API call without a session returns 401.
+
+**Why this priority**: The Railway template is public; without this, an instance shows boards to anyone and calls Jira with the owner's PAT.
+
+**Independent Test**: start the stack with `DRAWHL_PASSWORD=correct-horse`, open http://localhost:3000: the sign-in screen shows. `curl localhost:8000/api/boards` returns 401 `auth_required`. Enter a wrong password: an error shows. Enter `correct-horse`: the board opens; reload: still signed in.
+
+**Acceptance Scenarios**:
+
+1. **Given** `DRAWHL_PASSWORD` is set, **When** a request without a valid session cookie hits any `/api/*` path except `/api/auth/*`, or `/metrics`, `/docs`, `/openapi.json`, **Then** it gets 401 with `{"error": {"code": "auth_required", ...}}`. `/health` and `/ready` stay open for platform health checks.
+2. **Given** the sign-in screen, **When** the user submits the right password, **Then** the server sets an `HttpOnly`, `SameSite=Lax` session cookie, `Secure` when the request came over HTTPS, valid for 30 days, and the app loads.
+3. **Given** a wrong password, **Then** the server answers 401 `invalid_password` after the same delay as a right one, and after 5 wrong attempts from one IP within a minute it answers 429 with `Retry-After`.
+4. **Given** a signed-in user, **When** they choose "Sign out" in Settings, **Then** the cookie is cleared and the sign-in screen shows.
+5. **Given** the owner changes `DRAWHL_PASSWORD` and restarts, **Then** every existing session is invalid.
+6. **Given** `DRAWHL_PASSWORD` is not set, **Then** nothing changes from today: no sign-in screen, no 401, and `docker compose up` works without keys.
+
+---
+
+### User Story 2 - The Railway template is closed by default (Priority: P2)
+
+The template sets `DRAWHL_PASSWORD` to a generated value, so a one-click deploy is never open. The owner finds the password in the service's Variables tab, as the template README says.
+
+**Why this priority**: People click Deploy and skip the README; the safe default has to come from the template.
+
+**Independent Test**: deploy from `railway.com/deploy/drawhl`: the public URL shows the sign-in screen; the password from Variables opens it.
+
+**Acceptance Scenarios**:
+
+1. **Given** a fresh deploy from the template, **Then** `DRAWHL_PASSWORD` is set to a random 20-character value and the instance asks for it.
+2. **Given** the README, the docs guide and the template README, **Then** each says where the password is and how to change it.
+
+### Edge Cases
+
+- `DRAWHL_SECRET_KEY` is not set while the password is: the session is signed with a key derived from the password, so it still works; changing the password signs everyone out.
+- The API is reached directly on its own public domain, not through the web service: the same 401 applies.
+- Prometheus scrapes `/metrics` on an instance with a password: it gets 401; scraping needs no password set or a private network. Noted in the README.
+
+## Requirements *(mandatory)*
+
+- **FR-001**: The gate is on only when `DRAWHL_PASSWORD` is set.
+- **FR-002**: The password is compared in constant time and never logged or returned.
+- **FR-003**: The session is a signed cookie, not a database row; checking it does not touch SQLite.
+- **FR-004**: No new dependency.
+
+## Success Criteria *(mandatory)*
+
+- **SC-001**: With a password set, no board, task, setting or metric is readable without signing in (curl check of every route).
+- **SC-002**: A signed-in request adds under 1 ms of server time.
+- **SC-003**: A fresh template deploy is closed without any manual step.
