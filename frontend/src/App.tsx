@@ -12,8 +12,33 @@ import { TopBar } from '@/board/TopBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 
+const RELOADED = 'drawhl.reloadedForChunk'
+
+// A tab opened before an upgrade asks for a chunk the server no longer has; reload once to get the new build.
+function reloadOnce(error: unknown): Promise<never> {
+  try {
+    if (!sessionStorage.getItem(RELOADED)) {
+      sessionStorage.setItem(RELOADED, '1')
+      window.location.reload()
+      return new Promise(() => {})
+    }
+  } catch {
+    // Storage blocked: fall through and show the error instead of looping.
+  }
+  throw error
+}
+
 // xyflow needs the DOM, so the canvas is loaded only in the browser, never in prerender.
-const Canvas = lazy(() => import('@/canvas/Canvas'))
+const Canvas = lazy(() =>
+  import('@/canvas/Canvas').then((module) => {
+    try {
+      sessionStorage.removeItem(RELOADED)
+    } catch {
+      // Storage blocked: nothing to clear.
+    }
+    return module
+  }, reloadOnce),
+)
 
 const LAST_BOARD = 'drawhl.lastBoard'
 
