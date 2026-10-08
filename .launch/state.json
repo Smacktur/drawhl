@@ -37,7 +37,8 @@
     "paste-text",
     "docs-site",
     "docs-starlight",
-    "instance-password"
+    "instance-password",
+    "brand"
   ],
   "gates": {
     "G1_scope": "approved",
