@@ -45,11 +45,6 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         Sign in
       </Button>
       {login.isError && <p className="text-destructive text-sm">{message(login.error)}</p>}
-      <p className="text-muted-foreground text-[13px]">
-        The password is in <code className="font-mono text-[12px]">DRAWHL_PASSWORD</code> or, if
-        that is empty, in the server log and{' '}
-        <code className="font-mono text-[12px]">data/password</code>.
-      </p>
     </form>
   )
 }
