@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- The web container no longer loses the API after the API restarts on a new address, as it does on every redeploy on Railway or Render. The API address is now set with `API_UPSTREAM` (default `api:8000`), so the web image runs on hosts without compose networking.
 - The keyboard shortcuts list shows the second Redo shortcut as `⌃Y` on macOS and `Ctrl+Y` elsewhere instead of `CTRL Y`.
 
 ## [2026.10.7] - 2026-10-07
