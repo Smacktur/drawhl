@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
-# Cut a CalVer release (vYYYY.M.D, today's UTC date): move CHANGELOG.md "Unreleased" into a
-# version section, commit, tag and push. The tag starts .github/workflows/release.yml.
+# Cut a CalVer release vYYYY.M.N: UTC year and month, N counts releases in that month from 0, so a
+# hotfix on the same day gets the next number. Moves CHANGELOG.md "Unreleased" into a version
+# section, commits, tags and pushes. The tag starts .github/workflows/release.yml.
 #
 # Usage: scripts/release.sh [--dry-run]
 set -euo pipefail
-
-version="$(date -u +%Y).$(date -u +%-m).$(date -u +%-d)"
-tag="v$version"
 
 [ "$(git branch --show-current)" = main ] || { echo "release from main only"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { echo "working tree is not clean"; exit 1; }
 git fetch -q origin main --tags
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main differs from origin/main"; exit 1; }
-! git rev-parse -q --verify "refs/tags/$tag" >/dev/null || { echo "$tag already exists; one release per day"; exit 1; }
+
+month="$(date -u +%Y).$(date -u +%-m)"
+last="$(git tag -l "v$month.*" | sed "s/^v$month\.//" | grep -E '^[0-9]+$' | sort -n | tail -1)"
+version="$month.$(( ${last:--1} + 1 ))"
+tag="v$version"
 
 unreleased="$(awk '/^## \[Unreleased\]/ {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md)"
 [ -n "$(echo "$unreleased" | tr -d '[:space:]')" ] || { echo "CHANGELOG.md Unreleased is empty"; exit 1; }

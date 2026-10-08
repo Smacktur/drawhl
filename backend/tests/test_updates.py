@@ -37,6 +37,7 @@ def release(version: str) -> Release:
 def test_calver_compares_numerically():
     assert is_newer("2026.10.10", "2026.10.9")
     assert is_newer("2027.1.1", "2026.12.31")
+    assert is_newer("2026.11.0", "2026.10.31")
     assert not is_newer("2026.10.6", "2026.10.6")
     assert not is_newer("2026.10.5", "2026.10.6")
     assert not is_newer("2026.10.7", "dev")
