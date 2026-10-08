@@ -2,7 +2,15 @@
 title: Security and privacy
 ---
 
-drawhl is a single-user app and **has no login yet**. Anyone who can open its URL sees your boards and can search your tracker with your token. Run it on your own machine or home network, or reach it through a VPN such as Tailscale. If you expose it beyond that, put it behind a reverse proxy that adds authentication.
+drawhl is a single-user app behind one password. Every page and API route except `/health` and `/ready` asks for it, `/metrics` included.
+
+## The password
+
+- Set it with `DRAWHL_PASSWORD`. When it is empty, drawhl generates one on first start, prints it once to the API log (`docker compose logs api | grep 'drawhl password'`) and saves it to `data/password`.
+- On Railway the template generates it: see `DRAWHL_PASSWORD` in the `api` service's Variables.
+- A sign-in lasts 30 days in that browser. Changing the password and restarting signs out every browser, yours and anyone who learned the old one. Deleting `data/password` does the same with a new generated password.
+- After 5 wrong passwords in a minute, sign-in pauses for the rest of that minute.
+- On the open internet use HTTPS, which Railway and Render give you.
 
 ## What drawhl stores
 

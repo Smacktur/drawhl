@@ -10,6 +10,8 @@ server {
         proxy_pass $api;
         proxy_set_header Host $host;
         proxy_set_header X-Request-Id $request_id;
+        # The platform edge ends TLS; the API needs the scheme to mark the session cookie Secure.
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
     }
 
     # Prerendered pages live in <path>/index.html; unknown paths fall back to the SPA.

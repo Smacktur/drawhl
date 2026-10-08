@@ -50,9 +50,9 @@ Or in the cloud, on Railway:
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
 
-The template runs the released images with your boards on a volume and generates the encryption key. The app opens on the URL Railway gives you, and anyone who knows that URL can use it: see [security](https://smacktur.github.io/drawhl/security/). A tracker inside a corporate network is out of reach from there.
+The template runs the released images with your boards on a volume and generates the encryption key and the password. The app opens on the URL Railway gives you; the password is `DRAWHL_PASSWORD` in the `api` service's Variables. A tracker inside a corporate network is out of reach from there.
 
-On your machine, open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
+On your machine, open http://localhost:3000 and sign in with the password from the log: `docker compose logs api | grep 'drawhl password'`, or `cat data/password` from a source checkout. To pick your own, set `DRAWHL_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
 
 ## 🌟 Features
 
@@ -140,6 +140,7 @@ Everything works without a `.env` file. To override defaults, `cp .env.example .
 
 | Variable | Purpose | Default |
 |---|---|---|
+| `DRAWHL_PASSWORD` | Password to sign in. When empty, one is generated on first start, printed once to the API log and saved to `data/password` | generated |
 | `DRAWHL_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |
@@ -165,7 +166,7 @@ More in the [data and upgrades guide](https://smacktur.github.io/drawhl/data-and
 
 ## 🛡️ Security and privacy
 
-drawhl is a single-user app and **has no login yet**. Anyone who can open its URL sees your boards and can search your tracker with your token. Run it on your own machine or home network, or reach it through a VPN such as Tailscale. If you expose it beyond that, put it behind a reverse proxy that adds authentication.
+drawhl is a single-user app behind one password: every page and API route except `/health` and `/ready` asks for it, `/metrics` included. A sign-in lasts 30 days in that browser; changing `DRAWHL_PASSWORD` and restarting signs out every browser. After 5 wrong passwords in a minute sign-in pauses for the rest of that minute. On the open internet use HTTPS, which Railway and Render give you.
 
 Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too.
 

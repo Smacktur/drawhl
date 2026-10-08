@@ -5,6 +5,7 @@ import httpx
 from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
 
+from app.adapters import password_file
 from app.adapters.releases.github import GitHubReleaseFeed
 from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
@@ -16,8 +17,10 @@ from app.adapters.storage.sqlite import (
 from app.adapters.tasks.demo import DemoTaskProvider
 from app.adapters.tasks.jira_dc import JiraDcProvider
 from app.api.errors import register_error_handlers
+from app.api.gate import PasswordGate
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.domain.access import Access
 from app.domain.ports import ReleaseFeed
 from app.domain.refresh import RefreshService
 from app.domain.settings import SettingsService
@@ -45,6 +48,20 @@ def _jira_client(settings: Settings, transport: httpx.BaseTransport | None) -> h
     )
 
 
+def _password(settings: Settings) -> str:
+    if settings.drawhl_password and settings.drawhl_password.get_secret_value():
+        password = settings.drawhl_password.get_secret_value()
+    else:
+        password, created = password_file.load_or_create(settings.password_file)
+        if created:
+            # Printed once on purpose: without ENV this is the only way the owner learns it.
+            log.warning("drawhl password: %s (saved to %s)", password, settings.password_file)
+        else:
+            log.info("drawhl password is in %s", settings.password_file)
+    register_secret(password)
+    return password
+
+
 def create_app(
     settings: Settings | None = None,
     jira_transport: httpx.BaseTransport | None = None,
@@ -53,16 +70,19 @@ def create_app(
     settings = settings or get_settings()
     setup_logging(settings.log_level)
 
+    key = settings.drawhl_secret_key.get_secret_value() if settings.drawhl_secret_key else ""
+    if key and len(key) < MIN_SECRET_KEY_LENGTH:
+        log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
     app = FastAPI(title=settings.app_name)
+    app.state.access = Access(_password(settings), key)
+    # Added before the request context, so it runs inside it and 401s are logged and counted.
+    app.add_middleware(PasswordGate, access=app.state.access)
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
 
     db = Database(settings.db_path)
     app.state.boards = SqliteBoardRepo(db)
     app.state.snapshots = SqliteSnapshotRepo(db)
-    key = settings.drawhl_secret_key.get_secret_value() if settings.drawhl_secret_key else ""
-    if key and len(key) < MIN_SECRET_KEY_LENGTH:
-        log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
     box = FernetSecretBox(key) if key else NullSecretBox()
     app.state.refresher = RefreshService()
     service = SettingsService(

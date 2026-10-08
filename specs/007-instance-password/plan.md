@@ -37,8 +37,7 @@ One password closes every instance: from ENV, or generated on first start and sa
 
 ```text
 backend/app/config.py            drawhl_password: SecretStr | None
-backend/app/domain/session.py    issue(key, now) -> token, verify(key, token, now) -> bool; key from secret key + password
-backend/app/domain/attempts.py   in-memory limiter: 5 failures per IP per minute
+backend/app/domain/access.py     Access: sign_in(password, now) -> token, is_valid(token, now); 5 failures a minute per instance
 backend/app/api/auth.py          POST /api/auth/login, POST /api/auth/logout, GET /api/auth/status
 backend/app/api/gate.py          ASGI middleware: open paths, cookie check, 401 auth_required
 backend/app/adapters/password_file.py   read or create data/password, 0600
@@ -54,7 +53,7 @@ Token: `base64(expires_at) + "." + hex(HMAC-SHA256(key, expires_at))`, key = `SH
 
 Cookie: `drawhl_session`, `Path=/`, `HttpOnly`, `SameSite=Lax`, `Max-Age` 30 days, `Secure` when `X-Forwarded-Proto` or the request scheme is `https`. `SameSite=Lax` plus JSON-only bodies covers CSRF for this single-user gate.
 
-Login: a wrong password waits as long as a right one (constant-time compare, no early return). The limiter keys by the first `X-Forwarded-For` hop, falling back to the client address.
+Login: a wrong password waits as long as a right one (constant-time compare of SHA-256 digests). The limiter counts failures for the whole instance: the client sets `X-Forwarded-For`, so a per-IP limit is dodged by forging it. An attacker can keep the owner locked out by guessing, which is accepted for one user per instance; team mode moves to per-account limits.
 
 Frontend: `GET /api/auth/status` on boot returns `{signed_in: bool}`; the app renders SignIn until signed in. Any later `auth_required` drops back to SignIn, for example after a password change.
 
@@ -66,3 +65,4 @@ Railway: template variable `DRAWHL_PASSWORD=${{secret(20)}}` on the API service;
 |---|---|
 | Railway or Render do not send `X-Forwarded-Proto`, so the cookie is not `Secure` | Set `Secure` whenever `APP_ENV` is not `local` |
 | The in-memory limiter resets on restart or with several API replicas | Accepted for one user per instance; team mode moves it to the database |
+| Guessing keeps the owner locked out | A generated 20-character password makes guessing pointless; the lockout ends a minute after the attacker stops |

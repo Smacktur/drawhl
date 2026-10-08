@@ -1,13 +1,23 @@
 """Core scenario against a running stack. Stdlib only: runs inside the api container
 (`make smoke`) or on the host against stage (`make stage-smoke`)."""
 
+import http.cookiejar
 import json
 import os
+import pathlib
 import urllib.error
 import urllib.request
 
 API = os.environ.get("SMOKE_API_URL", "http://localhost:8000")
 WEB = os.environ.get("SMOKE_WEB_URL", "http://web:3000")
+# Inside the api container the generated password sits in data/password.
+PASSWORD_FILE = pathlib.Path("data/password")
+PASSWORD = (
+    os.environ.get("SMOKE_PASSWORD")
+    or os.environ.get("DRAWHL_PASSWORD")
+    or (PASSWORD_FILE.read_text().strip() if PASSWORD_FILE.exists() else "")
+)
+opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
 
 def call(method: str, url: str, body: dict | None = None) -> tuple[int, dict | None]:
@@ -16,7 +26,7 @@ def call(method: str, url: str, body: dict | None = None) -> tuple[int, dict | N
         url, data=data, method=method, headers={"content-type": "application/json"}
     )
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with opener.open(request, timeout=30) as response:
             raw = response.read()
             return response.status, json.loads(raw) if raw else None
     except urllib.error.HTTPError as error:
@@ -31,6 +41,11 @@ def check(condition: bool, label: str) -> None:
 
 status, _ = call("GET", f"{API}/health")
 check(status == 200, "health")
+
+status, _ = call("GET", f"{API}/api/boards")
+check(status == 401, "closed without a session")
+status, _ = call("POST", f"{API}/api/auth/login", {"password": PASSWORD})
+check(status == 204, "sign in")
 
 # The scenario runs on demo tasks; a connected Jira is switched back afterwards.
 status, settings = call("GET", f"{API}/api/settings")
@@ -211,8 +226,9 @@ try:
     ids = {b["id"] for b in body["boards"]}
     check(other["id"] not in ids and board["id"] in ids, "deleted board leaves the list")
 
+    # The session cookie belongs to the API host, so the answer through the UI is the gate's.
     status, body = call("GET", f"{WEB}/api/boards")
-    check(status == 200 and any(b["id"] == board["id"] for b in body["boards"]), "ui proxies /api")
+    check(status == 401 and body["error"]["code"] == "auth_required", "ui proxies /api")
 
 finally:
     call("PUT", f"{API}/api/demo/tasks/DEMO-1/status", {"status": "In Progress"})

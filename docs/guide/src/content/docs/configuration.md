@@ -6,6 +6,7 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 
 | Variable | Purpose | Default |
 |---|---|---|
+| `DRAWHL_PASSWORD` | Password to sign in. When empty, one is generated on first start, printed once to the API log and saved to `data/password` | generated |
 | `DRAWHL_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |

@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     log_level: str = "info"
     db_path: str = "data/app.db"
     drawhl_secret_key: SecretStr | None = None
+    drawhl_password: SecretStr | None = None
+    # Holds the generated password when DRAWHL_PASSWORD is empty.
+    password_file: str = "data/password"
     jira_tls_verify: bool = True
     jira_ca_bundle: str | None = None
     # Asks GitHub for the latest release every 6 hours to show "update available".

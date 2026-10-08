@@ -1,6 +1,5 @@
 import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from app.adapters.releases.github import GitHubReleaseFeed
 from app.config import Settings
@@ -8,6 +7,7 @@ from app.domain.errors import DependencyUnavailable
 from app.domain.updates import CHECK_EVERY_S, RETRY_FAILED_S, Release, UpdateService, is_newer
 from app.main import create_app
 from app.version import VERSION
+from tests.conftest import signed_in
 
 
 class Feed:
@@ -99,7 +99,7 @@ def test_github_feed_errors_become_unavailable():
 
 def test_version_endpoint():
     app = create_app(Settings(db_path=":memory:"), release_feed=Feed(release("2999.1.1")))
-    body = TestClient(app).get("/api/version").json()
+    body = signed_in(app).get("/api/version").json()
     assert body["version"] == VERSION
     assert body["update_available"] is True
     assert body["latest"]["version"] == "2999.1.1"
@@ -107,5 +107,5 @@ def test_version_endpoint():
 
 def test_version_endpoint_with_checks_off():
     app = create_app(Settings(db_path=":memory:", update_check=False))
-    body = TestClient(app).get("/api/version").json()
+    body = signed_in(app).get("/api/version").json()
     assert body == {"version": VERSION, "latest": None, "update_available": False}
