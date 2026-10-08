@@ -1,8 +1,12 @@
 # Changelog
 
-All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [CalVer](https://calver.org/) `YYYY.M.D`, the release date. `make release` moves Unreleased into a version section.
+All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [CalVer](https://calver.org/) `YYYY.M.N`: the year, the month and the release's number in that month, so a same-day hotfix gets the next number. Releases up to 2026.10.8 used the day as the last number. `make release` moves Unreleased into a version section.
 
 ## [Unreleased]
+
+### Changed
+
+- Release numbers are now `YYYY.M.N`, counting releases within the month, so a hotfix can ship on the same day. The next release after 2026.10.8 is 2026.10.9; image tags and update checks work as before.
 
 ### Added
 
