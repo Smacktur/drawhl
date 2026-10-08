@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.9] - 2026-10-08
+
 ### Changed
 
 - Release numbers are now `YYYY.M.N`, counting releases within the month, so a hotfix can ship on the same day. The next release after 2026.10.8 is 2026.10.9; image tags and update checks work as before.
