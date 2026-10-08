@@ -15,6 +15,7 @@ def test_defaults(client):
         "refresh_interval_s": 30,
         "secret_key_configured": False,
         "jira": {"base_url": None, "token_state": "none"},
+        "locked": [],
     }
 
 
@@ -113,3 +114,37 @@ def test_empty_secret_key_is_not_configured(fake_jira):
     settings = Settings(db_path=":memory:", drawhl_secret_key="")
     app = create_app(settings, jira_transport=httpx.MockTransport(fake_jira))
     assert signed_in(app).get("/api/settings").json()["secret_key_configured"] is False
+
+
+def test_tracker_from_the_environment_wins_and_is_locked():
+    from app.config import Settings
+    from app.main import create_app
+    from tests.conftest import signed_in
+
+    settings = Settings(
+        db_path=":memory:", drawhl_tracker="jira", jira_base_url="https://jira.example.com/"
+    )
+    client = signed_in(create_app(settings))
+    body = client.get("/api/settings").json()
+    assert body["provider"] == "jira" and body["jira"]["base_url"] == "https://jira.example.com"
+    assert body["locked"] == ["jira_base_url", "provider"]
+    moved = client.put("/api/settings", json={"jira": {"base_url": "https://other.example.com"}})
+    assert (moved.status_code, moved.json()["error"]["code"]) == (422, "validation_failed")
+    assert client.put("/api/settings", json={"provider": "demo"}).status_code == 422
+    # Saving the unchanged values with another field is fine, as the form does.
+    same = {
+        "provider": "jira",
+        "refresh_interval_s": 60,
+        "jira": {"base_url": body["jira"]["base_url"]},
+    }
+    assert client.put("/api/settings", json=same).json()["refresh_interval_s"] == 60
+
+
+def test_a_wrong_jira_url_in_the_environment_stops_the_start():
+    import pytest
+
+    from app.config import Settings
+    from app.main import create_app
+
+    with pytest.raises(ValueError):
+        create_app(Settings(db_path=":memory:", jira_base_url="jira.example.com"))

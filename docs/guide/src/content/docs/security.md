@@ -19,6 +19,7 @@ Every page and API route except `/health` and `/ready` asks you to sign in with 
 - An admin invites people in Settings → People: "Invite" gives a link to send in a chat. It works once and expires in 7 days. The person picks a username, a name and a password and is signed in. drawhl sends no mail.
 - From a person's menu an admin makes them admin or member, disables them (they are signed out at once and cannot sign in) or creates a password reset link that works once within 24 hours.
 - Only the hash of a link's token is stored, so a link is shown once. Unused links are listed under "Open links" and can be revoked.
+- Whoever deploys drawhl can hand it over: invite the business owner "As admin", then make yourself a member or disable your account. Set the tracker in the environment first (`DRAWHL_TRACKER`, `JIRA_BASE_URL`) so it stays as deployed.
 - There is always at least one active admin. If the only admin forgets their password, run `docker compose exec api python -m app.reset_password admin` (or the username) and open the printed link on your drawhl address.
 
 ## Sharing boards

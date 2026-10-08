@@ -9,7 +9,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { SectionHeader } from '@/settings/sections/Section'
 import { openSettings } from '@/settings/store'
 
+function ServerNote({ name }: { name: string }) {
+  return (
+    <p className="text-muted-foreground text-[13px]">
+      Set by the server with <code className="font-mono text-[12px]">{name}</code>.
+    </p>
+  )
+}
+
 function TaskSourceForm({ settings }: { settings: Settings }) {
+  const providerLocked = settings.locked.includes('provider')
+  const urlLocked = settings.locked.includes('jira_base_url')
   const queryClient = useQueryClient()
   const [provider, setProvider] = useState(settings.provider)
   const [baseUrl, setBaseUrl] = useState(settings.jira.base_url ?? '')
@@ -43,6 +53,7 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
         <RadioGroup
           value={provider}
           onValueChange={(value) => setProvider(value as Settings['provider'])}
+          disabled={providerLocked}
         >
           <div className="flex items-center gap-2">
             <RadioGroupItem value="demo" id="provider-demo" />
@@ -53,6 +64,7 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
             <Label htmlFor="provider-jira">Jira Data Center</Label>
           </div>
         </RadioGroup>
+        {providerLocked && <ServerNote name="DRAWHL_TRACKER" />}
       </fieldset>
 
       <div className="flex flex-col gap-1.5">
@@ -92,7 +104,10 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
             placeholder="https://jira.example.com"
             autoComplete="off"
             spellCheck={false}
+            readOnly={urlLocked}
+            disabled={urlLocked}
           />
+          {urlLocked && <ServerNote name="JIRA_BASE_URL" />}
         </div>
         <p className="text-muted-foreground text-[13px]">
           Each person connects their own token in{' '}

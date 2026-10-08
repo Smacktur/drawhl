@@ -54,11 +54,16 @@ class JiraView(BaseModel):
     token_state: TokenState
 
 
+LockedField = Literal["provider", "jira_base_url"]
+
+
 class SettingsView(BaseModel):
     provider: Provider
     refresh_interval_s: int
     secret_key_configured: bool
     jira: JiraView
+    # Fields set in the environment, which the API does not change.
+    locked: list[LockedField] = Field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -82,7 +87,9 @@ class SettingsService:
         secret_key_configured: bool,
         on_token: Callable[[str], None] = lambda _: None,
         on_change: Callable[[], None] = lambda: None,
+        env: dict[LockedField, str] | None = None,
     ) -> None:
+        self._env = env or {}
         self._repo = repo
         self._credentials = credentials
         self._box = box
@@ -105,20 +112,23 @@ class SettingsService:
         self._on_token(plain)
         return "set", SecretStr(plain)
 
+    def _values(self) -> dict[str, str]:
+        return {**self._repo.get_all(), **self._env}
+
     def refresh_interval_s(self) -> int:
-        return int(self._repo.get_all().get("refresh_interval_s", DEFAULT_INTERVAL_S))
+        return int(self._values().get("refresh_interval_s", DEFAULT_INTERVAL_S))
 
     def provider(self) -> Provider:
-        return "jira" if self._repo.get_all().get("provider") == "jira" else "demo"
+        return "jira" if self._values().get("provider") == "jira" else "demo"
 
     def base_url(self) -> str | None:
-        return self._repo.get_all().get("jira_base_url")
+        return self._values().get("jira_base_url")
 
     def token_state(self, user_id: str) -> TokenState:
         return self._token(user_id, self.base_url())[0]
 
     def view(self, user_id: str) -> SettingsView:
-        values = self._repo.get_all()
+        values = self._values()
         return SettingsView(
             provider="jira" if values.get("provider") == "jira" else "demo",
             refresh_interval_s=int(values.get("refresh_interval_s", DEFAULT_INTERVAL_S)),
@@ -126,10 +136,23 @@ class SettingsService:
             jira=JiraView(
                 base_url=values.get("jira_base_url"), token_state=self.token_state(user_id)
             ),
+            locked=sorted(self._env),
         )
 
     def update(self, change: SettingsIn, user_id: str) -> SettingsView:
         """Instance settings; a token in the change becomes this person's own."""
+        current = self._values()
+        changes_locked = (
+            "provider" in self._env
+            and change.provider is not None
+            and change.provider != current["provider"]
+        ) or (
+            "jira_base_url" in self._env
+            and change.jira is not None
+            and change.jira.base_url != current["jira_base_url"]
+        )
+        if changes_locked:
+            raise ValidationFailed("This is set by the server in the environment.")
         values: dict[str, str | None] = {}
         if change.provider is not None:
             values["provider"] = change.provider

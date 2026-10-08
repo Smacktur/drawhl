@@ -15,7 +15,8 @@ This spec covers step 1. The others get their own specs; nothing here builds the
 1. **Accounts and roles** (this spec): people, sessions, a settings window, invites, board sharing, a tracker token per person.
 2. **Real-time** (spec 009): several people on one board at once with cursors and presence, on a CRDT (`yjs` in the browser, `pycrdt` and `pycrdt-websocket` on the server, both MIT). Until then two editors are kept apart by the existing `version_conflict` check.
 3. **OIDC SSO** (Keycloak, ADFS, Entra ID) through Authlib. Enterprise license, not AGPL.
-4. **Postgres** as a second storage adapter next to SQLite, a Helm chart, backups. Several API replicas need Redis pub/sub for real-time fan-out.
+4. **Several trackers at once**: each person connects their own accounts (Jira, Jira Cloud, GitHub) and a card remembers its tracker, for companies where teams use different trackers. Until then one tracker serves the whole instance.
+5. **Postgres** as a second storage adapter next to SQLite, a Helm chart, backups. Several API replicas need Redis pub/sub for real-time fan-out.
 
 Decisions that stand for every step:
 
@@ -117,7 +118,7 @@ Each person connects Jira with their own personal access token in Settings → M
 
 **Acceptance Scenarios**:
 
-1. **Given** the admin, **Then** they set the provider, the Jira URL and the refresh interval for the instance; members cannot change them.
+1. **Given** the admin, **Then** they set the provider, the Jira URL and the refresh interval for the instance; members cannot change them. **Given** `DRAWHL_TRACKER` or `JIRA_BASE_URL` in the environment, **Then** those win and show as set by the server, so whoever deploys drawhl can hand it over with the tracker already in place.
 2. **Given** any person, **Then** they set, test and remove their own token; it is stored encrypted with `DRAWHL_SECRET_KEY`, never returned, never logged, as today.
 3. **Given** a board refresh or open, **Then** tasks are fetched and cached with the requesting person's token, and the cache of task snapshots is kept per person: a snapshot fetched with one person's token is never returned to another.
 4. **Given** a task the person's token cannot see, **Then** the card shows the key with a lock and "You don't have access to this task in Jira"; its summary, status and assignee are not sent.
