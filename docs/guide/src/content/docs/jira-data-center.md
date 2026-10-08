@@ -12,7 +12,9 @@ drawhl supports Jira Data Center and Server 8.14 and later. It uses your own per
 
 2. Restart: `docker compose up -d` (add `-f compose.release.yml` if you run from images).
 3. In Jira, open your profile → Personal Access Tokens → Create token.
-4. In drawhl, open Settings → Task source (main menu or `⌘,`), choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
+4. In drawhl, an admin opens Settings → Task source (main menu or `⌘,`), chooses the Jira provider and enters the base URL (`https://jira.example.com`). Whoever deploys drawhl can set both instead with `DRAWHL_TRACKER=jira` and `JIRA_BASE_URL` in the environment; Task source then shows them read-only. Then each person, the admin included, opens Settings → My tracker, pastes their own token and presses "Test connection". It shows their Jira name.
+
+Cards show each person what their own Jira access allows: a task their token cannot see reads "Not found or no access", and without a token a card shows its key and "Connect your Jira token to see this task". Moving the instance to another Jira URL asks everyone to enter their token again; a token is only ever sent to the URL it was entered for.
 
 Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again.
 

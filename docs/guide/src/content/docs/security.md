@@ -19,6 +19,7 @@ Every page and API route except `/health` and `/ready` asks you to sign in with 
 - An admin invites people in Settings → People: "Invite" gives a link to send in a chat. It works once and expires in 7 days. The person picks a username, a name and a password and is signed in. drawhl sends no mail.
 - From a person's menu an admin makes them admin or member, disables them (they are signed out at once and cannot sign in) or creates a password reset link that works once within 24 hours.
 - Only the hash of a link's token is stored, so a link is shown once. Unused links are listed under "Open links" and can be revoked.
+- Whoever deploys drawhl can hand it over: invite the business owner "As admin", then make yourself a member or disable your account. Set the tracker in the environment first (`DRAWHL_TRACKER`, `JIRA_BASE_URL`) so it stays as deployed.
 - There is always at least one active admin. If the only admin forgets their password, run `docker compose exec api python -m app.reset_password admin` (or the username) and open the printed link on your drawhl address.
 
 ## Sharing boards
@@ -28,13 +29,13 @@ Every page and API route except `/health` and `/ready` asks you to sign in with 
 - A board you cannot open is not in your list, and its link answers as if it did not exist.
 - Admins act as owner on every board, so a board is never stranded when its owner is disabled. Boards nobody shared with them are under "All boards" in the board menu.
 - Each new person gets their own welcome board once.
-- Task data on cards still comes from the instance's tracker connection; per-person tracker tokens are next.
+- Each person connects their own tracker token in Settings → My tracker, and task data is fetched and cached per person: a shared board never shows you a task your own Jira access does not allow.
 
 ## What drawhl stores
 
 - Your boards, settings and account: username, name and password hash.
-- The tracker token, encrypted with `DRAWHL_SECRET_KEY`. It is never sent back to the browser or written to logs.
-- A cached copy of each card's key, summary, status, type, assignee, priority and last update.
+- Each person's tracker token, encrypted with `DRAWHL_SECRET_KEY` and kept with the URL it was entered for. It is never sent back to the browser, written to logs or sent to another URL.
+- A cached copy of each card's key, summary, status, type, assignee, priority and last update, kept apart for each person.
 
 ## What drawhl talks to
 

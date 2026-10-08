@@ -162,8 +162,14 @@ class SqliteBoardRepo:
 
 
 class SqliteSnapshotRepo:
-    def __init__(self, db: Database) -> None:
+    """Task snapshots of one owner: a person for their own token, "" for the demo tasks."""
+
+    def __init__(self, db: Database, owner: str = "") -> None:
         self._db = db
+        self._owner = owner
+
+    def scoped(self, owner: str) -> "SqliteSnapshotRepo":
+        return SqliteSnapshotRepo(self._db, owner)
 
     def get_many(self, keys: list[str]) -> dict[str, Task]:
         if not keys:
@@ -171,7 +177,8 @@ class SqliteSnapshotRepo:
         marks = ",".join("?" * len(keys))
         with self._db.transaction() as conn:
             rows = conn.execute(
-                f"SELECT data FROM task_snapshots WHERE key IN ({marks})", keys
+                f"SELECT data FROM task_snapshots_v2 WHERE user_id = ? AND key IN ({marks})",
+                [self._owner, *keys],
             ).fetchall()
         tasks = [Task.model_validate_json(row["data"]) for row in rows]
         return {task.key: task for task in tasks}
@@ -179,11 +186,65 @@ class SqliteSnapshotRepo:
     def put_many(self, tasks: list[Task]) -> None:
         with self._db.transaction() as conn:
             conn.executemany(
-                "INSERT INTO task_snapshots (key, state, data, fetched_at) VALUES (?, ?, ?, ?)"
-                " ON CONFLICT(key) DO UPDATE SET state = excluded.state, data = excluded.data,"
-                " fetched_at = excluded.fetched_at",
-                [(t.key, t.state, t.model_dump_json(), t.fetched_at) for t in tasks],
+                "INSERT INTO task_snapshots_v2 (user_id, key, state, data, fetched_at)"
+                " VALUES (?, ?, ?, ?, ?) ON CONFLICT (user_id, key) DO UPDATE SET"
+                " state = excluded.state, data = excluded.data, fetched_at = excluded.fetched_at",
+                [(self._owner, t.key, t.state, t.model_dump_json(), t.fetched_at) for t in tasks],
             )
+
+
+class SqliteCredentialRepo:
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    def get(self, user_id: str, provider: str) -> tuple[str, str] | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT token_enc, base_url FROM user_credentials"
+                " WHERE user_id = ? AND provider = ?",
+                (user_id, provider),
+            ).fetchone()
+        return (row["token_enc"], row["base_url"]) if row else None
+
+    def set(self, user_id: str, provider: str, token_enc: str, base_url: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO user_credentials (user_id, provider, token_enc, base_url)"
+                " VALUES (?, ?, ?, ?) ON CONFLICT (user_id, provider) DO UPDATE SET"
+                " token_enc = excluded.token_enc, base_url = excluded.base_url",
+                (user_id, provider, token_enc, base_url),
+            )
+
+    def delete(self, user_id: str, provider: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "DELETE FROM user_credentials WHERE user_id = ? AND provider = ?",
+                (user_id, provider),
+            )
+
+    def adopt_instance_token(self, user_id: str) -> None:
+        """Moves the token and task cache from before accounts to this person, once."""
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO user_credentials (user_id, provider, token_enc, base_url)"
+                " SELECT ?, 'jira', t.value, u.value FROM settings t"
+                " JOIN settings u ON u.key = 'jira_base_url' WHERE t.key = 'jira_token_enc'",
+                (user_id,),
+            )
+            conn.execute("DELETE FROM settings WHERE key = 'jira_token_enc'")
+            legacy = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'task_snapshots'"
+            ).fetchone()
+            if legacy:
+                # Demo tasks are the same for everyone; anything else was fetched with the token.
+                conn.execute(
+                    "INSERT OR IGNORE INTO task_snapshots_v2"
+                    " (user_id, key, state, data, fetched_at)"
+                    " SELECT CASE WHEN key LIKE 'DEMO-%' THEN '' ELSE ? END,"
+                    " key, state, data, fetched_at FROM task_snapshots",
+                    (user_id,),
+                )
+                conn.execute("DROP TABLE task_snapshots")
 
 
 class SqliteSettingsRepo:

@@ -65,4 +65,6 @@ All existing board routes check the effective role: read routes (`GET /boards/{i
 
 ## Settings (changed)
 
-`GET /settings` returns the instance settings to everyone; `PUT /settings` (provider, Jira URL, refresh interval) needs admin. The `jira_token_enc` field moves to `/me/tracker`.
+`GET /settings` returns the instance settings to everyone, with `jira.token_state` of the caller's own token; `PUT /settings` (provider, Jira URL, refresh interval) needs admin, and a `jira.token` in it becomes the admin's own token. People manage their token at `/me/tracker` (`GET` also returns `base_url`). A token stays tied to the URL it was entered for: after the URL moves, its state reads `unreadable` and it is never sent.
+
+Task state `forbidden` is not used: Jira answers the same for a task that does not exist and one the token may not see, so both read `not_found` ("Not found or no access").

@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   KeyRound,
+  Plug,
   ListTodo,
   SlidersHorizontal,
   UserRound,
@@ -20,6 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from 'cn'
+import { MyTracker } from '@/settings/sections/MyTracker'
 import { People } from '@/settings/sections/People'
 import { Preferences } from '@/settings/sections/Preferences'
 import { Profile } from '@/settings/sections/Profile'
@@ -47,6 +49,7 @@ const GROUPS: { title: string; admin: boolean; entries: Entry[] }[] = [
         Icon: SlidersHorizontal,
         render: () => <Preferences />,
       },
+      { id: 'tracker', label: 'My tracker', Icon: Plug, render: () => <MyTracker /> },
     ],
   },
   {

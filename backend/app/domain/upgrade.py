@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 from app.domain.accounts import Accounts
 from app.domain.errors import UsernameTaken
-from app.domain.ports import MemberRepo, UserRepo
+from app.domain.ports import CredentialRepo, MemberRepo, UserRepo
 
 ADMIN = "admin"
 
@@ -19,8 +19,11 @@ def bootstrap_admin(accounts: Accounts, users: UserRepo, password: Callable[[], 
     return True
 
 
-def adopt_orphans(users: UserRepo, members: MemberRepo) -> None:
-    """Boards from before accounts, or left without an owner, go to the first admin."""
+def adopt_orphans(users: UserRepo, members: MemberRepo, credentials: CredentialRepo) -> None:
+    """Boards from before accounts, or left without an owner, go to the first admin, and so
+    do the instance's tracker token and task cache."""
     admins = [p for p in users.list() if p.role == "admin" and not p.disabled]
     if admins:
-        members.adopt_orphans(min(admins, key=lambda p: p.created_at).id)
+        first = min(admins, key=lambda p: p.created_at).id
+        members.adopt_orphans(first)
+        credentials.adopt_instance_token(first)

@@ -3,7 +3,7 @@ import { fetchJson } from '@/api/client'
 
 export const taskSchema = z.object({
   key: z.string(),
-  state: z.enum(['ok', 'not_found']),
+  state: z.enum(['ok', 'not_found', 'no_token']),
   summary: z.string(),
   status_name: z.string(),
   status_category: z.enum(['new', 'indeterminate', 'done']),

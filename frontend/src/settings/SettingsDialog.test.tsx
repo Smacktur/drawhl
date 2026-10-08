@@ -122,3 +122,20 @@ test('saves the refresh interval of the task source', async () => {
     }),
   )
 })
+
+test('shows the tracker set by the server as read-only', async () => {
+  mockApi({
+    '/api/settings': () =>
+      Response.json({
+        ...settings,
+        provider: 'jira',
+        jira: { base_url: 'https://jira.example.com', token_state: 'none' },
+        locked: ['provider', 'jira_base_url'],
+      }),
+  })
+  show('task-source')
+  expect(await screen.findByLabelText('Base URL')).toBeDisabled()
+  expect(screen.getByText('JIRA_BASE_URL')).toBeInTheDocument()
+  expect(screen.getByText('DRAWHL_TRACKER')).toBeInTheDocument()
+  expect(screen.getByLabelText('Demo tasks (DEMO-1 to DEMO-12)')).toBeDisabled()
+})

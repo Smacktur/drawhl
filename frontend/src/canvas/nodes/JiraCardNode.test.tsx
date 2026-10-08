@@ -90,3 +90,11 @@ test('a drag does not open the mini-card', () => {
   fireEvent.click(key, { clientX: 60, clientY: 10 })
   expect(screen.queryByText('Open in Jira')).toBeNull()
 })
+
+test('a card without a token of your own shows only the key and how to connect', () => {
+  const locked: Task = { ...task, key: 'DEV-2', state: 'no_token', summary: '', type_name: '' }
+  renderCard({ key: 'DEV-2' }, { 'DEV-2': locked })
+  // xyflow keeps unmeasured nodes out of the accessibility tree, so find it by text.
+  fireEvent.click(screen.getByText('Connect your Jira token to see this task'))
+  expect(new URL(window.location.href).searchParams.get('settings')).toBe('tracker')
+})

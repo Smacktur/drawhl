@@ -11,6 +11,7 @@ from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
+    SqliteCredentialRepo,
     SqliteInviteRepo,
     SqliteMemberRepo,
     SqliteSessionRepo,
@@ -30,7 +31,7 @@ from app.domain.members import Members
 from app.domain.ports import ReleaseFeed
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
-from app.domain.settings import SettingsService
+from app.domain.settings import LockedField, SettingsService, normalize_base_url
 from app.domain.updates import UpdateService
 from app.domain.upgrade import adopt_orphans, bootstrap_admin
 from app.observability import (
@@ -71,6 +72,16 @@ def _password(settings: Settings) -> str:
     return password
 
 
+def _tracker_env(settings: Settings) -> dict[LockedField, str]:
+    env: dict[LockedField, str] = {}
+    if settings.drawhl_tracker:
+        env["provider"] = settings.drawhl_tracker
+    if settings.jira_base_url:
+        # A typo here should stop the start, not surface later as failing cards.
+        env["jira_base_url"] = normalize_base_url(settings.jira_base_url)
+    return env
+
+
 def create_app(
     settings: Settings | None = None,
     jira_transport: httpx.BaseTransport | None = None,
@@ -93,7 +104,8 @@ def create_app(
     if not created and env_password:
         log.info("DRAWHL_PASSWORD is not used once people exist; each signs in with their own")
     member_repo = SqliteMemberRepo(db)
-    adopt_orphans(users, member_repo)
+    credentials = SqliteCredentialRepo(db)
+    adopt_orphans(users, member_repo, credentials)
     app.state.members = Members(member_repo, users)
     # Added before the request context, so it runs inside it and 401s are logged and counted.
     app.add_middleware(PasswordGate, sessions=app.state.sessions)
@@ -106,15 +118,18 @@ def create_app(
     app.state.refresher = RefreshService()
     service = SettingsService(
         SqliteSettingsRepo(db),
+        credentials,
         box,
         secret_key_configured=bool(key),
         on_token=register_secret,
         on_change=app.state.refresher.reset,
+        env=_tracker_env(settings),
     )
     app.state.settings = service
     app.state.demo = DemoTaskProvider()
     client = _jira_client(settings, jira_transport)
-    app.state.jira = JiraDcProvider(service.jira_credentials, client)
+    # Built per request from the signed-in person's own token.
+    app.state.jira = lambda creds: JiraDcProvider(lambda: creds, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()
     if release_feed is None and settings.update_check:
         release_feed = GitHubReleaseFeed("Smacktur/drawhl", httpx.Client(timeout=5.0))

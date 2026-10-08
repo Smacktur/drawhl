@@ -68,13 +68,16 @@ class RefreshService:
         boards: BoardRepo,
         snapshots: SnapshotRepo,
         provider: TaskProvider,
+        owner: str = "",
     ) -> tuple[dict[str, Task], list[SourceStatus]]:
+        """Polls with the provider of `owner`; each person's tracker errors and backoff are
+        their own, since each uses their own token."""
         record = boards.get(board_id)
         if record is None:
             raise NotFound("board not found")
         keys = task_keys(record.doc)
         with self._lock:
-            source = self._sources.setdefault(provider.source_id, _Source())
+            source = self._sources.setdefault(f"{provider.source_id}:{owner}", _Source())
             tasks = self._poll(source, keys, interval_s, provider) if keys else []
             status = SourceStatus(
                 id=provider.source_id,

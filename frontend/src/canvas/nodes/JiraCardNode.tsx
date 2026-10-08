@@ -7,6 +7,7 @@ import type { JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 import { CardDetails } from '@/canvas/nodes/CardDetails'
 import { Handles } from '@/canvas/nodes/Handles'
 import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
+import { openSettings } from '@/settings/store'
 
 // Long titles are cut so the status lozenge after them always stays visible.
 const SUMMARY_LIMIT = 120
@@ -22,7 +23,8 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
   const { updateNodeData } = useReactFlow()
   const [open, setOpen] = useState(false)
   const pressedAt = useRef<{ x: number; y: number } | null>(null)
-  const missing = task?.state === 'not_found'
+  const noToken = task?.state === 'no_token'
+  const missing = task?.state === 'not_found' || noToken
   const done = task?.status_category === 'done'
   const collapsed = Boolean(data.collapsed)
 
@@ -83,7 +85,18 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
             </a>
           )}
           {!task && <span className="text-muted-foreground">Loading…</span>}
-          {missing && <span className="text-muted-foreground">Not found or no access</span>}
+          {task?.state === 'not_found' && (
+            <span className="text-muted-foreground">Not found or no access</span>
+          )}
+          {noToken && (
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+              onClick={() => openSettings('tracker')}
+            >
+              Connect your Jira token to see this task
+            </button>
+          )}
           {task && !missing && (
             <>
               {!collapsed && (

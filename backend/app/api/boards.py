@@ -107,9 +107,10 @@ def refresh_board(
     settings: Annotated[SettingsService, Depends(deps.settings)],
     provider: Annotated[TaskProvider, Depends(deps.provider)],
     refresher: Annotated[RefreshService, Depends(deps.refresher)],
+    owner: Annotated[str, Depends(deps.owner)],
 ) -> RefreshOut:
     tasks, sources = refresher.refresh(
-        board_id, settings.refresh_interval_s(), boards, snapshots, provider
+        board_id, settings.refresh_interval_s(), boards, snapshots, provider, owner
     )
     return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
 

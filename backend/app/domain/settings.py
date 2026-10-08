@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
 from app.domain.errors import JiraNotConfigured, SecretUnreadable, ValidationFailed
-from app.domain.ports import SecretBox, SettingsRepo
+from app.domain.ports import CredentialRepo, SecretBox, SettingsRepo
 
 Provider = Literal["demo", "jira"]
 TokenState = Literal["none", "set", "unreadable"]
@@ -54,11 +54,16 @@ class JiraView(BaseModel):
     token_state: TokenState
 
 
+LockedField = Literal["provider", "jira_base_url"]
+
+
 class SettingsView(BaseModel):
     provider: Provider
     refresh_interval_s: int
     secret_key_configured: bool
     jira: JiraView
+    # Fields set in the environment, which the API does not change.
+    locked: list[LockedField] = Field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -68,25 +73,38 @@ class JiraCredentials:
 
 
 class SettingsService:
+    """Instance settings (provider, Jira URL, refresh interval) and each person's own token.
+
+    A token is stored with the URL it was entered for and is only ever sent there: when the
+    admin moves the instance to another Jira, every token waits to be entered again.
+    """
+
     def __init__(
         self,
         repo: SettingsRepo,
+        credentials: CredentialRepo,
         box: SecretBox,
         secret_key_configured: bool,
         on_token: Callable[[str], None] = lambda _: None,
         on_change: Callable[[], None] = lambda: None,
+        env: dict[LockedField, str] | None = None,
     ) -> None:
+        self._env = env or {}
         self._repo = repo
+        self._credentials = credentials
         self._box = box
         self._secret_key_configured = secret_key_configured
         # Lets the log formatter mask the token wherever it might appear.
         self._on_token = on_token
         self._on_change = on_change
 
-    def _token(self, values: dict[str, str]) -> tuple[TokenState, SecretStr | None]:
-        encrypted = values.get("jira_token_enc")
-        if encrypted is None:
+    def _token(self, user_id: str, base_url: str | None) -> tuple[TokenState, SecretStr | None]:
+        stored = self._credentials.get(user_id, "jira")
+        if stored is None:
             return "none", None
+        encrypted, token_url = stored
+        if base_url is None or origin(token_url) != origin(base_url):
+            return "unreadable", None
         try:
             plain = self._box.decrypt(encrypted)
         except SecretUnreadable:
@@ -94,50 +112,81 @@ class SettingsService:
         self._on_token(plain)
         return "set", SecretStr(plain)
 
+    def _values(self) -> dict[str, str]:
+        return {**self._repo.get_all(), **self._env}
+
     def refresh_interval_s(self) -> int:
-        return int(self._repo.get_all().get("refresh_interval_s", DEFAULT_INTERVAL_S))
+        return int(self._values().get("refresh_interval_s", DEFAULT_INTERVAL_S))
 
     def provider(self) -> Provider:
-        return "jira" if self._repo.get_all().get("provider") == "jira" else "demo"
+        return "jira" if self._values().get("provider") == "jira" else "demo"
 
-    def view(self) -> SettingsView:
-        values = self._repo.get_all()
-        state, _ = self._token(values)
+    def base_url(self) -> str | None:
+        return self._values().get("jira_base_url")
+
+    def token_state(self, user_id: str) -> TokenState:
+        return self._token(user_id, self.base_url())[0]
+
+    def view(self, user_id: str) -> SettingsView:
+        values = self._values()
         return SettingsView(
             provider="jira" if values.get("provider") == "jira" else "demo",
             refresh_interval_s=int(values.get("refresh_interval_s", DEFAULT_INTERVAL_S)),
             secret_key_configured=self._secret_key_configured,
-            jira=JiraView(base_url=values.get("jira_base_url"), token_state=state),
+            jira=JiraView(
+                base_url=values.get("jira_base_url"), token_state=self.token_state(user_id)
+            ),
+            locked=sorted(self._env),
         )
 
-    def update(self, change: SettingsIn) -> SettingsView:
-        stored = self._repo.get_all()
+    def update(self, change: SettingsIn, user_id: str) -> SettingsView:
+        """Instance settings; a token in the change becomes this person's own."""
+        current = self._values()
+        changes_locked = (
+            "provider" in self._env
+            and change.provider is not None
+            and change.provider != current["provider"]
+        ) or (
+            "jira_base_url" in self._env
+            and change.jira is not None
+            and change.jira.base_url != current["jira_base_url"]
+        )
+        if changes_locked:
+            raise ValidationFailed("This is set by the server in the environment.")
         values: dict[str, str | None] = {}
         if change.provider is not None:
             values["provider"] = change.provider
         if change.refresh_interval_s is not None:
             values["refresh_interval_s"] = str(change.refresh_interval_s)
         if change.jira is not None:
-            plain = _clean(change.jira.token)
-            old_url = stored.get("jira_base_url")
-            moved = old_url is not None and origin(old_url) != origin(change.jira.base_url)
-            # The stored token must never be sent to a host it was not entered for.
-            if moved and plain is None and "jira_token_enc" in stored:
-                raise ValidationFailed("Enter the token for the new Jira URL.")
             values["jira_base_url"] = change.jira.base_url
-            if plain is not None:
-                values["jira_token_enc"] = self._box.encrypt(plain)
-                self._on_token(plain)
         self._repo.set_many(values)
+        if change.jira is not None and (plain := _clean(change.jira.token)) is not None:
+            self.set_token(user_id, SecretStr(plain))
         self._on_change()
-        return self.view()
+        return self.view(user_id)
+
+    def set_token(self, user_id: str, token: SecretStr) -> TokenState:
+        plain = _clean(token)
+        url = self.base_url()
+        if plain is None:
+            raise ValidationFailed("token: enter your personal access token")
+        if url is None:
+            raise JiraNotConfigured("An admin sets the Jira URL in Settings first.")
+        self._credentials.set(user_id, "jira", self._box.encrypt(plain), url)
+        self._on_token(plain)
+        self._on_change()
+        return self.token_state(user_id)
+
+    def remove_token(self, user_id: str) -> None:
+        self._credentials.delete(user_id, "jira")
+        self._on_change()
 
     def jira_credentials(
-        self, base_url: str | None = None, token: SecretStr | None = None
+        self, user_id: str, base_url: str | None = None, token: SecretStr | None = None
     ) -> JiraCredentials:
-        """Stored credentials, each overridable (used to test before saving)."""
-        values = self._repo.get_all()
-        stored_url = values.get("jira_base_url")
+        """This person's credentials, each overridable (used to test before saving)."""
+        stored_url = self.base_url()
         try:
             url = normalize_base_url(base_url) if base_url else stored_url
         except ValueError as exc:
@@ -145,15 +194,17 @@ class SettingsService:
         plain = _clean(token)
         if plain is not None:
             self._on_token(plain)
-            secret = SecretStr(plain)
+            secret: SecretStr | None = SecretStr(plain)
         else:
             if url and stored_url and origin(url) != origin(stored_url):
                 raise JiraNotConfigured("Enter the token for this Jira URL.")
-            state, secret = self._token(values)
+            state, secret = self._token(user_id, url)
             if state == "unreadable":
                 raise JiraNotConfigured(
-                    "The stored token cannot be read. Enter it again in Settings."
+                    "Your stored token does not work here any more. Enter it again in Settings."
                 )
-        if not url or secret is None:
-            raise JiraNotConfigured("Set the Jira URL and token in Settings.")
+        if not url:
+            raise JiraNotConfigured("An admin sets the Jira URL in Settings first.")
+        if secret is None:
+            raise JiraNotConfigured("Connect your Jira token in Settings → My tracker.")
         return JiraCredentials(base_url=url, token=secret)

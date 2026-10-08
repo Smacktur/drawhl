@@ -9,6 +9,8 @@ const settingsSchema = z.object({
     base_url: z.string().nullable(),
     token_state: z.enum(['none', 'set', 'unreadable']),
   }),
+  // Set in the environment by whoever deployed drawhl; the form shows them read-only.
+  locked: z.array(z.enum(['provider', 'jira_base_url'])).default([]),
 })
 
 export type Settings = z.infer<typeof settingsSchema>
@@ -36,4 +38,27 @@ export function testJira(input: { base_url?: string; token?: string }) {
     method: 'POST',
     body: JSON.stringify(input),
   })
+}
+
+const trackerSchema = z.object({
+  provider: z.enum(['demo', 'jira']),
+  base_url: z.string().nullable(),
+  token_state: z.enum(['none', 'set', 'unreadable']),
+})
+export type Tracker = z.infer<typeof trackerSchema>
+
+/** The signed-in person's own tracker token. */
+export function getTracker() {
+  return fetchJson('/api/me/tracker', trackerSchema)
+}
+
+export function saveTrackerToken(token: string) {
+  return fetchJson('/api/me/tracker', trackerSchema, {
+    method: 'PUT',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export function removeTrackerToken() {
+  return fetchJson('/api/me/tracker', z.null(), { method: 'DELETE' })
 }

@@ -148,7 +148,11 @@ export function GanttLabel({
           {task && <TypeIcon typeName={task.type_name} />}
           <span className={cn('shrink-0 font-medium', done && 'line-through')}>{row.key}</span>
           <span className="truncate" title={task?.summary}>
-            {task?.state === 'not_found' ? 'not found' : task?.summary}
+            {task?.state === 'not_found'
+              ? 'not found'
+              : task?.state === 'no_token'
+                ? 'connect your Jira token'
+                : task?.summary}
           </span>
         </span>
       ) : editing ? (

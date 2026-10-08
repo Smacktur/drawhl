@@ -98,7 +98,7 @@ drawhl uses your own personal access token, so a Jira admin doesn't need to set 
 
 2. Restart: `docker compose up -d` (add `-f compose.release.yml` if you run from images).
 3. In Jira, open your profile → Personal Access Tokens → Create token.
-4. In drawhl, open Settings → Task source (main menu or `⌘,`), choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
+4. In drawhl, an admin opens Settings → Task source (main menu or `⌘,`), chooses the Jira provider and enters the base URL (`https://jira.example.com`). Each person then pastes their own token in Settings → My tracker and presses "Test connection". It shows their Jira name, and cards show each person only what their own Jira access allows.
 
 Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://smacktur.github.io/drawhl/jira-data-center/).
 
@@ -145,6 +145,8 @@ Everything works without a `.env` file. To override defaults, `cp .env.example .
 |---|---|---|
 | `DRAWHL_PASSWORD` | Password of the first account, `admin`. When empty, one is generated on first start, printed once to the API log and saved to `data/password`. Not read once the account exists | generated |
 | `DRAWHL_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
+| `DRAWHL_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
+| `JIRA_BASE_URL` | Jira URL for everyone, like `https://jira.example.com`; a wrong URL stops the start. Each person still adds their own token | set in Settings |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |
 | `LOG_LEVEL` | Log level | `info` |

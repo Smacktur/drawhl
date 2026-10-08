@@ -57,10 +57,19 @@ description: "Task list for Accounts and roles"
 
 ## Phase 5: Slice 40 `feat/my-tracker` — a tracker token per person (US4)
 
-- [ ] T022 [P] [US4] Migration `user_credentials`, `task_snapshots_v2`; move the instance token and snapshots to `admin`. Upgrade test
-- [ ] T023 [US4] Provider per request from instance settings and the person's token; refresh and snapshots keyed by person; `forbidden` and `no_token` task states. Tests with a fake Jira that answers per token: no task data crosses people
-- [ ] T024 [US4] API `/me/tracker`; `PUT /settings` admin only; Jira URL change marks tokens to test again. Tests
-- [ ] T025 [US4] Frontend: Settings → My tracker section; Instance group shown only to admins; locked card for `forbidden` and `no_token`. Tests
-- [ ] T026 [US4] Token-leak test extended to per-person snapshots; docs (Jira guide); `CHANGELOG.md`; screenshot
+- [x] T022 [P] [US4] Migration `user_credentials`, `task_snapshots_v2`; move the instance token and snapshots to `admin`. Upgrade test
+- [x] T023 [US4] Provider per request from instance settings and the person's token; refresh and snapshots keyed by person; `forbidden` and `no_token` task states. Tests with a fake Jira that answers per token: no task data crosses people
+- [x] T024 [US4] API `/me/tracker`; `PUT /settings` admin only; Jira URL change marks tokens to test again. Tests
+- [x] T025 [US4] Frontend: Settings → My tracker section; Instance group shown only to admins; locked card for `forbidden` and `no_token`. Tests
+- [x] T026 [US4] Token-leak test extended to per-person snapshots; docs (Jira guide); `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, `make smoke`, access matrix, per-token test → G3 → release.
+
+## Phase 6: Slice 41 `feat/my-tracker` — the tracker from the environment (US4)
+
+**Goal**: whoever deploys drawhl sets the tracker and its URL in the environment, like the rest of the infrastructure; admins then only invite people and everyone adds their own token.
+
+- [x] T027 [US4] `DRAWHL_TRACKER` (`demo` or `jira`) and `JIRA_BASE_URL` in `config.py`, checked at start; when set they win over the stored settings and `PUT /settings` refuses to change them. `GET /settings` names the locked fields. Tests
+- [x] T028 [US4] Task source shows locked fields read-only with "Set by the server"; `.env.example`, README, guide (configuration, Jira, quick start for a hand-over from DevOps); `CHANGELOG.md`
+
+**Checkpoint**: `make check`, `make smoke` → G3 for slices 40 and 41 together.
