@@ -30,7 +30,7 @@ The [user guide](https://smacktur.github.io/drawhl/) covers every feature and ho
 
 ## 🚀 Quick start
 
-You need Docker with Compose. From released images, no checkout needed:
+You need Docker with Compose, or a Railway account for the cloud option below. From released images, no checkout needed:
 
 ```bash
 mkdir drawhl && cd drawhl
@@ -46,7 +46,13 @@ cd drawhl
 docker compose up --build
 ```
 
-Open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
+Or in the cloud, on Railway:
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl-test?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
+
+The template runs the released images with your boards on a volume and generates the encryption key. The app opens on the URL Railway gives you, and anyone who knows that URL can use it: see [security](https://smacktur.github.io/drawhl/security/). A Jira Data Center inside a corporate network is out of reach from there.
+
+On your machine, open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
 
 ## 🌟 Features
 
