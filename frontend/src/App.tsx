@@ -85,7 +85,7 @@ export default function App() {
   }, [current])
 
   useEffect(() => {
-    const signedOut = () => queryClient.setQueryData(['auth'], { signed_in: false })
+    const signedOut = () => queryClient.setQueryData(['auth'], { signed_in: false, me: null })
     window.addEventListener(AUTH_REQUIRED_EVENT, signedOut)
     return () => window.removeEventListener(AUTH_REQUIRED_EVENT, signedOut)
   }, [queryClient])
@@ -94,14 +94,7 @@ export default function App() {
     return (
       <main className="bg-background relative h-dvh w-full overflow-hidden">
         <h1 className="sr-only">drawhl</h1>
-        <SignIn
-          onSignedIn={() => {
-            queryClient.setQueryData(['auth'], { signed_in: true })
-            void queryClient.invalidateQueries({
-              predicate: (query) => query.queryKey[0] !== 'auth',
-            })
-          }}
-        />
+        <SignIn onSignedIn={() => void queryClient.invalidateQueries()} />
       </main>
     )
   }

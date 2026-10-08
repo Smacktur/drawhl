@@ -10,7 +10,7 @@ import urllib.request
 
 API = os.environ.get("SMOKE_API_URL", "http://localhost:8000")
 WEB = os.environ.get("SMOKE_WEB_URL", "http://web:3000")
-# Inside the api container the generated password sits in data/password.
+# The admin's password: inside the api container the generated one sits in data/password.
 PASSWORD_FILE = pathlib.Path("data/password")
 PASSWORD = (
     os.environ.get("SMOKE_PASSWORD")
@@ -44,8 +44,10 @@ check(status == 200, "health")
 
 status, _ = call("GET", f"{API}/api/boards")
 check(status == 401, "closed without a session")
-status, _ = call("POST", f"{API}/api/auth/login", {"password": PASSWORD})
+status, _ = call("POST", f"{API}/api/auth/login", {"username": "admin", "password": PASSWORD})
 check(status == 204, "sign in")
+status, auth = call("GET", f"{API}/api/auth/status")
+check(status == 200 and auth["me"]["username"] == "admin", "signed in as admin")
 
 # The scenario runs on demo tasks; a connected Jira is switched back afterwards.
 status, settings = call("GET", f"{API}/api/settings")

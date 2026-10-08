@@ -16,7 +16,7 @@ It is for people who keep a lot of work in their head and think spatially: leads
 ## What drawhl is not
 
 - The tracker stays the source of truth: drawhl doesn't change status or edit tasks.
-- One person, one instance: there is no real-time collaboration yet. One password guards the instance.
+- One person per instance for now: inviting colleagues and sharing boards come next, real-time collaboration after that. You sign in with a username and password.
 - Desktop only, English only.
 
 The source code, issues and releases live on [GitHub](https://github.com/Smacktur/drawhl).

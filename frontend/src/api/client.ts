@@ -4,7 +4,7 @@ const apiErrorSchema = z.object({
   error: z.object({ code: z.string(), message: z.string() }),
 })
 
-/** Fired when the session is gone, for example after the instance password changed. */
+/** Fired when the session is gone, for example after a sign-out everywhere. */
 export const AUTH_REQUIRED_EVENT = 'drawhl:auth-required'
 
 export class ApiError extends Error {

@@ -11,8 +11,10 @@ from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
+    SqliteSessionRepo,
     SqliteSettingsRepo,
     SqliteSnapshotRepo,
+    SqliteUserRepo,
 )
 from app.adapters.tasks.demo import DemoTaskProvider
 from app.adapters.tasks.jira_dc import JiraDcProvider
@@ -20,11 +22,13 @@ from app.api.errors import register_error_handlers
 from app.api.gate import PasswordGate
 from app.api.routes import router
 from app.config import Settings, get_settings
-from app.domain.access import Access
+from app.domain.accounts import Accounts
 from app.domain.ports import ReleaseFeed
 from app.domain.refresh import RefreshService
+from app.domain.sessions import Sessions
 from app.domain.settings import SettingsService
 from app.domain.updates import UpdateService
+from app.domain.upgrade import bootstrap_admin
 from app.observability import (
     RequestContextMiddleware,
     metrics_response,
@@ -49,6 +53,7 @@ def _jira_client(settings: Settings, transport: httpx.BaseTransport | None) -> h
 
 
 def _password(settings: Settings) -> str:
+    """The first admin's password: DRAWHL_PASSWORD, or one generated into the password file."""
     if settings.drawhl_password and settings.drawhl_password.get_secret_value():
         password = settings.drawhl_password.get_secret_value()
     else:
@@ -74,13 +79,19 @@ def create_app(
     if key and len(key) < MIN_SECRET_KEY_LENGTH:
         log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
     app = FastAPI(title=settings.app_name)
-    app.state.access = Access(_password(settings), key)
+    db = Database(settings.db_path)
+    users = SqliteUserRepo(db)
+    app.state.sessions = Sessions(SqliteSessionRepo(db))
+    app.state.accounts = Accounts(users, app.state.sessions)
+    created = bootstrap_admin(app.state.accounts, users, lambda: _password(settings))
+    env_password = settings.drawhl_password and settings.drawhl_password.get_secret_value()
+    if not created and env_password:
+        log.info("DRAWHL_PASSWORD is not used once people exist; each signs in with their own")
     # Added before the request context, so it runs inside it and 401s are logged and counted.
-    app.add_middleware(PasswordGate, access=app.state.access)
+    app.add_middleware(PasswordGate, sessions=app.state.sessions)
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
 
-    db = Database(settings.db_path)
     app.state.boards = SqliteBoardRepo(db)
     app.state.snapshots = SqliteSnapshotRepo(db)
     box = FernetSecretBox(key) if key else NullSecretBox()

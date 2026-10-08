@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from app.domain.accounts import Person
     from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
     from app.domain.jql import JqlValue, JqlVocabulary
     from app.domain.tasks import Task
@@ -96,3 +97,37 @@ class ReleaseFeed(Protocol):
     def latest(self) -> Release:
         """Newest published release; raises DependencyUnavailable when it can't be fetched."""
         ...
+
+
+class UserRepo(Protocol):
+    def count(self) -> int: ...
+
+    def add(self, person: Person, password_hash: str) -> None:
+        """Raises UsernameTaken."""
+        ...
+
+    def find(self, username: str) -> tuple[Person, str] | None:
+        """The person and their password hash, matching the username without regard to case."""
+        ...
+
+    def update(self, person: Person) -> None:
+        """Saves name and username; raises UsernameTaken."""
+        ...
+
+    def set_password(self, user_id: str, password_hash: str) -> None: ...
+
+    def touch_sign_in(self, user_id: str) -> None: ...
+
+
+class SessionRepo(Protocol):
+    def add(self, token_hash: str, user_id: str, expires_at: str, created_at: str) -> None: ...
+
+    def get(self, token_hash: str) -> tuple[Person, str] | None:
+        """The person and the session's expiry."""
+        ...
+
+    def delete(self, token_hash: str) -> None: ...
+
+    def delete_for_user(self, user_id: str, keep: str | None) -> None: ...
+
+    def delete_expired(self, now: str) -> None: ...

@@ -2,19 +2,21 @@
 title: Security and privacy
 ---
 
-drawhl is a single-user app behind one password. Every page and API route except `/health` and `/ready` asks for it, `/metrics` included.
+Every page and API route except `/health` and `/ready` asks you to sign in with a username and password, `/metrics` included.
 
-## The password
+## Signing in
 
-- Set it with `DRAWHL_PASSWORD`. When it is empty, drawhl generates one on first start, prints it once to the API log (`docker compose logs api | grep 'drawhl password'`) and saves it to `data/password`.
+- The first account is `admin`. Its password is `DRAWHL_PASSWORD`; when that is empty, drawhl generates one on first start, prints it once to the API log (`docker compose logs api | grep 'drawhl password'`) and saves it to `data/password`.
 - On Railway the template generates it: see `DRAWHL_PASSWORD` in the `api` service's Variables.
-- A sign-in lasts 30 days in that browser. Changing the password and restarting signs out every browser, yours and anyone who learned the old one. Deleting `data/password` does the same with a new generated password.
-- After 5 wrong passwords in a minute, sign-in pauses for the rest of that minute.
+- Once the account exists, `DRAWHL_PASSWORD` and `data/password` are no longer read. Change the password, name and username in Settings → My account.
+- A sign-in lasts 30 days in that browser. Changing your password signs out your other devices; "Sign out everywhere" in Settings signs out all of them.
+- Passwords are stored as salted scrypt hashes, and sessions as hashes of their tokens.
+- After 10 wrong passwords for one username in 15 minutes, sign-in for that username pauses until the window passes.
 - On the open internet use HTTPS, which Railway and Render give you.
 
 ## What drawhl stores
 
-- Your boards and settings.
+- Your boards, settings and account: username, name and password hash.
 - The tracker token, encrypted with `DRAWHL_SECRET_KEY`. It is never sent back to the browser or written to logs.
 - A cached copy of each card's key, summary, status, type, assignee, priority and last update.
 

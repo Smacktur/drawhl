@@ -16,12 +16,12 @@ description: "Task list for Accounts and roles"
 
 **Goal**: people exist; an upgraded instance opens as `admin` with everything it had.
 
-- [ ] T001 [P] [US1] Migration with `users`, `sessions`; `domain/accounts.py` scrypt hash and verify, username rules, per-username limiter. Tests
-- [ ] T002 [US1] `domain/sessions.py` start, resolve with 30 s cache, end, end all; `api/gate.py` puts the person on the request. Tests: expiry, revoke, disabled person
-- [ ] T003 [US1] `domain/upgrade.py`: bootstrap `admin` from `DRAWHL_PASSWORD` or `data/password`; log once when the variable is set but unused. Test against a v2026.10.9 database fixture with boards and a token
-- [ ] T004 [US1] API: login with username, status with `me`, logout-all, `PATCH /me`, `PUT /me/password`. Tests
-- [ ] T005 [US1] Frontend: username field on sign-in, Settings → My account (name, username, password, sign out everywhere). Tests
-- [ ] T006 [US1] `conftest.py`, `scripts/smoke.py`, README, guide (security, quick start), `CHANGELOG.md`; screenshot
+- [x] T001 [P] [US1] Migration with `users`, `sessions`; `domain/accounts.py` scrypt hash and verify, username rules, per-username limiter. Tests
+- [x] T002 [US1] `domain/sessions.py` start, resolve with 30 s cache, end, end all; `api/gate.py` puts the person on the request. Tests: expiry, revoke, disabled person
+- [x] T003 [US1] `domain/upgrade.py`: bootstrap `admin` from `DRAWHL_PASSWORD` or `data/password`; log once when the variable is set but unused. Test against a v2026.10.9 database fixture with boards and a token
+- [x] T004 [US1] API: login with username, status with `me`, logout-all, `PATCH /me`, `PUT /me/password`. Tests
+- [x] T005 [US1] Frontend: username field on sign-in, Settings → My account (name, username, password, sign out everywhere). Tests
+- [x] T006 [US1] `conftest.py`, `scripts/smoke.py`, README, guide (security, quick start), `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, `make smoke`, upgrade fixture → G3.
 

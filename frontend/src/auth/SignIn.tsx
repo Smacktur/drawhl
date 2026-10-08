@@ -10,18 +10,20 @@ import { Label } from '@/components/ui/label'
 
 function message(error: Error) {
   if (!(error instanceof ApiError)) return error.message
-  if (error.code === 'invalid_password') return 'Wrong password. Try again.'
+  if (error.code === 'invalid_credentials') return 'Wrong username or password.'
+  if (error.code === 'account_disabled') return 'This account is disabled. Ask your admin.'
   if (error.code === 'too_many_attempts')
     return `Too many wrong passwords. Try again in ${error.retryAfter ?? 60} s.`
   return error.message
 }
 
 export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const login = useMutation({ mutationFn: signIn, onSuccess: onSignedIn })
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    if (password) login.mutate(password)
+    if (username && password) login.mutate({ username: username.trim(), password })
   }
   return (
     <form
@@ -33,18 +35,30 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         drawhl
       </p>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="instance-password">Password</Label>
+        <Label htmlFor="sign-in-username">Username</Label>
         <Input
-          id="instance-password"
+          id="sign-in-username"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          maxLength={64}
+          autoFocus
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="sign-in-password">Password</Label>
+        <Input
+          id="sign-in-password"
           type="password"
           autoComplete="current-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           maxLength={1024}
-          autoFocus
         />
       </div>
-      <Button type="submit" disabled={login.isPending || !password}>
+      <Button type="submit" disabled={login.isPending || !username || !password}>
         <LogIn strokeWidth={1.75} />
         Sign in
       </Button>

@@ -4,7 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- Sign-in asks for a username and a password. An upgraded instance creates the account `admin` with the instance password it had, so you sign in as `admin` and find every board and the tracker connection as before. After that `DRAWHL_PASSWORD` and `data/password` are no longer read.
+- API: `POST /api/auth/login` takes `{username, password}` and answers `invalid_credentials` instead of `invalid_password`; `GET /api/auth/status` also returns `me`. Sessions are stored on the server, so signing out ends the session for good.
+
 ### Added
+
+- Settings → My account: change your name, username and password, and sign out everywhere. Changing the password signs out your other devices.
 
 - A logo: the emblem is a dot grid where one dot grew into a card. The app has a favicon and a home screen icon, the sign-in screen and the About panel show the emblem, and the user guide shows the logo. Logo files, the app icon and social covers for GitHub and Product Hunt are in `brand/`.
 

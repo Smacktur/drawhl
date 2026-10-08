@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { LogOut, Settings as SettingsIcon } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { signOut } from '@/api/auth'
+import {
+  changePassword,
+  getAuthStatus,
+  signOut,
+  signOutEverywhere,
+  updateMe,
+  type Me,
+} from '@/api/auth'
 import { getSettings, saveSettings, testJira, type Settings } from '@/api/settings'
 import { readPasteAs, writePasteAs, type PasteAs } from '@/canvas/paste'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -192,19 +199,144 @@ function PasteSetting() {
   )
 }
 
+function AccountForm({ me }: { me: Me }) {
+  const queryClient = useQueryClient()
+  const [name, setName] = useState(me.name)
+  const [username, setUsername] = useState(me.username)
+  const save = useMutation({
+    mutationFn: () => updateMe({ name: name.trim(), username: username.trim() }),
+    onSuccess: (saved) => queryClient.setQueryData(['auth'], { signed_in: true, me: saved }),
+  })
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    save.mutate()
+  }
+  const changed = name.trim() !== me.name || username.trim() !== me.username
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="account-name">Name</Label>
+        <Input
+          id="account-name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          maxLength={64}
+          required
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="account-username">Username</Label>
+        <Input
+          id="account-username"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          minLength={3}
+          maxLength={32}
+          required
+        />
+      </div>
+      {save.isError && <p className="text-destructive text-[13px]">{save.error.message}</p>}
+      <div className="flex items-center gap-2">
+        <Button type="submit" size="sm" variant="outline" disabled={save.isPending || !changed}>
+          Save account
+        </Button>
+        {save.isSuccess && !changed && (
+          <span className="text-muted-foreground text-[13px]">Saved.</span>
+        )}
+      </div>
+    </form>
+  )
+}
+
+function PasswordForm({ username }: { username: string }) {
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const change = useMutation({
+    mutationFn: () => changePassword({ current, new: next }),
+    onSuccess: () => {
+      setCurrent('')
+      setNext('')
+    },
+  })
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    change.mutate()
+  }
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-3">
+      {/* Lets password managers file the new password under the right account. */}
+      <input type="text" value={username} autoComplete="username" readOnly hidden />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="password-current">Current password</Label>
+        <Input
+          id="password-current"
+          type="password"
+          autoComplete="current-password"
+          value={current}
+          onChange={(event) => setCurrent(event.target.value)}
+          maxLength={1024}
+          required
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="password-new">New password</Label>
+        <Input
+          id="password-new"
+          type="password"
+          autoComplete="new-password"
+          value={next}
+          onChange={(event) => setNext(event.target.value)}
+          minLength={10}
+          maxLength={1024}
+          required
+        />
+        <p className="text-muted-foreground text-[13px]">
+          At least 10 characters. Other devices are signed out.
+        </p>
+      </div>
+      {change.isError && <p className="text-destructive text-[13px]">{change.error.message}</p>}
+      <div className="flex items-center gap-2">
+        <Button type="submit" size="sm" variant="outline" disabled={change.isPending}>
+          Change password
+        </Button>
+        {change.isSuccess && (
+          <span className="text-muted-foreground text-[13px]">Password changed.</span>
+        )}
+      </div>
+    </form>
+  )
+}
+
+function MyAccount() {
+  const auth = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus })
+  const me = auth.data?.me
+  if (!me) return null
+  return (
+    <fieldset className="flex flex-col gap-5 px-4 text-[14px]">
+      <legend className="mb-2 font-medium">My account</legend>
+      <AccountForm key={me.id} me={me} />
+      <PasswordForm username={me.username} />
+    </fieldset>
+  )
+}
+
 // A reload drops every cached board and task along with the session.
 function SignOut() {
-  const logout = useMutation({ mutationFn: signOut, onSuccess: () => window.location.reload() })
+  const reload = () => window.location.reload()
+  const logout = useMutation({ mutationFn: signOut, onSuccess: reload })
+  const everywhere = useMutation({ mutationFn: signOutEverywhere, onSuccess: reload })
+  const pending = logout.isPending || everywhere.isPending
   return (
-    <div className="mt-auto px-4 pb-4">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => logout.mutate()}
-        disabled={logout.isPending}
-      >
+    <div className="mt-auto flex flex-wrap gap-2 px-4 pb-4">
+      <Button variant="outline" size="sm" onClick={() => logout.mutate()} disabled={pending}>
         <LogOut strokeWidth={1.75} />
         Sign out
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => everywhere.mutate()} disabled={pending}>
+        Sign out everywhere
       </Button>
     </div>
   )
@@ -228,11 +360,12 @@ export function SettingsSheet({
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Settings</SheetTitle>
-          <SheetDescription>Where cards get their task data.</SheetDescription>
+          <SheetDescription>Your account and where cards get their task data.</SheetDescription>
         </SheetHeader>
+        <MyAccount />
         {settings.isPending && <p className="text-muted-foreground px-4">Loading…</p>}
         {settings.isError && (
           <Alert variant="destructive" className="mx-4 w-auto">
