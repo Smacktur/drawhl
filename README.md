@@ -98,7 +98,7 @@ drawhl uses your own personal access token, so a Jira admin doesn't need to set 
 
 2. Restart: `docker compose up -d` (add `-f compose.release.yml` if you run from images).
 3. In Jira, open your profile → Personal Access Tokens → Create token.
-4. In drawhl, open the menu → Settings, choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
+4. In drawhl, open Settings → Task source (main menu or `⌘,`), choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
 
 Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://smacktur.github.io/drawhl/jira-data-center/).
 
@@ -154,7 +154,7 @@ Everything works without a `.env` file. To override defaults, `cp .env.example .
 
 To trust a corporate CA, put the bundle in `./data` (for example `data/corp-ca.pem`) and set `JIRA_CA_BUNDLE=data/corp-ca.pem`.
 
-The refresh interval is set in Settings, not in the environment.
+The refresh interval is set in Settings → Task source, not in the environment.
 
 ## 💾 Data, backups and upgrades
 
@@ -169,7 +169,7 @@ More in the [data and upgrades guide](https://smacktur.github.io/drawhl/data-and
 
 ## 🛡️ Security and privacy
 
-Every page and API route except `/health` and `/ready` asks you to sign in, `/metrics` included. The first account is `admin` with the password from `DRAWHL_PASSWORD` or `data/password`; after that, change it in Settings → My account. Passwords are stored as salted scrypt hashes. A sign-in lasts 30 days in that browser, and "Sign out everywhere" ends every session. After 10 wrong passwords for one username in 15 minutes sign-in for it pauses. On the open internet use HTTPS, which Railway and Render give you.
+Every page and API route except `/health` and `/ready` asks you to sign in, `/metrics` included. The first account is `admin` with the password from `DRAWHL_PASSWORD` or `data/password`; after that, change it in Settings → Security. Passwords are stored as salted scrypt hashes. A sign-in lasts 30 days in that browser, and "Sign out everywhere" ends every session. After 10 wrong passwords for one username in 15 minutes sign-in for it pauses. On the open internet use HTTPS, which Railway and Render give you.
 
 Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too.
 

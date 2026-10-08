@@ -15,6 +15,7 @@ export const SHORTCUTS = {
   help: { keys: 'shift+slash', display: '?', label: 'Keyboard shortcuts', group: 'General' },
   search: { keys: 'mod+k, mod+f', label: 'Search the board', group: 'General' },
   commands: { keys: 'mod+p, mod+shift+p', label: 'Commands', group: 'General' },
+  settings: { keys: 'mod+comma', label: 'Settings', group: 'General' },
   // Handled by the search palette; listed so the help dialog and the palette show it.
   selectMatches: { keys: 'mod+enter', label: 'Select all search results', group: 'General' },
   select: { keys: 'v', label: 'Select', group: 'Tools' },
@@ -59,6 +60,7 @@ const KEY_NAMES: Record<string, string> = {
   shift: 'Shift',
   alt: isMac ? '⌥' : 'Alt',
   escape: 'Esc',
+  comma: ',',
   enter: '↵',
   delete: 'Delete',
   backspace: 'Backspace',

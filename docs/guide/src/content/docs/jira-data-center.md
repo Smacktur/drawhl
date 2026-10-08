@@ -12,7 +12,7 @@ drawhl supports Jira Data Center and Server 8.14 and later. It uses your own per
 
 2. Restart: `docker compose up -d` (add `-f compose.release.yml` if you run from images).
 3. In Jira, open your profile → Personal Access Tokens → Create token.
-4. In drawhl, open the menu → Settings, choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
+4. In drawhl, open Settings → Task source (main menu or `⌘,`), choose the Jira provider, enter the base URL (`https://jira.example.com`) and the token, then press "Test connection". It shows your Jira name.
 
 Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again.
 
