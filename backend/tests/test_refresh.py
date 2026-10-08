@@ -45,9 +45,9 @@ class Flaky:
 def repos():
     db = Database(":memory:")
     boards = SqliteBoardRepo(db)
-    board = boards.create("b", BoardDoc())
-    boards.save(board.id, 1, DOC)
-    return board.id, boards, SqliteSnapshotRepo(db)
+    board_id = boards.create("b", BoardDoc(), "owner")
+    boards.save(board_id, 1, DOC)
+    return board_id, boards, SqliteSnapshotRepo(db)
 
 
 class Clock:
@@ -173,10 +173,10 @@ def test_reset_clears_backoff(repos):
 def test_empty_board_reports_the_last_known_state(repos):
     _, boards, _ = repos
     service = RefreshService(Clock())
-    empty = boards.create("empty", BoardDoc())
+    empty = boards.create("empty", BoardDoc(), "owner")
     provider = Flaky()
-    _, status = poll(service, repos, provider, board_id=empty.id)
+    _, status = poll(service, repos, provider, board_id=empty)
     assert (status.state, provider.calls) == ("ok", 0)
     poll(service, repos, Flaky(JiraUnreachable("down")))
-    _, status = poll(service, repos, provider, board_id=empty.id)
+    _, status = poll(service, repos, provider, board_id=empty)
     assert status.state == "error"

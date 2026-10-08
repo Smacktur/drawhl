@@ -1,10 +1,10 @@
 import time
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
-from app.api.deps import AccountsDep, CurrentAdmin, InvitesDep
+from app.api.deps import AccountsDep, CurrentAdmin, CurrentPerson, InvitesDep
 from app.domain.accounts import PersonRecord
 from app.domain.invites import Invite
 
@@ -63,3 +63,27 @@ def change_person(
 @router.post("/people/{user_id}/reset", status_code=201)
 def reset_link(user_id: str, admin: CurrentAdmin, invites: InvitesDep) -> InviteLink:
     return link(*invites.reset(admin.id, user_id, time.time()))
+
+
+class DirectoryEntry(BaseModel):
+    id: str
+    username: str
+    name: str
+
+
+class Directory(BaseModel):
+    people: list[DirectoryEntry]
+
+
+@router.get("/people/directory")
+def directory(
+    _: CurrentPerson, accounts: AccountsDep, q: str = Query(default="", max_length=64)
+) -> Directory:
+    """Active people for the share picker; open to everyone signed in."""
+    needle = q.strip().lower()
+    found = [
+        DirectoryEntry(id=p.id, username=p.username, name=p.name)
+        for p in accounts.people()
+        if not p.disabled and (needle in p.name.lower() or needle in p.username.lower())
+    ]
+    return Directory(people=found[:20])

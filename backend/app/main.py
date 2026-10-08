@@ -12,6 +12,7 @@ from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
     SqliteInviteRepo,
+    SqliteMemberRepo,
     SqliteSessionRepo,
     SqliteSettingsRepo,
     SqliteSnapshotRepo,
@@ -25,12 +26,13 @@ from app.api.routes import router
 from app.config import Settings, get_settings
 from app.domain.accounts import Accounts
 from app.domain.invites import Invites
+from app.domain.members import Members
 from app.domain.ports import ReleaseFeed
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
 from app.domain.settings import SettingsService
 from app.domain.updates import UpdateService
-from app.domain.upgrade import bootstrap_admin
+from app.domain.upgrade import adopt_orphans, bootstrap_admin
 from app.observability import (
     RequestContextMiddleware,
     metrics_response,
@@ -90,6 +92,9 @@ def create_app(
     env_password = settings.drawhl_password and settings.drawhl_password.get_secret_value()
     if not created and env_password:
         log.info("DRAWHL_PASSWORD is not used once people exist; each signs in with their own")
+    member_repo = SqliteMemberRepo(db)
+    adopt_orphans(users, member_repo)
+    app.state.members = Members(member_repo, users)
     # Added before the request context, so it runs inside it and 401s are logged and counted.
     app.add_middleware(PasswordGate, sessions=app.state.sessions)
     app.add_middleware(RequestContextMiddleware)

@@ -19,6 +19,7 @@ from app.domain.errors import (
     JiraUnauthorized,
     LastAdmin,
     NotFound,
+    OwnerRequired,
     SecretKeyMissing,
     TaskNotFound,
     TooManyAttempts,
@@ -50,6 +51,7 @@ _STATUS = {
     Forbidden: 403,
     LastAdmin: 409,
     InviteExpired: 410,
+    OwnerRequired: 409,
     TooManyAttempts: 429,
 }
 

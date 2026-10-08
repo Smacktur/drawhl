@@ -69,7 +69,13 @@ created: list[str] = []
 try:
     status, board = call("POST", f"{API}/api/boards", {"name": "smoke"})
     created.append(board["id"])
-    check(status == 201, "create board")
+    check(status == 201 and board["my_role"] == "owner", "create board as its owner")
+    status, members = call("GET", f"{API}/api/boards/{board['id']}/members")
+    check(status == 200 and members["members"][0]["role"] == "owner", "board lists its owner")
+    status, _ = call("PUT", f"{API}/api/boards/{board['id']}/everyone", {"role": "viewer"})
+    check(status == 204, "share board with everyone")
+    status, _ = call("PUT", f"{API}/api/boards/{board['id']}/everyone", {"role": None})
+    check(status == 204, "stop sharing with everyone")
 
     status, body = call("POST", f"{API}/api/tasks/resolve", {"ref": "DEMO-1"})
     check(status == 200 and body["task"]["key"] == "DEMO-1", "resolve by key")

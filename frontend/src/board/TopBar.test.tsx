@@ -1,12 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
+import type { BoardSummary } from '@/api/boards'
 import { TopBar } from '@/board/TopBar'
 
+const owner = { id: 'u1', name: 'Admin' }
 const boards = [
-  { id: 'a', name: 'Q4 goals', updated_at: '2026-10-05T07:00:00Z' },
-  { id: 'b', name: 'Team Platform', updated_at: '2026-10-05T07:00:00Z' },
-]
+  { id: 'a', name: 'Q4 goals', updated_at: '2026-10-05T07:00:00Z', my_role: 'owner', owner },
+  { id: 'b', name: 'Team Platform', updated_at: '2026-10-05T07:00:00Z', my_role: 'owner', owner },
+] satisfies BoardSummary[]
 
 afterEach(() => {
   localStorage.clear()
@@ -103,4 +105,38 @@ test('shows who is signed in and opens settings with mod+comma', async () => {
     expect(new URL(window.location.href).searchParams.get('settings')).toBe('profile'),
   )
   vi.unstubAllGlobals()
+})
+
+test('a viewer sees View only and cannot rename or delete', async () => {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <TopBar
+        boards={[{ ...boards[0], my_role: 'viewer' }]}
+        others={[]}
+        current={{ ...boards[0], my_role: 'viewer' }}
+        onSelect={vi.fn()}
+      />
+    </QueryClientProvider>,
+  )
+  expect(screen.getByText('View only')).toBeInTheDocument()
+  fireEvent.keyDown(screen.getByRole('button', { name: /Q4 goals/ }), { key: 'Enter' })
+  await screen.findByRole('menuitem', { name: 'New board' })
+  expect(screen.queryByRole('menuitem', { name: 'Rename board' })).toBeNull()
+  expect(screen.queryByRole('menuitem', { name: /Delete board/ })).toBeNull()
+})
+
+test('admins find boards shared with no one under All boards', async () => {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <TopBar
+        boards={[boards[0]]}
+        others={[{ ...boards[1], owner: { id: 'u9', name: 'Dana' } }]}
+        current={boards[0]}
+        onSelect={vi.fn()}
+      />
+    </QueryClientProvider>,
+  )
+  fireEvent.keyDown(screen.getByRole('button', { name: /Q4 goals/ }), { key: 'Enter' })
+  expect(await screen.findByText('All boards')).toBeInTheDocument()
+  expect(screen.getByRole('menuitemradio', { name: /Team Platform/ })).toBeInTheDocument()
 })

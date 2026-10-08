@@ -54,6 +54,8 @@ All existing board routes check the effective role: read routes (`GET /boards/{i
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
 | `GET /boards` | – | `{boards: BoardSummary[], all: BoardSummary[]}` (`all` only for admins: boards they have no role on) | |
+| `GET /boards/{id}` | – | `Board` = `BoardSummary` + `{version, doc, tasks}`; `my_role` drives the read-only canvas | 404 |
+| `POST /boards` | `{name}` | 201 `BoardSummary`, the creator is the owner | |
 | `GET /boards/{id}/members` | – | `{members: Member[], everyone_role: null | "viewer" | "editor"}` | 404 |
 | `PUT /boards/{id}/members/{user_id}` | `{role: "editor" | "viewer"}` | `Member` | 403, 404 |
 | `DELETE /boards/{id}/members/{user_id}` | – | 204 | 403, 404, 409 `owner_required` |

@@ -12,6 +12,7 @@ import { useFlashing } from '@/canvas/fly'
 import { formatDue, formatLeft, formatLeftLong } from './time'
 import { describeWatch, goesOffAt, timerState, type TimerState } from './timer'
 import { TimerEditor } from './TimerEditor'
+import { useReadOnly } from '@/canvas/readonly'
 
 // A press that moves further than this is a drag, not a click that opens the popover.
 const CLICK_SLOP = 4
@@ -63,11 +64,12 @@ function TimerNodeView({ id, data, parentId, selected, dragging }: NodeProps<Tim
   const onPointerDown = (event: PointerEvent) => {
     pressedAt.current = { x: event.clientX, y: event.clientY }
   }
+  const readOnly = useReadOnly()
   const onClick = (event: MouseEvent) => {
     const start = pressedAt.current
     if (!start || event.shiftKey) return
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP) return
-    setOpen(true)
+    if (!readOnly) setOpen(true)
   }
 
   return (

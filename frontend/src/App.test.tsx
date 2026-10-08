@@ -34,7 +34,7 @@ function mockFetch(status: number, body: unknown, auth: Partial<Record<string, R
 afterEach(() => vi.unstubAllGlobals())
 
 test('offers to create the first board', async () => {
-  mockFetch(200, { boards: [] })
+  mockFetch(200, { boards: [], all: [] })
   renderApp()
   expect(await screen.findByText(/Create a board/)).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /New board/ })).toBeDisabled()
@@ -57,7 +57,7 @@ test('asks for username and password and opens the boards after signing in', asy
     }
     if (path === '/api/auth/status')
       return Response.json({ signed_in: signedIn, me: signedIn ? me : null })
-    return Response.json({ boards: [] })
+    return Response.json({ boards: [], all: [] })
   })
   vi.stubGlobal('fetch', fetch)
   renderApp()
@@ -72,7 +72,7 @@ test('asks for username and password and opens the boards after signing in', asy
 test('names wrong credentials', async () => {
   mockFetch(
     200,
-    { boards: [] },
+    { boards: [], all: [] },
     {
       '/api/auth/status': { status: 200, body: { signed_in: false, me: null } },
       '/api/auth/login': {
@@ -89,7 +89,7 @@ test('names wrong credentials', async () => {
 })
 
 test('drops back to the sign-in screen when the session is gone', async () => {
-  mockFetch(200, { boards: [] })
+  mockFetch(200, { boards: [], all: [] })
   renderApp()
   await screen.findByText(/Create a board/)
   act(() => {

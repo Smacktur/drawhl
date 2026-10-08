@@ -3,6 +3,7 @@ import { ReactFlow, ReactFlowProvider, useNodesState } from '@xyflow/react'
 import { beforeAll, expect, test } from 'vitest'
 import { STICKY_MAX_CHARS } from '@/canvas/fit'
 import { StickyNode } from '@/canvas/nodes/StickyNode'
+import { ReadOnlyContext } from '@/canvas/readonly'
 import type { AppNode } from '@/canvas/types'
 
 const nodeTypes = { sticky: StickyNode }
@@ -54,4 +55,18 @@ test('pasting past the limit shows the no entry sign', () => {
   expect(document.querySelector('.sticky-blocked')).toBeNull()
   fireEvent.paste(field, { clipboardData: { getData: () => 'abcd' } })
   expect(document.querySelector('.sticky-blocked')).not.toBeNull()
+})
+
+test('a read-only board opens no editor and no color picker', () => {
+  render(
+    <ReadOnlyContext.Provider value={true}>
+      <ReactFlowProvider>
+        <div style={{ width: 800, height: 600 }}>
+          <Board text="Look only" />
+        </div>
+      </ReactFlowProvider>
+    </ReadOnlyContext.Provider>,
+  )
+  fireEvent.doubleClick(screen.getByText('Look only'))
+  expect(screen.queryByRole('textbox', { name: 'Note' })).toBeNull()
 })

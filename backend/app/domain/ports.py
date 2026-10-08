@@ -4,9 +4,10 @@ from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from app.domain.accounts import Person, PersonRecord, Role
-    from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
+    from app.domain.boards import BoardDoc, BoardRecord, BoardRow
     from app.domain.invites import Invite
     from app.domain.jql import JqlValue, JqlVocabulary
+    from app.domain.members import BoardRole, Member, ShareRole
     from app.domain.tasks import Task
     from app.domain.updates import Release
 
@@ -43,12 +44,16 @@ class TaskProvider(Protocol):
 
 
 class BoardRepo(Protocol):
-    def list(self) -> list[BoardSummary]: ...
+    def listing(self, user_id: str, board_id: str | None = None) -> list[BoardRow]:
+        """Every board (or one) by last change, with this person's role and the owner."""
+        ...
 
-    def create(self, name: str, doc: BoardDoc) -> BoardSummary: ...
+    def create(self, name: str, doc: BoardDoc, owner_id: str) -> str:
+        """Returns the new board's id."""
+        ...
 
-    def create_first(self, name: str, doc: BoardDoc) -> BoardSummary | None:
-        """Creates the board only on a store that never had a board."""
+    def create_welcome(self, user_id: str, name: str, doc: BoardDoc) -> str | None:
+        """Creates the person's welcome board once, only while they own no board."""
         ...
 
     def get(self, board_id: str) -> BoardRecord | None: ...
@@ -57,12 +62,38 @@ class BoardRepo(Protocol):
         """Compare-and-set on version; raises NotFound or VersionConflict, returns new version."""
         ...
 
-    def rename(self, board_id: str, name: str) -> BoardSummary:
+    def rename(self, board_id: str, name: str) -> None:
         """Leaves the doc version alone so open tabs keep saving; raises NotFound."""
         ...
 
     def delete(self, board_id: str) -> None:
         """Raises NotFound."""
+        ...
+
+
+class MemberRepo(Protocol):
+    def roles(
+        self, board_id: str, user_id: str
+    ) -> tuple[BoardRole | None, ShareRole | None] | None:
+        """The person's own role and the board's "everyone" role; None when the board is gone."""
+        ...
+
+    def role(self, board_id: str, user_id: str) -> BoardRole | None: ...
+
+    def members(self, board_id: str) -> list[Member]: ...
+
+    def everyone(self, board_id: str) -> ShareRole | None: ...
+
+    def set_role(self, board_id: str, user_id: str, role: BoardRole) -> None: ...
+
+    def remove(self, board_id: str, user_id: str) -> None: ...
+
+    def set_everyone(self, board_id: str, role: ShareRole | None) -> None: ...
+
+    def transfer(self, board_id: str, user_id: str) -> None: ...
+
+    def adopt_orphans(self, owner_id: str) -> None:
+        """Makes this person the owner of every board without one, as after an upgrade."""
         ...
 
 

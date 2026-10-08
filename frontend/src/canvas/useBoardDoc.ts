@@ -32,8 +32,16 @@ export function toDoc(nodes: AppNode[], edges: AppEdge[], viewport: Viewport): B
   }
 }
 
-/** Board state with debounced compare-and-set saves; calls onConflict on a 409. */
-export function useBoardDoc(board: Board, onConflict: () => void) {
+/** Board state with debounced compare-and-set saves; calls onConflict on a 409.
+ *
+ * A read-only board never saves; a 403 means the role changed and calls onForbidden.
+ */
+export function useBoardDoc(
+  board: Board,
+  onConflict: () => void,
+  readOnly = false,
+  onForbidden: () => void = () => {},
+) {
   const [nodes, setNodes, onNodesChange] = useNodesState(board.doc.nodes as AppNode[])
   const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
   const [viewport, setViewport] = useState<Viewport>(board.doc.viewport)
@@ -72,6 +80,10 @@ export function useBoardDoc(board: Board, onConflict: () => void) {
             onConflict()
             return
           }
+          if (error instanceof ApiError && error.code === 'forbidden') {
+            onForbidden()
+            return
+          }
           pending.current ??= next
           failures.current += 1
           setSaveError(error instanceof Error ? error.message : 'Could not save the board')
@@ -83,17 +95,21 @@ export function useBoardDoc(board: Board, onConflict: () => void) {
     } finally {
       inFlight.current = false
     }
-  }, [board.id, onConflict])
+  }, [board.id, onConflict, onForbidden])
 
   useEffect(() => {
     flushRef.current = flush
   }, [flush])
 
   useEffect(() => {
+    if (readOnly) {
+      pending.current = null
+      return
+    }
     pending.current = JSON.stringify(toDoc(nodes, edges, viewport))
     const timer = setTimeout(() => void flush(), SAVE_DELAY_MS)
     return () => clearTimeout(timer)
-  }, [nodes, edges, viewport, flush])
+  }, [nodes, edges, viewport, flush, readOnly])
 
   // Save right away when the tab is hidden or closed, or the board is switched.
   useEffect(() => {

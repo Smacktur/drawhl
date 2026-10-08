@@ -2,6 +2,7 @@ import { useReactFlow } from '@xyflow/react'
 import { useState } from 'react'
 import { takeFresh } from '@/canvas/editing'
 import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/canvas/readonly'
 
 type Props = {
   nodeId: string
@@ -24,10 +25,12 @@ export function EditableText({
   className,
 }: Props) {
   const { updateNodeData } = useReactFlow()
+  const readOnly = useReadOnly()
   const [editing, setEditing] = useState(() => takeFresh(nodeId))
   const [draft, setDraft] = useState(value)
 
   const start = () => {
+    if (readOnly) return
     setDraft(value)
     setEditing(true)
   }

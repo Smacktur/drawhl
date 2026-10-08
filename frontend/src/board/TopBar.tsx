@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Share2,
   Settings,
   SquareChevronRight,
   AlarmClock,
@@ -21,10 +22,12 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { getAuthStatus, signOut } from '@/api/auth'
-import type { BoardSummary } from '@/api/boards'
+import { canEdit, type BoardSummary } from '@/api/boards'
 import { DeleteBoardDialog, RenameBoardForm } from '@/board/BoardActions'
 import { NewBoardForm } from '@/board/NewBoardForm'
+import { ShareDialog } from '@/board/ShareDialog'
 import { ShortcutsDialog } from '@/board/ShortcutsDialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -49,6 +52,22 @@ import { formatShortcut, useShortcut } from '@/lib/shortcuts'
 import { useTheme, type Theme } from '@/lib/theme'
 import { openSettings } from '@/settings/store'
 
+// Boards owned by someone else name the owner, so shared ones stand apart from your own.
+function BoardItem({ board }: { board: BoardSummary }) {
+  const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me
+  const foreign = me && board.owner && board.owner.id !== me.id
+  return (
+    <DropdownMenuRadioItem value={board.id}>
+      <span className="truncate">{board.name}</span>
+      {foreign && (
+        <span className="text-muted-foreground ml-auto truncate pl-3 text-[12px]">
+          {board.owner?.name}
+        </span>
+      )}
+    </DropdownMenuRadioItem>
+  )
+}
+
 const themes = [
   { value: 'light', label: 'Light', Icon: Sun },
   { value: 'dark', label: 'Dark', Icon: Moon },
@@ -57,16 +76,19 @@ const themes = [
 
 type Props = {
   boards: BoardSummary[]
+  /** Admins only: boards nobody shared with them. */
+  others?: BoardSummary[]
   current?: BoardSummary
   onSelect: (id: string) => void
 }
 
-export function TopBar({ boards, current, onSelect }: Props) {
+export function TopBar({ boards, others = [], current, onSelect }: Props) {
   const { theme, setTheme } = useTheme()
   const focusVisible = useFocusVisible()
   const [creating, setCreating] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const [deleting, setDeleting] = useState<BoardSummary | null>(null)
 
   const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me
@@ -130,6 +152,18 @@ export function TopBar({ boards, current, onSelect }: Props) {
       keywords: 'security account',
       run: () => openSettings('security'),
     },
+    ...(current
+      ? [
+          {
+            id: 'app:share-board',
+            title: 'Share board',
+            group: 'Commands' as const,
+            Icon: Share2,
+            keywords: 'access people members invite',
+            run: () => setSharing(true),
+          },
+        ]
+      : []),
     {
       id: 'app:new-board',
       title: 'New board',
@@ -138,7 +172,7 @@ export function TopBar({ boards, current, onSelect }: Props) {
       keywords: 'create add',
       run: () => setCreating(true),
     },
-    ...(current
+    ...(current && canEdit(current.my_role)
       ? [
           {
             id: 'app:rename-board',
@@ -149,7 +183,7 @@ export function TopBar({ boards, current, onSelect }: Props) {
           },
         ]
       : []),
-    ...boards
+    ...[...boards, ...others]
       .filter((board) => board.id !== current?.id)
       .map((board) => ({
         id: `board:${board.id}`,
@@ -269,27 +303,59 @@ export function TopBar({ boards, current, onSelect }: Props) {
                 className="max-h-80 overflow-y-auto"
               >
                 {boards.map((board) => (
-                  <DropdownMenuRadioItem key={board.id} value={board.id}>
-                    <span className="truncate">{board.name}</span>
-                  </DropdownMenuRadioItem>
+                  <BoardItem key={board.id} board={board} />
                 ))}
+                {others.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-muted-foreground text-[12px] font-medium">
+                      All boards
+                    </DropdownMenuLabel>
+                    {others.map((board) => (
+                      <BoardItem key={board.id} board={board} />
+                    ))}
+                  </>
+                )}
               </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setCreating(true)}>
                 <Plus strokeWidth={1.75} />
                 New board
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setRenaming(true)}>
-                <Pencil strokeWidth={1.75} />
-                Rename board
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(current)}>
-                <Trash2 strokeWidth={1.75} />
-                Delete board…
-              </DropdownMenuItem>
+              {canEdit(current.my_role) && (
+                <DropdownMenuItem onSelect={() => setRenaming(true)}>
+                  <Pencil strokeWidth={1.75} />
+                  Rename board
+                </DropdownMenuItem>
+              )}
+              {current.my_role === 'owner' && (
+                <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(current)}>
+                  <Trash2 strokeWidth={1.75} />
+                  Delete board…
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )
+      )}
+      {current && current.my_role === 'viewer' && (
+        <Badge variant="outline" className="text-muted-foreground mx-1">
+          View only
+        </Badge>
+      )}
+      {current && (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[14px] font-normal"
+            onClick={() => setSharing(true)}
+          >
+            <Share2 strokeWidth={1.75} />
+            Share
+          </Button>
+          <ShareDialog board={current} open={sharing} onOpenChange={setSharing} />
+        </>
       )}
     </div>
   )

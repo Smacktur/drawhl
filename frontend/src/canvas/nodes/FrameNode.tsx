@@ -4,8 +4,10 @@ import { EditableText } from '@/canvas/nodes/EditableText'
 import { Handles } from '@/canvas/nodes/Handles'
 import type { FrameNode as FrameNodeType } from '@/canvas/types'
 import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/canvas/readonly'
 
 function FrameNodeView({ id, data, selected }: NodeProps<FrameNodeType>) {
+  const readOnly = useReadOnly()
   // Title sits above the border, like Miro, so it never covers the cards inside.
   return (
     <div
@@ -14,7 +16,7 @@ function FrameNodeView({ id, data, selected }: NodeProps<FrameNodeType>) {
         selected && 'bg-accent border-primary',
       )}
     >
-      <NodeResizer isVisible={selected} minWidth={160} minHeight={120} />
+      <NodeResizer isVisible={selected && !readOnly} minWidth={160} minHeight={120} />
       <div className="absolute bottom-full left-0 mb-1 max-w-full text-[13px] font-medium">
         <EditableText
           nodeId={id}

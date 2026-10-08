@@ -8,6 +8,7 @@ import type { ModuleNode as ModuleNodeType } from '@/canvas/types'
 import { ModuleHostContext } from '@/modules/host-context'
 import { findModule } from '@/modules/registry'
 import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/canvas/readonly'
 
 function ModuleNodeView({
   id,
@@ -17,6 +18,7 @@ function ModuleNodeView({
   width,
   height,
 }: NodeProps<ModuleNodeType>) {
+  const readOnly = useReadOnly()
   const { updateNodeData, updateNode } = useReactFlow()
   const host = useContext(ModuleHostContext)
   const def = findModule(data.kind)
@@ -58,11 +60,11 @@ function ModuleNodeView({
       )}
     >
       <NodeResizer
-        isVisible={selected}
+        isVisible={selected && !readOnly}
         minWidth={def?.minSize.width ?? 160}
         minHeight={Math.max(def?.minSize.height ?? 80, minHeight)}
       />
-      {view && def?.Controls && (
+      {view && def?.Controls && !readOnly && (
         <NodeToolbar
           // Hidden while dragging: it covers the guides and the elements next to it.
           isVisible={dragging ? false : undefined}
@@ -87,7 +89,13 @@ function ModuleNodeView({
           className="min-w-0 flex-1 truncate"
         />
       </div>
-      <div className="nodrag nopan relative min-h-0 flex-1 cursor-default">
+      {/* A viewer sees the module but cannot click into it to change it. */}
+      <div
+        className={cn(
+          'nodrag nopan relative min-h-0 flex-1 cursor-default',
+          readOnly && 'pointer-events-none',
+        )}
+      >
         {view && def ? (
           <def.View {...view} />
         ) : (

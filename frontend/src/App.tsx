@@ -80,8 +80,9 @@ export default function App() {
     enabled: mounted && signedIn,
   })
 
-  const known = boards.data?.find((board) => board.id === boardId)
-  const current = known ?? boards.data?.[0]
+  const mine = boards.data?.boards
+  const known = [...(mine ?? []), ...(boards.data?.all ?? [])].find((b) => b.id === boardId)
+  const current = known ?? mine?.[0]
 
   useEffect(() => {
     if (current) rememberBoard(current.id)
@@ -124,7 +125,7 @@ export default function App() {
           <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       )}
-      {boards.data?.length === 0 && (
+      {mine?.length === 0 && !current && (
         <div className="absolute top-1/2 left-1/2 flex w-96 -translate-x-1/2 -translate-y-1/2 flex-col gap-3">
           <p className="text-[14px]">Create a board to start placing Jira tasks on it.</p>
           <NewBoardForm onCreated={setBoardId} autoFocus />
@@ -135,7 +136,14 @@ export default function App() {
           <Canvas key={current.id} boardId={current.id} />
         </Suspense>
       )}
-      {boards.data && <TopBar boards={boards.data} current={current} onSelect={setBoardId} />}
+      {boards.data && (
+        <TopBar
+          boards={boards.data.boards}
+          others={boards.data.all}
+          current={current}
+          onSelect={setBoardId}
+        />
+      )}
       {focusVisible && <FocusCapsule />}
       {signedIn && <AboutButton />}
       {signedIn && <SettingsDialog />}
