@@ -40,7 +40,8 @@
     "instance-password",
     "brand",
     "accounts",
-    "settings"
+    "settings",
+    "people"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -95,7 +96,8 @@
     "G2_accounts": "approved",
     "G3_accounts": "approved",
     "G2_settings": "approved",
-    "G3_settings": "approved"
+    "G3_settings": "approved",
+    "G3_people": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",

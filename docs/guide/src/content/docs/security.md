@@ -14,6 +14,14 @@ Every page and API route except `/health` and `/ready` asks you to sign in with 
 - After 10 wrong passwords for one username in 15 minutes, sign-in for that username pauses until the window passes.
 - On the open internet use HTTPS, which Railway and Render give you.
 
+## People
+
+- An admin invites people in Settings → People: "Invite" gives a link to send in a chat. It works once and expires in 7 days. The person picks a username, a name and a password and is signed in. drawhl sends no mail.
+- From a person's menu an admin makes them admin or member, disables them (they are signed out at once and cannot sign in) or creates a password reset link that works once within 24 hours.
+- Only the hash of a link's token is stored, so a link is shown once. Unused links are listed under "Open links" and can be revoked.
+- There is always at least one active admin. If the only admin forgets their password, run `docker compose exec api python -m app.reset_password admin` (or the username) and open the printed link on your drawhl address.
+- Shared boards come next: until then everyone signed in sees every board.
+
 ## What drawhl stores
 
 - Your boards, settings and account: username, name and password hash.

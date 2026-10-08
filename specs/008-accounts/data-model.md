@@ -24,7 +24,8 @@ CREATE TABLE sessions (
 CREATE INDEX sessions_user ON sessions (user_id);
 
 CREATE TABLE invites (
-    token_hash TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY,                  -- what the admin revokes; the token is never stored
+    token_hash TEXT NOT NULL UNIQUE,
     kind TEXT NOT NULL,                   -- invite | reset
     role TEXT,                            -- invite: admin | member
     user_id TEXT REFERENCES users(id),    -- reset: whose password

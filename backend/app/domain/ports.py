@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from app.domain.accounts import Person
+    from app.domain.accounts import Person, PersonRecord, Role
     from app.domain.boards import BoardDoc, BoardRecord, BoardSummary
+    from app.domain.invites import Invite
     from app.domain.jql import JqlValue, JqlVocabulary
     from app.domain.tasks import Task
     from app.domain.updates import Release
@@ -116,6 +117,16 @@ class UserRepo(Protocol):
 
     def set_password(self, user_id: str, password_hash: str) -> None: ...
 
+    def get(self, user_id: str) -> Person | None: ...
+
+    def list(self) -> list[PersonRecord]: ...
+
+    def set_role(self, user_id: str, role: Role) -> None: ...
+
+    def set_disabled(self, user_id: str, disabled: bool) -> None: ...
+
+    def active_admins(self) -> int: ...
+
     def touch_sign_in(self, user_id: str) -> None: ...
 
 
@@ -131,3 +142,23 @@ class SessionRepo(Protocol):
     def delete_for_user(self, user_id: str, keep: str | None) -> None: ...
 
     def delete_expired(self, now: str) -> None: ...
+
+
+class InviteRepo(Protocol):
+    def add(self, invite: Invite, token_hash: str, created_by: str) -> None: ...
+
+    def find_open(self, token_hash: str, now: str) -> Invite | None:
+        """Not used, not revoked and not expired."""
+        ...
+
+    def consume(self, invite_id: str, now: str) -> bool:
+        """Marks it used; False when another request used it first."""
+        ...
+
+    def unconsume(self, invite_id: str) -> None: ...
+
+    def pending(self, now: str) -> list[Invite]: ...
+
+    def revoke(self, invite_id: str, now: str) -> bool:
+        """False when no open invite has this id."""
+        ...

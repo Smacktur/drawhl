@@ -88,6 +88,18 @@ class WeakPassword(DomainError):
     code = "weak_password"
 
 
+class Forbidden(DomainError):
+    code = "forbidden"
+
+
+class LastAdmin(DomainError):
+    code = "last_admin"
+
+
+class InviteExpired(DomainError):
+    code = "invite_expired"
+
+
 class TooManyAttempts(DomainError):
     code = "too_many_attempts"
 

@@ -38,9 +38,8 @@ def status(request: Request) -> dict:
     return {"signed_in": person is not None, "me": me(person) if person else None}
 
 
-@router.post("/login", status_code=204)
-def login(body: SignInRequest, request: Request, accounts: AccountsDep) -> Response:
-    token = accounts.sign_in(body.username, body.password, time.time())
+def signed_in(request: Request, token: str) -> Response:
+    """A 204 that starts the session in this browser."""
     response = Response(status_code=204)
     response.set_cookie(
         COOKIE,
@@ -51,6 +50,11 @@ def login(body: SignInRequest, request: Request, accounts: AccountsDep) -> Respo
         secure=_https(request),
     )
     return response
+
+
+@router.post("/login", status_code=204)
+def login(body: SignInRequest, request: Request, accounts: AccountsDep) -> Response:
+    return signed_in(request, accounts.sign_in(body.username, body.password, time.time()))
 
 
 @router.post("/logout", status_code=204)

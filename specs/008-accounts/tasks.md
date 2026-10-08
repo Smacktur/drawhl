@@ -39,17 +39,17 @@ description: "Task list for Accounts and roles"
 
 ## Phase 3: Slice 38 `feat/people` — the admin brings people in (US2)
 
-- [ ] T012 [P] [US2] Migration `invites`; `domain/invites.py` create, open, accept, revoke for invite and reset. Tests: once, expiry, hash only
-- [ ] T013 [US2] API `people`, `invites`, reset; last-admin guard. Tests
-- [ ] T014 [US2] Frontend: `AcceptInvite.tsx` for `?invite=` and `?reset=`; Settings → People section (list, invite with role, copy link, disable, make admin, reset, revoke). Tests
-- [ ] T015 [US2] `python -m app.reset_password <username>` in the api container prints a one-time reset link, so a locked-out only admin gets back in without SQL. Test
-- [ ] T016 [US2] Welcome board per person; smoke: invite and accept; docs; screenshot
+- [x] T012 [P] [US2] Migration `invites`; `domain/invites.py` create, open, accept, revoke for invite and reset. Tests: once, expiry, hash only
+- [x] T013 [US2] API `people`, `invites`, reset; last-admin guard. Tests
+- [x] T014 [US2] Frontend: `AcceptInvite.tsx` for `?invite=` and `?reset=`; Settings → People section (list, invite with role, copy link, disable, make admin, reset, revoke). Tests
+- [x] T015 [US2] `python -m app.reset_password <username>` in the api container prints a one-time reset link, so a locked-out only admin gets back in without SQL. Test
+- [x] T016 [US2] Smoke: create, open and revoke an invite; docs; screenshot. The welcome board per person moves to T017, where boards get owners
 
 **Checkpoint**: keep "Invite" behind the admin until slice 40 if releasing in between (see plan).
 
 ## Phase 4: Slice 39 `feat/sharing` — sharing a board (US3)
 
-- [ ] T017 [P] [US3] Migration `board_members`, `boards.everyone_role`; owners from the upgrade; `domain/members.py` effective role and `require`. Tests
+- [ ] T017 [P] [US3] Welcome board per person, owned by them (US3 scenario 8). Migration `board_members`, `boards.everyone_role`; owners from the upgrade; `domain/members.py` effective role and `require`. Tests
 - [ ] T018 [US3] Every board route through `board_role(min_role)`; 404 for no role; admin "All boards". Access matrix test over every board route
 - [ ] T019 [US3] API members, everyone, transfer, `people/directory`. Tests
 - [ ] T020 [US3] Frontend: Share dialog in the top bar; "View only" badge and read-only canvas (toolbar, drag, paste, undo, module controls, timers); 403 on save turns the board read-only. Tests

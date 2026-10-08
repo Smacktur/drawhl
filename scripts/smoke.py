@@ -49,6 +49,17 @@ check(status == 204, "sign in")
 status, auth = call("GET", f"{API}/api/auth/status")
 check(status == 200 and auth["me"]["username"] == "admin", "signed in as admin")
 
+# An invite is opened and revoked, not accepted, so a run adds no person to the instance.
+status, link = call("POST", f"{API}/api/invites", {"role": "member"})
+check(status == 201 and link["url"].startswith("/?invite="), "create invite link")
+token = link["url"].split("=", 1)[1]
+status, info = call("GET", f"{API}/api/invites/{token}")
+check(status == 200 and info["kind"] == "invite", "open invite link")
+status, _ = call("DELETE", f"{API}/api/invites/{link['invite']['id']}")
+check(status == 204, "revoke invite")
+status, _ = call("GET", f"{API}/api/invites/{token}")
+check(status == 410, "revoked invite is gone")
+
 # The scenario runs on demo tasks; a connected Jira is switched back afterwards.
 status, settings = call("GET", f"{API}/api/settings")
 check(status == 200, "read settings")
