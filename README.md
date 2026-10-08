@@ -1,6 +1,9 @@
-<h1 align="center">drawhl</h1>
-
-<p align="center"><b>An infinite canvas for your tasks</b></p>
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/social/readme-banner-dark.svg">
+    <img src="brand/social/readme-banner.svg" alt="drawhl: open-source infinite canvas for your tasks" width="100%">
+  </picture>
+</h1>
 
 <p align="center">
   <a href="#-quick-start"><b>Quick start</b></a> •

@@ -8,6 +8,11 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'drawhl',
+      logo: {
+        light: './src/assets/logo-light.svg',
+        dark: './src/assets/logo-dark.svg',
+        replacesTitle: true,
+      },
       description: 'User guide for drawhl, an open-source infinite canvas for your tasks.',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Smacktur/drawhl' }],
       editLink: { baseUrl: 'https://github.com/Smacktur/drawhl/edit/main/docs/guide/' },

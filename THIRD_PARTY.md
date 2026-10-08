@@ -18,7 +18,7 @@
 | lucide-react | ISC | Icons |
 | Octicons `mark-github` (inlined SVG path) | MIT | GitHub icon in the About panel |
 | React Flow (@xyflow/react) | MIT | Infinite canvas, nodes and edges |
-| IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font |
+| IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font; outlined in the logo and covers in `brand/` |
 | JetBrains Mono (@fontsource-variable/jetbrains-mono) | OFL-1.1 | Monospace font for task keys |
 | fake-indexeddb | Apache-2.0 | IndexedDB in frontend tests (dev only) |
 | class-variance-authority, tw-animate-css | Apache-2.0 / MIT | Component variants, animations |
@@ -28,6 +28,7 @@
 | marked | MIT | Markdown → HTML for legal pages at build time |
 | pip-licenses | MIT | Python dependency license check (`make licenses`) |
 | license-checker-rseidelsohn | BSD-3-Clause | npm dependency license check (`make licenses`) |
+| fontTools, brotli, uharfbuzz, resvg-py | MIT / MIT / Apache-2.0 / MIT | Outline text and render PNG in `brand/generate.py` (run by hand with `uv run --with`, not shipped) |
 
 Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.json`).
 
