@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.8] - 2026-10-08
+
 ### Fixed
 
 - The web container no longer loses the API after the API restarts on a new address, as it does on every redeploy on Railway or Render. The API address is now set with `API_UPSTREAM` (default `api:8000`), so the web image runs on hosts without compose networking.
