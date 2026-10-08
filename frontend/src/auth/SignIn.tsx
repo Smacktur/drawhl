@@ -3,6 +3,7 @@ import { LogIn } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { ApiError } from '@/api/client'
 import { signIn } from '@/api/auth'
+import { Emblem } from '@/components/Emblem'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,7 +28,10 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
       onSubmit={submit}
       className="absolute top-1/2 left-1/2 flex w-80 -translate-x-1/2 -translate-y-1/2 flex-col gap-3"
     >
-      <p className="text-[18px] font-semibold">drawhl</p>
+      <p className="flex items-center gap-2 text-[18px] font-semibold tracking-[-0.03em]">
+        <Emblem className="size-6" />
+        drawhl
+      </p>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="instance-password">Password</Label>
         <Input

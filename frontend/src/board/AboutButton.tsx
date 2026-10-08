@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowUpCircle, BookOpen, Bug, Info } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { getVersion } from '@/api/version'
+import { Emblem } from '@/components/Emblem'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
@@ -67,7 +68,10 @@ export function AboutButton() {
       </div>
       <PopoverContent side="top" align="start" className="w-80 gap-3 p-3">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[16px] font-semibold">drawhl</h2>
+          <h2 className="flex items-center gap-1.5 self-center text-[16px] font-semibold tracking-[-0.03em]">
+            <Emblem className="size-5" />
+            drawhl
+          </h2>
           {info && (
             <a
               href={`${REPO}/releases/tag/v${info.version}`}
