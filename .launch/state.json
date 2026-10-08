@@ -42,7 +42,9 @@
     "accounts",
     "settings",
     "people",
-    "sharing"
+    "sharing",
+    "my-tracker",
+    "tracker-env"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -99,7 +101,9 @@
     "G2_settings": "approved",
     "G3_settings": "approved",
     "G3_people": "approved",
-    "G3_sharing": "approved"
+    "G3_sharing": "approved",
+    "G3_my-tracker": "approved",
+    "G3_tracker-env": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -120,6 +124,7 @@
     "2026-10-08 spec 008 accounts drafted for team mode step 1 (accounts, people and invites, sharing with roles, a tracker token and task cache per person) in 4 slices; awaits G2. Development continues in a new session from this spec.",
     "2026-10-08 G2 accounts: owner approved spec 008 as written, including admins acting as owner on every board; no release between slices 37 and 39, so no member sees snapshots made with the admin's token.",
     "2026-10-08 accounts: slice 36 merged (PR 42). Owner asked for a settings window in spec 008; added as US5 and slice 37 feat/settings (a Dialog with sections, Figma and Notion style), later slices renumbered 38-40; awaits G2.",
-    "2026-10-08 G2 settings: owner approved slice 37 settings window and a reset_password command in slice 38 for a locked-out only admin."
+    "2026-10-08 G2 settings: owner approved slice 37 settings window and a reset_password command in slice 38 for a locked-out only admin.",
+    "2026-10-09 accounts: spec 008 done in slices 36-41 (accounts, settings window, people, sharing, a tracker token per person, the tracker from the environment). Owner approved and asked to release team mode. Several trackers at once is a later spec."
   ]
 }
