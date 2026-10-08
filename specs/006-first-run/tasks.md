@@ -50,4 +50,4 @@ description: "Task list for First run and polish"
 
 ## After the slices
 
-- [ ] T013 Run the core scenario through `/gstack-qa` and `/gstack-design-review` on a fresh install; fix what they find in `fix/` branches
+- [x] T013 Run the core scenario through `/gstack-qa` and `/gstack-design-review` on a fresh install; fix what they find in `fix/` branches. US1–US4 passed in light and dark; one fix (Redo shortcut label `CTRL Y`), the rest low and deferred
