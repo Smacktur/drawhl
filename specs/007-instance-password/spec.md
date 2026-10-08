@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-08
 
-**Status**: Draft
+**Status**: Done
 
 **Input**: User description: "We added the Deploy on Railway button, so anyone can bring up an instance and it is visible to the whole internet." Step 2 of the launch plan (one-click deploy with an instance password), approved at G1 on 2026-10-07. Step 0 of team mode, approved at G1 on 2026-10-08: `DRAWHL_PASSWORD` later becomes the first admin's password, so this work carries over.
 

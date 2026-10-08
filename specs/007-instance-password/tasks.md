@@ -23,7 +23,7 @@ description: "Task list for Instance password"
 - [x] T003 [US1] `nginx.conf.template` passes `X-Forwarded-Proto`; `Secure` cookie behind HTTPS. Test with the header
 - [x] T004 [US1] Frontend: `api/auth.ts`, `auth/SignIn.tsx`, boot check and drop back on `auth_required`, "Sign out" in Settings. Tests
 - [x] T005 [US1] `make smoke` and e2e sign in with the password from ENV
-- [ ] T006 [US2] Railway template variable `DRAWHL_PASSWORD=${{secret(20)}}`, template README; `.env.example`, README, quick-start guide, `CHANGELOG.md`
-- [ ] T007 [US1] curl over every route with and without a session; screenshot of the sign-in screen in light and dark; deploy from the template and sign in
+- [x] T006 [US2] Railway template variable `DRAWHL_PASSWORD=${{secret(20)}}`, template README; `.env.example`, README, quick-start guide, `CHANGELOG.md`
+- [x] T007 [US1] curl over every route with and without a session; screenshot of the sign-in screen in light and dark; deploy from the template and sign in
 
 **Checkpoint**: `make check`, curl list, screenshot → G3.
