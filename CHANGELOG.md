@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- The keyboard shortcuts list shows the second Redo shortcut as `⌃Y` on macOS and `Ctrl+Y` elsewhere instead of `CTRL Y`.
+
 ## [2026.10.7] - 2026-10-07
 
 ### Added
