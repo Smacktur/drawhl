@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from app.domain.accounts import Accounts, Person
+from app.domain.errors import Forbidden
+from app.domain.invites import Invites
 from app.domain.ports import BoardRepo, DemoTasks, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
@@ -48,6 +50,19 @@ def current_person(request: Request) -> Person:
     return request.state.person
 
 
+def current_admin(request: Request) -> Person:
+    person = current_person(request)
+    if person.role != "admin":
+        raise Forbidden("Only an admin can do this.")
+    return person
+
+
+def invites(request: Request) -> Invites:
+    return request.app.state.invites
+
+
 CurrentPerson = Annotated[Person, Depends(current_person)]
 AccountsDep = Annotated[Accounts, Depends(accounts)]
 SessionsDep = Annotated[Sessions, Depends(sessions)]
+CurrentAdmin = Annotated[Person, Depends(current_admin)]
+InvitesDep = Annotated[Invites, Depends(invites)]

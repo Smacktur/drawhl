@@ -6,12 +6,14 @@ import {
   ListTodo,
   SlidersHorizontal,
   UserRound,
+  Users,
 } from 'lucide-react'
 import { useState, useSyncExternalStore, type ComponentType, type ReactNode } from 'react'
 import { getAuthStatus, type Me } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { cn } from 'cn'
+import { People } from '@/settings/sections/People'
 import { Preferences } from '@/settings/sections/Preferences'
 import { Profile } from '@/settings/sections/Profile'
 import { Security } from '@/settings/sections/Security'
@@ -45,6 +47,7 @@ const GROUPS: { title: string; admin: boolean; entries: Entry[] }[] = [
     admin: true,
     entries: [
       { id: 'task-source', label: 'Task source', Icon: ListTodo, render: () => <TaskSource /> },
+      { id: 'people', label: 'People', Icon: Users, render: (me) => <People me={me} /> },
     ],
   },
 ]

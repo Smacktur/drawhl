@@ -40,9 +40,9 @@ Task.state gains "forbidden" (token cannot see it) and "no_token" (person has no
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
 | `GET /people` | – | `{people: Person[], invites: Invite[]}` | 403 |
-| `PATCH /people/{id}` | `{role?, disabled?}` | `Person` | 403, 404, 409 `last_admin` |
-| `POST /invites` | `{role}` | 201 `{invite: Invite, url}` (the token is in `url`, shown once) | 403 |
-| `POST /people/{id}/reset` | – | 201 `{invite: Invite, url}` | 403, 404 |
+| `PATCH /people/{id}` | `{role?, disabled?}` (`disabled: false` enables again) | `Person` | 403, 404, 409 `last_admin` |
+| `POST /invites` | `{role}` | 201 `{invite: Invite, url}` (`url` is relative, `/?invite=<token>`, shown once; the browser adds its own origin) | 403 |
+| `POST /people/{id}/reset` | – | 201 `{invite: Invite, url}` (`/?reset=<token>`) | 403, 404 |
 | `DELETE /invites/{id}` | – | 204 | 403, 404 |
 | `GET /invites/{token}` | – | `{kind, role, username: string|null}` | 410 `invite_expired` |
 | `POST /invites/{token}/accept` | invite: `{username, name, password}`; reset: `{password}` | 204, sets `drawhl_session` | 409 `username_taken`, 410 `invite_expired`, 422 `weak_password` |

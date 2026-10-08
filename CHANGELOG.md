@@ -14,6 +14,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Settings → Profile and Security: change your name, username and password, and sign out everywhere. Changing the password signs out your other devices.
 - Settings open in a window over the board with sections: Profile, Security, Preferences (theme, paste text as) and, for admins, Task source. Open it from the main menu or with `⌘,`; the section stays in the link (`?settings=security`). On a narrow screen it fills the screen and lists the sections first.
 - The main menu shows who is signed in and ends with "Sign out".
+- Settings → People for admins: invite people with a one-time link (7 days, no mail needed), make someone admin or member, disable them, or give them a password reset link (24 hours). Open links are listed and can be revoked.
+- `python -m app.reset_password <username>` in the api container prints a reset link for a locked-out admin.
 
 - A logo: the emblem is a dot grid where one dot grew into a card. The app has a favicon and a home screen icon, the sign-in screen and the About panel show the emblem, and the user guide shows the logo. Logo files, the app icon and social covers for GitHub and Product Hunt are in `brand/`.
 

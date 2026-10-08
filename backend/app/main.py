@@ -11,6 +11,7 @@ from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
+    SqliteInviteRepo,
     SqliteSessionRepo,
     SqliteSettingsRepo,
     SqliteSnapshotRepo,
@@ -23,6 +24,7 @@ from app.api.gate import PasswordGate
 from app.api.routes import router
 from app.config import Settings, get_settings
 from app.domain.accounts import Accounts
+from app.domain.invites import Invites
 from app.domain.ports import ReleaseFeed
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
@@ -83,6 +85,7 @@ def create_app(
     users = SqliteUserRepo(db)
     app.state.sessions = Sessions(SqliteSessionRepo(db))
     app.state.accounts = Accounts(users, app.state.sessions)
+    app.state.invites = Invites(SqliteInviteRepo(db), app.state.accounts, app.state.sessions)
     created = bootstrap_admin(app.state.accounts, users, lambda: _password(settings))
     env_password = settings.drawhl_password and settings.drawhl_password.get_secret_value()
     if not created and env_password:

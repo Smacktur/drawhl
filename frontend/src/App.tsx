@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react
 import { getAuthStatus } from '@/api/auth'
 import { listBoards } from '@/api/boards'
 import { AUTH_REQUIRED_EVENT } from '@/api/client'
+import { AcceptInvite, readInviteLink } from '@/auth/AcceptInvite'
 import { SignIn } from '@/auth/SignIn'
 import { SettingsDialog } from '@/settings/SettingsDialog'
 import { NewBoardForm } from '@/board/NewBoardForm'
@@ -69,6 +70,7 @@ export default function App() {
     typeof window === 'undefined' ? null : readBoardId(),
   )
   const focusVisible = useFocusVisible()
+  const [inviteLink] = useState(readInviteLink)
   const queryClient = useQueryClient()
   const auth = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus, enabled: mounted })
   const signedIn = auth.data?.signed_in === true
@@ -90,6 +92,15 @@ export default function App() {
     window.addEventListener(AUTH_REQUIRED_EVENT, signedOut)
     return () => window.removeEventListener(AUTH_REQUIRED_EVENT, signedOut)
   }, [queryClient])
+
+  if (mounted && inviteLink) {
+    return (
+      <main className="bg-background relative h-dvh w-full overflow-hidden">
+        <h1 className="sr-only">drawhl</h1>
+        <AcceptInvite link={inviteLink} />
+      </main>
+    )
+  }
 
   if (auth.data?.signed_in === false) {
     return (

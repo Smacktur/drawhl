@@ -15,6 +15,8 @@ from pydantic import BaseModel
 from app.domain.errors import (
     AccountDisabled,
     InvalidCredentials,
+    LastAdmin,
+    NotFound,
     TooManyAttempts,
     ValidationFailed,
     WeakPassword,
@@ -44,6 +46,11 @@ class Person(BaseModel):
     name: str
     role: Role
     disabled: bool = False
+
+
+class PersonRecord(Person):
+    last_sign_in_at: str | None
+    created_at: str
 
 
 def hash_password(password: str) -> str:
@@ -159,6 +166,36 @@ class Accounts:
         self._users.update(changed)
         self._sessions.forget(person.id)
         return changed
+
+    def get(self, user_id: str) -> Person:
+        person = self._users.get(user_id)
+        if person is None:
+            raise NotFound("person not found")
+        return person
+
+    def people(self) -> list[PersonRecord]:
+        return self._users.list()
+
+    def change(self, user_id: str, role: Role | None, disabled: bool | None) -> PersonRecord:
+        """Admin changes to a person; the last active admin cannot be demoted or disabled."""
+        person = self.get(user_id)
+        loses_admin = person.role == "admin" and not person.disabled
+        loses_admin = loses_admin and (role == "member" or disabled is True)
+        if loses_admin and self._users.active_admins() <= 1:
+            raise LastAdmin("Make someone else an admin first.")
+        if role is not None:
+            self._users.set_role(user_id, role)
+        if disabled is not None:
+            self._users.set_disabled(user_id, disabled)
+            if disabled:
+                self._sessions.end_all(user_id)
+        self._sessions.forget(user_id)
+        return next(record for record in self._users.list() if record.id == user_id)
+
+    def set_password(self, user_id: str, password: str) -> None:
+        """Sets a password without the current one, as a reset link does; ends every session."""
+        self._users.set_password(user_id, hash_password(check_password(password)))
+        self._sessions.end_all(user_id)
 
     def change_password(self, person: Person, current: str, new: str, keep_token: str) -> None:
         found = self._users.find(person.username.lower())

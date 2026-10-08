@@ -20,7 +20,7 @@ def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def _iso(ts: float) -> str:
+def iso(ts: float) -> str:
     return datetime.fromtimestamp(ts, UTC).isoformat(timespec="seconds")
 
 
@@ -38,8 +38,8 @@ class Sessions:
 
     def start(self, user_id: str, now: float) -> str:
         token = secrets.token_urlsafe(32)
-        self._repo.delete_expired(_iso(now))
-        self._repo.add(token_hash(token), user_id, _iso(now + SESSION_TTL_S), _iso(now))
+        self._repo.delete_expired(iso(now))
+        self._repo.add(token_hash(token), user_id, iso(now + SESSION_TTL_S), iso(now))
         return token
 
     def resolve(self, token: str, now: float) -> Person | None:

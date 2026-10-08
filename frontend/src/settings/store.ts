@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-export const SECTIONS = ['profile', 'security', 'preferences', 'task-source'] as const
+export const SECTIONS = ['profile', 'security', 'preferences', 'task-source', 'people'] as const
 export type Section = (typeof SECTIONS)[number]
 
 const PARAM = 'settings'

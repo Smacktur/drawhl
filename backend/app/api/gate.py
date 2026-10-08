@@ -10,6 +10,21 @@ from app.domain.sessions import Sessions
 COOKIE = "drawhl_session"
 # Platform health checks must pass before anyone signs in.
 OPEN_PATHS = {"/health", "/ready", "/api/auth/status", "/api/auth/login", "/api/auth/logout"}
+INVITES = "/api/invites/"
+
+
+def is_open(scope: Scope) -> bool:
+    path = scope["path"]
+    if path in OPEN_PATHS:
+        return True
+    # Reading an invite link and accepting it come before the person has an account.
+    token = path.removeprefix(INVITES)
+    if token == path or not token:
+        return False
+    method = scope.get("method")
+    return (method == "GET" and "/" not in token) or (
+        method == "POST" and token.count("/") == 1 and token.endswith("/accept")
+    )
 
 
 class PasswordGate:
@@ -29,7 +44,7 @@ class PasswordGate:
         if person is not None:
             state = scope.setdefault("state", {})
             state["person"], state["session"] = person, token
-        if person is not None or scope["path"] in OPEN_PATHS:
+        if person is not None or is_open(scope):
             await self.app(scope, receive, send)
             return
         if scope["type"] == "websocket":

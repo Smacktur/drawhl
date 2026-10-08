@@ -169,7 +169,7 @@ More in the [data and upgrades guide](https://smacktur.github.io/drawhl/data-and
 
 ## 🛡️ Security and privacy
 
-Every page and API route except `/health` and `/ready` asks you to sign in, `/metrics` included. The first account is `admin` with the password from `DRAWHL_PASSWORD` or `data/password`; after that, change it in Settings → Security. Passwords are stored as salted scrypt hashes. A sign-in lasts 30 days in that browser, and "Sign out everywhere" ends every session. After 10 wrong passwords for one username in 15 minutes sign-in for it pauses. On the open internet use HTTPS, which Railway and Render give you.
+Every page and API route except `/health` and `/ready` asks you to sign in, `/metrics` included. The first account is `admin` with the password from `DRAWHL_PASSWORD` or `data/password`; after that, change it in Settings → Security. Passwords are stored as salted scrypt hashes. A sign-in lasts 30 days in that browser, and "Sign out everywhere" ends every session. After 10 wrong passwords for one username in 15 minutes sign-in for it pauses. Admins invite people with one-time links in Settings → People; a locked-out admin gets a reset link with `docker compose exec api python -m app.reset_password admin`. On the open internet use HTTPS, which Railway and Render give you.
 
 Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too.
 
