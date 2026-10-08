@@ -20,12 +20,12 @@ Someone deploys drawhl from the Railway template. The template generates a passw
 
 **Acceptance Scenarios**:
 
-1. **Given** `DRAWHL_PASSWORD` is set, **When** a request without a valid session cookie hits any `/api/*` path except `/api/auth/*`, or `/metrics`, `/docs`, `/openapi.json`, **Then** it gets 401 with `{"error": {"code": "auth_required", ...}}`. `/health` and `/ready` stay open for platform health checks.
+1. **Given** any instance, **When** a request without a valid session cookie hits any `/api/*` path except `/api/auth/*`, or `/metrics`, `/docs`, `/openapi.json`, **Then** it gets 401 with `{"error": {"code": "auth_required", ...}}`. `/health` and `/ready` stay open for platform health checks.
 2. **Given** the sign-in screen, **When** the user submits the right password, **Then** the server sets an `HttpOnly`, `SameSite=Lax` session cookie, `Secure` when the request came over HTTPS, valid for 30 days, and the app loads.
 3. **Given** a wrong password, **Then** the server answers 401 `invalid_password` after the same delay as a right one, and after 5 wrong attempts from one IP within a minute it answers 429 with `Retry-After`.
 4. **Given** a signed-in user, **When** they choose "Sign out" in Settings, **Then** the cookie is cleared and the sign-in screen shows.
-5. **Given** the owner changes `DRAWHL_PASSWORD` and restarts, **Then** every existing session is invalid.
-6. **Given** `DRAWHL_PASSWORD` is not set, **Then** nothing changes from today: no sign-in screen, no 401, and `docker compose up` works without keys.
+5. **Given** the owner is signed in on a laptop and a phone, or someone else learned the old password, **When** the owner changes `DRAWHL_PASSWORD` and restarts, **Then** every browser signed in with the old password is signed out, including a stranger's.
+6. **Given** `DRAWHL_PASSWORD` is not set, **When** the instance starts for the first time, **Then** it generates a random 20-character password, saves it to `data/password` (mode 0600) and prints it once to the log with the line `drawhl password: <value>`; later starts reuse that file and log only where to find it. `docker compose up` still works without keys, and the instance is never open.
 
 ---
 
@@ -44,19 +44,21 @@ The template sets `DRAWHL_PASSWORD` to a generated value, so a one-click deploy 
 
 ### Edge Cases
 
-- `DRAWHL_SECRET_KEY` is not set while the password is: the session is signed with a key derived from the password, so it still works; changing the password signs everyone out.
+- `DRAWHL_SECRET_KEY` is not set: the session is signed with a key derived from the password, so it still works; changing the password signs everyone out.
 - The API is reached directly on its own public domain, not through the web service: the same 401 applies.
-- Prometheus scrapes `/metrics` on an instance with a password: it gets 401; scraping needs no password set or a private network. Noted in the README.
+- Prometheus scrapes `/metrics`: it gets 401 unless it sends the session cookie; open metrics on a private port are a later task. Noted in the README.
+- `data/password` is deleted: the next start generates a new password and signs everyone out.
+- `make smoke` and e2e tests sign in with the password from ENV.
 
 ## Requirements *(mandatory)*
 
-- **FR-001**: The gate is on only when `DRAWHL_PASSWORD` is set.
+- **FR-001**: The gate is always on. The password comes from `DRAWHL_PASSWORD` or, when it is not set, from a generated `data/password`. There is no switch to turn the gate off.
 - **FR-002**: The password is compared in constant time and never logged or returned.
 - **FR-003**: The session is a signed cookie, not a database row; checking it does not touch SQLite.
 - **FR-004**: No new dependency.
 
 ## Success Criteria *(mandatory)*
 
-- **SC-001**: With a password set, no board, task, setting or metric is readable without signing in (curl check of every route).
+- **SC-001**: No board, task, setting or metric is readable without signing in (curl check of every route).
 - **SC-002**: A signed-in request adds under 1 ms of server time.
 - **SC-003**: A fresh template deploy is closed without any manual step.
