@@ -24,9 +24,9 @@ docker compose up --build
 
 ## On Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl-test?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
 
-The template runs the released images: `api` keeps your boards on a volume, `web` is the only public service, and the key that encrypts the Jira token is generated on deploy. drawhl has no login yet, so anyone who knows the Railway URL can open your boards and use your Jira token: keep the URL to yourself, or put the domain behind a proxy that adds authentication. A Jira Data Center that is reachable only from a corporate network is out of reach from Railway.
+The template runs the released images: `api` keeps your boards on a volume, `web` is the only public service, and the key that encrypts tracker tokens is generated on deploy. drawhl has no login yet, so anyone who knows the Railway URL can open your boards and use your tracker token: keep the URL to yourself, or put the domain behind a proxy that adds authentication. A tracker that is reachable only from a corporate network is out of reach from Railway.
 
 To upgrade, redeploy `api` and `web`: they pull the latest release.
 

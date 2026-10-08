@@ -48,9 +48,9 @@ docker compose up --build
 
 Or in the cloud, on Railway:
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl-test?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
 
-The template runs the released images with your boards on a volume and generates the encryption key. The app opens on the URL Railway gives you, and anyone who knows that URL can use it: see [security](https://smacktur.github.io/drawhl/security/). A Jira Data Center inside a corporate network is out of reach from there.
+The template runs the released images with your boards on a volume and generates the encryption key. The app opens on the URL Railway gives you, and anyone who knows that URL can use it: see [security](https://smacktur.github.io/drawhl/security/). A tracker inside a corporate network is out of reach from there.
 
 On your machine, open http://localhost:3000. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
 
