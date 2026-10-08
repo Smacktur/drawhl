@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import {
@@ -148,6 +148,8 @@ function AddPeople({
   const term = query.trim()
   const found = useQuery({
     queryKey: ['directory', term],
+    // Keeps the last matches on screen while the next letter's search runs, so nothing flickers.
+    placeholderData: keepPreviousData,
     queryFn: () => findPeople(term),
     enabled: term.length > 0,
   })
@@ -236,7 +238,8 @@ export function ShareDialog({
         onOpenChange(next)
       }}
     >
-      <DialogContent className="gap-4 sm:max-w-[480px]">
+      {/* Pinned from the top like the search palette: the match list grows down, the window stays. */}
+      <DialogContent className="top-[18%] translate-y-0 gap-4 sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Share {board.name}</DialogTitle>
           <DialogDescription>
