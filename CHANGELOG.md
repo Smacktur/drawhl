@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Deploy on Railway: a one-click template in the README and the quick start guide runs the released images with boards on a volume and a generated encryption key.
+
 ## [2026.10.8] - 2026-10-08
 
 ### Fixed
