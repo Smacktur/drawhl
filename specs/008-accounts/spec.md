@@ -128,6 +128,7 @@ Each person connects Jira with their own personal access token in Settings → M
 
 - Upgrade of an instance that was never signed into: the generated `data/password` becomes `admin`'s password; the log says so.
 - Two people accept invites with usernames differing only in case: the second gets "This username is taken."
+- The only admin forgets their password: `python -m app.reset_password <username>` run in the api container prints a one-time reset link.
 - An admin removes the last owner's account: they cannot delete people, only disable; ownership stays until transferred.
 - A board shared with "everyone: editor" and a person explicitly set as viewer: the higher role wins (editor); the dialog shows it.
 - A person's role changes while their board is open: the next save answers 403 and the canvas turns read-only with a notice.
