@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
+    SqliteCredentialRepo,
     SqliteMemberRepo,
     SqliteUserRepo,
 )
@@ -89,7 +90,7 @@ def test_upgrade_gives_old_boards_to_the_admin_without_a_second_welcome(tmp_path
     db = Database(path)
     users, repo = SqliteUserRepo(db), SqliteBoardRepo(db)
     admin = person(db)
-    adopt_orphans(users, SqliteMemberRepo(db))
+    adopt_orphans(users, SqliteMemberRepo(db), SqliteCredentialRepo(db))
     [board], _ = list_boards(admin, repo, NOW)
     assert (board.id, board.owner.id) == ("b", "admin")
     repo.delete("b")

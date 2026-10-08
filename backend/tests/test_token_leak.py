@@ -51,9 +51,12 @@ def test_stored_token_never_goes_to_another_host(jira_client, fake_jira):
     tested = jira_client.post("/api/settings/jira/test", json=other)
     assert tested.json()["error"]["code"] == "jira_not_configured"
 
+    # Moving the instance to another Jira strands every stored token instead of sending it.
     moved = jira_client.put("/api/settings", json={"jira": other})
-    assert moved.status_code == 422
-    assert jira_client.get("/api/settings").json()["jira"]["base_url"] == JIRA["base_url"]
+    assert moved.json()["jira"]["token_state"] == "unreadable"
+    refused = jira_client.post("/api/tasks/resolve", json={"ref": "DEV-1"})
+    assert refused.json()["error"]["code"] == "jira_not_configured"
+    assert jira_client.post("/api/settings/jira/test", json={}).status_code == 400
 
     assert all(r.url.host == "jira.example.com" for r in fake_jira.requests)
 

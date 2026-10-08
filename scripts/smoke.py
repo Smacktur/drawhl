@@ -63,6 +63,8 @@ check(status == 410, "revoked invite is gone")
 # The scenario runs on demo tasks; a connected Jira is switched back afterwards.
 status, settings = call("GET", f"{API}/api/settings")
 check(status == 200, "read settings")
+status, tracker = call("GET", f"{API}/api/me/tracker")
+check(status == 200 and set(tracker) == {"provider", "base_url", "token_state"}, "my tracker")
 call("PUT", f"{API}/api/settings", {"provider": "demo"})
 # Boards made here are deleted at the end, so a run leaves the user's list as it was.
 created: list[str] = []

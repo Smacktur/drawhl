@@ -38,6 +38,8 @@ class FakeJira:
 
     def __init__(self, issues: dict[str, dict] | None = None, strict_only: bool = False) -> None:
         self.issues = issues or {"DEV-1": issue("DEV-1"), "DEV-2": issue("DEV-2", "Done", "done")}
+        # Other tokens and the keys each may see, like people with different Jira permissions.
+        self.tokens: dict[str, set[str]] = {}
         self.fail: int | None = None
         # Like a Jira that validates JQL even with validateQuery=false.
         self.strict_only = strict_only
@@ -49,8 +51,12 @@ class FakeJira:
         if self.fail:
             headers = {"retry-after": "42"} if self.fail == 429 else {}
             return httpx.Response(self.fail, json={"errorMessages": ["nope"]}, headers=headers)
-        if request.headers.get("authorization") != f"Bearer {TOKEN}":
+        token = request.headers.get("authorization", "").removeprefix("Bearer ")
+        if token != TOKEN and token not in self.tokens:
             return httpx.Response(401, json={"errorMessages": ["unauthorized"]})
+        issues = self.issues
+        if token in self.tokens:
+            issues = {k: v for k, v in self.issues.items() if k in self.tokens[token]}
         path = request.url.path
         if self.html:
             return httpx.Response(200, text="<html>Log in</html>")
@@ -76,16 +82,16 @@ class FakeJira:
             return httpx.Response(200, json={"name": "alex", "displayName": "Alex Rivera"})
         if "/issue/" in path:
             key = path.rsplit("/", 1)[1]
-            if key in self.issues:
-                return httpx.Response(200, json=self.issues[key])
+            if key in issues:
+                return httpx.Response(200, json=issues[key])
             return httpx.Response(404, json={"errorMessages": ["Issue does not exist"]})
         if path.endswith("/search"):
             body = json.loads(request.content)
             jql = body["jql"]
             if not jql.startswith("key in ("):
-                return self._query(jql, body.get("maxResults", 50))
+                return self._query(jql, body.get("maxResults", 50), issues)
             keys = jql[jql.index("(") + 1 : jql.index(")")].split(",")
-            missing = [k for k in keys if k not in self.issues]
+            missing = [k for k in keys if k not in issues]
             if not isinstance(body.get("validateQuery", True), bool):
                 return httpx.Response(400, json={"errorMessages": ["Cannot deserialize value"]})
             if missing and (self.strict_only or body.get("validateQuery", True)):
@@ -93,13 +99,13 @@ class FakeJira:
                     f"An issue with key '{k}' does not exist for field 'key'." for k in missing
                 ]
                 return httpx.Response(400, json={"errorMessages": errors})
-            found = [self.issues[k] for k in keys if k in self.issues]
+            found = [issues[k] for k in keys if k in issues]
             return httpx.Response(200, json={"issues": found, "total": len(found)})
         return httpx.Response(404)
 
-    def _query(self, jql: str, limit: int) -> httpx.Response:
+    def _query(self, jql: str, limit: int, issues: dict[str, dict]) -> httpx.Response:
         """Free JQL: "bad" in the query is a syntax error, anything else matches every issue."""
         if "bad" in jql:
             return httpx.Response(400, json={"errorMessages": ["Error in the JQL Query"]})
-        issues = list(self.issues.values())
-        return httpx.Response(200, json={"issues": issues[:limit], "total": len(issues)})
+        found = list(issues.values())
+        return httpx.Response(200, json={"issues": found[:limit], "total": len(found)})

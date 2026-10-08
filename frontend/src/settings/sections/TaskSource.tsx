@@ -1,47 +1,35 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { getSettings, saveSettings, testJira, type Settings } from '@/api/settings'
+import { getSettings, saveSettings, type Settings } from '@/api/settings'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { SectionHeader } from '@/settings/sections/Section'
-
-const TOKEN_HINT = {
-  none: 'No token stored yet.',
-  set: 'A token is stored. Leave the field empty to keep it.',
-  unreadable: 'The stored token cannot be read with the current secret key. Enter it again.',
-}
+import { openSettings } from '@/settings/store'
 
 function TaskSourceForm({ settings }: { settings: Settings }) {
   const queryClient = useQueryClient()
   const [provider, setProvider] = useState(settings.provider)
   const [baseUrl, setBaseUrl] = useState(settings.jira.base_url ?? '')
-  const [token, setToken] = useState('')
   const [intervalS, setIntervalS] = useState(String(settings.refresh_interval_s))
-
-  const jiraInput = () => ({
-    base_url: baseUrl.trim(),
-    ...(token.trim() && { token: token.trim() }),
-  })
 
   const save = useMutation({
     mutationFn: () =>
       saveSettings({
         provider,
         refresh_interval_s: Number(intervalS),
-        ...(baseUrl.trim() && { jira: jiraInput() }),
+        ...(baseUrl.trim() && { jira: { base_url: baseUrl.trim() } }),
       }),
     onSuccess: (saved) => {
       queryClient.setQueryData(['settings'], saved)
       // Cards resolve through the selected provider, so re-read open boards.
       void queryClient.invalidateQueries({ queryKey: ['board'] })
       void queryClient.invalidateQueries({ queryKey: ['refresh'] })
-      setToken('')
+      void queryClient.invalidateQueries({ queryKey: ['tracker'] })
     },
   })
-  const test = useMutation({ mutationFn: () => testJira(jiraInput()) })
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -90,7 +78,7 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
         {!settings.secret_key_configured && (
           <Alert>
             <AlertDescription>
-              Set DRAWHL_SECRET_KEY in .env and restart drawhl to store a token.
+              Set DRAWHL_SECRET_KEY in .env and restart drawhl so people can store their tokens.
             </AlertDescription>
           </Alert>
         )}
@@ -106,36 +94,18 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
             spellCheck={false}
           />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="jira-token">Personal access token</Label>
-          <Input
-            id="jira-token"
-            type="password"
-            value={token}
-            onChange={(event) => setToken(event.target.value)}
-            autoComplete="off"
-          />
-          <p className="text-muted-foreground text-[13px]">
-            {TOKEN_HINT[settings.jira.token_state]} The token stays on the server.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
+        <p className="text-muted-foreground text-[13px]">
+          Each person connects their own token in{' '}
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            disabled={test.isPending || !baseUrl.trim()}
-            onClick={() => test.mutate()}
+            className="text-primary hover:underline"
+            onClick={() => openSettings('tracker')}
           >
-            Test connection
-          </Button>
-          {test.isSuccess && (
-            <span className="text-status-done-foreground text-[13px]">
-              Connected as {test.data.user}
-            </span>
-          )}
-        </div>
-        {test.isError && <p className="text-destructive text-[13px]">{test.error.message}</p>}
+            My tracker
+          </button>
+          , so cards show what their own Jira access allows. Moving to another URL asks everyone to
+          enter their token again.
+        </p>
       </fieldset>
 
       {save.isError && (

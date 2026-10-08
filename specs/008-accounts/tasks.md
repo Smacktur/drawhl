@@ -57,10 +57,10 @@ description: "Task list for Accounts and roles"
 
 ## Phase 5: Slice 40 `feat/my-tracker` — a tracker token per person (US4)
 
-- [ ] T022 [P] [US4] Migration `user_credentials`, `task_snapshots_v2`; move the instance token and snapshots to `admin`. Upgrade test
-- [ ] T023 [US4] Provider per request from instance settings and the person's token; refresh and snapshots keyed by person; `forbidden` and `no_token` task states. Tests with a fake Jira that answers per token: no task data crosses people
-- [ ] T024 [US4] API `/me/tracker`; `PUT /settings` admin only; Jira URL change marks tokens to test again. Tests
-- [ ] T025 [US4] Frontend: Settings → My tracker section; Instance group shown only to admins; locked card for `forbidden` and `no_token`. Tests
-- [ ] T026 [US4] Token-leak test extended to per-person snapshots; docs (Jira guide); `CHANGELOG.md`; screenshot
+- [x] T022 [P] [US4] Migration `user_credentials`, `task_snapshots_v2`; move the instance token and snapshots to `admin`. Upgrade test
+- [x] T023 [US4] Provider per request from instance settings and the person's token; refresh and snapshots keyed by person; `forbidden` and `no_token` task states. Tests with a fake Jira that answers per token: no task data crosses people
+- [x] T024 [US4] API `/me/tracker`; `PUT /settings` admin only; Jira URL change marks tokens to test again. Tests
+- [x] T025 [US4] Frontend: Settings → My tracker section; Instance group shown only to admins; locked card for `forbidden` and `no_token`. Tests
+- [x] T026 [US4] Token-leak test extended to per-person snapshots; docs (Jira guide); `CHANGELOG.md`; screenshot
 
 **Checkpoint**: `make check`, `make smoke`, access matrix, per-token test → G3 → release.

@@ -11,6 +11,7 @@ from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
+    SqliteCredentialRepo,
     SqliteInviteRepo,
     SqliteMemberRepo,
     SqliteSessionRepo,
@@ -93,7 +94,8 @@ def create_app(
     if not created and env_password:
         log.info("DRAWHL_PASSWORD is not used once people exist; each signs in with their own")
     member_repo = SqliteMemberRepo(db)
-    adopt_orphans(users, member_repo)
+    credentials = SqliteCredentialRepo(db)
+    adopt_orphans(users, member_repo, credentials)
     app.state.members = Members(member_repo, users)
     # Added before the request context, so it runs inside it and 401s are logged and counted.
     app.add_middleware(PasswordGate, sessions=app.state.sessions)
@@ -106,6 +108,7 @@ def create_app(
     app.state.refresher = RefreshService()
     service = SettingsService(
         SqliteSettingsRepo(db),
+        credentials,
         box,
         secret_key_configured=bool(key),
         on_token=register_secret,
@@ -114,7 +117,8 @@ def create_app(
     app.state.settings = service
     app.state.demo = DemoTaskProvider()
     client = _jira_client(settings, jira_transport)
-    app.state.jira = JiraDcProvider(service.jira_credentials, client)
+    # Built per request from the signed-in person's own token.
+    app.state.jira = lambda creds: JiraDcProvider(lambda: creds, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()
     if release_feed is None and settings.update_check:
         release_feed = GitHubReleaseFeed("Smacktur/drawhl", httpx.Client(timeout=5.0))

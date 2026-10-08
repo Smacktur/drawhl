@@ -3,22 +3,29 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from app.domain.accounts import Accounts, Person
-from app.domain.errors import Forbidden
+from app.domain.errors import Forbidden, JiraNotConfigured
 from app.domain.invites import Invites
 from app.domain.members import BoardRole, Members
 from app.domain.ports import BoardRepo, DemoTasks, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
 from app.domain.settings import SettingsService
-from app.domain.tasks import select_provider
+from app.domain.tasks import NoTokenProvider
 
 
 def boards(request: Request) -> BoardRepo:
     return request.app.state.boards
 
 
+def _owner(request: Request) -> str:
+    """Whose task cache a request reads: the person's for Jira, the shared one for demo tasks."""
+    if request.app.state.settings.provider() != "jira":
+        return ""
+    return current_person(request).id
+
+
 def snapshots(request: Request) -> SnapshotRepo:
-    return request.app.state.snapshots
+    return request.app.state.snapshots.scoped(_owner(request))
 
 
 def settings(request: Request) -> SettingsService:
@@ -26,8 +33,20 @@ def settings(request: Request) -> SettingsService:
 
 
 def provider(request: Request) -> TaskProvider:
+    """The demo tasks, or Jira with the signed-in person's own token."""
     state = request.app.state
-    return select_provider(state.settings.provider(), state.demo, state.jira)
+    if state.settings.provider() != "jira":
+        return state.demo
+    settings: SettingsService = state.settings
+    try:
+        creds = settings.jira_credentials(current_person(request).id)
+    except JiraNotConfigured as exc:
+        return NoTokenProvider(settings.base_url(), exc)
+    return state.jira(creds)
+
+
+def owner(request: Request) -> str:
+    return _owner(request)
 
 
 def refresher(request: Request) -> RefreshService:

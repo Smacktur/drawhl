@@ -28,13 +28,13 @@ Every page and API route except `/health` and `/ready` asks you to sign in with 
 - A board you cannot open is not in your list, and its link answers as if it did not exist.
 - Admins act as owner on every board, so a board is never stranded when its owner is disabled. Boards nobody shared with them are under "All boards" in the board menu.
 - Each new person gets their own welcome board once.
-- Task data on cards still comes from the instance's tracker connection; per-person tracker tokens are next.
+- Each person connects their own tracker token in Settings → My tracker, and task data is fetched and cached per person: a shared board never shows you a task your own Jira access does not allow.
 
 ## What drawhl stores
 
 - Your boards, settings and account: username, name and password hash.
-- The tracker token, encrypted with `DRAWHL_SECRET_KEY`. It is never sent back to the browser or written to logs.
-- A cached copy of each card's key, summary, status, type, assignee, priority and last update.
+- Each person's tracker token, encrypted with `DRAWHL_SECRET_KEY` and kept with the URL it was entered for. It is never sent back to the browser, written to logs or sent to another URL.
+- A cached copy of each card's key, summary, status, type, assignee, priority and last update, kept apart for each person.
 
 ## What drawhl talks to
 

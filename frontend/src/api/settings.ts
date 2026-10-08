@@ -37,3 +37,26 @@ export function testJira(input: { base_url?: string; token?: string }) {
     body: JSON.stringify(input),
   })
 }
+
+const trackerSchema = z.object({
+  provider: z.enum(['demo', 'jira']),
+  base_url: z.string().nullable(),
+  token_state: z.enum(['none', 'set', 'unreadable']),
+})
+export type Tracker = z.infer<typeof trackerSchema>
+
+/** The signed-in person's own tracker token. */
+export function getTracker() {
+  return fetchJson('/api/me/tracker', trackerSchema)
+}
+
+export function saveTrackerToken(token: string) {
+  return fetchJson('/api/me/tracker', trackerSchema, {
+    method: 'PUT',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export function removeTrackerToken() {
+  return fetchJson('/api/me/tracker', z.null(), { method: 'DELETE' })
+}
