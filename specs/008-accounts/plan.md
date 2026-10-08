@@ -6,7 +6,7 @@
 
 ## Summary
 
-People with usernames and passwords replace the single instance password; its value becomes the first admin's. Sessions move from a stateless signed cookie to a database table so they can be revoked. Boards get an owner, members with roles and an "everyone" setting, checked in one domain function. The tracker token and the task cache become per person. Delivered in 4 slices; each is usable alone and keeps `main` running.
+People with usernames and passwords replace the single instance password; its value becomes the first admin's. Sessions move from a stateless signed cookie to a database table so they can be revoked. Boards get an owner, members with roles and an "everyone" setting, checked in one domain function. The tracker token and the task cache become per person. Delivered in 5 slices; each is usable alone and keeps `main` running.
 
 ## Technical Context
 
@@ -27,7 +27,7 @@ People with usernames and passwords replace the single instance password; its va
 | I. Main always runs | Pass: one `feat/<slice>` branch per slice; the upgrade step keeps old data working |
 | II. Works without keys | Pass: invites are links, no mail server |
 | III. Hypothesis-driven scope | Pass: team mode moved out of Won't at G1 on 2026-10-08 |
-| IV. Vertical slices | Pass: 4 slices, each with UI, API and storage |
+| IV. Vertical slices | Pass: 5 slices; 37 is UI only (it moves existing forms), the rest carry UI, API and storage |
 | V. Contract-first | Pass: [contracts/api.md](contracts/api.md) |
 | VI. Production feel, minimal | Pass: no auth framework, no new dependency |
 | VII. Clean code | Pass |
@@ -47,7 +47,7 @@ backend/app/api/deps.py            current_person, current_admin, board_role(min
 backend/app/api/me.py, people.py, invites.py, members.py
 frontend/src/auth/SignIn.tsx       username + password
 frontend/src/auth/AcceptInvite.tsx ?invite=<token> and ?reset=<token>
-frontend/src/settings/             tabs: My account, My tracker, Instance (admin), People (admin)
+frontend/src/settings/             SettingsDialog with sections: Profile, Security, Preferences, My tracker; Instance group (admin): Task source, People
 frontend/src/board/ShareDialog.tsx members list, add person, role select, everyone, transfer
 frontend/src/canvas/               read-only mode for viewers: no toolbar, no drag, "View only" badge
 ```
@@ -73,11 +73,12 @@ What changes for tooling:
 | # | Branch | Stories | Done when |
 |---|---|---|---|
 | 36 | `feat/accounts` | US1 | upgrade fixture opens as `admin`; change password; sign out everywhere |
-| 37 | `feat/people` | US2 | invite → accept → signed in; disable; reset |
-| 38 | `feat/sharing` | US3 | access matrix green; viewer read-only; admin "All boards" |
-| 39 | `feat/my-tracker` | US4 | per-token fake Jira: no task data crosses people |
+| 37 | `feat/settings` | US5 | settings window with sections replaces the sheet; deep link; narrow screen |
+| 38 | `feat/people` | US2 | invite → accept → signed in; disable; reset |
+| 39 | `feat/sharing` | US3 | access matrix green; viewer read-only; admin "All boards" |
+| 40 | `feat/my-tracker` | US4 | per-token fake Jira: no task data crosses people |
 
-Slice 39 must land before any release that lets a second person in with the Jira provider: until then a member would see snapshots made with the admin's token. Either ship 37–39 in one release, or keep "Invite" hidden until 39 is merged.
+Slice 40 must land before any release that lets a second person in with the Jira provider: until then a member would see snapshots made with the admin's token. No release between slices 38 and 40 (decided at G2). Slice 37 has no such limit and can ship on its own.
 
 ## Risks
 

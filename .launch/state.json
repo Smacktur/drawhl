@@ -111,6 +111,7 @@
     "2026-10-08 G2 instance-password: owner approved spec 007 with the password always on: generated into data/password and logged once when ENV has none; changing it signs out every browser.",
     "2026-10-08 instance-password: spec 007 done; v2026.10.9 shipped with the password, the Railway template generates DRAWHL_PASSWORD (owner added it in the dashboard; the API cannot edit template variables). Releases now number YYYY.M.N; the web image builds its static files natively after an arm64 npm ci hang under QEMU. Next: team mode, accounts and roles.",
     "2026-10-08 spec 008 accounts drafted for team mode step 1 (accounts, people and invites, sharing with roles, a tracker token and task cache per person) in 4 slices; awaits G2. Development continues in a new session from this spec.",
-    "2026-10-08 G2 accounts: owner approved spec 008 as written, including admins acting as owner on every board; no release between slices 37 and 39, so no member sees snapshots made with the admin's token."
+    "2026-10-08 G2 accounts: owner approved spec 008 as written, including admins acting as owner on every board; no release between slices 37 and 39, so no member sees snapshots made with the admin's token.",
+    "2026-10-08 accounts: slice 36 merged (PR 42). Owner asked for a settings window in spec 008; added as US5 and slice 37 feat/settings (a Dialog with sections, Figma and Notion style), later slices renumbered 38-40; awaits G2."
   ]
 }

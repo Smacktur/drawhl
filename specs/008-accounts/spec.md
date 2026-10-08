@@ -6,13 +6,13 @@
 
 **Status**: Draft
 
-**Input**: Owner's decision at G1 on 2026-10-08: "I want to plan for team work from the start, like Miro. It is one of the features that will get us noticed by companies that want a Miro alternative inside their own network." Team mode leaves Won't. This spec is its first step: accounts, roles, board sharing and a tracker token per person. Spec 007 (instance password) was step 0; its password becomes the first admin's.
+**Input**: Owner's decision at G1 on 2026-10-08: "I want to plan for team work from the start, like Miro. It is one of the features that will get us noticed by companies that want a Miro alternative inside their own network." Team mode leaves Won't. This spec is its first step: accounts, roles, a settings window, board sharing and a tracker token per person. Spec 007 (instance password) was step 0; its password becomes the first admin's.
 
 ## Team mode roadmap
 
 This spec covers step 1. The others get their own specs; nothing here builds them, but the data model must not block them.
 
-1. **Accounts and roles** (this spec): people, sessions, invites, board sharing, a tracker token per person.
+1. **Accounts and roles** (this spec): people, sessions, a settings window, invites, board sharing, a tracker token per person.
 2. **Real-time** (spec 009): several people on one board at once with cursors and presence, on a CRDT (`yjs` in the browser, `pycrdt` and `pycrdt-websocket` on the server, both MIT). Until then two editors are kept apart by the existing `version_conflict` check.
 3. **OIDC SSO** (Keycloak, ADFS, Entra ID) through Authlib. Enterprise license, not AGPL.
 4. **Postgres** as a second storage adapter next to SQLite, a Helm chart, backups. Several API replicas need Redis pub/sub for real-time fan-out.
@@ -46,9 +46,29 @@ The owner upgrades an instance that already has boards and a Jira token. After t
 
 ---
 
+### User Story 5 - Settings in one window with sections (Priority: P1, built right after US1)
+
+Settings grow with this spec: profile, security, people, a tracker per person, instance options, later SSO and audit in the enterprise edition. The side sheet holds one column of forms and already scrolls with just the account and the tracker. The owner opens the main menu, picks "Settings" (or presses `⌘,`), and a window opens over the board: sections on the left grouped as "Account" and "Instance", the picked section on the right. They change their name in Profile, switch the theme in Preferences, close with Esc and are back on the same board at the same spot. A link with `?settings=security` opens the window on that section.
+
+**Why this priority**: People (US2) and My tracker (US4) need a place to live; building them into the sheet first and moving them later is double work.
+
+**Why a window and not a page or the sheet**: drawhl is a canvas; settings are a short visit, and the board stays in place behind the window, the way Figma, Miro and Notion do it. A separate page would unload the board and lose the view. The sheet is too narrow for a people table and has no room for navigation.
+
+**Independent Test**: open Settings from the main menu and with `⌘,`: the window opens on Profile. Pick Security, reload the page: it opens on Security. Change the theme in Preferences: the board behind changes at once. As a member, the "Instance" group is not shown and `?settings=task-source` opens Profile. At 600px wide the window fills the screen and shows a list of sections first.
+
+**Acceptance Scenarios**:
+
+1. **Given** the main menu, **Then** it starts with the person's name and username, has "Settings" with `⌘,`, and ends with "Sign out".
+2. **Given** the window, **Then** the sidebar shows "Account": Profile, Security, Preferences (and My tracker from US4), and for admins "Instance": Task source (and People from US2). Sections a person cannot use are not shown.
+3. **Given** a section, **Then** its forms save on their own button, as today; leaving a section with unsaved changes keeps them until the window closes.
+4. **Given** `?settings=<section>`, **Then** the window opens on it; an unknown or forbidden section opens Profile; closing the window removes the parameter.
+5. **Given** the window, **Then** Esc or the × closes it, focus returns to the main menu button, and the board keeps its viewport.
+6. **Given** a window under 720px wide, **Then** the window fills the screen, shows the list of sections, and each opens with a Back button.
+7. **Given** the command palette, **Then** "Open settings" and "Change password" open the window on Profile and Security.
+
 ### User Story 2 - The admin brings people in (Priority: P2)
 
-The admin opens Settings → People, presses "Invite", picks a role (Member or Admin) and gets a link. They send it in chat. The colleague opens it, picks a username, a display name and a password, and lands on the board list. The admin sees the new person in People and can make them admin, disable them (they are signed out at once and cannot sign in) or issue a password reset link.
+The admin opens Settings → People (Instance group), presses "Invite", picks a role (Member or Admin) and gets a link. They send it in chat. The colleague opens it, picks a username, a display name and a password, and lands on the board list. The admin sees the new person in People and can make them admin, disable them (they are signed out at once and cannot sign in) or issue a password reset link.
 
 **Why this priority**: Without people there is nothing to share.
 
