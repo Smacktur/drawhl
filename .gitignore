@@ -32,3 +32,6 @@ coverage/
 data/*
 !data/.gitkeep
 backend/data/
+
+# Copied from install/ by the docs workflow
+docs/guide/public/install.sh

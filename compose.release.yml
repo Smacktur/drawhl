@@ -15,6 +15,6 @@ services:
   web:
     image: ghcr.io/tiko-run/tiko-web:${TAG:-latest}
     restart: unless-stopped
-    ports: ["3000:3000"]
+    ports: ["${TIKO_PORT:-3000}:3000"]
     depends_on:
       api: { condition: service_healthy }

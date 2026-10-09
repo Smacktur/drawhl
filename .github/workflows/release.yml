@@ -51,6 +51,9 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           awk -v v="$version" '$0 ~ "^## \\[" v "\\]" {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md > notes.md
           test -s notes.md || { echo "no CHANGELOG.md section for $version"; exit 1; }
-      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+      # install.sh downloads this asset; TAG defaults to this release instead of latest.
+      - name: Compose file pinned to this release
+        run: sed "s/\${TAG:-latest}/\${TAG:-${GITHUB_REF_NAME#v}}/" compose.release.yml > compose.pinned.yml && grep -q "${GITHUB_REF_NAME#v}" compose.pinned.yml
+      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag "compose.pinned.yml#compose.release.yml"
         env:
           GH_TOKEN: ${{ github.token }}
