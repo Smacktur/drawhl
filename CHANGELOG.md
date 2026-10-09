@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.13] - 2026-10-09
+
 ### Added
 
 - One-command install for Linux and macOS: `curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh` checks the machine, installs Docker after asking (Docker Engine on Linux, Colima on macOS), writes `.env` with a generated password and key, and starts the latest release. Running it again upgrades and keeps your data.
