@@ -61,11 +61,24 @@ jobs:
       - if: failure()
         run: docker compose -f "$TIKO_DIR/compose.yaml" logs --tail=100
 
+  # install.ps1 is only linted: hosted Windows runners have no WSL 2 for Docker Desktop.
+  installer-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: PSScriptAnalyzer
+        shell: powershell
+        run: |
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          $issues = Invoke-ScriptAnalyzer -Path install/install.ps1 -Severity Warning, Error -ExcludeRule PSAvoidUsingWriteHost
+          $issues | Format-Table -AutoSize
+          if ($issues) { exit 1 }
+
   # The one required status check for main; add new jobs to `needs`.
   gate:
     name: CI Gate
     if: always()
-    needs: [check, smoke, licenses, installer]
+    needs: [check, smoke, licenses, installer, installer-windows]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = false
