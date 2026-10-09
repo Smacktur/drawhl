@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.12] - 2026-10-09
+
 ### Added
 
 - Deploy to Render button: a private `tiko-api` with a 1 GB disk and a public `tiko-web`, both from the released images, with the password and the encryption key generated on deploy.
