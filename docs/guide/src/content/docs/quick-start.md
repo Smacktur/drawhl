@@ -7,7 +7,7 @@ title: Quick start
 On Linux or macOS:
 
 ```bash
-curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh
+curl -fsSL https://tiko.run/install.sh | sh
 ```
 
 It installs Docker if needed, starts tiko and prints the address and the password. Never used Docker, or on Windows? See [Install](../install/) for every step.

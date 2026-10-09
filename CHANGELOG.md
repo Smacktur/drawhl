@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- The guide moved to [docs.tiko.run](https://docs.tiko.run), and the installer is `curl -fsSL https://tiko.run/install.sh | sh`. Old `tiko-run.github.io/tiko` links redirect.
+
 ## [2026.10.13] - 2026-10-09
 
 ### Added

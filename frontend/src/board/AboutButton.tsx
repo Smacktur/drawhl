@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const REPO = 'https://github.com/tiko-run/tiko'
-const DOCS = 'https://tiko-run.github.io/tiko'
+const DOCS = 'https://docs.tiko.run'
 const UPGRADE_DOCS = `${DOCS}/data-and-upgrades/`
 
 // lucide dropped brand icons, so this is the Octicons mark (MIT).
