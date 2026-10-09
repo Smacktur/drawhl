@@ -9,7 +9,7 @@ const settingsSchema = z.object({
     base_url: z.string().nullable(),
     token_state: z.enum(['none', 'set', 'unreadable']),
   }),
-  // Set in the environment by whoever deployed drawhl; the form shows them read-only.
+  // Set in the environment by whoever deployed tiko; the form shows them read-only.
   locked: z.array(z.enum(['provider', 'jira_base_url'])).default([]),
 })
 

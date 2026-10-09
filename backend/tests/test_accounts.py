@@ -183,7 +183,7 @@ def test_sign_in_sets_a_session_cookie(gated):
     response = login(gated)
     assert response.status_code == 204
     cookie = response.headers["set-cookie"]
-    assert "drawhl_session=" in cookie and "HttpOnly" in cookie and "SameSite=lax" in cookie
+    assert "tiko_session=" in cookie and "HttpOnly" in cookie and "SameSite=lax" in cookie
     assert "Secure" not in cookie
     status = gated.get("/api/auth/status").json()
     assert status["signed_in"] and status["me"]["username"] == "admin"
@@ -209,10 +209,10 @@ def test_wrong_password_then_rate_limit(gated):
 
 def test_sign_out_ends_the_session(gated):
     client = signed_in(gated.app)
-    stolen = client.cookies["drawhl_session"]
+    stolen = client.cookies["tiko_session"]
     assert client.post("/api/auth/logout").status_code == 204
     assert client.get("/api/boards").status_code == 401
-    replay = TestClient(gated.app, cookies={"drawhl_session": stolen})
+    replay = TestClient(gated.app, cookies={"tiko_session": stolen})
     assert replay.get("/api/boards").status_code == 401
 
 
@@ -247,7 +247,7 @@ def test_change_password_over_the_api(gated):
 
 
 def test_without_env_the_password_is_generated_and_logged_once(tmp_path, monkeypatch, capsys):
-    monkeypatch.delenv("DRAWHL_PASSWORD")
+    monkeypatch.delenv("TIKO_PASSWORD")
     path = tmp_path / "password"
     settings = Settings(db_path=str(tmp_path / "app.db"), password_file=str(path))
     first = TestClient(create_app(settings))
@@ -289,7 +289,7 @@ def _v2026_10_9_database(path: str, secret_key: str) -> None:
 def test_upgrade_from_v2026_10_9_opens_as_admin(tmp_path, monkeypatch, capsys):
     db = str(tmp_path / "app.db")
     _v2026_10_9_database(db, "test-secret-key")
-    settings = Settings(db_path=db, drawhl_secret_key="test-secret-key")
+    settings = Settings(db_path=db, tiko_secret_key="test-secret-key")
     client = signed_in(create_app(settings, jira_transport=httpx.MockTransport(lambda _: None)))
     names = sorted(board["name"] for board in client.get("/api/boards").json()["boards"])
     assert names == ["Roadmap", "Sprint"]
@@ -299,8 +299,8 @@ def test_upgrade_from_v2026_10_9_opens_as_admin(tmp_path, monkeypatch, capsys):
 
     # Once the admin exists, the variable no longer opens anything and the log says why.
     capsys.readouterr()
-    monkeypatch.setenv("DRAWHL_PASSWORD", "another-password")
+    monkeypatch.setenv("TIKO_PASSWORD", "another-password")
     again = TestClient(create_app(settings))
-    assert "DRAWHL_PASSWORD is not used" in capsys.readouterr().err
+    assert "TIKO_PASSWORD is not used" in capsys.readouterr().err
     assert login(again, "another-password").status_code == 401
     assert login(again).status_code == 204

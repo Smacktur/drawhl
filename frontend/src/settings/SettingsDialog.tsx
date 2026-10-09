@@ -198,7 +198,7 @@ export function SettingsDialog() {
           </Button>
         </DialogClose>
         <DialogDescription className="sr-only">
-          Your account, preferences and the settings of this drawhl.
+          Your account, preferences and the settings of this tiko.
         </DialogDescription>
         {me && section && <SettingsBody me={me} section={section} />}
       </DialogContent>

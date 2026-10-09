@@ -14,7 +14,7 @@ The welcome board is built by a pure domain function and seeded by the boards se
 
 **Primary Dependencies**: existing only.
 
-**Storage**: seed flag `welcome_seeded` in the existing `settings` table; "Paste text as" in `localStorage` `drawhl.paste.as`.
+**Storage**: seed flag `welcome_seeded` in the existing `settings` table; "Paste text as" in `localStorage` `tiko.paste.as`.
 
 **Testing**: pytest for the welcome doc (validates, dates from today, demo keys only) and the seed rules (once, not after delete, not on upgrade, one board under concurrent requests); vitest for the fit steps, the paste handler and the setting; screenshot per slice.
 
@@ -52,7 +52,7 @@ Sticky fit: after the text or size changes, binary-search the largest font size 
 
 Scrollbars: `scrollbar-width: thin` and `scrollbar-color` on `*` for Firefox, `::-webkit-scrollbar` rules for Chromium and Safari, colors from `--muted-foreground` with alpha, transparent track.
 
-Paste: one native `paste` handler runs an ordered list of steps; the first that takes the clipboard wins. 1) Copied drawhl elements: copy also writes `application/x-drawhl` with an id through the `copy` event; when it matches the in-memory buffer, elements are pasted as today. 2) Task keys and links: split `text/plain` by lines, spaces and commas; when every item parses as a key or a link of the connected tracker (the same parser as the Jira card input's "several keys" mode), the existing add-several flow adds the cards in a grid at the pointer. 3) Plain text: a text or sticky node. Draft idea 13's other trackers plug into step 2 through their providers. Paste inside editable targets is ignored by the board.
+Paste: one native `paste` handler runs an ordered list of steps; the first that takes the clipboard wins. 1) Copied tiko elements: copy also writes `application/x-tiko` with an id through the `copy` event; when it matches the in-memory buffer, elements are pasted as today. 2) Task keys and links: split `text/plain` by lines, spaces and commas; when every item parses as a key or a link of the connected tracker (the same parser as the Jira card input's "several keys" mode), the existing add-several flow adds the cards in a grid at the pointer. 3) Plain text: a text or sticky node. Draft idea 13's other trackers plug into step 2 through their providers. Paste inside editable targets is ignored by the board.
 
 ## Risks
 

@@ -10,7 +10,7 @@ Click the cube to note what you are waiting for and set when it goes off: `15m`,
 
 On a Jira card, pick "When the status changes": the timer goes off as soon as the board sees the task leave its current status.
 
-When a timer goes off you get a browser notification and a chime while drawhl is open. Timers that went off while the board was closed are listed when you open it. The button left of the sync indicator lists every timer on the board.
+When a timer goes off you get a browser notification and a chime while tiko is open. Timers that went off while the board was closed are listed when you open it. The button left of the sync indicator lists every timer on the board.
 
 ## Focus timer
 

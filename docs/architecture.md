@@ -21,7 +21,7 @@ backend/app/
   adapters/
     tasks/    jira_dc.py (httpx), demo.py (in-memory seed)
     storage/  sqlite.py, migrations/*.sql (PRAGMA user_version)
-    secrets/  fernet.py (token encryption with DRAWHL_SECRET_KEY)
+    secrets/  fernet.py (token encryption with TIKO_SECRET_KEY)
   config.py   ENV, the single entry point
 ```
 

@@ -15,7 +15,7 @@
 
 ## Decision: one `module` node type with `kind`, not one node type per module
 
-A single type keeps the board schema, `check_doc`, clipboard, history and node registration closed to change: a new kind touches only its own folder and the two registries (FR-002). Unknown kinds round-trip, so an older drawhl does not destroy a board made by a newer one.
+A single type keeps the board schema, `check_doc`, clipboard, history and node registration closed to change: a new kind touches only its own folder and the two registries (FR-002). Unknown kinds round-trip, so an older tiko does not destroy a board made by a newer one.
 
 ## Decision: rows stored in module content, not as child nodes
 

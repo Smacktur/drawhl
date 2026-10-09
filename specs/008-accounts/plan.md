@@ -64,9 +64,9 @@ What carries over from spec 007:
 
 What changes for tooling:
 
-- `backend/tests/conftest.py` `signed_in()` posts `{username: "admin", password}`; the autouse `DRAWHL_PASSWORD` fixture still seeds the admin.
+- `backend/tests/conftest.py` `signed_in()` posts `{username: "admin", password}`; the autouse `TIKO_PASSWORD` fixture still seeds the admin.
 - `scripts/smoke.py` signs in as `admin`; add a member flow (invite, accept, share, viewer gets 403 on save).
-- The Railway template keeps `DRAWHL_PASSWORD=${{secret(20)}}`; README and guide say it is the `admin` password.
+- The Railway template keeps `TIKO_PASSWORD=${{secret(20)}}`; README and guide say it is the `admin` password.
 
 ## Slices
 
@@ -77,7 +77,7 @@ What changes for tooling:
 | 38 | `feat/people` | US2 | invite → accept → signed in; disable; reset |
 | 39 | `feat/sharing` | US3 | access matrix green; viewer read-only; admin "All boards" |
 | 40 | `feat/my-tracker` | US4 | per-token fake Jira: no task data crosses people |
-| 41 | `feat/my-tracker` | US4 | `DRAWHL_TRACKER` and `JIRA_BASE_URL` set the tracker; Task source shows them locked |
+| 41 | `feat/my-tracker` | US4 | `TIKO_TRACKER` and `JIRA_BASE_URL` set the tracker; Task source shows them locked |
 
 Slice 40 must land before any release that lets a second person in with the Jira provider: until then a member would see snapshots made with the admin's token. No release between slices 38 and 40 (decided at G2). Slice 37 has no such limit and can ship on its own.
 

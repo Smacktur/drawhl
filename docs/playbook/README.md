@@ -1,4 +1,4 @@
-# Playbook: drawhl
+# Playbook: tiko
 
 The set of rules for working on the project: what to do, in what order, with which tool. It comes from [launchpad](https://github.com/Smacktur/launchpad) and is updated by the `launch update` command, so **make methodology changes in launchpad, not here**.
 

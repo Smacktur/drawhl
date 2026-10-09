@@ -11,11 +11,11 @@ PASSWORD = "test-password"
 
 @pytest.fixture(autouse=True)
 def instance_password(monkeypatch):
-    monkeypatch.setenv("DRAWHL_PASSWORD", PASSWORD)
+    monkeypatch.setenv("TIKO_PASSWORD", PASSWORD)
 
 
 def signed_in(app, username: str = "admin", password: str = PASSWORD) -> TestClient:
-    """A client with a session; by default the admin made from DRAWHL_PASSWORD."""
+    """A client with a session; by default the admin made from TIKO_PASSWORD."""
     client = TestClient(app)
     response = client.post("/api/auth/login", json={"username": username, "password": password})
     assert response.status_code == 204
@@ -35,5 +35,5 @@ def fake_jira() -> FakeJira:
 @pytest.fixture
 def jira_client(fake_jira) -> TestClient:
     """App with a secret key and a fake Jira DC behind the HTTP transport."""
-    settings = Settings(db_path=":memory:", drawhl_secret_key="test-secret-key")
+    settings = Settings(db_path=":memory:", tiko_secret_key="test-secret-key")
     return signed_in(create_app(settings, jira_transport=httpx.MockTransport(fake_jira)))

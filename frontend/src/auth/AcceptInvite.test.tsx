@@ -36,7 +36,7 @@ test('joins with a username, a name and a password', async () => {
   fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Ann Lee' } })
   fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'ann ' } })
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'long-enough-password' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Join drawhl' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Join tiko' }))
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
   const [url, init] = fetchMock.mock.calls[1]
   expect(url).toBe('/api/invites/tok/accept')

@@ -3,23 +3,23 @@ import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 
 export default defineConfig({
-  site: 'https://smacktur.github.io',
-  base: '/drawhl',
+  site: 'https://tiko-run.github.io',
+  base: '/tiko',
   integrations: [
     starlight({
-      title: 'drawhl',
+      title: 'tiko',
       logo: {
         light: './src/assets/logo-light.svg',
         dark: './src/assets/logo-dark.svg',
         replacesTitle: true,
       },
-      description: 'User guide for drawhl, an open-source infinite canvas for your tasks.',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Smacktur/drawhl' }],
-      editLink: { baseUrl: 'https://github.com/Smacktur/drawhl/edit/main/docs/guide/' },
+      description: 'User guide for tiko, an open-source infinite canvas for your tasks.',
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/tiko-run/tiko' }],
+      editLink: { baseUrl: 'https://github.com/tiko-run/tiko/edit/main/docs/guide/' },
       sidebar: [
         { label: 'Getting started', items: ['index', 'quick-start'] },
         {
-          label: 'Using drawhl',
+          label: 'Using tiko',
           items: ['adding-tasks', 'search', 'gantt', 'focus-and-timers', 'keyboard-shortcuts'],
         },
         {

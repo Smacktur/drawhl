@@ -3,8 +3,8 @@
 API_URL ?= http://localhost:8000
 WEB_URL ?= http://localhost:3000
 # Must match service names in render.yaml; Render adds a suffix if the subdomain is taken.
-STAGE_API_URL ?= https://drawhl-api-stage.onrender.com
-STAGE_WEB_URL ?= https://drawhl-web-stage.onrender.com
+STAGE_API_URL ?= https://tiko-api-stage.onrender.com
+STAGE_WEB_URL ?= https://tiko-web-stage.onrender.com
 
 help:  ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'

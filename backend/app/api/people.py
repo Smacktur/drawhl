@@ -33,7 +33,7 @@ class PersonChange(BaseModel):
 
 class InviteLink(BaseModel):
     invite: Invite
-    # Relative, so it works on whatever address the admin opened drawhl on.
+    # Relative, so it works on whatever address the admin opened tiko on.
     url: str
 
 

@@ -20,7 +20,7 @@ Task.state gains "forbidden" (token cannot see it) and "no_token" (person has no
 | Method, path | Request | Response | Errors |
 |---|---|---|---|
 | `GET /auth/status` | – | `{signed_in: bool, me: Me|null}` | |
-| `POST /auth/login` | `{username, password}` | 204, sets `drawhl_session` | 401 `invalid_credentials`, 403 `account_disabled`, 429 `too_many_attempts` |
+| `POST /auth/login` | `{username, password}` | 204, sets `tiko_session` | 401 `invalid_credentials`, 403 `account_disabled`, 429 `too_many_attempts` |
 | `POST /auth/logout` | – | 204 | |
 | `POST /auth/logout-all` | – | 204, ends every session of this person | |
 
@@ -45,7 +45,7 @@ Task.state gains "forbidden" (token cannot see it) and "no_token" (person has no
 | `POST /people/{id}/reset` | – | 201 `{invite: Invite, url}` (`/?reset=<token>`) | 403, 404 |
 | `DELETE /invites/{id}` | – | 204 | 403, 404 |
 | `GET /invites/{token}` | – | `{kind, role, username: string|null}` | 410 `invite_expired` |
-| `POST /invites/{token}/accept` | invite: `{username, name, password}`; reset: `{password}` | 204, sets `drawhl_session` | 409 `username_taken`, 410 `invite_expired`, 422 `weak_password` |
+| `POST /invites/{token}/accept` | invite: `{username, name, password}`; reset: `{password}` | 204, sets `tiko_session` | 409 `username_taken`, 410 `invite_expired`, 422 `weak_password` |
 
 ## Boards (changed)
 

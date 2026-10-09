@@ -6,13 +6,13 @@
 
 **Status**: Draft
 
-**Input**: User description: "drawhl MVP: self-hosted infinite canvas with live Jira Data Center task cards for a single lead user." Full input: core scenario, scope and Won't items from [docs/brief.md](../../docs/brief.md).
+**Input**: User description: "tiko MVP: self-hosted infinite canvas with live Jira Data Center task cards for a single lead user." Full input: core scenario, scope and Won't items from [docs/brief.md](../../docs/brief.md).
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Put a Jira task on a saved board (Priority: P1)
 
-The lead starts drawhl on their machine, opens it in the browser, connects it to their Jira Data Center with a base URL and a personal access token, creates a board and adds a task by its key or by pasting its link. A compact card appears with the task's type icon, key, title and status. When they come back later, the board and the card are where they left them.
+The lead starts tiko on their machine, opens it in the browser, connects it to their Jira Data Center with a base URL and a personal access token, creates a board and adds a task by its key or by pasting its link. A compact card appears with the task's type icon, key, title and status. When they come back later, the board and the card are where they left them.
 
 **Why this priority**: This is the smallest thing that proves the product: a real task from Jira lives on a canvas the user owns. Every other story builds on it.
 

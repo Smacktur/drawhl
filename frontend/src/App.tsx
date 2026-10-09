@@ -14,7 +14,7 @@ import { TopBar } from '@/board/TopBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const RELOADED = 'drawhl.reloadedForChunk'
+const RELOADED = 'tiko.reloadedForChunk'
 
 // A tab opened before an upgrade asks for a chunk the server no longer has; reload once to get the new build.
 function reloadOnce(error: unknown): Promise<never> {
@@ -42,7 +42,7 @@ const Canvas = lazy(() =>
   }, reloadOnce),
 )
 
-const LAST_BOARD = 'drawhl.lastBoard'
+const LAST_BOARD = 'tiko.lastBoard'
 
 // Server snapshot is false, client snapshot is true: tells prerender and hydration apart.
 const subscribeNever = () => () => {}
@@ -97,7 +97,7 @@ export default function App() {
   if (mounted && inviteLink) {
     return (
       <main className="bg-background relative h-dvh w-full overflow-hidden">
-        <h1 className="sr-only">drawhl</h1>
+        <h1 className="sr-only">tiko</h1>
         <AcceptInvite link={inviteLink} />
       </main>
     )
@@ -106,7 +106,7 @@ export default function App() {
   if (auth.data?.signed_in === false) {
     return (
       <main className="bg-background relative h-dvh w-full overflow-hidden">
-        <h1 className="sr-only">drawhl</h1>
+        <h1 className="sr-only">tiko</h1>
         <SignIn onSignedIn={() => void queryClient.invalidateQueries()} />
       </main>
     )
@@ -116,7 +116,7 @@ export default function App() {
 
   return (
     <main className="bg-background relative h-dvh w-full overflow-hidden">
-      <h1 className="sr-only">drawhl</h1>
+      <h1 className="sr-only">tiko</h1>
       {(!mounted || auth.isPending || (signedIn && boards.isPending)) && (
         <Skeleton className="absolute inset-0 rounded-none" />
       )}

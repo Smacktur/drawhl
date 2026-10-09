@@ -37,7 +37,7 @@ export function renderPages(): Page[] {
   const legal = Object.entries(legalDocs).map(([file, markdown]) => ({
     path: `/legal/${file.slice('./legal/'.length, -'.md'.length)}/`,
     lang: file.split('/')[2],
-    body: `<article class="legal"><p><a href="/">drawhl</a></p>${marked.parse(markdown, { async: false })}</article>`,
+    body: `<article class="legal"><p><a href="/">tiko</a></p>${marked.parse(markdown, { async: false })}</article>`,
     title: markdown.match(/^# (.+)$/m)?.[1],
     hydrate: false,
   }))

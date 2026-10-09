@@ -2,7 +2,7 @@
 _commit: v0.11.0-4-g0a01ba6
 _src_path: /Users/pgkbuild/Documents/code/project/launchpad
 contact_email: smacktur@gmail.com
-copyright_holder: The drawhl Authors
+copyright_holder: The tiko Authors
 description: 'Open-source infinite canvas for your tasks: live cards from your tracker,
     arranged the way you think'
 frontend: true
@@ -10,6 +10,6 @@ github_owner: Smacktur
 license: AGPL-3.0
 llm: false
 profile: oss
-project_name: drawhl
-project_title: drawhl
+project_name: tiko
+project_title: tiko
 ui_lang: en

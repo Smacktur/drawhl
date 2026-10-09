@@ -15,4 +15,4 @@ Include the affected version, steps to reproduce and the impact you see. You wil
 
 ## Scope
 
-drawhl is self-hosted: you run it on your own infrastructure. Keep it updated, keep secrets in environment variables, and do not expose it to the public internet without authentication in front of it.
+tiko is self-hosted: you run it on your own infrastructure. Keep it updated, keep secrets in environment variables, and do not expose it to the public internet without authentication in front of it.

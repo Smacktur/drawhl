@@ -17,7 +17,7 @@ export interface FocusStore {
   now: number
 }
 
-const KEY = 'drawhl.focus'
+const KEY = 'tiko.focus'
 // A phase that ended this long before the page noticed (closed tab) ends quietly.
 const LATE_ALERT = 5_000
 

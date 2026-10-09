@@ -64,7 +64,7 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
             <Label htmlFor="provider-jira">Jira Data Center</Label>
           </div>
         </RadioGroup>
-        {providerLocked && <ServerNote name="DRAWHL_TRACKER" />}
+        {providerLocked && <ServerNote name="TIKO_TRACKER" />}
       </fieldset>
 
       <div className="flex flex-col gap-1.5">
@@ -90,7 +90,7 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
         {!settings.secret_key_configured && (
           <Alert>
             <AlertDescription>
-              Set DRAWHL_SECRET_KEY in .env and restart drawhl so people can store their tokens.
+              Set TIKO_SECRET_KEY in .env and restart tiko so people can store their tokens.
             </AlertDescription>
           </Alert>
         )}
@@ -144,7 +144,7 @@ export function TaskSource() {
     <div className="flex flex-col gap-5">
       <SectionHeader
         title="Task source"
-        description="Where cards get their task data, for everyone on this drawhl."
+        description="Where cards get their task data, for everyone on this tiko."
       />
       {settings.isPending && <p className="text-muted-foreground">Loading…</p>}
       {settings.isError && (

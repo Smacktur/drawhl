@@ -1,4 +1,4 @@
-# Brief: drawhl
+# Brief: tiko
 
 > Open-source infinite canvas for your tasks: live cards from your tracker, arranged the way you think
 
@@ -6,7 +6,7 @@ Filled in during Intake and Scope (gate **G1**) from [research.md](research.md).
 
 ## Hypothesis
 
-The main hypothesis from the research (top by ICE): a lead will trust the canvas and manage their tasks on it only if card statuses update on their own. A spatially minded lead will open drawhl every day because lists and kanban boards don't give them an overview of their tasks. We'll know by how often they open it and by manual refresh being almost unnecessary.
+The main hypothesis from the research (top by ICE): a lead will trust the canvas and manage their tasks on it only if card statuses update on their own. A spatially minded lead will open tiko every day because lists and kanban boards don't give them an overview of their tasks. We'll know by how often they open it and by manual refresh being almost unnecessary.
 
 | Field | Answer |
 |---|---|
@@ -18,7 +18,7 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 
 ## Core scenario
 
-1. The user starts drawhl (`docker compose up`), opens it in the browser and enters the Jira DC URL and their PAT in settings.
+1. The user starts tiko (`docker compose up`), opens it in the browser and enters the Jira DC URL and their PAT in settings.
 2. Creates a board, draws frames and sticky notes, connects them with arrows.
 3. Adds a task with the "Jira card" tool by key (`DEV-12`) or by pasting a link. A compact card appears on the canvas: type icon, key, title, status.
 4. Drags cards into frames, collapses them to the key, and clicks to expand a mini-card (assignee, priority, updated, link to Jira).

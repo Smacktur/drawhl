@@ -14,7 +14,7 @@ A frontend-only feature. A pure index turns board nodes and task snapshots into 
 
 **Primary Dependencies**: existing only (radix dialog, xyflow, lucide, react-hotkeys-hook). No `cmdk`: ranking is our own, so its filtering would be switched off anyway, and the list is a plain `listbox`.
 
-**Storage**: recent jumps in `localStorage` `drawhl.search.recent.<boardId>`.
+**Storage**: recent jumps in `localStorage` `tiko.search.recent.<boardId>`.
 
 **Testing**: vitest for the index, matcher, layout map, ranking, filters and the palette (keyboard, jump, restore); screenshot against the running stack.
 

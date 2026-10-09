@@ -14,7 +14,7 @@ A new board node `timer`. Attachment is xyflow's `parentId`, so a timer moves wi
 
 **Primary Dependencies**: existing only (xyflow, radix popover, lucide). Notification and Web Audio from the browser; the chime is shared with the focus timer.
 
-**Storage**: timers live in the board document (server). Which timers already notified lives in `localStorage` `drawhl.timers.notified`, so a reload does not notify twice.
+**Storage**: timers live in the board document (server). Which timers already notified lives in `localStorage` `tiko.timers.notified`, so a reload does not notify twice.
 
 **Testing**: vitest for parsing, state, repeat, attach and delete rules, the cube and the hook; pytest for the node type and parent rules; screenshot against the running stack.
 

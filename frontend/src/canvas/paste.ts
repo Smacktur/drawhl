@@ -1,11 +1,11 @@
 import { pastedRefs } from '@/canvas/refs'
 
-/** Clipboard type that says the copy came from drawhl; its value is the copy's id. */
-export const CLIPBOARD_MARKER = 'application/x-drawhl'
+/** Clipboard type that says the copy came from tiko; its value is the copy's id. */
+export const CLIPBOARD_MARKER = 'application/x-tiko'
 const TEXT_LIMIT = 5000
 
 export type PasteAs = 'text' | 'sticky'
-const PASTE_AS_KEY = 'drawhl.paste.as'
+const PASTE_AS_KEY = 'tiko.paste.as'
 
 export function readPasteAs(): PasteAs {
   try {
@@ -29,7 +29,7 @@ export type Paste =
 type Clipboard = Pick<DataTransfer, 'getData'>
 
 /**
- * What a paste over the board adds, tried in order: elements copied in drawhl,
+ * What a paste over the board adds, tried in order: elements copied in tiko,
  * task keys and links, plain text. Other trackers' links join the refs step.
  */
 export function classifyPaste(data: Clipboard, copyId: string | null): Paste | null {

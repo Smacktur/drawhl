@@ -73,9 +73,9 @@ description: "Task list for Live Jira Canvas (MVP)"
 
 **Goal**: settings with base URL and PAT, encrypted at rest, test connection, real cards.
 
-**Independent Test**: with `DRAWHL_SECRET_KEY` set and httpx `MockTransport` Jira: save settings, test connection returns the user, resolve a real-looking key; token string absent from every response and log line. Manual: real DC instance.
+**Independent Test**: with `TIKO_SECRET_KEY` set and httpx `MockTransport` Jira: save settings, test connection returns the user, resolve a real-looking key; token string absent from every response and log line. Manual: real DC instance.
 
-- [x] T022 [US1] Add `httpx` and `cryptography` to `backend/pyproject.toml` (`uv add`), lines in `THIRD_PARTY.md`, `make licenses`; add `drawhl_secret_key: SecretStr | None`, `jira_tls_verify: bool = True`, `jira_ca_bundle: str | None` to `backend/app/config.py`; document `DRAWHL_SECRET_KEY` (`openssl rand -base64 32`), `JIRA_TLS_VERIFY`, `JIRA_CA_BUNDLE` in `.env.example` and README
+- [x] T022 [US1] Add `httpx` and `cryptography` to `backend/pyproject.toml` (`uv add`), lines in `THIRD_PARTY.md`, `make licenses`; add `tiko_secret_key: SecretStr | None`, `jira_tls_verify: bool = True`, `jira_ca_bundle: str | None` to `backend/app/config.py`; document `TIKO_SECRET_KEY` (`openssl rand -base64 32`), `JIRA_TLS_VERIFY`, `JIRA_CA_BUNDLE` in `.env.example` and README
 - [x] T023 [P] [US1] Add errors `SecretKeyMissing` (`secret_key_missing`, 400), `SecretUnreadable`, `JiraNotConfigured` (`jira_not_configured`, 400), `JiraUnauthorized` (`jira_unauthorized`, 401), `JiraRateLimited(retry_after)` (`jira_rate_limited`, 429) to `backend/app/domain/errors.py` and `backend/app/api/errors.py`; reuse `DependencyUnavailable` with code `jira_unavailable` (503)
 - [x] T024 [P] [US1] Create `backend/app/adapters/secrets/fernet.py`: `FernetSecretBox(key)` and `NullSecretBox` (encrypt raises `SecretKeyMissing`, decrypt raises `SecretUnreadable`); add `SecretBox` and `SettingsRepo` protocols to `backend/app/domain/ports.py`. Tests in `backend/tests/test_secrets.py` (round-trip, wrong key → unreadable)
 - [x] T025 [P] [US1] Add `settings` key-value table (migration 2) and `SqliteSettingsRepo` to `backend/app/adapters/storage/` with keys `provider` (default `demo`), `refresh_interval_s` (default 30, 30–300), `jira_base_url`, `jira_token_enc` Done as migration `002_settings.sql`.
@@ -185,11 +185,11 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 ## Phase 7d: Slice 9 `feat/about` — About panel and theme icon
 
-**Goal**: anyone who opens drawhl sees what it is, which version runs and where to read more.
+**Goal**: anyone who opens tiko sees what it is, which version runs and where to read more.
 
 **Independent Test**: the About button in the bottom left opens a small panel with a short description, the version, GitHub and docs links; the Theme item in the main menu has an icon.
 
-- [x] T083 `frontend/src/board/AboutButton.tsx`: bottom-left button with a `Popover`: what drawhl is, version (`VITE_APP_VERSION`, `dev` for source builds) linked to its release, GitHub and documentation links; test
+- [x] T083 `frontend/src/board/AboutButton.tsx`: bottom-left button with a `Popover`: what tiko is, version (`VITE_APP_VERSION`, `dev` for source builds) linked to its release, GitHub and documentation links; test
 - [x] T084 Release images carry the version: `ARG VITE_APP_VERSION` in `frontend/Dockerfile`, build arg in `release.yml`
 - [x] T085 Icon for the Theme item in the main menu; `CHANGELOG.md`, `DESIGN.md`; live check in the browser
 
@@ -205,7 +205,7 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 ## Phase 7f: Slice 11 `feat/version-check` — running version and update notice
 
-**Goal**: About shows the version actually running, and the user learns about a new release without leaving drawhl.
+**Goal**: About shows the version actually running, and the user learns about a new release without leaving tiko.
 
 **Independent Test**: `GET /api/version` returns the running version; with a newer release on GitHub the About button shows a dot and the panel links to it; `UPDATE_CHECK=false` makes no outside calls.
 
@@ -225,7 +225,7 @@ Canvas chrome (US6), same slice because it owns `Toolbar.tsx` and `Canvas.tsx`:
 
 ## Phase 8: Polish (verify and ship phases)
 
-- [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `DRAWHL_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data
+- [x] T059 README: problem, solution, core scenario, setup in ≤ 10 min (demo, then Jira DC with `TIKO_SECRET_KEY`), all ENV variables, limitations from Won't, screenshot made with demo data
 - [x] T060 Update `docs/architecture.md` with the final structure and `THIRD_PARTY.md` completeness check
 - [x] T061 Run [quickstart.md](quickstart.md) end to end on a clean clone (`make clean-clone`)
 

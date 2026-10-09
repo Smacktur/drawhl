@@ -34,7 +34,7 @@ def main(argv: list[str]) -> int:
     # The person issues their own link: there may be no other admin to stand for it.
     _, token = invites.reset(person.id, person.id, time.time())
     hours = RESET_TTL_S // 3600
-    print(f"Open this on your drawhl address within {hours} hours to set a new password:")
+    print(f"Open this on your tiko address within {hours} hours to set a new password:")
     print(f"/?reset={token}")
     return 0
 

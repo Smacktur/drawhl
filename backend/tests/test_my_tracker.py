@@ -22,7 +22,7 @@ HIDDEN = "Summary of DEV-2"
 def team():
     fake = FakeJira()
     fake.tokens = {T_ANN: {"DEV-1", "DEV-2"}, T_BOB: {"DEV-1"}}
-    settings = Settings(db_path=":memory:", drawhl_secret_key="test-secret-key")
+    settings = Settings(db_path=":memory:", tiko_secret_key="test-secret-key")
     app = create_app(settings, jira_transport=httpx.MockTransport(fake))
     admin = signed_in(app)
     assert admin.put(

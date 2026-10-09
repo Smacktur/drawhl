@@ -58,24 +58,24 @@ def _jira_client(settings: Settings, transport: httpx.BaseTransport | None) -> h
 
 
 def _password(settings: Settings) -> str:
-    """The first admin's password: DRAWHL_PASSWORD, or one generated into the password file."""
-    if settings.drawhl_password and settings.drawhl_password.get_secret_value():
-        password = settings.drawhl_password.get_secret_value()
+    """The first admin's password: TIKO_PASSWORD, or one generated into the password file."""
+    if settings.tiko_password and settings.tiko_password.get_secret_value():
+        password = settings.tiko_password.get_secret_value()
     else:
         password, created = password_file.load_or_create(settings.password_file)
         if created:
             # Printed once on purpose: without ENV this is the only way the owner learns it.
-            log.warning("drawhl password: %s (saved to %s)", password, settings.password_file)
+            log.warning("tiko password: %s (saved to %s)", password, settings.password_file)
         else:
-            log.info("drawhl password is in %s", settings.password_file)
+            log.info("tiko password is in %s", settings.password_file)
     register_secret(password)
     return password
 
 
 def _tracker_env(settings: Settings) -> dict[LockedField, str]:
     env: dict[LockedField, str] = {}
-    if settings.drawhl_tracker:
-        env["provider"] = settings.drawhl_tracker
+    if settings.tiko_tracker:
+        env["provider"] = settings.tiko_tracker
     if settings.jira_base_url:
         # A typo here should stop the start, not surface later as failing cards.
         env["jira_base_url"] = normalize_base_url(settings.jira_base_url)
@@ -90,9 +90,9 @@ def create_app(
     settings = settings or get_settings()
     setup_logging(settings.log_level)
 
-    key = settings.drawhl_secret_key.get_secret_value() if settings.drawhl_secret_key else ""
+    key = settings.tiko_secret_key.get_secret_value() if settings.tiko_secret_key else ""
     if key and len(key) < MIN_SECRET_KEY_LENGTH:
-        log.warning("DRAWHL_SECRET_KEY is short; use openssl rand -base64 32")
+        log.warning("TIKO_SECRET_KEY is short; use openssl rand -base64 32")
     app = FastAPI(title=settings.app_name)
     db = Database(settings.db_path)
     users = SqliteUserRepo(db)
@@ -100,9 +100,9 @@ def create_app(
     app.state.accounts = Accounts(users, app.state.sessions)
     app.state.invites = Invites(SqliteInviteRepo(db), app.state.accounts, app.state.sessions)
     created = bootstrap_admin(app.state.accounts, users, lambda: _password(settings))
-    env_password = settings.drawhl_password and settings.drawhl_password.get_secret_value()
+    env_password = settings.tiko_password and settings.tiko_password.get_secret_value()
     if not created and env_password:
-        log.info("DRAWHL_PASSWORD is not used once people exist; each signs in with their own")
+        log.info("TIKO_PASSWORD is not used once people exist; each signs in with their own")
     member_repo = SqliteMemberRepo(db)
     credentials = SqliteCredentialRepo(db)
     adopt_orphans(users, member_repo, credentials)
@@ -132,7 +132,7 @@ def create_app(
     app.state.jira = lambda creds: JiraDcProvider(lambda: creds, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()
     if release_feed is None and settings.update_check:
-        release_feed = GitHubReleaseFeed("Smacktur/drawhl", httpx.Client(timeout=5.0))
+        release_feed = GitHubReleaseFeed("tiko-run/tiko", httpx.Client(timeout=5.0))
     app.state.updates = UpdateService(VERSION, release_feed if settings.update_check else None)
     app.include_router(router)
 

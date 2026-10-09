@@ -32,7 +32,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     >
       <p className="flex items-center gap-2 text-[18px] font-semibold tracking-[-0.03em]">
         <Emblem className="size-6" />
-        drawhl
+        tiko
       </p>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="sign-in-username">Username</Label>

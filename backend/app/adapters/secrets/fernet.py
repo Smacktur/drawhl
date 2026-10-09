@@ -8,7 +8,7 @@ from app.domain.errors import SecretKeyMissing, SecretUnreadable
 
 class FernetSecretBox:
     def __init__(self, key: str) -> None:
-        # Any string works as DRAWHL_SECRET_KEY; Fernet itself needs 32 url-safe base64 bytes.
+        # Any string works as TIKO_SECRET_KEY; Fernet itself needs 32 url-safe base64 bytes.
         digest = hashlib.sha256(key.encode()).digest()
         self._fernet = Fernet(base64.urlsafe_b64encode(digest))
 
@@ -24,7 +24,7 @@ class FernetSecretBox:
 
 class NullSecretBox:
     def encrypt(self, plain: str) -> str:
-        raise SecretKeyMissing("Set DRAWHL_SECRET_KEY in .env to store a Jira token.")
+        raise SecretKeyMissing("Set TIKO_SECRET_KEY in .env to store a Jira token.")
 
     def decrypt(self, token: str) -> str:
-        raise SecretUnreadable("DRAWHL_SECRET_KEY is not set")
+        raise SecretUnreadable("TIKO_SECRET_KEY is not set")

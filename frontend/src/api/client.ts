@@ -5,7 +5,7 @@ const apiErrorSchema = z.object({
 })
 
 /** Fired when the session is gone, for example after a sign-out everywhere. */
-export const AUTH_REQUIRED_EVENT = 'drawhl:auth-required'
+export const AUTH_REQUIRED_EVENT = 'tiko:auth-required'
 
 export class ApiError extends Error {
   readonly code: string

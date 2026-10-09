@@ -48,7 +48,7 @@ ALTER TABLE boards ADD COLUMN everyone_role TEXT;   -- NULL | viewer | editor
 CREATE TABLE user_credentials (
     user_id TEXT NOT NULL REFERENCES users(id),
     provider TEXT NOT NULL,               -- jira
-    token_enc TEXT NOT NULL,              -- Fernet, DRAWHL_SECRET_KEY
+    token_enc TEXT NOT NULL,              -- Fernet, TIKO_SECRET_KEY
     base_url TEXT NOT NULL,               -- instance URL the token was tested against
     PRIMARY KEY (user_id, provider)
 );
@@ -66,7 +66,7 @@ CREATE TABLE task_snapshots_v2 (
 
 Upgrade, done in code on first start after the migration (the admin's password is not known to SQL):
 
-1. No row in `users` → create `admin` with role `admin` and the password from `DRAWHL_PASSWORD` or `data/password` (generate and log once if neither, as in spec 007).
+1. No row in `users` → create `admin` with role `admin` and the password from `TIKO_PASSWORD` or `data/password` (generate and log once if neither, as in spec 007).
 2. Every board without an owner gets `admin` as owner.
 3. The instance tracker token in `settings` (`jira_token_enc`) moves to `user_credentials` for `admin`; the setting is deleted. `jira_base_url`, `provider`, `refresh_interval_s` stay in `settings` as instance settings.
 4. Rows of `task_snapshots` are copied to `task_snapshots_v2` with `admin`'s id (demo keys with `''`), then `task_snapshots` is dropped.

@@ -7,7 +7,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from app.api.errors import error_body
 from app.domain.sessions import Sessions
 
-COOKIE = "drawhl_session"
+COOKIE = "tiko_session"
 # Platform health checks must pass before anyone signs in.
 OPEN_PATHS = {"/health", "/ready", "/api/auth/status", "/api/auth/login", "/api/auth/logout"}
 INVITES = "/api/invites/"
@@ -50,5 +50,5 @@ class PasswordGate:
         if scope["type"] == "websocket":
             await send({"type": "websocket.close", "code": 1008})
             return
-        response = JSONResponse(error_body("auth_required", "sign in to drawhl"), status_code=401)
+        response = JSONResponse(error_body("auth_required", "sign in to tiko"), status_code=401)
         await response(scope, receive, send)

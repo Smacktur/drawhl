@@ -36,7 +36,7 @@ One password closes every instance: from ENV, or generated on first start and sa
 ## Design
 
 ```text
-backend/app/config.py            drawhl_password: SecretStr | None
+backend/app/config.py            tiko_password: SecretStr | None
 backend/app/domain/access.py     Access: sign_in(password, now) -> token, is_valid(token, now); 5 failures a minute per instance
 backend/app/api/auth.py          POST /api/auth/login, POST /api/auth/logout, GET /api/auth/status
 backend/app/api/gate.py          ASGI middleware: open paths, cookie check, 401 auth_required
@@ -49,15 +49,15 @@ frontend/src/settings/SettingsSheet.tsx   "Sign out"
 frontend/nginx.conf.template     pass X-Forwarded-Proto to the API
 ```
 
-Token: `base64(expires_at) + "." + hex(HMAC-SHA256(key, expires_at))`, key = `SHA-256("drawhl-session" + secret key + password)`. Changing either value invalidates every session: all of the owner's browsers and anyone who used the old password. Verification is one HMAC and one compare, no I/O.
+Token: `base64(expires_at) + "." + hex(HMAC-SHA256(key, expires_at))`, key = `SHA-256("tiko-session" + secret key + password)`. Changing either value invalidates every session: all of the owner's browsers and anyone who used the old password. Verification is one HMAC and one compare, no I/O.
 
-Cookie: `drawhl_session`, `Path=/`, `HttpOnly`, `SameSite=Lax`, `Max-Age` 30 days, `Secure` when `X-Forwarded-Proto` or the request scheme is `https`. `SameSite=Lax` plus JSON-only bodies covers CSRF for this single-user gate.
+Cookie: `tiko_session`, `Path=/`, `HttpOnly`, `SameSite=Lax`, `Max-Age` 30 days, `Secure` when `X-Forwarded-Proto` or the request scheme is `https`. `SameSite=Lax` plus JSON-only bodies covers CSRF for this single-user gate.
 
 Login: a wrong password waits as long as a right one (constant-time compare of SHA-256 digests). The limiter counts failures for the whole instance: the client sets `X-Forwarded-For`, so a per-IP limit is dodged by forging it. An attacker can keep the owner locked out by guessing, which is accepted for one user per instance; team mode moves to per-account limits.
 
 Frontend: `GET /api/auth/status` on boot returns `{signed_in: bool}`; the app renders SignIn until signed in. Any later `auth_required` drops back to SignIn, for example after a password change.
 
-Railway: template variable `DRAWHL_PASSWORD=${{secret(20)}}` on the API service; template README, project README, `.env.example` and the quick-start guide explain it.
+Railway: template variable `TIKO_PASSWORD=${{secret(20)}}` on the API service; template README, project README, `.env.example` and the quick-start guide explain it.
 
 ## Risks
 

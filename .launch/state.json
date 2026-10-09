@@ -44,7 +44,8 @@
     "people",
     "sharing",
     "my-tracker",
-    "tracker-env"
+    "tracker-env",
+    "rename-tiko"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -110,7 +111,7 @@
     "2026-10-06 G4: repo public, main protected by rulesets, first release v2026.10.6 (ghcr images amd64+arm64). Author email stays in history by owner's choice. Next: Render slice with optional basic auth.",
     "2026-10-06 G1 modules: owner approved a module host with Gantt as the first module; plan dates on the board only, Jira dates later. Spec 002 awaits G2.",
     "2026-10-07 G1 and G2 focus: owner asked for a pomodoro timer with lofi music, picked the capsule design and told the agent to proceed without waiting. Music: 7 CC0 tracks from OpenGameArt, Pixabay rejected by license.",
-    "2026-10-07 G1 and G2 timers: owner shaped idea 10 (cube timers attached to elements, list of the current board, status and repeat triggers) and told the agent to build; notifications only while drawhl is open.",
+    "2026-10-07 G1 and G2 timers: owner shaped idea 10 (cube timers attached to elements, list of the current board, status and repeat triggers) and told the agent to build; notifications only while tiko is open.",
     "2026-10-07 G1 search: owner asked for a Spotlight-like palette on Cmd+K and Cmd+F and took all extras: preview and highlight, filters, commands and boards, layout fallback and recent jumps. Owner approved spec 005 (G2) and asked for a fast search; no list virtualization needed with 50 rows.",
     "2026-10-07 search: spec 005 done in 4 slices (search, preview, filters, commands); owner added Cmd+P for the command palette.",
     "2026-10-07 legal: owner chose AGPL-3.0-only over MIT to keep a future hosted version and enterprise terms open; CLA (checkbox in the PR template, bot before the first outside PR), TRADEMARKS.md, releases up to v2026.10.6 stay MIT.",
@@ -118,14 +119,15 @@
     "2026-10-07 G1 first-run: owner approved a 5-step launch plan (first-run polish, one-click deploy with an instance password, public web demo, Jira Cloud then GitHub Issues, launch kit) and moved the instance password and Jira Cloud out of Won't. Spec 006 covers step 1: welcome board, sticky fit, scrollbars, paste text.",
     "2026-10-07 G2 first-run: owner approved spec 006; sticky text shrinks with no floor and stops at 2000 characters like Miro, paste turns task links into cards (draft idea 13, Jira first).",
     "2026-10-08 first-run: spec 006 done; T013 QA and design review of a fresh install passed US1-US4 in both themes, one fix (Redo shortcut label), release images pull anonymously and start in about 20 s.",
-    "2026-10-08 G1 teams: owner moved team mode out of Won't (accounts and roles, sharing, real-time, then OIDC SSO and Postgres; monolith stays) to win companies that want Miro inside their network. Order: instance password now (step 0, DRAWHL_PASSWORD becomes the first admin's password), then accounts and roles. Open core: everything AGPL except SSO, audit and SCIM, which go to an enterprise license. Spec 007 awaits G2.",
+    "2026-10-08 G1 teams: owner moved team mode out of Won't (accounts and roles, sharing, real-time, then OIDC SSO and Postgres; monolith stays) to win companies that want Miro inside their network. Order: instance password now (step 0, TIKO_PASSWORD becomes the first admin's password), then accounts and roles. Open core: everything AGPL except SSO, audit and SCIM, which go to an enterprise license. Spec 007 awaits G2.",
     "2026-10-08 G2 instance-password: owner approved spec 007 with the password always on: generated into data/password and logged once when ENV has none; changing it signs out every browser.",
-    "2026-10-08 instance-password: spec 007 done; v2026.10.9 shipped with the password, the Railway template generates DRAWHL_PASSWORD (owner added it in the dashboard; the API cannot edit template variables). Releases now number YYYY.M.N; the web image builds its static files natively after an arm64 npm ci hang under QEMU. Next: team mode, accounts and roles.",
+    "2026-10-08 instance-password: spec 007 done; v2026.10.9 shipped with the password, the Railway template generates TIKO_PASSWORD (owner added it in the dashboard; the API cannot edit template variables). Releases now number YYYY.M.N; the web image builds its static files natively after an arm64 npm ci hang under QEMU. Next: team mode, accounts and roles.",
     "2026-10-08 spec 008 accounts drafted for team mode step 1 (accounts, people and invites, sharing with roles, a tracker token and task cache per person) in 4 slices; awaits G2. Development continues in a new session from this spec.",
     "2026-10-08 G2 accounts: owner approved spec 008 as written, including admins acting as owner on every board; no release between slices 37 and 39, so no member sees snapshots made with the admin's token.",
     "2026-10-08 accounts: slice 36 merged (PR 42). Owner asked for a settings window in spec 008; added as US5 and slice 37 feat/settings (a Dialog with sections, Figma and Notion style), later slices renumbered 38-40; awaits G2.",
     "2026-10-08 G2 settings: owner approved slice 37 settings window and a reset_password command in slice 38 for a locked-out only admin.",
     "2026-10-09 accounts: spec 008 done in slices 36-41 (accounts, settings window, people, sharing, a tracker token per person, the tracker from the environment). Owner approved and asked to release team mode. Several trackers at once is a later spec.",
-    "2026-10-09 v2026.10.10 released with team mode (spec 008). Spec 009 real-time drafted as a skeleton with the decisions and constraints from the spec 008 session; next session fills requirements and tasks, then G2."
+    "2026-10-09 v2026.10.10 released with team mode (spec 008). Spec 009 real-time drafted as a skeleton with the decisions and constraints from the spec 008 session; next session fills requirements and tasks, then G2.",
+    "2026-10-09 rename: the product is tiko (tiko.run), repo tiko-run/tiko; no fallback for old names by the owner's choice, data/app.db untouched. Next: one-command installer (tiko.run/install)."
   ]
 }

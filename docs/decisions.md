@@ -10,7 +10,7 @@
 - 2026-10-05 — doc fields mirror xyflow names, validated by a Pydantic discriminated union that strips transient fields — no mapping code — own schema with mapping layers
 - 2026-10-05 — task snapshots in a `task_snapshots` table keyed by issue key, not in the doc — one fetch per key, refresh never races with saves — snapshot inside node data
 - 2026-10-05 — SQLite via stdlib, `schema.sql` + `PRAGMA user_version` migrations — 3 tables, one volume, upgrade-safe — SQLAlchemy/Alembic, Postgres
-- 2026-10-05 — PAT encrypted with Fernet, key `DRAWHL_SECRET_KEY` from env, required only to save a token; `SecretStr`, leak test over responses and logs — operator-supplied key per FR-002, explicit failure modes — key file in `data/`, plaintext
+- 2026-10-05 — PAT encrypted with Fernet, key `TIKO_SECRET_KEY` from env, required only to save a token; `SecretStr`, leak test over responses and logs — operator-supplied key per FR-002, explicit failure modes — key file in `data/`, plaintext
 - 2026-10-05 — provider is a runtime setting `demo | jira`, default `demo` — fresh install works, connecting Jira needs no restart — `TASK_PROVIDER` env, auto-switch on token presence
 - 2026-10-05 — Jira DC: Bearer PAT, `myself` for test, `issue/{key}` for resolve, `POST search` with `key in (...)` for poll, done by `statusCategory.key`, timeouts 5/15 s — one request per board per tick — per-card GETs, webhooks (Won't); incremental `updated >= -2m` kept as fallback
 - 2026-10-05 — backoff: server `backoff_until = now + max(Retry-After, interval × 2^fails)` capped at 300 s, client doubles its interval on errors — protects DC from load — fixed-rate retries

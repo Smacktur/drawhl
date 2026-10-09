@@ -14,7 +14,7 @@ WEB = os.environ.get("SMOKE_WEB_URL", "http://web:3000")
 PASSWORD_FILE = pathlib.Path("data/password")
 PASSWORD = (
     os.environ.get("SMOKE_PASSWORD")
-    or os.environ.get("DRAWHL_PASSWORD")
+    or os.environ.get("TIKO_PASSWORD")
     or (PASSWORD_FILE.read_text().strip() if PASSWORD_FILE.exists() else "")
 )
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))

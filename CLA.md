@@ -2,13 +2,13 @@
 
 Version 1.0. Based on the Apache Software Foundation Individual Contributor License Agreement v2.2.
 
-This agreement is between you and the maintainer of drawhl, the owner of the GitHub account [Smacktur](https://github.com/Smacktur) ("the Maintainer"). It lets the Maintainer keep drawhl open source under the GNU AGPL v3 and also offer it under other terms, for example a hosted service or a commercial license.
+This agreement is between you and the maintainer of tiko, the owner of the GitHub account [Smacktur](https://github.com/Smacktur) ("the Maintainer"). It lets the Maintainer keep tiko open source under the GNU AGPL v3 and also offer it under other terms, for example a hosted service or a commercial license.
 
 You accept this agreement for all your present and future Contributions by signing it through CLA Assistant, which asks you to on your first pull request.
 
 ## 1. Definitions
 
-"You" means the person or legal entity that submits a Contribution. "Contribution" means any work of authorship, including changes to existing work, that You intentionally submit to the Maintainer for inclusion in drawhl, by pull request, issue, patch or any other form of electronic or written communication.
+"You" means the person or legal entity that submits a Contribution. "Contribution" means any work of authorship, including changes to existing work, that You intentionally submit to the Maintainer for inclusion in tiko, by pull request, issue, patch or any other form of electronic or written communication.
 
 ## 2. Copyright license
 
@@ -20,7 +20,7 @@ You grant the Maintainer, and recipients of software distributed by the Maintain
 
 ## 4. Your rights
 
-You keep the copyright in Your Contributions. Apart from the licenses in sections 2 and 3, this agreement transfers no rights. The Maintainer also distributes every accepted Contribution under the GNU AGPL v3 as part of drawhl for as long as drawhl is published under that license.
+You keep the copyright in Your Contributions. Apart from the licenses in sections 2 and 3, this agreement transfers no rights. The Maintainer also distributes every accepted Contribution under the GNU AGPL v3 as part of tiko for as long as tiko is published under that license.
 
 ## 5. Your representations
 

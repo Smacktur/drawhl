@@ -1,4 +1,4 @@
-# Research: drawhl, an open-source canvas with live Jira Data Center cards
+# Research: tiko, an open-source canvas with live Jira Data Center cards
 
 > Date: 2026-10-05 · Timebox: ~25 min (4 streams in parallel) · Recommendation: **go** (as a personal tool for a lead, self-hosted, Jira DC)
 
@@ -80,9 +80,9 @@ The main risk with React Flow: it is not a whiteboard. Freehand drawing exists o
 
 | # | Hypothesis | I | C | E | ICE | How to test in the MVP |
 |---|---|---|---|---|---|---|
-| 1 | A spatially minded lead will manage their Jira DC tasks on the drawhl canvas daily because lists and kanban don't give them an overview. We'll know by how often they open it (≥ 4 days a week, 2 weeks) | 9 | 4 | 7 | 252 | Self-dogfooding by the founder and 3–5 leads from the team. Session counter and a survey on an "organization, overview" scale before and after |
+| 1 | A spatially minded lead will manage their Jira DC tasks on the tiko canvas daily because lists and kanban don't give them an overview. We'll know by how often they open it (≥ 4 days a week, 2 weeks) | 9 | 4 | 7 | 252 | Self-dogfooding by the founder and 3–5 leads from the team. Session counter and a survey on an "organization, overview" scale before and after |
 | 2 | A user trusts the board only if the status updates on its own. We'll know by manual "Refresh" being almost unused and the Jira discrepancy staying ≤ 1 min | 8 | 8 | 7 | 448 | Polling every 30–60 s, a manual refresh metric, status comparison |
-| 3 | Team leads will install drawhl themselves (`docker compose up` and a PAT), without a Jira admin. We'll know by 10–20 installs in the team and neighboring departments within a month | 7 | 5 | 6 | 210 | Setup in ≤ 10 min from the README, active board counter |
+| 3 | Team leads will install tiko themselves (`docker compose up` and a PAT), without a Jira admin. We'll know by 10–20 installs in the team and neighboring departments within a month | 7 | 5 | 6 | 210 | Setup in ≤ 10 min from the README, active board counter |
 | 4 | The OSS community will notice the project (stars, issues) after Show HN and posts in r/jira and r/selfhosted | 5 | 3 | 6 | 90 | After v0.1.0. Outside the MVP |
 
 ## MVP map

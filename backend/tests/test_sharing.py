@@ -31,7 +31,7 @@ def world(monkeypatch_module):
 @pytest.fixture(scope="module")
 def monkeypatch_module():
     with pytest.MonkeyPatch.context() as patch:
-        patch.setenv("DRAWHL_PASSWORD", "test-password")
+        patch.setenv("TIKO_PASSWORD", "test-password")
         yield patch
 
 
@@ -171,4 +171,4 @@ def test_each_new_person_gets_their_own_welcome_board(world):
     dave = signed_in(clients["admin"].app, "dave", LONG)
     boards = dave.get("/api/boards").json()["boards"]
     own = [b for b in boards if b["owner"]["id"] == ids["dave"]]
-    assert [b["name"] for b in own] == ["Welcome to drawhl"]
+    assert [b["name"] for b in own] == ["Welcome to tiko"]

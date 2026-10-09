@@ -119,7 +119,7 @@ export function MyTracker() {
       )}
       {tracker.data?.provider === 'demo' && (
         <p className="text-muted-foreground text-[13px]">
-          This drawhl uses demo tasks, which need no token.
+          This tiko uses demo tasks, which need no token.
         </p>
       )}
       {tracker.data?.provider === 'jira' && !tracker.data.base_url && (

@@ -37,7 +37,7 @@ test('switches to the dark theme from the main menu', async () => {
   fireEvent.keyDown(await screen.findByRole('menuitem', { name: 'Theme' }), { key: 'ArrowRight' })
   fireEvent.click(await screen.findByRole('menuitemradio', { name: 'Dark' }))
   expect(document.documentElement.classList.contains('dark')).toBe(true)
-  expect(localStorage.getItem('drawhl.theme')).toBe('dark')
+  expect(localStorage.getItem('tiko.theme')).toBe('dark')
 })
 
 test('opens the shortcut list with ?', async () => {
