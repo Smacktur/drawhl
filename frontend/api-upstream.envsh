@@ -1,0 +1,12 @@
+#!/bin/sh
+# nginx's resolver ignores search domains, so a short name like Render's "tiko-api:8000"
+# never resolves; expand it to the first search domain that knows it. Compose names stay short.
+host=${API_UPSTREAM%:*}
+case "$host" in *.*) return 0 ;; esac
+# shellcheck disable=SC2013  # one domain per word is the point
+for domain in $(sed -n 's/^search //p' /etc/resolv.conf); do
+  if getent hosts "$host.$domain" >/dev/null; then
+    export API_UPSTREAM="$host.$domain:${API_UPSTREAM##*:}"
+    return 0
+  fi
+done
