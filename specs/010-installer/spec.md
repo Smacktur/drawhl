@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-09
 
-**Status**: Draft, awaits G2
+**Status**: Approved (G2 2026-10-09)
 
 **Input**: Owner, 2026-10-09: "A full installer for any system: it checks Docker and resources, installs what is missing, creates the folders and the password. In the future something like `tiko.run/install`, so a person runs one command in a terminal and gets everything." Plus a step-by-step Docker guide for people who never used it. G1 approved by the owner on 2026-10-09: Colima as the default Docker on macOS, the `tiko.run` domain through Cloudflare (not pointed straight at GitHub Pages, because the apex is kept for a future hosted tiko).
 
