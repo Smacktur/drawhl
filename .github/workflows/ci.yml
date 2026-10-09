@@ -46,7 +46,7 @@ jobs:
   installer:
     runs-on: ubuntu-latest
     env:
-      TIKO_DIR: ${{ runner.temp }}/tiko
+      TIKO_DIR: /tmp/tiko-install
       TIKO_COMPOSE_URL: file://${{ github.workspace }}/compose.release.yml
     steps:
       - uses: actions/checkout@v7
