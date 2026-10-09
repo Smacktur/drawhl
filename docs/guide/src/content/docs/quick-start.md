@@ -28,10 +28,16 @@ docker compose up --build
 
 The template runs the released images: `api` keeps your boards on a volume, `web` is the only public service, and the key that encrypts tracker tokens and the password are generated on deploy. Sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables. A tracker that is reachable only from a corporate network is out of reach from Railway.
 
+## On Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tiko-run/tiko)
+
+The Blueprint creates `tiko-api`, a private service with a 1 GB disk for your boards, and `tiko-web`, the public one. The disk needs paid instances, about $15 a month for both. Sign in as `admin` with `TIKO_PASSWORD` from the `tiko-api` service's Environment. Updates are manual: Deploy → Deploy latest reference on each service.
+
 To upgrade, redeploy `api` and `web`: they pull the latest release.
 
 ## First look
 
-Open http://localhost:3000, or the Railway URL, and sign in as `admin`. On your machine the password is in the log: `docker compose logs api | grep 'tiko password'`. A fresh install opens on a sample board built from demo tasks. Move things around, then add more with the card tool at the bottom: type `DEMO-5` for one task, or `project = DEMO` for all twelve. Delete the sample board when you are done with it.
+Open http://localhost:3000, or the Railway or Render URL, and sign in as `admin`. On your machine the password is in the log: `docker compose logs api | grep 'tiko password'`. A fresh install opens on a sample board built from demo tasks. Move things around, then add more with the card tool at the bottom: type `DEMO-5` for one task, or `project = DEMO` for all twelve. Delete the sample board when you are done with it.
 
 No keys or accounts are needed for the demo. To see your real tasks, [connect Jira Data Center](../jira-data-center/).

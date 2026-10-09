@@ -1,10 +1,7 @@
-.PHONY: help up down backup logs dev-api dev-web test lint fmt check smoke release clean-clone stage-validate stage-env stage-smoke audit licenses
+.PHONY: help up down backup logs dev-api dev-web test lint fmt check smoke release clean-clone render-validate audit licenses
 
 API_URL ?= http://localhost:8000
 WEB_URL ?= http://localhost:3000
-# Must match service names in render.yaml; Render adds a suffix if the subdomain is taken.
-STAGE_API_URL ?= https://tiko-api-stage.onrender.com
-STAGE_WEB_URL ?= https://tiko-web-stage.onrender.com
 
 help:  ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -44,7 +41,7 @@ fmt:  ## auto-format
 
 check: lint test  ## gate before every merge to main
 
-smoke:  ## main scenario against a running stack (make up first; stage-smoke for stage)
+smoke:  ## main scenario against a running stack (make up first)
 	docker compose exec -T api python - < scripts/smoke.py
 
 # Permissive and weak-copyleft only, so the maintainer can still relicense the code under the CLA;
@@ -64,15 +61,8 @@ release:  ## cut the next CalVer release vYYYY.M.N from CHANGELOG.md Unreleased 
 clean-clone:  ## clone origin/main to a temp dir and run it by README
 	scripts/clean-clone-check.sh
 
-stage-validate:  ## validate render.yaml against Render (needs render CLI + RENDER_API_KEY)
+render-validate:  ## validate render.yaml against Render (needs render CLI + RENDER_API_KEY)
 	render blueprints validate render.yaml
 
-stage-env:  ## push stage secrets (sync: false in render.yaml) from .env to Render, redeploy changed
-	python3 scripts/stage-env.py --deploy
-
-stage-smoke:  ## wake the free-tier API and run smoke against stage (needs SMOKE_PASSWORD)
-	curl -fsS --retry 12 --retry-delay 10 --retry-all-errors $(STAGE_API_URL)/health >/dev/null
-	SMOKE_API_URL=$(STAGE_API_URL) SMOKE_WEB_URL=$(STAGE_WEB_URL) python3 scripts/smoke.py
-
-audit:  ## PageSpeed scores + what crawlers see without JS (URL=..., default stage)
-	python3 scripts/audit.py $(or $(URL),$(STAGE_WEB_URL))
+audit:  ## PageSpeed scores + what crawlers see without JS (URL=...)
+	python3 scripts/audit.py $(URL)

@@ -1,5 +1,5 @@
 """Core scenario against a running stack. Stdlib only: runs inside the api container
-(`make smoke`) or on the host against stage (`make stage-smoke`)."""
+(`make smoke`)."""
 
 import http.cookiejar
 import json
