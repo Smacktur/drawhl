@@ -94,5 +94,5 @@ The user guide gets an "Install" page: the one-line commands first, then a manua
 
 - A native Windows install without Docker Desktop, Podman, Kubernetes, Helm.
 - HTTPS and a public domain for the instance (a reverse proxy guide is a later page).
-- The Railway and Render templates: they are rebuilt by hand by the owner; a Render deploy button needs a paid disk and is a separate decision.
+- The Railway template and the Deploy to Render button: done outside this spec.
 - The hosted tiko on the `tiko.run` apex.
