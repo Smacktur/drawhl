@@ -6,8 +6,8 @@ import { Emblem } from '@/components/Emblem'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
-const REPO = 'https://github.com/Smacktur/drawhl'
-const DOCS = 'https://smacktur.github.io/drawhl'
+const REPO = 'https://github.com/tiko-run/tiko'
+const DOCS = 'https://tiko-run.github.io/tiko'
 const UPGRADE_DOCS = `${DOCS}/data-and-upgrades/`
 
 // lucide dropped brand icons, so this is the Octicons mark (MIT).
@@ -53,8 +53,8 @@ export function AboutButton() {
             variant="ghost"
             size="icon"
             className="relative"
-            aria-label={update ? 'About drawhl, update available' : 'About drawhl'}
-            title={update ? `About drawhl: v${update.version} is available` : 'About drawhl'}
+            aria-label={update ? 'About tiko, update available' : 'About tiko'}
+            title={update ? `About tiko: v${update.version} is available` : 'About tiko'}
           >
             <Info className="size-[18px]" strokeWidth={1.75} />
             {update && (
@@ -70,7 +70,7 @@ export function AboutButton() {
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="flex items-center gap-1.5 self-center text-[16px] font-semibold tracking-[-0.03em]">
             <Emblem className="size-5" />
-            drawhl
+            tiko
           </h2>
           {info && (
             <a
@@ -105,7 +105,7 @@ export function AboutButton() {
           An infinite canvas for your tasks: live cards from your tracker, arranged the way you
           think. Open source, self-hosted, no telemetry.
         </p>
-        <nav className="-mx-2 flex flex-col" aria-label="drawhl links">
+        <nav className="-mx-2 flex flex-col" aria-label="tiko links">
           <AboutLink href={REPO} icon={<GitHubIcon />}>
             Source code on GitHub
           </AboutLink>

@@ -18,7 +18,7 @@ description: "Task list for Accounts and roles"
 
 - [x] T001 [P] [US1] Migration with `users`, `sessions`; `domain/accounts.py` scrypt hash and verify, username rules, per-username limiter. Tests
 - [x] T002 [US1] `domain/sessions.py` start, resolve with 30 s cache, end, end all; `api/gate.py` puts the person on the request. Tests: expiry, revoke, disabled person
-- [x] T003 [US1] `domain/upgrade.py`: bootstrap `admin` from `DRAWHL_PASSWORD` or `data/password`; log once when the variable is set but unused. Test against a v2026.10.9 database fixture with boards and a token
+- [x] T003 [US1] `domain/upgrade.py`: bootstrap `admin` from `TIKO_PASSWORD` or `data/password`; log once when the variable is set but unused. Test against a v2026.10.9 database fixture with boards and a token
 - [x] T004 [US1] API: login with username, status with `me`, logout-all, `PATCH /me`, `PUT /me/password`. Tests
 - [x] T005 [US1] Frontend: username field on sign-in, Settings → My account (name, username, password, sign out everywhere). Tests
 - [x] T006 [US1] `conftest.py`, `scripts/smoke.py`, README, guide (security, quick start), `CHANGELOG.md`; screenshot
@@ -67,9 +67,9 @@ description: "Task list for Accounts and roles"
 
 ## Phase 6: Slice 41 `feat/my-tracker` — the tracker from the environment (US4)
 
-**Goal**: whoever deploys drawhl sets the tracker and its URL in the environment, like the rest of the infrastructure; admins then only invite people and everyone adds their own token.
+**Goal**: whoever deploys tiko sets the tracker and its URL in the environment, like the rest of the infrastructure; admins then only invite people and everyone adds their own token.
 
-- [x] T027 [US4] `DRAWHL_TRACKER` (`demo` or `jira`) and `JIRA_BASE_URL` in `config.py`, checked at start; when set they win over the stored settings and `PUT /settings` refuses to change them. `GET /settings` names the locked fields. Tests
+- [x] T027 [US4] `TIKO_TRACKER` (`demo` or `jira`) and `JIRA_BASE_URL` in `config.py`, checked at start; when set they win over the stored settings and `PUT /settings` refuses to change them. `GET /settings` names the locked fields. Tests
 - [x] T028 [US4] Task source shows locked fields read-only with "Set by the server"; `.env.example`, README, guide (configuration, Jira, quick start for a hand-over from DevOps); `CHANGELOG.md`
 
 **Checkpoint**: `make check`, `make smoke` → G3 for slices 40 and 41 together.

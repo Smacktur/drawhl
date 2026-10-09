@@ -29,7 +29,7 @@ Decisions that stand for every step:
 
 ### User Story 1 - Signing in as a person, not as the instance (Priority: P1)
 
-The owner upgrades an instance that already has boards and a Jira token. After the upgrade the sign-in screen asks for a username and a password. They sign in as `admin` with the instance password they used before and find everything as it was: their boards, their Jira token, their settings. On a fresh install the same happens with the password from `DRAWHL_PASSWORD` or the one printed to the log. In Settings they can change their name, username and password, and sign out on every device.
+The owner upgrades an instance that already has boards and a Jira token. After the upgrade the sign-in screen asks for a username and a password. They sign in as `admin` with the instance password they used before and find everything as it was: their boards, their Jira token, their settings. On a fresh install the same happens with the password from `TIKO_PASSWORD` or the one printed to the log. In Settings they can change their name, username and password, and sign out on every device.
 
 **Why this priority**: Every other story needs people to exist; the upgrade must not lose anything or lock the owner out.
 
@@ -37,8 +37,8 @@ The owner upgrades an instance that already has boards and a Jira token. After t
 
 **Acceptance Scenarios**:
 
-1. **Given** a database with no users, **When** the API starts, **Then** it creates one admin with username `admin` and the instance password (from `DRAWHL_PASSWORD`, or `data/password`, generated and logged once as today), makes them the owner of every existing board and moves the stored tracker token to them.
-2. **Given** users exist, **Then** `DRAWHL_PASSWORD` and `data/password` are no longer read, and the log says so once at start if `DRAWHL_PASSWORD` is still set.
+1. **Given** a database with no users, **When** the API starts, **Then** it creates one admin with username `admin` and the instance password (from `TIKO_PASSWORD`, or `data/password`, generated and logged once as today), makes them the owner of every existing board and moves the stored tracker token to them.
+2. **Given** users exist, **Then** `TIKO_PASSWORD` and `data/password` are no longer read, and the log says so once at start if `TIKO_PASSWORD` is still set.
 3. **Given** the sign-in screen, **When** a username and password match an active account, **Then** a session starts (cookie as in spec 007: `HttpOnly`, `SameSite=Lax`, `Secure` behind HTTPS, 30 days) and the app opens.
 4. **Given** a wrong username or password, **Then** the answer and its timing are the same whether the username exists or not, and the error is "Wrong username or password."
 5. **Given** a signed-in person, **When** they change their password, **Then** every other session of theirs ends; the current one stays.
@@ -53,7 +53,7 @@ Settings grow with this spec: profile, security, people, a tracker per person, i
 
 **Why this priority**: People (US2) and My tracker (US4) need a place to live; building them into the sheet first and moving them later is double work.
 
-**Why a window and not a page or the sheet**: drawhl is a canvas; settings are a short visit, and the board stays in place behind the window, the way Figma, Miro and Notion do it. A separate page would unload the board and lose the view. The sheet is too narrow for a people table and has no room for navigation.
+**Why a window and not a page or the sheet**: tiko is a canvas; settings are a short visit, and the board stays in place behind the window, the way Figma, Miro and Notion do it. A separate page would unload the board and lose the view. The sheet is too narrow for a people table and has no room for navigation.
 
 **Independent Test**: open Settings from the main menu and with `⌘,`: the window opens on Profile. Pick Security, reload the page: it opens on Security. Change the theme in Preferences: the board behind changes at once. As a member, the "Instance" group is not shown and `?settings=task-source` opens Profile. At 600px wide the window fills the screen and shows a list of sections first.
 
@@ -89,7 +89,7 @@ The admin opens Settings → People (Instance group), presses "Invite", picks a 
 
 ### User Story 3 - Sharing a board (Priority: P3)
 
-A lead builds a sprint board and presses "Share" in the top bar. A dialog lists who has access. They add two colleagues as editors and one as a viewer, or switch "Everyone in drawhl" to "Can view". The editors see the board in their list and change it; the viewer sees it with a "View only" badge and cannot move or edit anything. The owner can change roles, remove people and transfer ownership.
+A lead builds a sprint board and presses "Share" in the top bar. A dialog lists who has access. They add two colleagues as editors and one as a viewer, or switch "Everyone in tiko" to "Can view". The editors see the board in their list and change it; the viewer sees it with a "View only" badge and cannot move or edit anything. The owner can change roles, remove people and transfer ownership.
 
 **Why this priority**: This is the team value; real-time (spec 009) builds on it.
 
@@ -118,8 +118,8 @@ Each person connects Jira with their own personal access token in Settings → M
 
 **Acceptance Scenarios**:
 
-1. **Given** the admin, **Then** they set the provider, the Jira URL and the refresh interval for the instance; members cannot change them. **Given** `DRAWHL_TRACKER` or `JIRA_BASE_URL` in the environment, **Then** those win and show as set by the server, so whoever deploys drawhl can hand it over with the tracker already in place.
-2. **Given** any person, **Then** they set, test and remove their own token; it is stored encrypted with `DRAWHL_SECRET_KEY`, never returned, never logged, as today.
+1. **Given** the admin, **Then** they set the provider, the Jira URL and the refresh interval for the instance; members cannot change them. **Given** `TIKO_TRACKER` or `JIRA_BASE_URL` in the environment, **Then** those win and show as set by the server, so whoever deploys tiko can hand it over with the tracker already in place.
+2. **Given** any person, **Then** they set, test and remove their own token; it is stored encrypted with `TIKO_SECRET_KEY`, never returned, never logged, as today.
 3. **Given** a board refresh or open, **Then** tasks are fetched and cached with the requesting person's token, and the cache of task snapshots is kept per person: a snapshot fetched with one person's token is never returned to another.
 4. **Given** a task the person's token cannot see, **Then** the card shows the key with a lock and "You don't have access to this task in Jira"; its summary, status and assignee are not sent.
 5. **Given** a person with no token while the provider is Jira, **Then** cards show the key and "Connect your tracker to see this task", with a link to Settings.

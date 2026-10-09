@@ -102,7 +102,7 @@ function ModuleNodeView({
           <p className="text-muted-foreground p-3 text-[13px]">
             {def
               ? 'This module has content this version cannot read.'
-              : `Unknown module "${data.kind}". A newer drawhl can show it; it is kept as is.`}
+              : `Unknown module "${data.kind}". A newer tiko can show it; it is kept as is.`}
           </p>
         )}
       </div>

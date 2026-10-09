@@ -21,7 +21,7 @@ export function Profile({ me }: { me: Me }) {
   const changed = name.trim() !== me.name || username.trim() !== me.username
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
-      <SectionHeader title="Profile" description="How other people see you in drawhl." />
+      <SectionHeader title="Profile" description="How other people see you in tiko." />
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="account-name">Name</Label>
         <Input

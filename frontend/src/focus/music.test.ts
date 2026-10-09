@@ -34,7 +34,7 @@ it('plays the picked track and remembers it with the volume', () => {
   music.setVolume(0.3)
   music.pick(4)
   expect(play).toHaveBeenCalledTimes(1)
-  expect(JSON.parse(localStorage.getItem('drawhl.music')!)).toMatchObject({
+  expect(JSON.parse(localStorage.getItem('tiko.music')!)).toMatchObject({
     current: '/music/families.mp3',
     volume: 0.3,
   })

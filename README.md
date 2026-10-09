@@ -1,13 +1,13 @@
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="brand/social/readme-banner-dark.svg">
-    <img src="brand/social/readme-banner.svg" alt="drawhl: open-source infinite canvas for your tasks" width="100%">
+    <img src="brand/social/readme-banner.svg" alt="tiko: open-source infinite canvas for your tasks" width="100%">
   </picture>
 </h1>
 
 <p align="center">
   <a href="#-quick-start"><b>Quick start</b></a> •
-  <a href="https://smacktur.github.io/drawhl/"><b>Docs</b></a> •
+  <a href="https://tiko-run.github.io/tiko/"><b>Docs</b></a> •
   <a href="#-features"><b>Features</b></a> •
   <a href="#-task-trackers"><b>Trackers</b></a> •
   <a href="#%EF%B8%8F-roadmap"><b>Roadmap</b></a> •
@@ -15,47 +15,47 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Smacktur/drawhl/actions/workflows/ci.yml"><img src="https://github.com/Smacktur/drawhl/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/tiko-run/tiko/actions/workflows/ci.yml"><img src="https://github.com/tiko-run/tiko/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License: AGPL-3.0"></a>
-  <a href="https://github.com/Smacktur/drawhl/releases"><img src="https://img.shields.io/github/v/release/Smacktur/drawhl" alt="Release"></a>
-  <a href="https://smacktur.github.io/drawhl/"><img src="https://img.shields.io/badge/docs-user%20guide-8A2BE2" alt="Docs"></a>
+  <a href="https://github.com/tiko-run/tiko/releases"><img src="https://img.shields.io/github/v/release/tiko-run/tiko" alt="Release"></a>
+  <a href="https://tiko-run.github.io/tiko/"><img src="https://img.shields.io/badge/docs-user%20guide-8A2BE2" alt="Docs"></a>
 </p>
 
-![A drawhl board: frames of live task cards with timers, sticky notes, arrows, a Gantt release plan and the focus timer](docs/assets/board.png)
+![A tiko board: frames of live task cards with timers, sticky notes, arrows, a Gantt release plan and the focus timer](docs/assets/board.png)
 
-drawhl is an open-source, self-hosted whiteboard where the tasks from your tracker live as cards. Put them in frames, circle a group, leave a sticky note beside it and draw arrows between them. Statuses update on their own while the board is open, so the board stays true without manual upkeep.
+tiko is an open-source, self-hosted whiteboard where the tasks from your tracker live as cards. Put them in frames, circle a group, leave a sticky note beside it and draw arrows between them. Statuses update on their own while the board is open, so the board stays true without manual upkeep.
 
-It is for people who keep a lot of work in their head and think spatially: leads, managers, anyone juggling tasks across projects. Lists and kanban boards show a long column; drawhl lets you lay the same tasks out the way you think about them.
+It is for people who keep a lot of work in their head and think spatially: leads, managers, anyone juggling tasks across projects. Lists and kanban boards show a long column; tiko lets you lay the same tasks out the way you think about them.
 
-The [user guide](https://smacktur.github.io/drawhl/) covers every feature and how to self-host drawhl.
+The [user guide](https://tiko-run.github.io/tiko/) covers every feature and how to self-host tiko.
 
-> drawhl is young. Jira Data Center is the first tracker; Linear, Plane, Todoist and others are next. Ideas and bug reports are welcome in [issues](https://github.com/Smacktur/drawhl/issues).
+> tiko is young. Jira Data Center is the first tracker; Linear, Plane, Todoist and others are next. Ideas and bug reports are welcome in [issues](https://github.com/tiko-run/tiko/issues).
 
 ## 🚀 Quick start
 
 You need Docker with Compose, or a Railway account for the cloud option below. From released images, no checkout needed:
 
 ```bash
-mkdir drawhl && cd drawhl
-curl -fsSLO https://raw.githubusercontent.com/Smacktur/drawhl/main/compose.release.yml
+mkdir tiko && cd tiko
+curl -fsSLO https://raw.githubusercontent.com/tiko-run/tiko/main/compose.release.yml
 docker compose -f compose.release.yml up -d
 ```
 
 Or from source:
 
 ```bash
-git clone https://github.com/Smacktur/drawhl.git
-cd drawhl
+git clone https://github.com/tiko-run/tiko.git
+cd tiko
 docker compose up --build
 ```
 
 Or in the cloud, on Railway:
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/drawhl?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=drawhl)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/tiko?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=tiko)
 
-The template runs the released images with your boards on a volume and generates the encryption key and the password. The app opens on the URL Railway gives you; sign in as `admin` with `DRAWHL_PASSWORD` from the `api` service's Variables. A tracker inside a corporate network is out of reach from there.
+The template runs the released images with your boards on a volume and generates the encryption key and the password. The app opens on the URL Railway gives you; sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables. A tracker inside a corporate network is out of reach from there.
 
-On your machine, open http://localhost:3000 and sign in as `admin` with the password from the log: `docker compose logs api | grep 'drawhl password'`, or `cat data/password` from a source checkout. To pick your own, set `DRAWHL_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://smacktur.github.io/drawhl/quick-start/).
+On your machine, open http://localhost:3000 and sign in as `admin` with the password from the log: `docker compose logs api | grep 'tiko password'`, or `cat data/password` from a source checkout. To pick your own, set `TIKO_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://tiko-run.github.io/tiko/quick-start/).
 
 ## 🌟 Features
 
@@ -64,7 +64,7 @@ On your machine, open http://localhost:3000 and sign in as `admin` with the pass
 - **A real whiteboard.** Frames, sticky notes, text and arrows, which can also point at an empty spot. Drag cards in and out of frames; moving a frame moves everything inside. Smart guides snap what you drag or resize to the edges, centers and gaps of its neighbors, and long text in a sticky note shrinks to fit.
 - **Details on demand.** Click a card for assignee, priority, last update and a link to the task. Collapse cards to one line when the board gets busy.
 - **Gantt module.** The first board module. Drop cards onto a timeline to plan them as bars with live status, nest them into stages, mark milestones and draw dependency lines that turn amber when a task starts too early. Plan dates stay on the board.
-- **Timers.** Put a small countdown cube next to a card you are waiting on, with a note on what for. It goes off after a set time or as soon as the task leaves its status in the tracker, with a browser notification and a chime while drawhl is open. Timers move and disappear with their card, and a list in the top bar shows every timer on the board.
+- **Timers.** Put a small countdown cube next to a card you are waiting on, with a note on what for. It goes off after a set time or as soon as the task leaves its status in the tracker, with a browser notification and a chime while tiko is open. Timers move and disappear with their card, and a list in the top bar shows every timer on the board.
 - **Focus timer.** A pomodoro capsule at the top of the screen: 25 minutes of focus, 5 minute breaks and a long one after every fourth round, with a chime and a browser notification at the end. Its color warms from green to raspberry as the time runs out. Lengths are adjustable, and the countdown survives a reload. Under the timer, a small player with seven built-in lofi tracks (CC0) or your own audio files, kept in your browser; it can pause itself on breaks.
 - **Several boards.** Saved on the server and reopened exactly as you left them.
 - **Search.** `⌘K` finds any text on the board, cards by key, title, status or assignee included, and moves the board to it. Filters like `@anna` or `status:review`, and app commands and other boards in the same palette.
@@ -73,7 +73,7 @@ On your machine, open http://localhost:3000 and sign in as `admin` with the pass
 
 ## 🔌 Task trackers
 
-drawhl talks to trackers through one provider interface, so adding a new one doesn't touch the board.
+tiko talks to trackers through one provider interface, so adding a new one doesn't touch the board.
 
 | Tracker | Status |
 |---|---|
@@ -88,19 +88,19 @@ drawhl talks to trackers through one provider interface, so adding a new one doe
 
 ### Connect Jira Data Center
 
-drawhl uses your own personal access token, so a Jira admin doesn't need to set anything up.
+tiko uses your own personal access token, so a Jira admin doesn't need to set anything up.
 
 1. Create a `.env` file next to the compose file with a key that encrypts your token on disk:
 
    ```bash
-   echo "DRAWHL_SECRET_KEY=$(openssl rand -base64 32)" >> .env
+   echo "TIKO_SECRET_KEY=$(openssl rand -base64 32)" >> .env
    ```
 
 2. Restart: `docker compose up -d` (add `-f compose.release.yml` if you run from images).
 3. In Jira, open your profile → Personal Access Tokens → Create token.
-4. In drawhl, an admin opens Settings → Task source (main menu or `⌘,`), chooses the Jira provider and enters the base URL (`https://jira.example.com`). Each person then pastes their own token in Settings → My tracker and presses "Test connection". It shows their Jira name, and cards show each person only what their own Jira access allows.
+4. In tiko, an admin opens Settings → Task source (main menu or `⌘,`), chooses the Jira provider and enters the base URL (`https://jira.example.com`). Each person then pastes their own token in Settings → My tracker and presses "Test connection". It shows their Jira name, and cards show each person only what their own Jira access allows.
 
-Keep `DRAWHL_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://smacktur.github.io/drawhl/jira-data-center/).
+Keep `TIKO_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://tiko-run.github.io/tiko/jira-data-center/).
 
 ## 🗺️ Roadmap
 
@@ -108,7 +108,7 @@ What we plan next, roughly in order. Want something sooner or missing here? Open
 
 **Access and hosting**
 
-- Optional password login, so drawhl can run on a public server
+- Optional password login, so tiko can run on a public server
 - One-click deploy to Render and similar hosts
 - Accounts and shared boards for a team
 
@@ -143,9 +143,9 @@ Everything works without a `.env` file. To override defaults, `cp .env.example .
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `DRAWHL_PASSWORD` | Password of the first account, `admin`. When empty, one is generated on first start, printed once to the API log and saved to `data/password`. Not read once the account exists | generated |
-| `DRAWHL_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
-| `DRAWHL_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
+| `TIKO_PASSWORD` | Password of the first account, `admin`. When empty, one is generated on first start, printed once to the API log and saved to `data/password`. Not read once the account exists | generated |
+| `TIKO_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
+| `TIKO_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
 | `JIRA_BASE_URL` | Jira URL for everyone, like `https://jira.example.com`; a wrong URL stops the start. Each person still adds their own token | set in Settings |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |
@@ -167,22 +167,22 @@ All data is one SQLite file in `./data`, which survives rebuilds and upgrades.
 - **Upgrade from images:** `docker compose -f compose.release.yml pull && docker compose -f compose.release.yml up -d`. Pin a version with `TAG=2026.10.6`.
 - **Upgrade from source:** `git pull && docker compose up --build -d`.
 
-More in the [data and upgrades guide](https://smacktur.github.io/drawhl/data-and-upgrades/).
+More in the [data and upgrades guide](https://tiko-run.github.io/tiko/data-and-upgrades/).
 
 ## 🛡️ Security and privacy
 
-Every page and API route except `/health` and `/ready` asks you to sign in, `/metrics` included. The first account is `admin` with the password from `DRAWHL_PASSWORD` or `data/password`; after that, change it in Settings → Security. Passwords are stored as salted scrypt hashes. A sign-in lasts 30 days in that browser, and "Sign out everywhere" ends every session. After 10 wrong passwords for one username in 15 minutes sign-in for it pauses. Admins invite people with one-time links in Settings → People, and each board is shared with "Share" in the top bar (can edit, can view, or everyone); a locked-out admin gets a reset link with `docker compose exec api python -m app.reset_password admin`. On the open internet use HTTPS, which Railway and Render give you.
+Every page and API route except `/health` and `/ready` asks you to sign in, `/metrics` included. The first account is `admin` with the password from `TIKO_PASSWORD` or `data/password`; after that, change it in Settings → Security. Passwords are stored as salted scrypt hashes. A sign-in lasts 30 days in that browser, and "Sign out everywhere" ends every session. After 10 wrong passwords for one username in 15 minutes sign-in for it pauses. Admins invite people with one-time links in Settings → People, and each board is shared with "Share" in the top bar (can edit, can view, or everyone); a locked-out admin gets a reset link with `docker compose exec api python -m app.reset_password admin`. On the open internet use HTTPS, which Railway and Render give you.
 
-Jira Data Center is usually reachable only from the corporate network, so the host running drawhl must be able to reach it too.
+Jira Data Center is usually reachable only from the corporate network, so the host running tiko must be able to reach it too.
 
-The token is stored only on the server, encrypted with `DRAWHL_SECRET_KEY`. It is never sent back to the browser or written to logs. drawhl sends no telemetry: it stores your boards, settings, the encrypted token and a cached copy of each card's key, summary, status, type, assignee, priority and last update, and talks only to the tracker URL you configure and, unless `UPDATE_CHECK=false`, to the GitHub API for the latest drawhl release (no data about you or your boards is sent). Fonts and icons ship with the app.
+The token is stored only on the server, encrypted with `TIKO_SECRET_KEY`. It is never sent back to the browser or written to logs. tiko sends no telemetry: it stores your boards, settings, the encrypted token and a cached copy of each card's key, summary, status, type, assignee, priority and last update, and talks only to the tracker URL you configure and, unless `UPDATE_CHECK=false`, to the GitHub API for the latest tiko release (no data about you or your boards is sent). Fonts and icons ship with the app.
 
 Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 
 ## 🚧 Current limits
 
 - One person, one instance: no real-time collaboration yet
-- The tracker stays the source of truth: drawhl doesn't change status or edit tasks
+- The tracker stays the source of truth: tiko doesn't change status or edit tasks
 - Statuses come from polling the open board, not webhooks
 - Desktop only, English only
 
@@ -218,11 +218,11 @@ make help     # all commands
 
 ## 📝 License
 
-[GNU AGPL v3](LICENSE) (`AGPL-3.0-only`) © The drawhl Authors. Third-party components: [THIRD_PARTY.md](THIRD_PARTY.md).
+[GNU AGPL v3](LICENSE) (`AGPL-3.0-only`) © The tiko Authors. Third-party components: [THIRD_PARTY.md](THIRD_PARTY.md).
 
-- Anyone may use, self-host and modify drawhl, privately or inside a company, for free.
-- If you change drawhl and let people use the changed version over a network, you must offer them its source code under the same license.
+- Anyone may use, self-host and modify tiko, privately or inside a company, for free.
+- If you change tiko and let people use the changed version over a network, you must offer them its source code under the same license.
 - The name and logo are not covered by the license: see [TRADEMARKS.md](TRADEMARKS.md).
-- Need other terms, for example to embed drawhl in a closed product? Email smacktur@gmail.com.
+- Need other terms, for example to embed tiko in a closed product? Email smacktur@gmail.com.
 
 Releases up to and including `v2026.10.6` were published under the MIT License and stay available under it.

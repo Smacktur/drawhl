@@ -18,7 +18,7 @@ docker compose -f compose.release.yml pull
 docker compose -f compose.release.yml up -d
 ```
 
-Pin a version with `TAG`, for example `TAG=2026.10.6`. Release notes are on [GitHub Releases](https://github.com/Smacktur/drawhl/releases).
+Pin a version with `TAG`, for example `TAG=2026.10.6`. Release notes are on [GitHub Releases](https://github.com/tiko-run/tiko/releases).
 
 From source:
 

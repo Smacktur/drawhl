@@ -58,9 +58,9 @@ test('keeps errors out of the bar and lists them per tracker on click', () => {
   expect(onRefresh).toHaveBeenCalledOnce()
 })
 
-test('a silent drawhl server is shown as down', () => {
+test('a silent tiko server is shown as down', () => {
   renderIndicator({ sources: [], serverError: new Error('Failed to fetch') })
   expect(screen.getByRole('status')).toHaveTextContent('Not syncing.')
   fireEvent.click(screen.getByRole('button', { name: 'Sync status' }))
-  expect(screen.getByText('drawhl server')).toBeInTheDocument()
+  expect(screen.getByText('tiko server')).toBeInTheDocument()
 })

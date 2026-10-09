@@ -19,14 +19,14 @@ function renderWith(body: object) {
 
 test('shows the running version and project links', async () => {
   renderWith({ version: '2026.10.6', latest: null, update_available: false })
-  fireEvent.click(screen.getByRole('button', { name: 'About drawhl' }))
+  fireEvent.click(screen.getByRole('button', { name: 'About tiko' }))
   expect(await screen.findByRole('link', { name: 'v2026.10.6' })).toHaveAttribute(
     'href',
-    'https://github.com/Smacktur/drawhl/releases/tag/v2026.10.6',
+    'https://github.com/tiko-run/tiko/releases/tag/v2026.10.6',
   )
   expect(screen.getByRole('link', { name: /GitHub/ })).toHaveAttribute(
     'href',
-    'https://github.com/Smacktur/drawhl',
+    'https://github.com/tiko-run/tiko',
   )
   expect(screen.queryByText(/is available/)).toBeNull()
 })
@@ -36,14 +36,14 @@ test('flags a newer release on the button and in the panel', async () => {
     version: '2026.10.6',
     latest: {
       version: '2026.11.1',
-      url: 'https://github.com/Smacktur/drawhl/releases/tag/v2026.11.1',
+      url: 'https://github.com/tiko-run/tiko/releases/tag/v2026.11.1',
     },
     update_available: true,
   })
-  fireEvent.click(await screen.findByRole('button', { name: 'About drawhl, update available' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'About tiko, update available' }))
   expect(await screen.findByText('v2026.11.1 is available')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: "See what's new" })).toHaveAttribute(
     'href',
-    'https://github.com/Smacktur/drawhl/releases/tag/v2026.11.1',
+    'https://github.com/tiko-run/tiko/releases/tag/v2026.11.1',
   )
 })

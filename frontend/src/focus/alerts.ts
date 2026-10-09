@@ -55,7 +55,7 @@ export function notify(phase: Phase) {
   if (notifyPermission() !== 'granted') return
   const [title, body] = MESSAGES[phase]
   try {
-    new Notification(title, { body, tag: 'drawhl-focus' })
+    new Notification(title, { body, tag: 'tiko-focus' })
   } catch {
     // Some mobile browsers allow notifications only from a service worker.
   }

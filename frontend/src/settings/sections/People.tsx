@@ -188,7 +188,7 @@ export function People({ me }: { me: Me }) {
     <div className="flex flex-col gap-5">
       <SectionHeader
         title="People"
-        description="Who can sign in to this drawhl. Invite people with a link; no mail needed."
+        description="Who can sign in to this tiko. Invite people with a link; no mail needed."
         action={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -24,7 +24,7 @@ The lead opens the module picker from the bottom toolbar or the right-click menu
 2. **Given** the picker, **When** the user picks Gantt, **Then** a Gantt module appears at the viewport center (or at the clicked point when opened from the right-click menu) with sensible defaults.
 3. **Given** a module on the board, **When** the user moves, resizes, copies, pastes, deletes or undoes, **Then** it behaves like a frame or a sticky note.
 4. **Given** a board with modules, **When** the user reloads, **Then** every module comes back with the same position, size and content.
-5. **Given** a board saved by a newer drawhl with a module kind this version does not know, **When** it is opened, **Then** the module is shown as a placeholder with its kind name and is saved back unchanged.
+5. **Given** a board saved by a newer tiko with a module kind this version does not know, **When** it is opened, **Then** the module is shown as a placeholder with its kind name and is saved back unchanged.
 
 ---
 

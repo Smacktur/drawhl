@@ -2,13 +2,13 @@
 title: Configuration
 ---
 
-Everything works without a `.env` file. To override defaults, copy [`.env.example`](https://github.com/Smacktur/drawhl/blob/main/.env.example) to `.env` next to the compose file and edit it.
+Everything works without a `.env` file. To override defaults, copy [`.env.example`](https://github.com/tiko-run/tiko/blob/main/.env.example) to `.env` next to the compose file and edit it.
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `DRAWHL_PASSWORD` | Password of the first account, `admin`. When empty, one is generated on first start, printed once to the API log and saved to `data/password`. Not read once the account exists | generated |
-| `DRAWHL_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
-| `DRAWHL_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
+| `TIKO_PASSWORD` | Password of the first account, `admin`. When empty, one is generated on first start, printed once to the API log and saved to `data/password`. Not read once the account exists | generated |
+| `TIKO_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
+| `TIKO_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
 | `JIRA_BASE_URL` | Jira URL for everyone, like `https://jira.example.com`; a wrong URL stops the start. Each person still adds their own token | set in Settings |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |

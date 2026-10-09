@@ -11,7 +11,7 @@ export function nextDelayS(intervalS: number, sources: SyncSource[]): number {
 
 export type SyncHealth = 'ok' | 'partial' | 'down'
 
-/** Down when no tracker syncs (or the drawhl server itself fails), partial when only some do. */
+/** Down when no tracker syncs (or the tiko server itself fails), partial when only some do. */
 export function syncHealth(sources: SyncSource[], serverError: unknown): SyncHealth {
   const failing = sources.filter((source) => source.state === 'error').length
   if (serverError || (sources.length > 0 && failing === sources.length)) return 'down'

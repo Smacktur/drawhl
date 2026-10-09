@@ -37,7 +37,7 @@ Decisions from the architecture review. Full list with dates in [docs/decisions.
 
 ## PAT at rest
 
-- **Decision**: Fernet (`cryptography`) with `DRAWHL_SECRET_KEY` from env. Key required only to save a token; demo mode works without it. Missing key → `secret_key_missing`; key changed → `token_state: "unreadable"`. Token typed `SecretStr`, never serialized or logged.
+- **Decision**: Fernet (`cryptography`) with `TIKO_SECRET_KEY` from env. Key required only to save a token; demo mode works without it. Missing key → `secret_key_missing`; key changed → `token_state: "unreadable"`. Token typed `SecretStr`, never serialized or logged.
 - **Alternatives**: key file generated in `data/` (key next to ciphertext), plaintext.
 
 ## Provider selection

@@ -4,11 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- The project is now called tiko and lives at [github.com/tiko-run/tiko](https://github.com/tiko-run/tiko). Images move to `ghcr.io/tiko-run/tiko-api` and `ghcr.io/tiko-run/tiko-web`, the guide to [tiko-run.github.io/tiko](https://tiko-run.github.io/tiko/). Environment variables are now `TIKO_PASSWORD`, `TIKO_SECRET_KEY` and `TIKO_TRACKER`; the session cookie is `tiko_session`, so everyone signs in once more. Browser preferences and focus tracks added in the browser start fresh. Boards and settings in `data/app.db` stay as they are.
+
 ## [2026.10.10] - 2026-10-08
 
 ### Changed
 
-- Sign-in asks for a username and a password. An upgraded instance creates the account `admin` with the instance password it had, so you sign in as `admin` and find every board and the tracker connection as before. After that `DRAWHL_PASSWORD` and `data/password` are no longer read.
+- Sign-in asks for a username and a password. An upgraded instance creates the account `admin` with the instance password it had, so you sign in as `admin` and find every board and the tracker connection as before. After that `TIKO_PASSWORD` and `data/password` are no longer read.
 - API: `POST /api/auth/login` takes `{username, password}` and answers `invalid_credentials` instead of `invalid_password`; `GET /api/auth/status` also returns `me`. Sessions are stored on the server, so signing out ends the session for good.
 
 ### Added
@@ -18,9 +22,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - The main menu shows who is signed in and ends with "Sign out".
 - Settings → People for admins: invite people with a one-time link (7 days, no mail needed), make someone admin or member, disable them, or give them a password reset link (24 hours). Open links are listed and can be revoked.
 - `python -m app.reset_password <username>` in the api container prints a reset link for a locked-out admin.
-- Board sharing: each board has an owner. "Share" in the top bar adds people as editors or viewers, opens the board to everyone in drawhl, or hands it to a new owner. Viewers get a "View only" board with no toolbar, and the server refuses their saves. A board you cannot open is not in your list. Admins act as owner on every board and find the others under "All boards". Each new person gets their own welcome board.
+- Board sharing: each board has an owner. "Share" in the top bar adds people as editors or viewers, opens the board to everyone in tiko, or hands it to a new owner. Viewers get a "View only" board with no toolbar, and the server refuses their saves. A board you cannot open is not in your list. Admins act as owner on every board and find the others under "All boards". Each new person gets their own welcome board.
 - Each person connects their own Jira token in Settings → My tracker, and cards show each person what their own Jira access allows. Task data is fetched and cached per person, so a shared board never shows a task through someone else's token. Without a token a card shows its key and "Connect your Jira token to see this task". An upgraded instance keeps its token as the admin's. Task source (admins) holds the provider, the Jira URL and the refresh interval; moving to another URL asks everyone to enter their token again.
-- `DRAWHL_TRACKER` and `JIRA_BASE_URL` set the tracker at deploy time, so drawhl can be handed over with Jira already in place: admins only invite people and everyone adds their own token. Settings → Task source shows them read-only.
+- `TIKO_TRACKER` and `JIRA_BASE_URL` set the tracker at deploy time, so tiko can be handed over with Jira already in place: admins only invite people and everyone adds their own token. Settings → Task source shows them read-only.
 - API: `GET /api/boards` returns `{boards, all}`, and every board carries `my_role` and `owner`. New routes: `/api/boards/{id}/members`, `/everyone`, `/transfer`, `/api/people/directory` and `/api/me/tracker`. `PUT /api/settings` is for admins; its `jira.token` becomes the admin's own token, and `jira.token_state` in `GET /api/settings` is the caller's. Tasks gain the state `no_token`.
 
 - A logo: the emblem is a dot grid where one dot grew into a card. The app has a favicon and a home screen icon, the sign-in screen and the About panel show the emblem, and the user guide shows the logo. Logo files, the app icon and social covers for GitHub and Product Hunt are in `brand/`.
@@ -33,7 +37,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- Password sign-in: every instance asks for a password before it shows boards or answers the API. Set it with `DRAWHL_PASSWORD`, or leave it empty and drawhl generates one on first start, prints it to the API log and saves it to `data/password`. The Railway template generates it too. A sign-in lasts 30 days; "Sign out" is in Settings. `/metrics` now needs a sign-in as well.
+- Password sign-in: every instance asks for a password before it shows boards or answers the API. Set it with `TIKO_PASSWORD`, or leave it empty and tiko generates one on first start, prints it to the API log and saves it to `data/password`. The Railway template generates it too. A sign-in lasts 30 days; "Sign out" is in Settings. `/metrics` now needs a sign-in as well.
 - Deploy on Railway: a one-click template in the README and the quick start guide runs the released images with boards on a volume and a generated encryption key.
 
 ### Fixed
@@ -51,10 +55,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- User guide at [smacktur.github.io/drawhl](https://smacktur.github.io/drawhl/): quick start, adding tasks, search, Gantt, timers, keyboard shortcuts and self-hosting. It is written in `docs/guide/` and published on every change to `main`.
-- Paste onto the board: `⌘V` over the board turns copied text into a text element at the pointer, or a sticky note if you pick that under "Paste text as" in Settings. When the clipboard holds only task keys or task links, for example the URLs of several open Jira tabs, each one becomes a card, up to 50 in a grid; keys that cannot be added are listed in a short notice. Elements copied in drawhl paste as before.
+- User guide at [tiko-run.github.io/tiko](https://tiko-run.github.io/tiko/): quick start, adding tasks, search, Gantt, timers, keyboard shortcuts and self-hosting. It is written in `docs/guide/` and published on every change to `main`.
+- Paste onto the board: `⌘V` over the board turns copied text into a text element at the pointer, or a sticky note if you pick that under "Paste text as" in Settings. When the clipboard holds only task keys or task links, for example the URLs of several open Jira tabs, each one becomes a card, up to 50 in a grid; keys that cannot be added are listed in a short notice. Elements copied in tiko paste as before.
 - Long text in a sticky note gets smaller as you type so it always stays inside the note, and grows back when you delete or make the note bigger. A note holds up to 2000 characters: past that, typing and pasting stop and a "no entry" sign flashes over it. Older, longer notes still show in full.
-- A fresh install opens on "Welcome to drawhl", a sample board with demo task cards in frames, sticky notes on what to try, arrows, a Gantt with a milestone and a dependency, and a timer. Everything on it can be moved, edited or deleted, and once deleted it does not come back. Upgrades keep their boards and get no sample. A board that was never saved opens fitted to the screen.
+- A fresh install opens on "Welcome to tiko", a sample board with demo task cards in frames, sticky notes on what to try, arrows, a Gantt with a milestone and a dependency, and a timer. Everything on it can be moved, edited or deleted, and once deleted it does not come back. Upgrades keep their boards and get no sample. A board that was never saved opens fitted to the screen.
 - Search on the board: press `⌘K` or `⌘F` (`Ctrl+K`, `Ctrl+F` on Windows and Linux) or pick "Search" in the main menu, and type. The palette finds any text on the board: sticky notes, text, frame titles, Jira cards by key, title, status, assignee, type or priority, timer notes, modules, Gantt rows and milestones. Several words narrow the results, matches are highlighted and each row says where it lives. Arrows and Enter, or a click, move the board to the element, select it and flash it. An empty search lists your recent jumps and the board's frames. A query typed in the wrong keyboard layout (Russian or English) still finds what you meant.
 - Search previews and highlights: moving through results with the arrow keys moves the board to each one, in the space under the palette, and Esc puts the board back where it was. While you search, matches are ringed on the board and everything else fades. `⌘Enter` or "Select all N" selects every match and fits them in view, ready to collapse, move or delete together.
 - Search filters: type `@anna`, `status:review`, `type:bug` or `priority:high` to narrow search to Jira tasks, and start with `#` to find only frames and modules. While you type a filter, the palette suggests the values on the board with task counts; Tab or Enter turns one into a chip. Several values of one field mean any of them, different fields must all match. Backspace in an empty input turns the last chip back into text; values with spaces go in quotes: `@"Anna Lee"`.
@@ -66,17 +70,17 @@ All notable changes to this project are documented here. The format follows [Kee
 - Background music under the focus timer: seven built-in lofi tracks (CC0, from OpenGameArt) play in a loop from the capsule's player row. Pick a track, set the volume or add your own audio files in the Music tab of the timer settings; your files stay in this browser (IndexedDB) across reloads until you remove them, and are never uploaded. The Music tab shows how much space they take and whether the browser protects them from automatic cleanup, and names any file it could not keep. Music pauses on breaks and comes back with the next focus, unless you turn that off.
 - Arrows can point at a spot instead of an element: drag an arrow from a handle and release it over empty space. Its free end shows a dot on hover; drag it to point elsewhere. Deleting the arrow removes its free end too.
 - Smart guides: a dragged element snaps to the edges and centers of the others on screen and to an equal gap in a row or column, with dashed alignment lines and gap markers like in Miro. Resizing snaps to the width or height of the others and marks each element of that size. Hold Alt to move or resize freely. The sticky color bar and module controls hide while you drag.
-- About button in the bottom left: what drawhl is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.
+- About button in the bottom left: what tiko is, the running version with a link to its release notes, and links to the source on GitHub, documentation and issues.
 - Modules: interactive blocks added from the Modules button in the toolbar (`M`) or the right-click menu. The first one is Gantt: a timeline over days, weeks, months or quarters, with its own name (double-click the header), a line for today, start and end dates, and "+" buttons that add a calendar quarter on either side. Stretch the block to give each day more room.
 - Gantt rows: drop a Jira card onto a Gantt to plan it as a bar at the drop date, or use "Add" in the module: a task from the tracker by key, link or JQL, or a plain task that lives only on the board. Bars show the task's live status color, and done tasks are struck through. Drag a bar to move it, drag its ends to change the dates, drag a row's label to reorder it, or drag it out onto the board to turn it back into a card (plain rows become sticky notes). Plan dates stay on the board and are never written to Jira. Drag the border of the task column to show more of the titles.
 - Gantt rows form a tree: nest tasks and plain rows under each other up to five levels by dragging a row label right or with the indent buttons, and add a row under any row. A row with children keeps its own dates and always covers its children (a task keeps its key, title and status color): stretch it wider than its children, drag it to move the whole branch, and collapse it. A child that moves past its parent's edge pushes the parent out. A task row opens in the tracker from its own link button, so dragging never opens it by accident. Deleting a parent keeps its children one level up.
 - Gantt milestones and dependencies: add a milestone from the module controls, rename it with a double-click and drag it to its date. Drag the dot past a bar's end onto another row to say that row starts after this one; the line follows both bars and turns amber when the second one starts before the first ends. Click a line to remove it; deleting a row removes its lines. Hover a bar to see its exact dates and length; they follow the bar while you drag it or its ends. A milestone shows its date on hover.
-- Update notice: when a newer drawhl release is out, the About button gets a dot and the panel links to what's new and how to upgrade. The server asks GitHub at most every 6 hours; `UPDATE_CHECK=false` turns it off.
+- Update notice: when a newer tiko release is out, the About button gets a dot and the panel links to what's new and how to upgrade. The server asks GitHub at most every 6 hours; `UPDATE_CHECK=false` turns it off.
 
 ### Changed
 
 - Panels, menus and dialogs scroll with thin scrollbars in the theme's colors instead of the browser's default bars.
-- drawhl is now licensed under the GNU AGPL v3 (`AGPL-3.0-only`) instead of MIT. Using and self-hosting it stays free; if you modify drawhl and offer it over a network, you share your changes under the same license. Contributions need the [CLA](CLA.md), and the name and logo follow [TRADEMARKS.md](TRADEMARKS.md). Releases up to `v2026.10.6` remain available under MIT.
+- tiko is now licensed under the GNU AGPL v3 (`AGPL-3.0-only`) instead of MIT. Using and self-hosting it stays free; if you modify tiko and offer it over a network, you share your changes under the same license. Contributions need the [CLA](CLA.md), and the name and logo follow [TRADEMARKS.md](TRADEMARKS.md). Releases up to `v2026.10.6` remain available under MIT.
 - The Theme item in the main menu has an icon.
 - The sync indicator shows only a colored dot and the last sync time: green when every tracker syncs, amber when some fail, red when none do. Click it to see each tracker with its last sync and the reason it fails.
 
@@ -91,7 +95,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - Boards on an infinite canvas: add Jira task cards by key or link, pan, zoom and drag; boards save automatically and reopen as left. Works out of the box with built-in demo tasks.
-- Connect Jira Data Center with a personal access token in Settings; the token is encrypted at rest with `DRAWHL_SECRET_KEY` and never sent back to the browser.
+- Connect Jira Data Center with a personal access token in Settings; the token is encrypted at rest with `TIKO_SECRET_KEY` and never sent back to the browser.
 - Card statuses refresh on their own while a board is open (every 30 s by default, configurable), with one batched Jira request per board, an "updated N s ago" indicator, "Refresh all" and automatic backoff when Jira struggles. Closed tasks are struck through.
 - Frames, sticky notes, free text and arrows. Drop cards and notes into a frame to group them; moving the frame moves everything inside, and deleting it keeps the contents. Box-select or shift-click to move or delete several items.
 - Right-click menu on the canvas: add a Jira card, frame, sticky note or text at the clicked spot, or delete the selection.

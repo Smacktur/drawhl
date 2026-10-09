@@ -33,7 +33,7 @@ A single-user, self-hosted canvas (`@xyflow/react` 12) where Jira Data Center ta
 | Principle | Status |
 |---|---|
 | I. Main always runs | Pass: one `feat/<slice>` branch per slice, merge after G3 |
-| II. One command, works without keys | Pass: demo provider is the default; `DRAWHL_SECRET_KEY` needed only to save a PAT |
+| II. One command, works without keys | Pass: demo provider is the default; `TIKO_SECRET_KEY` needed only to save a PAT |
 | III. Hypothesis-driven scope | Pass: slices map to core scenario steps; nothing from Won't (no webhooks, no two-way sync, no auth) |
 | IV. Vertical slices | Pass: 6 slices, each UI → API → domain → storage |
 | V. Contract-first, ports and adapters | Pass: [contracts/api.md](contracts/api.md) fixed; `TaskProvider`, `BoardRepo`, `SettingsRepo`, `SecretBox` ports in `domain/ports.py` |
@@ -63,7 +63,7 @@ specs/001-live-jira-canvas/
 ```text
 backend/app/
 ├── main.py                 # wiring: repos, providers, secret box
-├── config.py               # + DB_PATH, DRAWHL_SECRET_KEY, JIRA_TLS_VERIFY, JIRA_CA_BUNDLE
+├── config.py               # + DB_PATH, TIKO_SECRET_KEY, JIRA_TLS_VERIFY, JIRA_CA_BUNDLE
 ├── api/
 │   ├── errors.py           # extend domain error → HTTP mapping
 │   ├── routes.py           # include routers

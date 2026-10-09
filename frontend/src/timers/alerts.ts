@@ -1,6 +1,6 @@
 import { notifyPermission } from '@/focus/alerts'
 
-const KEY = 'drawhl.timers.notified'
+const KEY = 'tiko.timers.notified'
 // Enough for every timer of a busy board; the oldest are forgotten first.
 const LIMIT = 200
 
@@ -34,7 +34,7 @@ export function notifyTimer(id: string, title: string, body: string, onClick: ()
   if (notifyPermission() !== 'granted') return
   try {
     // The same tag in every tab, so the browser shows one notification.
-    const notification = new Notification(title, { body, tag: `drawhl-timer-${id}` })
+    const notification = new Notification(title, { body, tag: `tiko-timer-${id}` })
     notification.onclick = () => {
       window.focus()
       onClick()

@@ -10,7 +10,7 @@ export interface StoredTrack {
   added: number
 }
 
-const DB = 'drawhl'
+const DB = 'tiko'
 const STORE = 'tracks'
 
 function open(): Promise<IDBDatabase> {

@@ -209,7 +209,7 @@ wheels = [
 ]
 
 [[package]]
-name = "drawhl-api"
+name = "tiko-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

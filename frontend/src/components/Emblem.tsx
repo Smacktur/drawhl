@@ -10,7 +10,7 @@ const DOTS = [
   [27, 27],
 ]
 
-/** The drawhl emblem in theme colors; geometry matches brand/emblem. */
+/** The tiko emblem in theme colors; geometry matches brand/emblem. */
 export function Emblem({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className={cn('shrink-0', className)}>

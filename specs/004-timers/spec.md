@@ -6,17 +6,17 @@
 
 **Status**: Approved
 
-**Input**: User description: "A reminder timer tied to a card, with a note on what to do. It goes off as a notification in drawhl." Shaped with the owner: a small bright cube next to an element, settings in a popover, a list of all timers on the board with jump-to, plus a timer that waits for a task's status to change and repeating timers.
+**Input**: User description: "A reminder timer tied to a card, with a note on what to do. It goes off as a notification in tiko." Shaped with the owner: a small bright cube next to an element, settings in a popover, a list of all timers on the board with jump-to, plus a timer that waits for a task's status to change and repeating timers.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A timer next to a card (Priority: P1)
 
-The user waits for something on a task: an answer, a deploy, a review. They drop a timer on the card: a small amber cube appears just left of the card's top edge and starts counting 30 minutes. A popover opens on it: they type what they are waiting for and pick when it should go off, as a duration (15m, 1h, "2h 30m") or a date and time ("tomorrow 10:00", "25.10.2026 15:00"). The popover shows when it goes off and how much is left. The cube shows only the time left ("28m", "3h", "2d"); hovering it shows the note and the exact time. The cube moves with the card and goes away with it. When the time comes, drawhl shows a browser notification with the note, plays a chime, the cube turns coral with a bell and pulses, the tab title gets a count, and a note in the corner of the board offers Done, +10 min and +1 hour.
+The user waits for something on a task: an answer, a deploy, a review. They drop a timer on the card: a small amber cube appears just left of the card's top edge and starts counting 30 minutes. A popover opens on it: they type what they are waiting for and pick when it should go off, as a duration (15m, 1h, "2h 30m") or a date and time ("tomorrow 10:00", "25.10.2026 15:00"). The popover shows when it goes off and how much is left. The cube shows only the time left ("28m", "3h", "2d"); hovering it shows the note and the exact time. The cube moves with the card and goes away with it. When the time comes, tiko shows a browser notification with the note, plays a chime, the cube turns coral with a bell and pulses, the tab title gets a count, and a note in the corner of the board offers Done, +10 min and +1 hour.
 
 **Why this priority**: This is the timer itself; the list and the extra triggers build on it.
 
-**Independent Test**: right-click a card → "Add timer": a cube at its top right, popover open, 30m left. Type "ping QA", set "1m", close. Move the card: the cube follows. Wait: notification "ping QA", chime, coral cube, "(1) drawhl" in the title, corner note; press +10 min: the cube counts again. Delete the card: the timer is gone. A timer placed on an empty spot stays when nearby elements are deleted.
+**Independent Test**: right-click a card → "Add timer": a cube at its top right, popover open, 30m left. Type "ping QA", set "1m", close. Move the card: the cube follows. Wait: notification "ping QA", chime, coral cube, "(1) tiko" in the title, corner note; press +10 min: the cube counts again. Delete the card: the timer is gone. A timer placed on an empty spot stays when nearby elements are deleted.
 
 **Acceptance Scenarios**:
 
@@ -103,7 +103,7 @@ A timer on a Jira card can wait for the task instead of the clock: "Goes off whe
 
 ## Assumptions
 
-- Timers go off only while drawhl is open in some tab; a closed browser gets them on the next open (US1 scenario 9). Web Push is a separate idea.
+- Timers go off only while tiko is open in some tab; a closed browser gets them on the next open (US1 scenario 9). Web Push is a separate idea.
 - The list covers the current board only.
 - Times are stored as UTC moments and shown in the browser's time zone; the text stays English.
 

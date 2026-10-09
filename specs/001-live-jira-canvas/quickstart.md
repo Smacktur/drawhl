@@ -35,7 +35,7 @@ Delete the board from the board menu afterwards.
 
 ## With real Jira DC
 
-1. Set `DRAWHL_SECRET_KEY` in `.env` (`openssl rand -base64 32`), restart.
+1. Set `TIKO_SECRET_KEY` in `.env` (`openssl rand -base64 32`), restart.
 2. Settings → provider `jira`, base URL, PAT → "Test connection" shows your name.
 3. Add a real key, change its status in Jira: the board shows it within 60 s.
 

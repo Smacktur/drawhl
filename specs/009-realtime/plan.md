@@ -47,4 +47,4 @@ frontend/vite.config.ts            dev proxy needs ws: true
 - Gate every board route and socket through one domain function; test with an access matrix.
 - Library docs come from context7; new dependencies go through `make licenses` and `THIRD_PARTY.md`.
 - Release tags are `vYYYY.M.N`, images are tagged `YYYY.M.N` without the `v`.
-- The CLA bot sometimes posts no status on a PR; opening `https://cla-assistant.io/check/Smacktur/drawhl?pullRequest=<n>` makes it check again.
+- The CLA bot sometimes posts no status on a PR; opening `https://cla-assistant.io/check/tiko-run/tiko?pullRequest=<n>` makes it check again.

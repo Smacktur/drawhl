@@ -1,5 +1,5 @@
 const LIMIT = 5
-const storageKey = (boardId: string) => `drawhl.search.recent.${boardId}`
+const storageKey = (boardId: string) => `tiko.search.recent.${boardId}`
 
 /** Ids of the last jumps on a board, newest first. */
 export function readRecent(boardId: string): string[] {

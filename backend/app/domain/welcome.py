@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
-WELCOME_NAME = "Welcome to drawhl"
+WELCOME_NAME = "Welcome to tiko"
 
 _PAD, _TITLE = 24, 48
 _STICKY = 200
@@ -41,7 +41,7 @@ def welcome_doc(now: datetime) -> dict[str, Any]:
             "position": {"x": 0, "y": -90},
             "width": 640,
             "height": 50,
-            "data": {"text": "Welcome to drawhl: live task cards on an infinite canvas"},
+            "data": {"text": "Welcome to tiko: live task cards on an infinite canvas"},
         }
     ]
 

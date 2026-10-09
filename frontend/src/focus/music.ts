@@ -56,7 +56,7 @@ export interface MusicState {
   saveError?: string
 }
 
-const KEY = 'drawhl.music'
+const KEY = 'tiko.music'
 
 export function nextIndex(index: number, count: number): number {
   return count === 0 ? 0 : (index + 1) % count

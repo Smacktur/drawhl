@@ -63,7 +63,7 @@ function SourceRow({
 
 type Props = {
   sources: SyncSource[]
-  /** The drawhl server itself did not answer. */
+  /** The tiko server itself did not answer. */
   serverError: Error | null
   syncedAt: number
   refreshing: boolean
@@ -95,7 +95,7 @@ export function RefreshIndicator({ sources, serverError, syncedAt, refreshing, o
           <ul className="flex flex-col">
             {serverError && (
               <SourceRow
-                name="drawhl server"
+                name="tiko server"
                 health="down"
                 syncedAt={0}
                 detail={serverError.message}

@@ -1,4 +1,4 @@
-# drawhl Constitution
+# tiko Constitution
 
 ## Core Principles
 

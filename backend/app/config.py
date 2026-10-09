@@ -8,16 +8,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    app_name: str = "drawhl"
+    app_name: str = "tiko"
     app_env: str = "local"
     log_level: str = "info"
     db_path: str = "data/app.db"
-    drawhl_secret_key: SecretStr | None = None
-    drawhl_password: SecretStr | None = None
-    # Holds the generated password when DRAWHL_PASSWORD is empty.
+    tiko_secret_key: SecretStr | None = None
+    tiko_password: SecretStr | None = None
+    # Holds the generated password when TIKO_PASSWORD is empty.
     password_file: str = "data/password"
     # Set at deploy time, these win over Settings → Task source and lock it there.
-    drawhl_tracker: Literal["demo", "jira"] | None = None
+    tiko_tracker: Literal["demo", "jira"] | None = None
     jira_base_url: str | None = None
     jira_tls_verify: bool = True
     jira_ca_bundle: str | None = None

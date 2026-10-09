@@ -40,7 +40,7 @@ beforeEach(() => {
   vi.stubGlobal('Notification', FakeNotification)
   localStorage.clear()
   shown.length = 0
-  document.title = 'drawhl'
+  document.title = 'tiko'
 })
 
 afterEach(() => {
@@ -60,7 +60,7 @@ test('a timer that goes off while the board is open notifies once and counts in 
   expect(shown).toHaveLength(1)
   expect(shown[0].title).toBe('note t')
   expect(shown[0].body).toMatch(/^On DEMO-1 · Set for /)
-  expect(document.title).toBe('(1) drawhl')
+  expect(document.title).toBe('(1) tiko')
 
   rerender({ list: [...nodes] })
   act(() => vi.advanceTimersByTime(3000))
@@ -73,7 +73,7 @@ test('timers that went off while the board was closed are counted quietly', () =
   expect(result.current.missed).toBe(2)
   expect(shown).toHaveLength(0)
   unmount()
-  expect(document.title).toBe('drawhl')
+  expect(document.title).toBe('tiko')
 
   // Seen once, they are not reported again after a reload.
   const again = renderHook(() => useTimers(nodes, quiet))

@@ -1,4 +1,4 @@
-"""Generate drawhl brand assets: SVG with outlined text + PNG renders."""
+"""Generate tiko brand assets: SVG with outlined text + PNG renders."""
 import io
 import sys
 from pathlib import Path
@@ -115,8 +115,8 @@ PAL = {
 
 # Emblem: content box 32 with 0 padding; clear space is handled by the user per README.
 for sfx, p in PAL.items():
-    write(f"emblem/drawhl-emblem{sfx}.svg", svg(32, 32, mark(p["card"], p["dot"]), "drawhl emblem"),
-          [(f"drawhl-emblem{sfx}-512.png", 512)])
+    write(f"emblem/tiko-emblem{sfx}.svg", svg(32, 32, mark(p["card"], p["dot"]), "tiko emblem"),
+          [(f"tiko-emblem{sfx}-512.png", 512)])
 
 
 def tile(size, radius_ratio=0.22, r=2.4, scale=0.66):
@@ -127,11 +127,11 @@ def tile(size, radius_ratio=0.22, r=2.4, scale=0.66):
             + placed(mark("#FFFFFF", "#FFFFFF", r=r, dot_op=0.5), off, off, m))
 
 
-write("app-icon/drawhl-app-icon.svg", svg(512, 512, tile(512), "drawhl app icon"),
-      [("drawhl-app-icon-512.png", 512), ("drawhl-app-icon-1024.png", 1024),
+write("app-icon/tiko-app-icon.svg", svg(512, 512, tile(512), "tiko app icon"),
+      [("tiko-app-icon-512.png", 512), ("tiko-app-icon-1024.png", 1024),
        ("apple-touch-icon.png", 180), ("producthunt-thumbnail-240.png", 240)])
 # Favicon: bigger dots and mark so the grid survives 16 px.
-fav = svg(32, 32, tile(32, 0.22, r=3, scale=0.78), "drawhl")
+fav = svg(32, 32, tile(32, 0.22, r=3, scale=0.78), "tiko")
 write("app-icon/favicon.svg", fav, [("favicon-16.png", 16), ("favicon-32.png", 32), ("favicon-48.png", 48)])
 
 
@@ -139,26 +139,26 @@ def lockup(p, h=48, x=0, y=0):
     """Horizontal logo: emblem + wordmark. Returns (svg body, width)."""
     size = h * 0.62
     gap = h * 0.24
-    tw = SANS6.width("drawhl", size, WM_TRACK)
+    tw = SANS6.width("tiko", size, WM_TRACK)
     base = y + h / 2 + size * 0.36
     body = placed(mark(p["card"], p["dot"]), x, y, h)
-    body += f'<path d="{SANS6.path("drawhl", size, x + h + gap, base, WM_TRACK)}" fill="{p["ink"]}"/>'
+    body += f'<path d="{SANS6.path("tiko", size, x + h + gap, base, WM_TRACK)}" fill="{p["ink"]}"/>'
     return body, h + gap + tw
 
 
 for sfx, p in PAL.items():
     body, w = lockup(p)
-    write(f"logo/drawhl-logo{sfx}.svg", svg(round(w + 1), 48, body, "drawhl"),
-          [(f"drawhl-logo{sfx}-1200.png", 1200)])
+    write(f"logo/tiko-logo{sfx}.svg", svg(round(w + 1), 48, body, "tiko"),
+          [(f"tiko-logo{sfx}-1200.png", 1200)])
     size = 40
-    tw = SANS6.width("drawhl", size, WM_TRACK)
+    tw = SANS6.width("tiko", size, WM_TRACK)
     W = max(tw, 64)
     stacked = placed(mark(p["card"], p["dot"]), (W - 64) / 2, 0, 64)
-    stacked += f'<path d="{SANS6.path("drawhl", size, (W - tw) / 2, 64 + 18 + size * 0.72, WM_TRACK)}" fill="{p["ink"]}"/>'
-    write(f"logo/drawhl-logo-stacked{sfx}.svg", svg(round(W + 1), round(64 + 18 + size), stacked, "drawhl"))
-    tw = SANS6.width("drawhl", 40, WM_TRACK)
-    write(f"wordmark/drawhl-wordmark{sfx}.svg",
-          svg(round(tw + 1), 40, f'<path d="{SANS6.path("drawhl", 40, 0, 40 * 0.74, WM_TRACK)}" fill="{p["ink"]}"/>', "drawhl"))
+    stacked += f'<path d="{SANS6.path("tiko", size, (W - tw) / 2, 64 + 18 + size * 0.72, WM_TRACK)}" fill="{p["ink"]}"/>'
+    write(f"logo/tiko-logo-stacked{sfx}.svg", svg(round(W + 1), round(64 + 18 + size), stacked, "tiko"))
+    tw = SANS6.width("tiko", 40, WM_TRACK)
+    write(f"wordmark/tiko-wordmark{sfx}.svg",
+          svg(round(tw + 1), 40, f'<path d="{SANS6.path("tiko", 40, 0, 40 * 0.74, WM_TRACK)}" fill="{p["ink"]}"/>', "tiko"))
 
 
 # Covers -------------------------------------------------------------------
@@ -230,7 +230,7 @@ def board(t, x, y, s=1.6):
     return out
 
 
-def cover(w, h, dark, tagline=True, scene=True, title="drawhl"):
+def cover(w, h, dark, tagline=True, scene=True, title="tiko"):
     t = theme(dark)
     body = dotgrid(w, h, t)
     left = 80
@@ -265,6 +265,6 @@ for dark in (False, True):
     banner = dotgrid(W, H, t)
     banner += f'<g transform="translate({(W - lw) / 2:.1f} {H / 2 - 64:.1f})">{lk}</g>'
     banner += f'<path d="{SANS4.path(tl, 22, (W - tw) / 2, H / 2 + 54)}" fill="{t["muted"]}"/>'
-    write(f"social/readme-banner{sfx}.svg", svg(W, H, banner, "drawhl"), [(f"readme-banner{sfx}.png", 2560)])
+    write(f"social/readme-banner{sfx}.svg", svg(W, H, banner, "tiko"), [(f"readme-banner{sfx}.png", 2560)])
 
 print("done")

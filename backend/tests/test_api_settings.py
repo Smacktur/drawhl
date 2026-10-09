@@ -85,9 +85,9 @@ def test_changed_secret_key_makes_token_unreadable(tmp_path, fake_jira):
 
     db = str(tmp_path / "app.db")
     transport = httpx.MockTransport(fake_jira)
-    first = signed_in(create_app(Settings(db_path=db, drawhl_secret_key="one"), transport))
+    first = signed_in(create_app(Settings(db_path=db, tiko_secret_key="one"), transport))
     connect(first)
-    second = signed_in(create_app(Settings(db_path=db, drawhl_secret_key="two"), transport))
+    second = signed_in(create_app(Settings(db_path=db, tiko_secret_key="two"), transport))
     assert second.get("/api/settings").json()["jira"]["token_state"] == "unreadable"
     response = second.post("/api/tasks/resolve", json={"ref": "DEV-1"})
     assert response.json()["error"]["code"] == "jira_not_configured"
@@ -111,7 +111,7 @@ def test_empty_secret_key_is_not_configured(fake_jira):
     from app.main import create_app
     from tests.conftest import signed_in
 
-    settings = Settings(db_path=":memory:", drawhl_secret_key="")
+    settings = Settings(db_path=":memory:", tiko_secret_key="")
     app = create_app(settings, jira_transport=httpx.MockTransport(fake_jira))
     assert signed_in(app).get("/api/settings").json()["secret_key_configured"] is False
 
@@ -122,7 +122,7 @@ def test_tracker_from_the_environment_wins_and_is_locked():
     from tests.conftest import signed_in
 
     settings = Settings(
-        db_path=":memory:", drawhl_tracker="jira", jira_base_url="https://jira.example.com/"
+        db_path=":memory:", tiko_tracker="jira", jira_base_url="https://jira.example.com/"
     )
     client = signed_in(create_app(settings))
     body = client.get("/api/settings").json()

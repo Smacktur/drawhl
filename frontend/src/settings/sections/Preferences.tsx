@@ -22,7 +22,7 @@ export function Preferences() {
     <div className="flex flex-col gap-5">
       <SectionHeader
         title="Preferences"
-        description="How drawhl looks and behaves in this browser."
+        description="How tiko looks and behaves in this browser."
       />
       <Group title="Theme">
         <RadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)}>

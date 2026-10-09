@@ -135,7 +135,7 @@ function TimerTab() {
 const PROTECTION: Record<library.Protection, string> = {
   protected: 'Protected from automatic cleanup.',
   unprotected: 'The browser may clear them when disk space runs low.',
-  unavailable: 'Open drawhl over HTTPS or on localhost to protect them from cleanup.',
+  unavailable: 'Open tiko over HTTPS or on localhost to protect them from cleanup.',
 }
 
 function MusicTab() {

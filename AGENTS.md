@@ -1,6 +1,6 @@
 # AGENTS.md — rules for AI agents (Claude Code, Codex)
 
-**drawhl** — Open-source infinite canvas for your tasks: live cards from your tracker, arranged the way you think
+**tiko** — Open-source infinite canvas for your tasks: live cards from your tracker, arranged the way you think
 Profile: **oss** ([strategy](docs/playbook/01-strategy.md)). Research: [docs/research.md](docs/research.md). Idea and scope: [docs/brief.md](docs/brief.md). Full playbook: [docs/playbook/](docs/playbook/README.md).
 
 ## Hard rules

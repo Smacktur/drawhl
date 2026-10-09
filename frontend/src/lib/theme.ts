@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react'
 export type Theme = 'light' | 'dark' | 'system'
 
 // Same key and logic as the inline script in index.html, which applies the theme before first paint.
-const KEY = 'drawhl.theme'
+const KEY = 'tiko.theme'
 const listeners = new Set<() => void>()
 
 function darkQuery() {

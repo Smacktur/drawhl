@@ -14,7 +14,7 @@ description: "Task list for First run and polish"
 
 ## Phase 1: Slice 26 `feat/welcome-board` — a board to start from (US1) 🎯
 
-**Goal**: a fresh install opens on a board that shows drawhl.
+**Goal**: a fresh install opens on a board that shows tiko.
 
 **Independent Test**: see US1 in [spec.md](spec.md).
 
@@ -42,7 +42,7 @@ description: "Task list for First run and polish"
 
 ## Phase 4: Slice 29 `feat/paste-text` — paste text and task links onto the board (US4)
 
-- [x] T010 [P] [US4] `canvas/paste.ts`: ordered steps (drawhl elements by clipboard marker, task keys and links to cards, plain text to a text or sticky node), ignore editable targets. Tests
+- [x] T010 [P] [US4] `canvas/paste.ts`: ordered steps (tiko elements by clipboard marker, task keys and links to cards, plain text to a text or sticky node), ignore editable targets. Tests
 - [x] T011 [US4] Canvas wires the native `paste` event; "Paste text as" in Settings, stored in `localStorage`. Tests
 - [x] T012 [US4] `CHANGELOG.md`, README; screenshot
 

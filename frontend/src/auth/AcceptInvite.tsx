@@ -62,7 +62,7 @@ function AcceptForm({ token, info }: { token: string; info: InviteInfo }) {
     <form onSubmit={submit} className="flex flex-col gap-3">
       <p className="text-muted-foreground text-[14px]">
         {isInvite
-          ? `You are invited to drawhl${info.role === 'admin' ? ' as an admin' : ''}. Pick how you sign in.`
+          ? `You are invited to tiko${info.role === 'admin' ? ' as an admin' : ''}. Pick how you sign in.`
           : `Set a new password for ${info.username}.`}
       </p>
       {isInvite && (
@@ -109,7 +109,7 @@ function AcceptForm({ token, info }: { token: string; info: InviteInfo }) {
         autoFocus={!isInvite}
       />
       <Button type="submit" disabled={accept.isPending}>
-        {isInvite ? 'Join drawhl' : 'Set password'}
+        {isInvite ? 'Join tiko' : 'Set password'}
       </Button>
       {accept.isError && <p className="text-destructive text-sm">{accept.error.message}</p>}
     </form>
@@ -127,7 +127,7 @@ export function AcceptInvite({ link }: { link: InviteLink }) {
     <div className="absolute top-1/2 left-1/2 flex w-80 -translate-x-1/2 -translate-y-1/2 flex-col gap-4">
       <p className="flex items-center gap-2 text-[18px] font-semibold tracking-[-0.03em]">
         <Emblem className="size-6" />
-        drawhl
+        tiko
       </p>
       {info.isPending && <p className="text-muted-foreground text-[14px]">Checking the link…</p>}
       {info.isError && (
