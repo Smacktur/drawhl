@@ -31,7 +31,20 @@ Options go after `sh -s --`, for example `curl -fsSL https://tiko.run/install.sh
 
 Run the same command again to upgrade: it keeps your boards, accounts and `.env`.
 
-Windows gets its own one-line installer soon. Until then, follow the Windows steps below.
+On Windows 10 or 11, open PowerShell and run:
+
+```powershell
+irm https://tiko.run/install.ps1 | iex
+```
+
+The Windows installer does the same, with Docker Desktop instead of Docker Engine:
+
+1. Checks the machine: 64-bit Windows 10 version 2004 or later, at least 4 GB of memory, virtualization turned on in the firmware, 2 GB of free disk, a free port.
+2. Installs WSL 2 if it is missing, after asking. Windows turns WSL on only while it starts, so the installer asks you to restart, then run the same line again.
+3. Installs [Docker Desktop](https://docs.docker.com/desktop/) with `winget`, after asking, and starts it. On its first start Docker Desktop opens a few windows: press **Skip** on "Welcome to Docker" (tiko needs no Docker account), close "Welcome to Windows Subsystem for Linux", and answer the Windows Firewall question about "Docker Desktop Backend": **Allow** lets other devices on your network open tiko, **Cancel** keeps it on this computer.
+4. Creates the folder `%USERPROFILE%\tiko`, starts the latest release, prints the address, the username and the password, and opens the browser.
+
+Options: `& ([scriptblock]::Create((irm https://tiko.run/install.ps1))) -Yes -Port 8080`, with `-Dir` and `-Version` as well, or the same environment variables as above.
 
 ## Step by step
 

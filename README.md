@@ -39,7 +39,9 @@ On Linux or macOS, one command installs Docker if needed, starts the latest rele
 curl -fsSL https://tiko.run/install.sh | sh
 ```
 
-Never used Docker, or on Windows? The [install guide](https://docs.tiko.run/install/) walks through every step.
+On Windows, in PowerShell: `irm https://tiko.run/install.ps1 | iex`. It installs WSL 2 and Docker Desktop if needed; that takes one restart when WSL 2 is missing.
+
+Never used Docker? The [install guide](https://docs.tiko.run/install/) walks through every step.
 
 Or from source:
 

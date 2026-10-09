@@ -35,6 +35,7 @@ $Version = $Version -replace '^v', ''
 $Dir = [IO.Path]::GetFullPath($Dir).TrimEnd('\')
 $Upgrade = $false
 $NeedsRestart = $false
+$FreshDocker = $false
 $Password = ''
 
 function Say([string]$Text) { Write-Host $Text }
@@ -126,15 +127,33 @@ function Install-DockerDesktop {
   if (-not (Read-Consent 'Docker Desktop is not installed. Install it with winget (Windows asks for administrator rights)?')) {
     Fail "tiko runs in Docker; install Docker Desktop and run the installer again: $DockerDocs"
   }
+  Say 'Downloading and installing Docker Desktop (about 600 MB, usually 3 to 10 minutes)...'
   $ErrorActionPreference = 'Continue'
-  & winget install -e --id Docker.DockerDesktop --source winget --accept-package-agreements --accept-source-agreements `
-    --override 'install --quiet --accept-license --backend=wsl-2' | Out-Host
+  # winget draws its progress bar in characters the console garbles; its log matters only on failure.
+  $log = & winget install -e --id Docker.DockerDesktop --source winget --accept-package-agreements --accept-source-agreements `
+    --disable-interactivity --override 'install --quiet --accept-license --backend=wsl-2' 2>&1
+  $code = $LASTEXITCODE
   if ((Test-Path $DockerBin) -and -not (Test-Command docker)) { $env:Path = "$env:Path;$DockerBin" }
-  if (-not (Test-Command docker)) { Fail "winget could not install Docker Desktop (code $LASTEXITCODE); install it by hand: $DockerDocs" }
+  if (-not (Test-Command docker)) {
+    $log | Where-Object { "$_" -match '[A-Za-z]{3}' } | Select-Object -Last 15 | ForEach-Object { Say "  $_" }
+    Fail "winget could not install Docker Desktop (code $code); install it by hand: $DockerDocs"
+  }
+  Say 'OK: Docker Desktop is installed'
+  $script:FreshDocker = $true
 }
 
 function Wait-Docker {
   if (Test-Path $DockerDesktop) { Start-Process $DockerDesktop }
+  if ($FreshDocker) {
+    Say ''
+    Say 'Docker Desktop starts for the first time and opens a few windows:'
+    Say '  - "Welcome to Docker" asks you to sign in: press Skip, tiko needs no Docker account;'
+    Say '  - "Welcome to Windows Subsystem for Linux": close it;'
+    Say '  - Windows Firewall asks about "Docker Desktop Backend": Allow lets other devices on your'
+    Say '    network open tiko, Cancel keeps it on this computer only.'
+    Say 'The installer goes on by itself once Docker is ready.'
+    Say ''
+  }
   Say 'Waiting for Docker Desktop to start (up to 3 minutes)...'
   for ($i = 0; $i -lt 90; $i++) {
     if (Test-Native docker info) { return }
@@ -230,12 +249,16 @@ function Show-Result {
   $tag = if ($match) { $match.Matches[0].Groups[1].Value } else { '' }
   $address = "http://localhost:$Port"
   Step "tiko $tag is running"
-  Say "Open:      $address"
+  Write-Host ''
+  Write-Host "  Open:      $address" -ForegroundColor Green
   if (-not $Upgrade) {
-    Say "Sign in:   admin / $Password"
-    Say "           (change it in Settings > Security; it is also in $Dir\.env)"
+    Write-Host '  Username:  admin' -ForegroundColor Green
+    Write-Host "  Password:  $Password" -ForegroundColor Green
+    Write-Host ''
+    Say "Change the password in Settings > Security; until then it is also in $Dir\.env"
   } else {
-    Say 'Sign in as before: boards, accounts and settings are kept.'
+    Write-Host '  Sign in as before: boards, accounts and settings are kept.' -ForegroundColor Green
+    Write-Host ''
   }
   Say "Folder:    $Dir (boards in data, settings in .env)"
   Say "Logs:      cd $Dir; docker compose logs -f"
@@ -250,8 +273,11 @@ function Install-Tiko {
   Confirm-Docker
   if ($NeedsRestart) {
     Step 'Restart Windows'
-    Say 'WSL 2 is installed. Restart Windows, then run the same line again to finish:'
+    Say 'WSL 2 is installed, but Windows turns on its virtual machine platform only while it starts,'
+    Say 'so Docker Desktop cannot run until you restart. After the restart, run the same line again'
+    Say 'to install Docker Desktop and start tiko:'
     Say "  $InstallLine"
+    if (-not $Yes -and (Read-Consent 'Restart now? Save your work in other programs first.')) { Restart-Computer }
     return
   }
   Initialize-Folder

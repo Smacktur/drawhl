@@ -272,12 +272,18 @@ finish() {
     [ -z "$ip" ] || address="$address or http://$ip:$PORT"
   fi
   step "tiko ${version:-} is running"
-  say "Open:      $address"
+  on='' off=''
+  if [ -t 1 ]; then on=$(printf '\033[1;32m') off=$(printf '\033[0m'); fi
+  say ""
+  say "${on}  Open:      $address${off}"
   if [ "$UPGRADE" = 0 ]; then
-    say "Sign in:   admin / $PASSWORD"
-    say "           (change it in Settings → Security; it is also in $DIR/.env)"
+    say "${on}  Username:  admin${off}"
+    say "${on}  Password:  $PASSWORD${off}"
+    say ""
+    say "Change the password in Settings → Security; until then it is also in $DIR/.env"
   else
-    say "Sign in as before: boards, accounts and settings are kept."
+    say "${on}  Sign in as before: boards, accounts and settings are kept.${off}"
+    say ""
   fi
   say "Folder:    $DIR (boards in data/, settings in .env)"
   say "Logs:      cd $DIR && $HINT compose logs -f"
