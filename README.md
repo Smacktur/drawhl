@@ -33,7 +33,7 @@ The [user guide](https://tiko-run.github.io/tiko/) covers every feature and how 
 
 ## 🚀 Quick start
 
-You need Docker with Compose, or a Railway account for the cloud option below. From released images, no checkout needed:
+You need Docker with Compose, or a Railway or Render account for the cloud options below. From released images, no checkout needed:
 
 ```bash
 mkdir tiko && cd tiko
@@ -49,11 +49,11 @@ cd tiko
 docker compose up --build
 ```
 
-Or in the cloud, on Railway:
+Or in the cloud, on Railway or Render:
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/tiko?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=tiko)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/tiko?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=tiko) [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tiko-run/tiko)
 
-The template runs the released images with your boards on a volume and generates the encryption key and the password. The app opens on the URL Railway gives you; sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables. A tracker inside a corporate network is out of reach from there.
+Both run the released images with your boards on a disk and generate the encryption key and the password. The app opens on the URL the platform gives you; sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables on Railway, or the `tiko-api` service's Environment on Render. Render needs paid instances for the disk, about $15 a month for both. A tracker inside a corporate network is out of reach from there.
 
 On your machine, open http://localhost:3000 and sign in as `admin` with the password from the log: `docker compose logs api | grep 'tiko password'`, or `cat data/password` from a source checkout. To pick your own, set `TIKO_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://tiko-run.github.io/tiko/quick-start/).
 
@@ -109,7 +109,6 @@ What we plan next, roughly in order. Want something sooner or missing here? Open
 **Access and hosting**
 
 - Optional password login, so tiko can run on a public server
-- One-click deploy to Render and similar hosts
 - Accounts and shared boards for a team
 
 **More trackers**

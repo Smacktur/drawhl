@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Deploy to Render button: a private `tiko-api` with a 1 GB disk and a public `tiko-web`, both from the released images, with the password and the encryption key generated on deploy.
+
+### Fixed
+
+- The web image reaches the API by a short host name on platforms whose DNS needs a search domain, such as Render's private network.
+
 ## [2026.10.11] - 2026-10-09
 
 ### Changed
