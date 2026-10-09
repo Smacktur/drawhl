@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.11] - 2026-10-09
+
 ### Changed
 
 - The project is now called tiko and lives at [github.com/tiko-run/tiko](https://github.com/tiko-run/tiko). Images move to `ghcr.io/tiko-run/tiko-api` and `ghcr.io/tiko-run/tiko-web`, the guide to [tiko-run.github.io/tiko](https://tiko-run.github.io/tiko/). Environment variables are now `TIKO_PASSWORD`, `TIKO_SECRET_KEY` and `TIKO_TRACKER`; the session cookie is `tiko_session`, so everyone signs in once more. Browser preferences and focus tracks added in the browser start fresh. Boards and settings in `data/app.db` stay as they are.
