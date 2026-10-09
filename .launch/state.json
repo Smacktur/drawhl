@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/009-realtime",
+  "feature": "specs/010-installer",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -105,7 +105,9 @@
     "G3_sharing": "approved",
     "G3_my-tracker": "approved",
     "G3_tracker-env": "approved",
-    "G3_rename-tiko": "approved"
+    "G3_rename-tiko": "approved",
+    "G1_installer": "approved",
+    "G2_installer": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -130,6 +132,7 @@
     "2026-10-09 accounts: spec 008 done in slices 36-41 (accounts, settings window, people, sharing, a tracker token per person, the tracker from the environment). Owner approved and asked to release team mode. Several trackers at once is a later spec.",
     "2026-10-09 v2026.10.10 released with team mode (spec 008). Spec 009 real-time drafted as a skeleton with the decisions and constraints from the spec 008 session; next session fills requirements and tasks, then G2.",
     "2026-10-09 rename: the product is tiko (tiko.run), repo tiko-run/tiko; no fallback for old names by the owner's choice, data/app.db untouched. Next: one-command installer (tiko.run/install).",
-    "2026-10-09 rename done: v2026.10.11 released from tiko-run/tiko, GHCR images public, docs on tiko-run.github.io/tiko, CLA Assistant relinked. Left: Railway template slug and images; Render stage was already down."
+    "2026-10-09 rename done: v2026.10.11 released from tiko-run/tiko, GHCR images public, docs on tiko-run.github.io/tiko, CLA Assistant relinked. Left: Railway template slug and images; Render stage was already down.",
+    "2026-10-09 G1 and G2 installer: owner approved spec 010 (install.sh, install.ps1, Install guide page, docs.tiko.run through Cloudflare, Colima on macOS). Railway template republished as railway.com/deploy/tiko; Deploy to Render button shipped in v2026.10.12. Spec 009 real-time waits."
   ]
 }
