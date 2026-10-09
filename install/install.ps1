@@ -52,7 +52,7 @@ function Test-Native {
   $LASTEXITCODE -eq 0
 }
 
-function Read-Yes([string]$Question) {
+function Read-Consent([string]$Question) {
   if ($Yes) { return $true }
   (Read-Host "$Question [y/N]") -match '^(y|yes)$'
 }
@@ -107,7 +107,7 @@ function Test-Virtualization {
 }
 
 function Install-Wsl {
-  if (-not (Read-Yes 'WSL 2 is not installed, and Docker Desktop needs it. Install it now (Windows asks for administrator rights)?')) {
+  if (-not (Read-Consent 'WSL 2 is not installed, and Docker Desktop needs it. Install it now (Windows asks for administrator rights)?')) {
     Fail "tiko runs in Docker Desktop, which needs WSL 2; install it with 'wsl --install' and run the installer again"
   }
   $process = Start-Process wsl.exe -ArgumentList '--install', '--no-distribution' -Verb RunAs -Wait -PassThru
@@ -123,7 +123,7 @@ function Install-DockerDesktop {
     Fail 'Docker Desktop is required; run the installer again once it is installed'
   }
   Say 'Docker Desktop is free for personal use and small companies, paid above 250 people or $10M revenue.'
-  if (-not (Read-Yes 'Docker Desktop is not installed. Install it with winget (Windows asks for administrator rights)?')) {
+  if (-not (Read-Consent 'Docker Desktop is not installed. Install it with winget (Windows asks for administrator rights)?')) {
     Fail "tiko runs in Docker; install Docker Desktop and run the installer again: $DockerDocs"
   }
   $ErrorActionPreference = 'Continue'
