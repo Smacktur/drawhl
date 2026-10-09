@@ -17,7 +17,7 @@ export default defineConfig({
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/tiko-run/tiko' }],
       editLink: { baseUrl: 'https://github.com/tiko-run/tiko/edit/main/docs/guide/' },
       sidebar: [
-        { label: 'Getting started', items: ['index', 'quick-start'] },
+        { label: 'Getting started', items: ['index', 'install', 'quick-start'] },
         {
           label: 'Using tiko',
           items: ['adding-tasks', 'search', 'gantt', 'focus-and-timers', 'keyboard-shortcuts'],

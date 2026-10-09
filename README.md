@@ -33,13 +33,13 @@ The [user guide](https://tiko-run.github.io/tiko/) covers every feature and how 
 
 ## 🚀 Quick start
 
-You need Docker with Compose, or a Railway or Render account for the cloud options below. From released images, no checkout needed:
+On Linux or macOS, one command installs Docker if needed, starts the latest release and prints the address and the password:
 
 ```bash
-mkdir tiko && cd tiko
-curl -fsSLO https://raw.githubusercontent.com/tiko-run/tiko/main/compose.release.yml
-docker compose -f compose.release.yml up -d
+curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh
 ```
+
+Never used Docker, or on Windows? The [install guide](https://tiko-run.github.io/tiko/install/) walks through every step.
 
 Or from source:
 
@@ -55,7 +55,7 @@ Or in the cloud, on Railway or Render:
 
 Both run the released images with your boards on a disk and generate the encryption key and the password. The app opens on the URL the platform gives you; sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables on Railway, or the `tiko-api` service's Environment on Render. Render needs paid instances for the disk, about $15 a month for both. A tracker inside a corporate network is out of reach from there.
 
-On your machine, open http://localhost:3000 and sign in as `admin` with the password from the log: `docker compose logs api | grep 'tiko password'`, or `cat data/password` from a source checkout. To pick your own, set `TIKO_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://tiko-run.github.io/tiko/quick-start/).
+On your machine, open http://localhost:3000 and sign in as `admin` with the password the installer printed, or the one from the log: `docker compose logs api | grep 'tiko password'`, or `cat data/password` from a source checkout. To pick your own, set `TIKO_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://tiko-run.github.io/tiko/quick-start/).
 
 ## 🌟 Features
 

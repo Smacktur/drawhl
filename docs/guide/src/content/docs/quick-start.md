@@ -2,17 +2,15 @@
 title: Quick start
 ---
 
-You need Docker with Compose.
+## One command
 
-## From released images
-
-No checkout needed:
+On Linux or macOS:
 
 ```bash
-mkdir tiko && cd tiko
-curl -fsSLO https://raw.githubusercontent.com/tiko-run/tiko/main/compose.release.yml
-docker compose -f compose.release.yml up -d
+curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh
 ```
+
+It installs Docker if needed, starts tiko and prints the address and the password. Never used Docker, or on Windows? See [Install](../install/) for every step.
 
 ## From source
 

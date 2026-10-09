@@ -42,11 +42,30 @@ jobs:
         working-directory: frontend
       - run: make licenses
 
+  # The released images through install.sh, twice: a fresh install, then an upgrade.
+  installer:
+    runs-on: ubuntu-latest
+    env:
+      TIKO_DIR: /tmp/tiko-install
+      TIKO_COMPOSE_URL: file://${{ github.workspace }}/compose.release.yml
+    steps:
+      - uses: actions/checkout@v7
+      - run: shellcheck -s sh install/install.sh
+      - run: sh install/install.sh --yes --port 3100
+      - name: Sign in with the generated password
+        run: |
+          password=$(sed -n 's/^TIKO_PASSWORD=//p' "$TIKO_DIR/.env")
+          curl -fsS -o /dev/null -H 'content-type: application/json' \
+            -d "{\"username\":\"admin\",\"password\":\"$password\"}" http://127.0.0.1:3100/api/auth/login
+      - run: cp "$TIKO_DIR/.env" env.before && sh install/install.sh --yes && cmp env.before "$TIKO_DIR/.env"
+      - if: failure()
+        run: docker compose -f "$TIKO_DIR/compose.yaml" logs --tail=100
+
   # The one required status check for main; add new jobs to `needs`.
   gate:
     name: CI Gate
     if: always()
-    needs: [check, smoke, licenses]
+    needs: [check, smoke, licenses, installer]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = false
