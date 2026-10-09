@@ -3,8 +3,7 @@ import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 
 export default defineConfig({
-  site: 'https://tiko-run.github.io',
-  base: '/tiko',
+  site: 'https://docs.tiko.run',
   integrations: [
     starlight({
       title: 'tiko',

@@ -10,7 +10,7 @@ tiko runs in Docker on your own machine or server. The installer does everything
 On Linux or macOS, open a terminal and run:
 
 ```bash
-curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh
+curl -fsSL https://tiko.run/install.sh | sh
 ```
 
 The installer:
@@ -20,7 +20,7 @@ The installer:
 3. Creates the folder `~/tiko` (`/opt/tiko` when run as root on Linux) with a generated password and secret key in `.env`.
 4. Starts the latest release and prints the address, the username `admin` and the password.
 
-Options go after `sh -s --`, for example `curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh -s -- --yes --port 8080`:
+Options go after `sh -s --`, for example `curl -fsSL https://tiko.run/install.sh | sh -s -- --yes --port 8080`:
 
 | Option | Environment variable | What it does |
 |---|---|---|

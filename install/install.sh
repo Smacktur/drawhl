@@ -2,8 +2,8 @@
 # tiko installer for Linux and macOS: checks the machine, installs Docker when it is missing,
 # writes .env with generated secrets and starts the released images. Run it again to upgrade.
 #
-#   curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh
-#   curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh -s -- --yes --port 8080
+#   curl -fsSL https://tiko.run/install.sh | sh
+#   curl -fsSL https://tiko.run/install.sh | sh -s -- --yes --port 8080
 #
 # Env: TIKO_DIR, TIKO_PORT (3000), TIKO_VERSION (latest release), TIKO_YES=1,
 #      TIKO_COMPOSE_URL (another compose file, for testing a branch).
@@ -282,7 +282,7 @@ finish() {
   say "Folder:    $DIR (boards in data/, settings in .env)"
   say "Logs:      cd $DIR && $HINT compose logs -f"
   say "Upgrade:   run this installer again"
-  say "Guide:     https://tiko-run.github.io/tiko/"
+  say "Guide:     https://docs.tiko.run/"
 }
 
 main() {

@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="#-quick-start"><b>Quick start</b></a> •
-  <a href="https://tiko-run.github.io/tiko/"><b>Docs</b></a> •
+  <a href="https://docs.tiko.run/"><b>Docs</b></a> •
   <a href="#-features"><b>Features</b></a> •
   <a href="#-task-trackers"><b>Trackers</b></a> •
   <a href="#%EF%B8%8F-roadmap"><b>Roadmap</b></a> •
@@ -18,7 +18,7 @@
   <a href="https://github.com/tiko-run/tiko/actions/workflows/ci.yml"><img src="https://github.com/tiko-run/tiko/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License: AGPL-3.0"></a>
   <a href="https://github.com/tiko-run/tiko/releases"><img src="https://img.shields.io/github/v/release/tiko-run/tiko" alt="Release"></a>
-  <a href="https://tiko-run.github.io/tiko/"><img src="https://img.shields.io/badge/docs-user%20guide-8A2BE2" alt="Docs"></a>
+  <a href="https://docs.tiko.run/"><img src="https://img.shields.io/badge/docs-user%20guide-8A2BE2" alt="Docs"></a>
 </p>
 
 ![A tiko board: frames of live task cards with timers, sticky notes, arrows, a Gantt release plan and the focus timer](docs/assets/board.png)
@@ -27,7 +27,7 @@ tiko is an open-source, self-hosted whiteboard where the tasks from your tracker
 
 It is for people who keep a lot of work in their head and think spatially: leads, managers, anyone juggling tasks across projects. Lists and kanban boards show a long column; tiko lets you lay the same tasks out the way you think about them.
 
-The [user guide](https://tiko-run.github.io/tiko/) covers every feature and how to self-host tiko.
+The [user guide](https://docs.tiko.run/) covers every feature and how to self-host tiko.
 
 > tiko is young. Jira Data Center is the first tracker; Linear, Plane, Todoist and others are next. Ideas and bug reports are welcome in [issues](https://github.com/tiko-run/tiko/issues).
 
@@ -36,10 +36,10 @@ The [user guide](https://tiko-run.github.io/tiko/) covers every feature and how 
 On Linux or macOS, one command installs Docker if needed, starts the latest release and prints the address and the password:
 
 ```bash
-curl -fsSL https://tiko-run.github.io/tiko/install.sh | sh
+curl -fsSL https://tiko.run/install.sh | sh
 ```
 
-Never used Docker, or on Windows? The [install guide](https://tiko-run.github.io/tiko/install/) walks through every step.
+Never used Docker, or on Windows? The [install guide](https://docs.tiko.run/install/) walks through every step.
 
 Or from source:
 
@@ -55,7 +55,7 @@ Or in the cloud, on Railway or Render:
 
 Both run the released images with your boards on a disk and generate the encryption key and the password. The app opens on the URL the platform gives you; sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables on Railway, or the `tiko-api` service's Environment on Render. Render needs paid instances for the disk, about $15 a month for both. A tracker inside a corporate network is out of reach from there.
 
-On your machine, open http://localhost:3000 and sign in as `admin` with the password the installer printed, or the one from the log: `docker compose logs api | grep 'tiko password'`, or `cat data/password` from a source checkout. To pick your own, set `TIKO_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://tiko-run.github.io/tiko/quick-start/).
+On your machine, open http://localhost:3000 and sign in as `admin` with the password the installer printed, or the one from the log: `docker compose logs api | grep 'tiko password'`, or `cat data/password` from a source checkout. To pick your own, set `TIKO_PASSWORD` in `.env`. A fresh install opens on a sample board built from demo tasks: move things around, then add more with the card tool at the bottom (`DEMO-5`, or `project = DEMO` for all twelve). Delete the board when you are done with it. Next steps are in the [quick start guide](https://docs.tiko.run/quick-start/).
 
 ## 🌟 Features
 
@@ -100,7 +100,7 @@ tiko uses your own personal access token, so a Jira admin doesn't need to set an
 3. In Jira, open your profile → Personal Access Tokens → Create token.
 4. In tiko, an admin opens Settings → Task source (main menu or `⌘,`), chooses the Jira provider and enters the base URL (`https://jira.example.com`). Each person then pastes their own token in Settings → My tracker and presses "Test connection". It shows their Jira name, and cards show each person only what their own Jira access allows.
 
-Keep `TIKO_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://tiko-run.github.io/tiko/jira-data-center/).
+Keep `TIKO_SECRET_KEY` safe. If you change or lose it, enter the token again. Corporate certificates and other details: [Jira Data Center guide](https://docs.tiko.run/jira-data-center/).
 
 ## 🗺️ Roadmap
 
@@ -166,7 +166,7 @@ All data is one SQLite file in `./data`, which survives rebuilds and upgrades.
 - **Upgrade from images:** `docker compose -f compose.release.yml pull && docker compose -f compose.release.yml up -d`. Pin a version with `TAG=2026.10.6`.
 - **Upgrade from source:** `git pull && docker compose up --build -d`.
 
-More in the [data and upgrades guide](https://tiko-run.github.io/tiko/data-and-upgrades/).
+More in the [data and upgrades guide](https://docs.tiko.run/data-and-upgrades/).
 
 ## 🛡️ Security and privacy
 
