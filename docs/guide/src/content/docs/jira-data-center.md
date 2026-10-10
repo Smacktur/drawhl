@@ -22,4 +22,4 @@ Jira Data Center is usually reachable only from the corporate network, so the ho
 
 ## Other trackers
 
-Jira Cloud, Linear, Plane, Todoist, TickTick and Windshift are planned. tiko talks to trackers through one provider interface, so a new provider is a good first contribution: see [CONTRIBUTING.md](https://github.com/tiko-run/tiko/blob/main/CONTRIBUTING.md).
+The full list, with what is planned, is in [Task trackers](../trackers/).

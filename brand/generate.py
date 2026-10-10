@@ -267,4 +267,37 @@ for dark in (False, True):
     banner += f'<path d="{SANS4.path(tl, 22, (W - tw) / 2, H / 2 + 54)}" fill="{t["muted"]}"/>'
     write(f"social/readme-banner{sfx}.svg", svg(W, H, banner, "tiko"), [(f"readme-banner{sfx}.png", 2560)])
 
+
+# Button -------------------------------------------------------------------
+
+def cloud_button():
+    """README button for tiko Cloud; the card shrinks to a dot and grows back every 6 s."""
+    h, pad, em, gap = 40, 12, 22, 9
+    label, ls = "Start on tiko Cloud", 15
+    tag, ts = "FREE", 11
+    lw = SANS6.width(label, ls)
+    gw = SANS6.width(tag, ts, 0.04) + 14
+    gh = 20
+    w = round(pad + em + gap + lw + 10 + gw + pad)
+    frames = dict(x="10.6;10.6;13.6;10.6;10.6", y="10.8;10.8;13.6;10.8;10.8",
+                  width="18.8;18.8;4.8;18.8;18.8", height="10.4;10.4;4.8;10.4;10.4",
+                  rx="2.6;2.6;2.4;2.6;2.6")
+    anim = "".join(
+        f'<animate attributeName="{a}" values="{v}" keyTimes="0;0.72;0.8;0.9;1" dur="6s" '
+        f'calcMode="spline" keySplines="0 0 1 1;0.4 0 0.2 1;0.2 0.8 0.2 1;0 0 1 1" repeatCount="indefinite"/>'
+        for a, v in frames.items())
+    dots = "".join(f'<circle cx="{x}" cy="{y}" r="2.4" fill="#FFFFFF" fill-opacity="0.5"/>' for x, y in DOTS)
+    emblem = f'{dots}<rect x="10.6" y="10.8" width="18.8" height="10.4" rx="2.6" fill="#FFFFFF">{anim}</rect>'
+    body = f'<rect width="{w}" height="{h}" rx="8" fill="{C["brand"]}"/>'
+    body += placed(emblem, pad, (h - em) / 2, em)
+    tx = pad + em + gap
+    body += f'<path d="{SANS6.path(label, ls, tx, h / 2 + ls * 0.35)}" fill="#FFFFFF"/>'
+    gx = tx + lw + 10
+    body += f'<rect x="{gx:.1f}" y="{(h - gh) / 2}" width="{gw:.1f}" height="{gh}" rx="4" fill="#FFFFFF"/>'
+    body += f'<path d="{SANS6.path(tag, ts, gx + 7, h / 2 + ts * 0.36, 0.04)}" fill="{C["brand"]}"/>'
+    return svg(w, h, body, "Start on tiko Cloud, free")
+
+
+write("button/tiko-cloud-button.svg", cloud_button(), [("tiko-cloud-button.png", 640)])
+
 print("done")
