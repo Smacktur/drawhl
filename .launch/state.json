@@ -45,7 +45,8 @@
     "sharing",
     "my-tracker",
     "tracker-env",
-    "rename-tiko"
+    "rename-tiko",
+    "install-ps1"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -133,6 +134,7 @@
     "2026-10-09 v2026.10.10 released with team mode (spec 008). Spec 009 real-time drafted as a skeleton with the decisions and constraints from the spec 008 session; next session fills requirements and tasks, then G2.",
     "2026-10-09 rename: the product is tiko (tiko.run), repo tiko-run/tiko; no fallback for old names by the owner's choice, data/app.db untouched. Next: one-command installer (tiko.run/install).",
     "2026-10-09 rename done: v2026.10.11 released from tiko-run/tiko, GHCR images public, docs on tiko-run.github.io/tiko, CLA Assistant relinked. Left: Railway template slug and images; Render stage was already down.",
-    "2026-10-09 G1 and G2 installer: owner approved spec 010 (install.sh, install.ps1, Install guide page, docs.tiko.run through Cloudflare, Colima on macOS). Railway template republished as railway.com/deploy/tiko; Deploy to Render button shipped in v2026.10.12. Spec 009 real-time waits."
+    "2026-10-09 G1 and G2 installer: owner approved spec 010 (install.sh, install.ps1, Install guide page, docs.tiko.run through Cloudflare, Colima on macOS). Railway template republished as railway.com/deploy/tiko; Deploy to Render button shipped in v2026.10.12. Spec 009 real-time waits.",
+    "2026-10-10 installer: install.ps1 passed on a clean Windows 11 VM (two runs, one restart), PR 60. Left: T013 check of tiko.run/install.ps1 after the merge."
   ]
 }
