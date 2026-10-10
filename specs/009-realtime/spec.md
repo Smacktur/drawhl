@@ -77,7 +77,8 @@ The top bar shows the initials of the people on the board. Each person has a cur
 5. **Given** a person drags elements, **Then** others see them move during the drag; the document changes once, on the drop.
 6. **Given** a viewer, **Then** they are shown in the faces and have a cursor; they cannot select for editing, as today.
 7. **Given** a tab closes or loses its connection, **Then** its cursor, selection and face are gone for others within 3 s of a clean close and 30 s of a lost connection.
-8. **Given** `prefers-reduced-motion`, **Then** remote cursors and drags jump instead of gliding.
+8. **Given** someone else moves or resizes an element, **Then** it glides to its new place in about 150 ms instead of jumping; the person's own changes stay instant.
+9. **Given** `prefers-reduced-motion`, **Then** remote cursors, drags and changes jump instead of gliding.
 
 ---
 

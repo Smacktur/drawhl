@@ -16,20 +16,20 @@ description: "Task list for Real-time boards"
 
 **Goal**: two people edit one board and converge; roles hold on the socket; undo is personal.
 
-- [ ] T001 [P] [US1] Add `pycrdt`, `yjs`, `y-websocket`, `y-protocols`; `make licenses`, `THIRD_PARTY.md`. Migration `008_live.sql` (`boards.ydoc`); repo reads and writes `doc`, `ydoc` and `version` in one statement. Tests
-- [ ] T002 [P] [US1] `domain/live.py`: document schema, projection to `BoardDoc`, `apply_json`. Shared JSON fixtures in `frontend/src/live/projection.fixtures.json`; tests: round trip of every node type, the welcome board, parent order, stacking order
-- [ ] T003 [US1] `domain/live.py` repair: every row of the table in data-model.md, with the server's origin; the result passes `BoardDoc` and `check_doc`. Tests per rule and a property test over random concurrent edits
-- [ ] T004 [US1] `adapters/live/rooms.py`: room per board on first join (from `ydoc`, else `apply_json`), save after 2 s idle and every 10 s, on last leave and at shutdown, drop after 30 s; storage in a worker thread. Tests: restart keeps item identity, a v2026.10.13 database fixture opens with identical content
-- [ ] T005 [US1] `adapters/live/rooms.py` connections and `api/live.py`: origin check, `Members.require`, per-connection role filter by message type, 1 MiB limit, 30 connections, close codes. Socket access matrix test (role × action), forged viewer update, foreign origin
-- [ ] T006 [US1] `LiveRooms` port wired into `Sessions.end` and `end_all`, people disable and role change, member, everyone, transfer and delete routes: sockets close or re-check within 1 s; session re-check every 60 s. Tests
-- [ ] T007 [US1] `PUT /boards/{id}` through `apply_json` on the open room or the stored doc; stale version answers `version_conflict`. Tests; `scripts/smoke.py` still green
-- [ ] T008 [P] [US1] `frontend/nginx.conf.template` upgrade headers and read timeout, `vite.config.ts` `ws: true`; a compose check that a socket through the web container stays open for 2 minutes idle
-- [ ] T009 [US1] `live/doc.ts` schema and projection against the shared fixtures; `live/binding.ts` and `live/useLiveBoard.ts`: provider, xyflow binding in both directions (per-frame batching, only changed nodes, hidden orphans), first paint from REST then editable on sync, view-only with the notice after 5 s without a socket. Replaces `useBoardDoc.ts`; the conflict banner goes. Tests
-- [ ] T010 [US1] `live/viewport.ts`: viewport per board in `localStorage`, fit when there is none; the web app stops writing `doc.viewport`. Tests
-- [ ] T011 [US3] `Y.UndoManager` over nodes and edges with the tab's origin replaces `useHistory.ts`; a drag, a resize and a typing burst are one step each. Tests: two docs in one test, undo touches only its own changes, undo of an overwritten change is a no-op
-- [ ] T012 [US1] Leak test: record every byte on two people's sockets with a fake Jira that answers per token; no summary appears (SC-004). SC-001 convergence test with two headless clients
-- [ ] T013 [US1] Timers (done, snooze), modules, paste, clipboard, search jump, welcome board and the read-only canvas checked on the live doc; fixes. Playwright: two browser contexts on one board, each sees the other's edit
-- [ ] T014 [US1] Guide: a "Working together" page, reverse proxy snippets (nginx, Caddy, Traefik) in configuration, security page (socket auth, roles); README; `CHANGELOG.md` with the "Breaking" note on WebSockets; screenshot
+- [x] T001 [P] [US1] Add `pycrdt`, `yjs`, `y-websocket`, `y-protocols`; `make licenses`, `THIRD_PARTY.md`. Migration `008_live.sql` (`boards.ydoc`); repo reads and writes `doc`, `ydoc` and `version` in one statement. Tests
+- [x] T002 [P] [US1] `domain/live.py`: document schema, projection to `BoardDoc`, `apply_json`. Shared JSON fixtures in `frontend/src/live/projection.fixtures.json`; tests: round trip of every node type, the welcome board, parent order, stacking order
+- [x] T003 [US1] `domain/live.py` repair: every row of the table in data-model.md, with the server's origin; the result passes `BoardDoc` and `check_doc`. Tests per rule and a property test over random concurrent edits
+- [x] T004 [US1] `adapters/live/rooms.py`: room per board on first join (from `ydoc`, else `apply_json`), save after 2 s idle and every 10 s, on last leave and at shutdown, drop after 30 s; storage in a worker thread. Tests: restart keeps item identity, a v2026.10.13 database fixture opens with identical content
+- [x] T005 [US1] `adapters/live/rooms.py` connections and `api/live.py`: origin check, `Members.require`, per-connection role filter by message type, 1 MiB limit, 30 connections, close codes. Socket access matrix test (role × action), forged viewer update, foreign origin
+- [x] T006 [US1] `LiveRooms` port wired into `Sessions.end` and `end_all`, people disable and role change, member, everyone, transfer and delete routes: sockets close or re-check within 1 s; session re-check every 60 s. Tests
+- [x] T007 [US1] `PUT /boards/{id}` through `apply_json` on the open room or the stored doc; stale version answers `version_conflict`. Tests; `scripts/smoke.py` still green
+- [x] T008 [P] [US1] `frontend/nginx.conf.template` upgrade headers and read timeout, `vite.config.ts` `ws: true`; a compose check that a socket through the web container stays open for 2 minutes idle
+- [x] T009 [US1] `live/doc.ts` schema and projection against the shared fixtures; `live/binding.ts` and `live/useLiveBoard.ts`: provider, xyflow binding in both directions (per-frame batching, only changed nodes, hidden orphans), first paint from REST then editable on sync, view-only with the notice after 5 s without a socket. Replaces `useBoardDoc.ts`; the conflict banner goes. Tests
+- [x] T010 [US1] `live/viewport.ts`: viewport per board in `localStorage`, fit when there is none; the web app stops writing `doc.viewport`. Tests
+- [x] T011 [US3] `Y.UndoManager` over nodes and edges with the tab's origin replaces `useHistory.ts`; a drag, a resize and a typing burst are one step each. Tests: two docs in one test, undo touches only its own changes, undo of an overwritten change is a no-op
+- [x] T012 [US1] Leak test: record every byte on two people's sockets with a fake Jira that answers per token; no summary appears (SC-004). SC-001 convergence test with two headless clients
+- [x] T013 [US1] Timers (done, snooze), modules, paste, clipboard, search jump, welcome board and the read-only canvas checked on the live doc; fixes. Two tabs on one board through nginx, checked by hand with a browser script: each sees the other's drag, text edit, duplicate, delete and undo (no browser test in the repository yet)
+- [x] T014 [US1] Guide: a "Working together" page, reverse proxy snippets (nginx, Caddy, Traefik) in configuration, security page (socket auth, roles); README; `CHANGELOG.md` with the "Breaking" note on WebSockets; screenshot
 
 **Checkpoint**: `make check`, `make smoke`, socket access matrix, leak test, upgrade fixture, SC-002 measured → G3.
 
@@ -41,6 +41,7 @@ description: "Task list for Real-time boards"
 - [ ] T016 [P] [US2] `live/presence.ts`: awareness state per contracts/live.md, color from the person's id, cursor throttled to 50 ms and cleared off-canvas, selection capped at 200 ids. Tests
 - [ ] T017 [US2] Faces in the top bar: up to 5 and "+N", names on hover, one face per person across tabs, the person themselves left out. Tests
 - [ ] T018 [US2] Remote cursors layer in flow coordinates, outside xyflow's node tree; remote selection outline with the name. Tests at several zoom levels
+- [ ] T026 [US2] Changes made by others glide into place instead of jumping: a short transition on position and size for remote updates only, off under `prefers-reduced-motion`; a person's own changes stay instant. Tests
 - [ ] T019 [US2] Live drags: positions in presence during a drag, the document written once on drop; a remote drag moves the node without entering undo. Tests
 - [ ] T020 [US2] SC-005 measured (2000 nodes, 10 clients, 20 dragged elements); `/ui-review`; guide; `CHANGELOG.md`; screenshot in both themes
 
