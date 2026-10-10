@@ -42,6 +42,7 @@ frontend/src/live/                 doc.ts (schema, projection), binding.ts (canv
 - **`PUT /boards/{id}` calls the room** when one is open and the same `apply_json` on a stored doc when none is, so there is one write path.
 - **The first paint comes from `GET /boards/{id}`**, as today, view-only; the canvas turns editable on the first sync. Edits are never accepted into a doc that has not synced once, so nothing can be stranded in a tab.
 - **A drag writes the document once, on drop**; positions during the drag travel as presence. This keeps a drag one undo step and keeps update traffic low.
+- **Other people's moves are animated in the positions given to xyflow, not with CSS on the node** (`frontend/src/live/motion.ts`). A transition on the element left behind everything xyflow places from the node's position: arrows, frame contents, attached timers. With the position itself animated they follow by construction, and a new element or module needs no code for it.
 - **Remote changes are applied per animation frame**, and the binding touches only the nodes that changed, so xyflow does not re-render the board on every update.
 - **nginx**: `proxy_http_version 1.1`, `Upgrade` and `Connection` headers through a `map`, `proxy_read_timeout 1h`; the provider's awareness heartbeat (every 15 s) keeps the socket busy anyway.
 

@@ -49,7 +49,7 @@ import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
-import { withRemoteMotion } from '@/live/drags'
+import { useRemoteMotion } from '@/live/motion'
 import { MAX_LIVE_DRAG } from '@/live/presence'
 import { SelectedByContext, withPresence } from '@/live/PresenceRing'
 import { PresenceLayer } from '@/live/PresenceLayer'
@@ -157,13 +157,13 @@ function BoardCanvas({
   const flashId = useFlashingId()
   const hits = useSearchHits()
   const { drags } = live
+  const originOf = useCallback(
+    (id: string) => flow.getInternalNode(id)?.internals.positionAbsolute,
+    [flow],
+  )
+  // Other people's moves in progress; arrows and everything else placed from a node follow.
+  const moving = useRemoteMotion(nodes, drags, live.glide, originOf)
   const shown = useMemo(() => {
-    const moving = withRemoteMotion(
-      nodes,
-      drags,
-      live.glide,
-      (id) => flow.getInternalNode(id)?.internals.positionAbsolute,
-    )
     const raised = raiseAnchors(moving, edges)
     if (!flashId && !hits) return raised
     return {
@@ -181,7 +181,7 @@ function BoardCanvas({
         }
       }),
     }
-  }, [nodes, edges, flashId, hits, drags, live.glide, flow])
+  }, [moving, edges, flashId, hits])
 
   // What the others see of this person: what is selected, and nodes on their way while dragged.
   const { presence } = live
