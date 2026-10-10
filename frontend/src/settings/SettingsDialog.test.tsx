@@ -9,6 +9,7 @@ const settings = {
   refresh_interval_s: 30,
   secret_key_configured: true,
   jira: { base_url: null, token_state: 'none' },
+  public_links: true,
 }
 const admin = { id: 'u1', username: 'admin', name: 'Admin', role: 'admin' }
 
@@ -138,4 +139,19 @@ test('shows the tracker set by the server as read-only', async () => {
   expect(screen.getByText('JIRA_BASE_URL')).toBeInTheDocument()
   expect(screen.getByText('TIKO_TRACKER')).toBeInTheDocument()
   expect(screen.getByLabelText('Demo tasks (DEMO-1 to DEMO-12)')).toBeDisabled()
+})
+
+test('an admin switches public links off for the instance', async () => {
+  const fetchMock = mockApi()
+  show('sharing')
+  const toggle = await screen.findByRole('switch', { name: 'Board owners can make a public link' })
+  await waitFor(() => expect(toggle).toBeChecked())
+  fireEvent.click(toggle)
+  await waitFor(() =>
+    expect(callTo(fetchMock, '/api/settings')).toEqual({
+      method: 'PUT',
+      body: { public_links: false },
+    }),
+  )
+  await waitFor(() => expect(toggle).not.toBeChecked())
 })

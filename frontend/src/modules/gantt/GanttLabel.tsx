@@ -145,7 +145,7 @@ export function GanttLabel({
             hasChildren && 'font-semibold',
           )}
         >
-          {task && <TypeIcon typeName={task.type_name} />}
+          {task && task.state !== 'private' && <TypeIcon typeName={task.type_name} />}
           <span className={cn('shrink-0 font-medium', done && 'line-through')}>{row.key}</span>
           <span className="truncate" title={task?.summary}>
             {task?.state === 'not_found'

@@ -1,5 +1,6 @@
 import {
   ChevronDown,
+  Globe,
   Keyboard,
   KeyRound,
   LayoutDashboard,
@@ -61,6 +62,7 @@ function BoardItem({ board }: { board: BoardSummary }) {
   return (
     <DropdownMenuRadioItem value={board.id}>
       <span className="truncate">{board.name}</span>
+      {board.public && <Globe className="text-muted-foreground size-3.5" strokeWidth={1.75} />}
       {foreign && (
         <span className="text-muted-foreground ml-auto truncate pl-3 text-[12px]">
           {board.owner?.name}
@@ -344,6 +346,11 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
       {current && current.my_role === 'viewer' && (
         <Badge variant="outline" className="text-muted-foreground mx-1">
           View only
+        </Badge>
+      )}
+      {current?.public && (
+        <Badge variant="outline" className="text-muted-foreground mx-1">
+          Public
         </Badge>
       )}
       {current && (

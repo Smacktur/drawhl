@@ -180,6 +180,8 @@ class BoardSummary(BaseModel):
     updated_at: str
     my_role: BoardRole
     owner: BoardOwner | None
+    # Anyone with the board's public link can view it.
+    public: bool = False
 
 
 class BoardRow(BaseModel):
@@ -192,6 +194,7 @@ class BoardRow(BaseModel):
     everyone_role: ShareRole | None
     owner_id: str | None
     owner_name: str | None
+    public: bool = False
 
 
 class BoardRecord(BaseModel):
@@ -247,7 +250,12 @@ def task_keys(doc: BoardDoc) -> list[str]:
 def _summary(row: BoardRow, role: BoardRole) -> BoardSummary:
     owner = BoardOwner(id=row.owner_id, name=row.owner_name or "") if row.owner_id else None
     return BoardSummary(
-        id=row.id, name=row.name, updated_at=row.updated_at, my_role=role, owner=owner
+        id=row.id,
+        name=row.name,
+        updated_at=row.updated_at,
+        my_role=role,
+        owner=owner,
+        public=row.public,
     )
 
 

@@ -31,6 +31,7 @@ from app.domain.accounts import Accounts
 from app.domain.invites import Invites
 from app.domain.members import Members
 from app.domain.ports import ReleaseFeed
+from app.domain.public import PublicLinks
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
 from app.domain.settings import LockedField, SettingsService, normalize_base_url
@@ -136,6 +137,7 @@ def create_app(
         env=_tracker_env(settings),
     )
     app.state.settings = service
+    app.state.public_links = PublicLinks(app.state.boards, service.public_links)
     app.state.demo = DemoTaskProvider()
     client = _jira_client(settings, jira_transport)
     # Built per request from the signed-in person's own token.

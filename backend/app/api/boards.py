@@ -10,6 +10,7 @@ from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
 from app.domain.members import Member, ShareRole
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo, TaskProvider
+from app.domain.public import PublicLinks
 from app.domain.refresh import RefreshService, SourceStatus
 from app.domain.settings import SettingsService
 from app.domain.tasks import Task, now_iso
@@ -49,6 +50,9 @@ class RefreshOut(BaseModel):
 class MemberList(BaseModel):
     members: list[Member]
     everyone_role: ShareRole | None
+    public: bool
+    # The link itself is the owner's to hand out.
+    public_token: str | None
 
 
 class MemberIn(BaseModel):
@@ -61,6 +65,15 @@ class EveryoneIn(BaseModel):
 
 class TransferIn(BaseModel):
     user_id: str
+
+
+class PublicIn(BaseModel):
+    public: bool
+
+
+class PublicOut(BaseModel):
+    public: bool
+    public_token: str | None
 
 
 @router.get("")
@@ -117,9 +130,20 @@ def refresh_board(
 
 
 @router.get("/{board_id}/members")
-def list_members(board_id: str, _: CanView, members: MembersDep) -> MemberList:
+def list_members(
+    board_id: str,
+    role: CanView,
+    members: MembersDep,
+    links: Annotated[PublicLinks, Depends(deps.public_links)],
+) -> MemberList:
     listed, everyone = members.list(board_id)
-    return MemberList(members=listed, everyone_role=everyone)
+    token = links.token(board_id)
+    return MemberList(
+        members=listed,
+        everyone_role=everyone,
+        public=token is not None,
+        public_token=token if role == "owner" else None,
+    )
 
 
 @router.put("/{board_id}/members/{user_id}")
@@ -141,6 +165,17 @@ def share_with_everyone(
 ) -> Response:
     members.set_everyone(board_id, body.role)
     return Response(status_code=204)
+
+
+@router.put("/{board_id}/public")
+def set_public_link(
+    board_id: str,
+    body: PublicIn,
+    _: IsOwner,
+    links: Annotated[PublicLinks, Depends(deps.public_links)],
+) -> PublicOut:
+    token = links.set(board_id, body.public)
+    return PublicOut(public=token is not None, public_token=token)
 
 
 @router.post("/{board_id}/transfer", status_code=204)

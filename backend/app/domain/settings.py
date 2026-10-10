@@ -47,6 +47,7 @@ class SettingsIn(BaseModel):
     provider: Provider | None = None
     refresh_interval_s: int | None = Field(default=None, ge=30, le=300)
     jira: JiraIn | None = None
+    public_links: bool | None = None
 
 
 class JiraView(BaseModel):
@@ -62,6 +63,8 @@ class SettingsView(BaseModel):
     refresh_interval_s: int
     secret_key_configured: bool
     jira: JiraView
+    # Whether board owners may make a public link.
+    public_links: bool
     # Fields set in the environment, which the API does not change.
     locked: list[LockedField] = Field(default_factory=list)
 
@@ -124,6 +127,9 @@ class SettingsService:
     def base_url(self) -> str | None:
         return self._values().get("jira_base_url")
 
+    def public_links(self) -> bool:
+        return self._values().get("public_links") != "0"
+
     def token_state(self, user_id: str) -> TokenState:
         return self._token(user_id, self.base_url())[0]
 
@@ -136,6 +142,7 @@ class SettingsService:
             jira=JiraView(
                 base_url=values.get("jira_base_url"), token_state=self.token_state(user_id)
             ),
+            public_links=values.get("public_links") != "0",
             locked=sorted(self._env),
         )
 
@@ -160,6 +167,8 @@ class SettingsService:
             values["refresh_interval_s"] = str(change.refresh_interval_s)
         if change.jira is not None:
             values["jira_base_url"] = change.jira.base_url
+        if change.public_links is not None:
+            values["public_links"] = "1" if change.public_links else "0"
         self._repo.set_many(values)
         if change.jira is not None and (plain := _clean(change.jira.token)) is not None:
             self.set_token(user_id, SecretStr(plain))

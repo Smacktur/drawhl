@@ -70,7 +70,8 @@ class SqliteBoardRepo:
         with self._db.transaction() as conn:
             rows = conn.execute(
                 "SELECT b.id, b.name, b.updated_at, b.everyone_role, m.role AS member_role,"
-                " o.user_id AS owner_id, u.name AS owner_name FROM boards b"
+                " o.user_id AS owner_id, u.name AS owner_name,"
+                " b.public_token IS NOT NULL AS public FROM boards b"
                 " LEFT JOIN board_members m ON m.board_id = b.id AND m.user_id = ?"
                 " LEFT JOIN board_members o ON o.board_id = b.id AND o.role = 'owner'"
                 f" LEFT JOIN users u ON u.id = o.user_id {where} ORDER BY b.updated_at DESC",
@@ -178,6 +179,39 @@ class SqliteBoardRepo:
             cursor = conn.execute("DELETE FROM boards WHERE id = ?", (board_id,))
         if cursor.rowcount == 0:
             raise NotFound("board not found")
+
+    def public_token(self, board_id: str) -> str | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT public_token FROM boards WHERE id = ?", (board_id,)
+            ).fetchone()
+        return row["public_token"] if row else None
+
+    def ensure_public_token(self, board_id: str, token: str) -> str | None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "UPDATE boards SET public_token = ? WHERE id = ? AND public_token IS NULL",
+                (token, board_id),
+            )
+            row = conn.execute(
+                "SELECT public_token FROM boards WHERE id = ?", (board_id,)
+            ).fetchone()
+        return row["public_token"] if row else None
+
+    def clear_public_token(self, board_id: str) -> str | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT public_token FROM boards WHERE id = ?", (board_id,)
+            ).fetchone()
+            conn.execute("UPDATE boards SET public_token = NULL WHERE id = ?", (board_id,))
+        return row["public_token"] if row else None
+
+    def by_public_token(self, token: str) -> tuple[str, int, str] | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT id, version, updated_at FROM boards WHERE public_token = ?", (token,)
+            ).fetchone()
+        return (row["id"], row["version"], row["updated_at"]) if row else None
 
 
 class SqliteSnapshotRepo:

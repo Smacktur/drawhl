@@ -1,9 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Users } from 'lucide-react'
+import { Check, ChevronDown, Copy, Globe, Users } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import {
   findPeople,
   listMembers,
+  publicUrl,
+  setPublicLink,
   shareBoard,
   shareWithEveryone,
   transferBoard,
@@ -29,7 +31,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { getSettings } from '@/api/settings'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 
 const LABEL = { owner: 'Owner', editor: 'Can edit', viewer: 'Can view' } as const
 type EveryoneChoice = ShareRole | 'none'
@@ -204,6 +208,84 @@ function AddPeople({
   )
 }
 
+const COPIED_MS = 2000
+
+function PublicLink({
+  boardId,
+  manage,
+  isPublic,
+  token,
+  onError,
+}: {
+  boardId: string
+  manage: boolean
+  isPublic: boolean
+  token: string | null
+  onError: (error: Error) => void
+}) {
+  const queryClient = useQueryClient()
+  const allowed = useQuery({ queryKey: ['settings'], queryFn: getSettings }).data?.public_links
+  const [copied, setCopied] = useState(false)
+  const toggle = useMutation({
+    mutationFn: (next: boolean) => setPublicLink(boardId, next),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['members', boardId] })
+      void queryClient.invalidateQueries({ queryKey: ['boards'] })
+    },
+    onError,
+  })
+  const url = token ? publicUrl(token) : ''
+  const copy = () => {
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), COPIED_MS)
+    }, onError)
+  }
+  return (
+    <section className="flex flex-col gap-2 border-t pt-3" aria-label="Public link">
+      <div className="flex items-center gap-3">
+        <span className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full">
+          <Globe className="text-muted-foreground size-4" strokeWidth={1.75} />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="font-medium">Anyone with the link can view</span>
+          <span className="text-muted-foreground text-[12px]">
+            {allowed === false
+              ? 'An admin switched public links off on this tiko.'
+              : 'No sign-in. Tasks from your tracker show only their key.'}
+          </span>
+        </div>
+        {manage ? (
+          <Switch
+            aria-label="Public link"
+            checked={isPublic}
+            // Turning a link off stays possible while new ones are forbidden.
+            disabled={toggle.isPending || (allowed === false && !isPublic)}
+            onCheckedChange={(next) => toggle.mutate(next)}
+          />
+        ) : (
+          <span className="text-muted-foreground text-[13px]">{isPublic ? 'On' : 'Off'}</span>
+        )}
+      </div>
+      {manage && token && (
+        <div className="flex items-center gap-2">
+          <Input
+            readOnly
+            value={url}
+            aria-label="Public link address"
+            className="font-mono text-[12px]"
+            onFocus={(event) => event.target.select()}
+          />
+          <Button variant="outline" size="sm" onClick={copy}>
+            {copied ? <Check strokeWidth={1.75} /> : <Copy strokeWidth={1.75} />}
+            {copied ? 'Copied' : 'Copy'}
+          </Button>
+        </div>
+      )}
+    </section>
+  )
+}
+
 /** Who has access to a board; its owner (or an admin) changes it here. */
 export function ShareDialog({
   board,
@@ -291,6 +373,15 @@ export function ShareDialog({
               )}
             </li>
           </ul>
+        )}
+        {members.data && (
+          <PublicLink
+            boardId={board.id}
+            manage={manage}
+            isPublic={members.data.public}
+            token={members.data.public_token}
+            onError={onError}
+          />
         )}
         {error && <p className="text-destructive text-[13px]">{error}</p>}
       </DialogContent>

@@ -63,6 +63,7 @@ const board: Board = {
   updated_at: '2026-10-05T00:00:00+00:00',
   my_role: 'owner',
   owner: { id: 'u1', name: 'Admin' },
+  public: false,
   version: 3,
   doc: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
   tasks: {},
@@ -182,4 +183,18 @@ test('leaving the board ends its connection and its timers', () => {
   act(() => vi.advanceTimersByTime(60_000))
   expect(provider.destroy).toHaveBeenCalledOnce()
   expect(provider.connect).not.toHaveBeenCalled()
+})
+
+test('a guest of a public link gets the board as given, with no connection', () => {
+  const { result, rerender } = renderHook(
+    ({ shown }: { shown: Board }) => useLiveBoard(shown, true, vi.fn(), undefined, false),
+    { initialProps: { shown: board } },
+  )
+  expect(providers).toHaveLength(0)
+  expect(result.current.editable).toBe(false)
+  rerender({ shown: { ...board, version: 4, doc: { ...board.doc, nodes: [sticky('a')] } } })
+  expect(result.current.nodes.map((node) => node.id)).toEqual(['a'])
+  act(() => vi.advanceTimersByTime(60_000))
+  expect(result.current.status).toBe('connecting')
+  expect(providers).toHaveLength(0)
 })

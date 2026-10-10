@@ -7,6 +7,7 @@ export const SECTIONS = [
   'tracker',
   'task-source',
   'people',
+  'sharing',
 ] as const
 export type Section = (typeof SECTIONS)[number]
 

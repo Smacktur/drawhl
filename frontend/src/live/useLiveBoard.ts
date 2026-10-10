@@ -62,6 +62,8 @@ export function useLiveBoard(
   readOnly: boolean,
   onAccessChanged: () => void,
   me: { id: string; name: string } | undefined,
+  /** False for a guest of a public link: the board comes from `board` alone and is never live. */
+  socket = true,
 ) {
   const [nodes, setNodes, onNodesChange] = useNodesState(board.doc.nodes as AppNode[])
   const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
@@ -84,6 +86,13 @@ export function useLiveBoard(
   }, [onAccessChanged])
 
   useEffect(() => {
+    if (socket) return
+    setNodes(board.doc.nodes as AppNode[])
+    setEdges(board.doc.edges)
+  }, [socket, board.doc, setNodes, setEdges])
+
+  useEffect(() => {
+    if (!socket) return
     const doc = new Y.Doc()
     let frame = 0
     let gliding: ReturnType<typeof setTimeout> | undefined
@@ -234,7 +243,7 @@ export function useLiveBoard(
       provider.destroy()
       doc.destroy()
     }
-  }, [board.id, readOnly, setNodes, setEdges, meId, meName])
+  }, [board.id, readOnly, setNodes, setEdges, meId, meName, socket])
 
   // A layout effect: nothing can arrive between a change on the canvas and its write.
   useLayoutEffect(() => {

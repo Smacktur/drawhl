@@ -11,11 +11,13 @@ COOKIE = "tiko_session"
 # Platform health checks must pass before anyone signs in.
 OPEN_PATHS = {"/health", "/ready", "/api/auth/status", "/api/auth/login", "/api/auth/logout"}
 INVITES = "/api/invites/"
+# Boards shown by their public link; the routes there only read.
+PUBLIC = "/api/public/"
 
 
 def is_open(scope: Scope) -> bool:
     path = scope["path"]
-    if path in OPEN_PATHS:
+    if path in OPEN_PATHS or path.startswith(PUBLIC):
         return True
     # Reading an invite link and accepting it come before the person has an account.
     token = path.removeprefix(INVITES)

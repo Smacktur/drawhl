@@ -71,7 +71,7 @@ export function GanttBar({ span, range, pxPerDay, label, task, summary, onSpan }
   // Grips capture the pointer themselves; their moves bubble up to the bar's handlers.
   const handlers = { onPointerMove: move, onPointerUp: stop, onPointerCancel: stop }
 
-  const missing = task?.state === 'not_found' || task?.state === 'no_token'
+  const missing = task !== undefined && task.state !== 'ok'
   const live = task && !missing
   const content = (
     <>

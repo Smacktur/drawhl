@@ -3,7 +3,8 @@ import { fetchJson } from '@/api/client'
 
 export const taskSchema = z.object({
   key: z.string(),
-  state: z.enum(['ok', 'not_found', 'no_token']),
+  // private: on a public board a task from a tracker shows a guest its key only.
+  state: z.enum(['ok', 'not_found', 'no_token', 'private']),
   summary: z.string(),
   status_name: z.string(),
   status_category: z.enum(['new', 'indeterminate', 'done']),

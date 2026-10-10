@@ -31,6 +31,15 @@ server {
         add_header Cache-Control "public, max-age=31536000, immutable";
     }
 
+    # A board opened by its public link: kept out of search engines, and the link, which is the
+    # access itself, out of the Referer of anything the page loads or links to.
+    location /p/ {
+        add_header Cache-Control "no-cache";
+        add_header X-Robots-Tag "noindex, nofollow";
+        add_header Referrer-Policy "no-referrer";
+        try_files /index.html =404;
+    }
+
     # Prerendered pages live in <path>/index.html; unknown paths fall back to the SPA.
     location / {
         # Pages are checked on every load, so a tab opened after an upgrade gets the new app.
