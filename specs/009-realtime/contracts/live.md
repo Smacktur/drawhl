@@ -49,8 +49,7 @@ One state per tab, set by the client, never stored.
   user: {id, name, color},       // color: index 0–7 into the presence palette, from the person's id
   cursor: {x, y} | null,         // flow coordinates; null when the pointer is off the canvas
   selected: string[],            // node and edge ids, at most 200
-  drag: {[nodeId]: {x, y}} | null, // absolute positions of nodes being dragged
-  hold: {id, x, y} | null          // the dragged node the cursor holds and where on it
+  drag: {[nodeId]: {x, y}} | null  // absolute positions of nodes being dragged
 }
 ```
 

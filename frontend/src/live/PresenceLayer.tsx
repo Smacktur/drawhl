@@ -1,6 +1,6 @@
 import { ViewportPortal, useViewport } from '@xyflow/react'
 import { Avatar } from '@/live/Avatar'
-import { cursorOf, type Peer } from '@/live/presence'
+import type { Peer } from '@/live/presence'
 
 /**
  * Other people's cursors on the canvas. What they have selected is drawn by the nodes
@@ -15,15 +15,14 @@ export function PresenceLayer({ peers }: { peers: Peer[] }) {
   const unscale = { transform: `scale(${1 / zoom})` }
   return (
     <ViewportPortal>
-      {peers.map((peer) => {
-        const cursor = cursorOf(peer)
-        return (
-          cursor && (
+      {peers.map(
+        (peer) =>
+          peer.cursor && (
             <div
               key={peer.client}
               className="presence-cursor pointer-events-none absolute top-0 left-0"
               style={{
-                transform: `translate(${cursor.x}px, ${cursor.y}px)`,
+                transform: `translate(${peer.cursor.x}px, ${peer.cursor.y}px)`,
                 zIndex: 1001,
               }}
             >
@@ -37,7 +36,7 @@ export function PresenceLayer({ peers }: { peers: Peer[] }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <div className="absolute top-2.5 left-2.5 flex items-center gap-1">
+                <div className="absolute top-3.5 left-3.5 flex items-center gap-1">
                   <Avatar user={peer.user} className="ring-card size-[18px] text-[8px] ring-1" />
                   <span
                     className="presence-name text-presence-foreground rounded-sm px-1 py-0.5 text-[11px] leading-none font-medium whitespace-nowrap"
@@ -48,9 +47,8 @@ export function PresenceLayer({ peers }: { peers: Peer[] }) {
                 </div>
               </div>
             </div>
-          )
-        )
-      })}
+          ),
+      )}
     </ViewportPortal>
   )
 }

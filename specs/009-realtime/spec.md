@@ -74,7 +74,7 @@ The top bar shows the avatars of the people on the board. Each person has a curs
 2. **Given** one person with two tabs on the board, **Then** they show as one face and two cursors.
 3. **Given** a person moves the mouse over the canvas, **Then** others see a cursor with that person's small avatar (initials on their color) at the same board position, the same size at any zoom; the full name shows next to it for 2 s after the person joins and as the tooltip of their avatar in the top bar (a cursor takes no pointer events, so it never steals a click). The cursor is updated at most every 50 ms; a cursor that leaves the canvas disappears.
 4. **Given** a person selects elements, **Then** others see an outline in that person's color with their avatar on its corner; the outline is part of the element and moves with it as one, also while it is dragged. Several people on one element: the first person's color, up to 3 avatars, then "+N"; the person's own selection looks as today.
-5. **Given** a person drags elements, **Then** others see them move during the drag, with that person's cursor fixed to the element at the point where they hold it; the document changes once, on the drop.
+5. **Given** a person drags elements, **Then** others see them move during the drag; the document changes once, on the drop.
 6. **Given** a viewer, **Then** they are shown in the faces and have a cursor; they cannot select for editing, as today.
 7. **Given** a tab closes or loses its connection, **Then** its cursor, selection and face are gone for others within 3 s of a clean close and 30 s of a lost connection.
 8. **Given** someone else moves or resizes an element, **Then** it glides to its new place in about 150 ms instead of jumping; the person's own changes stay instant.

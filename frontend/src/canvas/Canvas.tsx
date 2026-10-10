@@ -185,23 +185,21 @@ function BoardCanvas({
   useEffect(() => {
     presence.selected(selectedKey ? selectedKey.split(' ') : [])
   }, [presence, selectedKey])
-  // Where on the dragged node the pointer holds it, so others draw the cursor fixed to the node.
-  const hold = useRef<{ id: string; x: number; y: number } | null>(null)
   useEffect(() => {
     const dragged = nodes.filter((n) => n.dragging)
     if (dragged.length === 0 || dragged.length > MAX_LIVE_DRAG) {
-      hold.current = null
-      presence.drag(null, null)
+      presence.drag(null)
       return
     }
-    const at = (n: AppNode) => flow.getInternalNode(n.id)?.internals.positionAbsolute ?? n.position
-    if (!dragged.some((n) => n.id === hold.current?.id)) {
-      const origin = at(dragged[0])
-      const point = pointer.current ? screenToFlowPosition(pointer.current) : origin
-      hold.current = { id: dragged[0].id, x: point.x - origin.x, y: point.y - origin.y }
-    }
-    presence.drag(Object.fromEntries(dragged.map((n) => [n.id, at(n)])), hold.current)
-  }, [presence, nodes, flow, screenToFlowPosition])
+    presence.drag(
+      Object.fromEntries(
+        dragged.map((n) => [
+          n.id,
+          flow.getInternalNode(n.id)?.internals.positionAbsolute ?? n.position,
+        ]),
+      ),
+    )
+  }, [presence, nodes, flow])
   const guides = useGuides(onNodesChange)
   useShortcut('undo', live.undo, { enabled: !readOnly })
   useShortcut('redo', live.redo, { enabled: !readOnly })

@@ -22,8 +22,6 @@ const stateSchema = z.object({
   cursor: xy.nullable().catch(null),
   selected: z.array(z.string()).max(MAX_SELECTED).catch([]),
   drag: z.record(z.string(), xy).nullable().catch(null),
-  // The dragged node the cursor holds and where on it, so the two are drawn as one.
-  hold: z.object({ id: z.string(), x: z.number(), y: z.number() }).nullable().catch(null),
 })
 
 export type PresenceUser = z.infer<typeof stateSchema>['user']
@@ -114,9 +112,8 @@ export function presenceSender(send: (patch: Partial<PresenceState>) => void) {
       patch.cursor = cursor
       flush()
     },
-    drag: (drag: PresenceState['drag'], hold: PresenceState['hold']) => {
+    drag: (drag: PresenceState['drag']) => {
       patch.drag = drag
-      patch.hold = hold
       flush()
     },
     selected: (ids: string[]) => send({ selected: selection(ids) }),
@@ -138,15 +135,6 @@ export function selectedBy(peers: Peer[]): Map<string, PresenceUser[]> {
     }
   }
   return byNode
-}
-
-/**
- * Where a person's cursor is drawn. While they drag, it is fixed to the node they hold, so the
- * cursor and the node cannot drift apart between updates.
- */
-export function cursorOf(peer: Peer): { x: number; y: number } | null {
-  const held = peer.hold && peer.drag?.[peer.hold.id]
-  return held && peer.hold ? { x: held.x + peer.hold.x, y: held.y + peer.hold.y } : peer.cursor
 }
 
 // The canvas publishes who is on the open board; the top bar, in another tree, shows them.

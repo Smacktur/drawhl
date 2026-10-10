@@ -6,7 +6,6 @@ import { remoteDrags, withRemoteMotion } from '@/live/drags'
 import {
   PRESENCE_COLORS,
   colorOf,
-  cursorOf,
   initials,
   parsePeers,
   peopleOf,
@@ -22,7 +21,6 @@ const state = (id: string, name: string, extra: object = {}) => ({
   cursor: null,
   selected: [],
   drag: null,
-  hold: null,
   ...extra,
 })
 
@@ -153,15 +151,15 @@ test('cursor and drag leave in one message, so a dragged node stays under its cu
   const mine = presenceSender((patch) => sent.push(patch))
   mine.cursor({ x: 1, y: 1 })
   mine.cursor({ x: 2, y: 2 })
-  mine.drag({ a: { x: 5, y: 5 } }, { id: 'a', x: 3, y: 4 })
+  mine.drag({ a: { x: 5, y: 5 } })
   vi.advanceTimersByTime(50)
   expect(sent).toEqual([
     { cursor: { x: 1, y: 1 } },
-    { cursor: { x: 2, y: 2 }, drag: { a: { x: 5, y: 5 } }, hold: { id: 'a', x: 3, y: 4 } },
+    { cursor: { x: 2, y: 2 }, drag: { a: { x: 5, y: 5 } } },
   ])
-  mine.drag(null, null)
+  mine.drag(null)
   vi.advanceTimersByTime(50)
-  expect(sent[2]).toEqual({ drag: null, hold: null })
+  expect(sent[2]).toEqual({ drag: null })
 })
 
 test('who has a node selected: each person once, in the order they are known', () => {
@@ -174,20 +172,4 @@ test('who has a node selected: each person once, in the order they are known', (
   expect(by.get('a')?.map((person) => person.name)).toEqual(['Ann', 'Bob'])
   expect(by.get('b')?.map((person) => person.name)).toEqual(['Ann'])
   expect(by.get('c')).toBeUndefined()
-})
-
-test('while a person drags, their cursor is drawn fixed to the node they hold', () => {
-  const free = { ...state('u2', 'Bob', { cursor: { x: 10, y: 10 } }), client: 2 } as Peer
-  expect(cursorOf(free)).toEqual({ x: 10, y: 10 })
-  const dragging = {
-    ...state('u2', 'Bob', {
-      cursor: { x: 999, y: 999 },
-      drag: { a: { x: 100, y: 200 } },
-      hold: { id: 'a', x: 30, y: 5 },
-    }),
-    client: 2,
-  } as Peer
-  expect(cursorOf(dragging)).toEqual({ x: 130, y: 205 })
-  // A hold on a node that is not in the drag falls back to the pointer.
-  expect(cursorOf({ ...dragging, hold: { id: 'gone', x: 1, y: 1 } })).toEqual({ x: 999, y: 999 })
 })
