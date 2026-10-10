@@ -23,6 +23,12 @@ Boards = Annotated[BoardRepo, Depends(deps.boards)]
 Settings = Annotated[SettingsService, Depends(deps.settings)]
 
 
+def _statuses_of(request: Request, board_id: str, boards: BoardRepo) -> str:
+    """Whose demo task statuses a guest sees: the board owner's on a demo instance, where
+    each person has their own, and the shared ones anywhere else."""
+    return (boards.owner(board_id) or "") if deps.is_demo(request) else ""
+
+
 class VersionOut(BaseModel):
     version: int
     # A rename changes this and not the version.
@@ -35,7 +41,8 @@ def get_public_board(
 ) -> PublicBoard:
     board_id, *_ = links.find(token)
     # Only the demo tasks belong to no person; anything else was fetched with someone's token.
-    shared = request.app.state.snapshots if settings.provider() == "demo" else None
+    owner = _statuses_of(request, board_id, boards)
+    shared = request.app.state.snapshots.scoped(owner) if settings.provider() == "demo" else None
     return public_board(
         board_id, boards, shared, settings.base_url(), settings.refresh_interval_s()
     )
@@ -54,8 +61,14 @@ def refresh_public_board(
     board_id, *_ = links.find(token)
     state = request.app.state
     if settings.provider() == "demo":
+        owner = _statuses_of(request, board_id, boards)
         tasks, sources = state.refresher.refresh(
-            board_id, settings.refresh_interval_s(), boards, state.snapshots, state.demo
+            board_id,
+            settings.refresh_interval_s(),
+            boards,
+            state.snapshots.scoped(owner),
+            state.demo.scoped(owner),
+            owner,
         )
         return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
     record = boards.get(board_id)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import threading
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
 SESSION_TTL_S = 30 * 24 * 3600
 # Bounds how long a revoked session or a disabled person still gets through on another worker.
 CACHE_S = 30.0
+# A demo visitor's expiry moves on with their requests, but not on every one.
+TOUCH_EVERY_S = 60.0
 
 
 def token_hash(token: str) -> str:
@@ -31,8 +34,16 @@ def _ts(iso: str) -> float:
 class Sessions:
     """Random cookie tokens; only their hashes are stored, so a leaked database signs no one in."""
 
-    def __init__(self, repo: SessionRepo, live: LiveBoards | None = None) -> None:
+    def __init__(
+        self,
+        repo: SessionRepo,
+        live: LiveBoards | None = None,
+        touch_demo: Callable[[str, float], str | None] | None = None,
+    ) -> None:
         self._repo = repo
+        # Moves a demo visitor's expiry; without it the instance is not a demo and has none.
+        self._touch_demo = touch_demo
+        self._touched: dict[str, float] = {}
         # Open sockets outlive the 30 s cache, so they are told about every ended session.
         self._live = live
         self._cache: dict[str, tuple[Person, float, float]] = {}
@@ -50,15 +61,39 @@ class Sessions:
             cached = self._cache.get(key)
         if cached and now - cached[2] < CACHE_S:
             person, expires, _ = cached
-            return person if expires > now else None
+            return person if expires > now and self._alive(person, now) else None
         found = self._repo.get(key)
         if found is None or _ts(found[1]) <= now or found[0].disabled:
             with self._lock:
                 self._cache.pop(key, None)
             return None
+        person = self._touch(found[0], now)
+        if person is None:
+            with self._lock:
+                self._cache.pop(key, None)
+            return None
         with self._lock:
-            self._cache[key] = (found[0], _ts(found[1]), now)
-        return found[0]
+            self._cache[key] = (person, _ts(found[1]), now)
+        return person
+
+    def _alive(self, person: Person, now: float) -> bool:
+        return person.demo_expires_at is None or _ts(person.demo_expires_at) > now
+
+    def _touch(self, person: Person, now: float) -> Person | None:
+        """A demo visitor who is still in time, with the expiry moved on; anyone else as is."""
+        if person.demo_expires_at is None:
+            return person
+        if self._touch_demo is None or not self._alive(person, now):
+            return None
+        with self._lock:
+            fresh = now - self._touched.get(person.id, 0.0) < TOUCH_EVERY_S
+            if not fresh:
+                self._touched[person.id] = now
+        if fresh:
+            return person
+        expires = self._touch_demo(person.id, now)
+        # None: they signed up between the read and the touch.
+        return person.model_copy(update={"demo_expires_at": expires})
 
     def end(self, token: str) -> None:
         key = token_hash(token)
@@ -82,5 +117,6 @@ class Sessions:
 
     def _forget(self, user_id: str) -> None:
         with self._lock:
+            self._touched.pop(user_id, None)
             for key in [k for k, v in self._cache.items() if v[0].id == user_id]:
                 del self._cache[key]

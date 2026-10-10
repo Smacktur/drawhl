@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 
 from app.domain.errors import (
     AccountDisabled,
+    BoardLimit,
+    DemoFull,
     DependencyUnavailable,
     DomainError,
     Forbidden,
@@ -53,6 +55,8 @@ _STATUS = {
     InviteExpired: 410,
     OwnerRequired: 409,
     TooManyAttempts: 429,
+    DemoFull: 429,
+    BoardLimit: 409,
 }
 
 

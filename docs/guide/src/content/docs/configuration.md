@@ -11,6 +11,7 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 | `TIKO_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
 | `TIKO_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
 | `JIRA_BASE_URL` | Jira URL for everyone, like `https://jira.example.com`; a wrong URL stops the start. Each person still adds their own token | set in Settings |
+| `TIKO_DEMO` | `1` makes the instance a public demo: anyone starts without an account on the demo tasks. See [Running a demo](../demo/) | off |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |
 | `LOG_LEVEL` | Log level | `info` |

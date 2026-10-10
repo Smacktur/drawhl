@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/012-public-link",
+  "feature": "specs/011-demo",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -51,7 +51,8 @@
     "presence",
     "reconnect",
     "public-link",
-    "public-live"
+    "public-live",
+    "demo-sandbox"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -122,7 +123,9 @@
     "G1_public-link": "approved",
     "G2_public-link": "approved",
     "G3_public-link": "approved",
-    "G3_public-live": "approved"
+    "G3_public-live": "approved",
+    "G2_demo": "approved",
+    "G3_demo-sandbox": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -161,6 +164,9 @@
     "2026-10-11 public link: slice public-live approved at G3; spec 012 done: the guest page listens on a read-only socket of its link (no presence either way, 200 places per board apart from the people's 30), falls back to the 5 s check when the board is full or WebSockets are blocked; a rename, a link turned off, a deleted board and the admin's switch close guest sockets. SC-005: 100 guests leave an edit between two editors at about 1.3 ms median. Public link tokens are masked in the server's socket log.",
     "2026-10-11 realtime: T028 done on a clean clone of main (fresh install, owner, editor and viewer in three browser sessions, both themes). Railway and Render passing WebSockets moved to T029: both run released images, so it is checked right after the release.",
     "2026-10-11 v2026.10.14 released: live boards, presence, reconnect (spec 009), the public link with a live guest view (spec 012), the Windows installer. The release commit reached main as PR 102, because main takes pull requests only. Railway passes WebSockets on the release; Render is not checked yet (T029). Found on Railway: nginx started 48 workers, one per host core, fixed by the image's worker autotune. Owner asked for a clearer way to find the generated password after a cloud deploy (guide and README) and turned down a fixed default password; a forced password change on first sign-in is an idea for later.",
-    "2026-10-11 realtime: T029 done, spec 009 has no open task: v2026.10.14 passes WebSockets on Railway (template) and on Render (Blueprint), both deployed by the owner and checked under the admin's login. The nginx worker fix and the password steps in the guide (PR 103) are not released yet."
+    "2026-10-11 realtime: T029 done, spec 009 has no open task: v2026.10.14 passes WebSockets on Railway (template) and on Render (Blueprint), both deployed by the owner and checked under the admin's login. The nginx worker fix and the password steps in the guide (PR 103) are not released yet.",
+    "2026-10-11 demo: spec 011 taken off the shelf and completed with plan, data model, contract and tasks in 2 slices (demo-sandbox, demo-signup); awaits G2. Owner's answers: a demo visitor cannot turn on a public link, a signed-up person can; personal demo task statuses ship in slice 1; three boards per person on a demo instance, for a visitor and after sign-up. Found while planning: nginx does not pass the client address to the API, and the board list reads every board; both are tasks of slice 1.",
+    "2026-10-11 G2 demo: owner approved spec 011 with both slices; three boards per person with the welcome board counted, a first screen led by \"Try the demo\". Against bots: an account that changed nothing lives an hour and is evicted at the cap of 500, IPv6 counted by /64. Open before slice demo-signup: whether signed-up accounts unused for long are deleted.",
+    "2026-10-11 demo: slice demo-sandbox approved at G3 (PR 105): TIKO_DEMO, a first screen led by \"Try the demo\", a temporary member per visitor with three boards and their own task statuses, deleted 7 days after the last request (an hour when nothing was changed), eviction at the cap of 500. The people directory answers a whole username only on a demo instance (T013, done early: it showed a visitor the admin). Owner's answer for slice demo-signup: a signed-up account unused for 90 days is deleted. Not checked: a forged forwarded address from outside, needs a Linux host. The welcome board's note about connecting a tracker is wrong on a demo."
   ]
 }

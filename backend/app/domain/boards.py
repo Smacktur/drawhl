@@ -270,7 +270,7 @@ def list_boards(
     boards.create_welcome(person.id, WELCOME_NAME, doc)
     mine: list[BoardSummary] = []
     others: list[BoardSummary] = []
-    for row in boards.listing(person.id):
+    for row in boards.listing(person.id, others=person.role == "admin"):
         role = effective_role(person, row.member_role, row.everyone_role)
         if role is None:
             continue

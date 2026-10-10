@@ -44,9 +44,18 @@ class TaskProvider(Protocol):
 
 
 class BoardRepo(Protocol):
-    def listing(self, user_id: str, board_id: str | None = None) -> list[BoardRow]:
-        """Every board (or one) by last change, with this person's role and the owner."""
+    def listing(
+        self, user_id: str, board_id: str | None = None, others: bool = False
+    ) -> list[BoardRow]:
+        """The boards this person has a role on, or one board, by last change, with their
+        role and the owner. `others` adds every other board, except those of demo visitors."""
         ...
+
+    def owned(self, user_id: str) -> int:
+        """How many boards the person owns."""
+        ...
+
+    def owner(self, board_id: str) -> str | None: ...
 
     def create(self, name: str, doc: BoardDoc, owner_id: str) -> str:
         """Returns the new board's id."""
@@ -200,6 +209,14 @@ class DemoTasks(Protocol):
     def set_status(self, key: str, status: str) -> Task: ...
 
 
+class DemoStatusRepo(Protocol):
+    def get(self, user_id: str) -> dict[str, tuple[str, str]]:
+        """The statuses this person changed: key to status and the time of the change."""
+        ...
+
+    def set(self, user_id: str, key: str, status: str, updated_at: str) -> None: ...
+
+
 class ReleaseFeed(Protocol):
     def latest(self) -> Release:
         """Newest published release; raises DependencyUnavailable when it can't be fetched."""
@@ -234,6 +251,22 @@ class UserRepo(Protocol):
     def active_admins(self) -> int: ...
 
     def touch_sign_in(self, user_id: str) -> None: ...
+
+    def touch_demo(self, user_id: str, until: str) -> bool:
+        """Moves a demo visitor's expiry; False for anyone who is not a demo visitor."""
+        ...
+
+    def demo_alive(self, now: str) -> int: ...
+
+    def delete_expired_demo(self, now: str, untouched: str) -> tuple[list[str], list[str]]:
+        """Deletes demo visitors whose expiry is before `now`, or before `untouched` when they
+        changed nothing, with their boards, sessions, statuses and cache in one step; returns
+        the ids of the people and of the boards that went."""
+        ...
+
+    def evict_untouched_demo(self) -> tuple[list[str], list[str]]:
+        """Deletes the demo visitor who changed nothing and is closest to expiry, if any."""
+        ...
 
 
 class SessionRepo(Protocol):

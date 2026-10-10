@@ -25,6 +25,7 @@ import { useState } from 'react'
 import { getAuthStatus, signOut } from '@/api/auth'
 import { canEdit, type BoardSummary } from '@/api/boards'
 import { DeleteBoardDialog, RenameBoardForm } from '@/board/BoardActions'
+import { DemoMark } from '@/board/DemoMark'
 import { NewBoardForm } from '@/board/NewBoardForm'
 import { ShareDialog } from '@/board/ShareDialog'
 import { Faces } from '@/live/Avatar'
@@ -32,6 +33,14 @@ import { useBoardPeople } from '@/live/presence'
 import { ShortcutsDialog } from '@/board/ShortcutsDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -97,6 +106,9 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
   const [deleting, setDeleting] = useState<BoardSummary | null>(null)
 
   const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me
+  // A demo visitor has no account yet: nothing to share with, no password to come back by.
+  const demoUntil = me?.demo_expires_at
+  const [leaving, setLeaving] = useState(false)
   // A reload drops every cached board and task along with the session.
   const logout = useMutation({ mutationFn: signOut, onSuccess: () => window.location.reload() })
 
@@ -149,15 +161,19 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
       keywords: 'jira token connection preferences profile account',
       run: () => openSettings(),
     },
-    {
-      id: 'app:password',
-      title: 'Change password',
-      group: 'Commands',
-      Icon: KeyRound,
-      keywords: 'security account',
-      run: () => openSettings('security'),
-    },
-    ...(current
+    ...(demoUntil
+      ? []
+      : [
+          {
+            id: 'app:password',
+            title: 'Change password',
+            group: 'Commands' as const,
+            Icon: KeyRound,
+            keywords: 'security account',
+            run: () => openSettings('security'),
+          },
+        ]),
+    ...(current && !demoUntil
       ? [
           {
             id: 'app:share-board',
@@ -213,7 +229,9 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
             <>
               <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
                 <span className="truncate font-medium">{me.name}</span>
-                <span className="text-muted-foreground truncate text-[12px]">{me.username}</span>
+                {!demoUntil && (
+                  <span className="text-muted-foreground truncate text-[12px]">{me.username}</span>
+                )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
             </>
@@ -272,7 +290,10 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
             Focus timer
           </DropdownMenuCheckboxItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => logout.mutate()} disabled={logout.isPending}>
+          <DropdownMenuItem
+            onSelect={() => (demoUntil ? setLeaving(true) : logout.mutate())}
+            disabled={logout.isPending}
+          >
             <LogOut strokeWidth={1.75} />
             Sign out
           </DropdownMenuItem>
@@ -280,6 +301,29 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
       </DropdownMenu>
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <DeleteBoardDialog board={deleting} onOpenChange={(open) => !open && setDeleting(null)} />
+      <Dialog open={leaving} onOpenChange={setLeaving}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Leave the demo?</DialogTitle>
+            <DialogDescription>
+              Without an account your boards cannot be opened again after you sign out. They are
+              deleted in a week.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeaving(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={logout.isPending}
+              onClick={() => logout.mutate()}
+            >
+              Sign out
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {creating ? (
         <NewBoardForm
@@ -353,7 +397,8 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
           Public
         </Badge>
       )}
-      {current && (
+      {demoUntil && <DemoMark expiresAt={demoUntil} />}
+      {current && !demoUntil && (
         <>
           <Button
             variant="ghost"

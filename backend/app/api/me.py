@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, SecretStr
 
 from app.api import deps
 from app.api.auth import me
-from app.api.deps import AccountsDep, CurrentPerson
+from app.api.deps import AccountsDep, CurrentPerson, NotDemoVisitor, NotOnDemo
 from app.domain.settings import SettingsService, TokenState
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -21,12 +21,17 @@ class PasswordChange(BaseModel):
     new: str = Field(max_length=1024)
 
 
-@router.patch("")
-def update_me(body: MeUpdate, person: CurrentPerson, accounts: AccountsDep) -> dict:
-    return me(accounts.update(person, body.name, body.username))
+@router.patch("", dependencies=[NotDemoVisitor])
+def update_me(
+    body: MeUpdate,
+    person: CurrentPerson,
+    accounts: AccountsDep,
+    demo: Annotated[bool, Depends(deps.is_demo)],
+) -> dict:
+    return me(accounts.update(person, body.name, body.username), demo)
 
 
-@router.put("/password", status_code=204)
+@router.put("/password", status_code=204, dependencies=[NotDemoVisitor])
 def change_password(
     body: PasswordChange,
     request: Request,
@@ -63,7 +68,7 @@ def get_tracker(person: CurrentPerson, settings: Settings) -> TrackerView:
     return _tracker(person.id, settings)
 
 
-@router.put("/tracker")
+@router.put("/tracker", dependencies=[NotOnDemo])
 def set_tracker_token(body: TokenIn, person: CurrentPerson, settings: Settings) -> TrackerView:
     settings.set_token(person.id, body.token)
     return _tracker(person.id, settings)

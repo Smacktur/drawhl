@@ -38,6 +38,8 @@ type Entry = {
   render: (me: Me) => ReactNode
 }
 
+const VISITOR_HIDDEN = new Set<Section>(['profile', 'security', 'tracker'])
+
 const GROUPS: { title: string; admin: boolean; entries: Entry[] }[] = [
   {
     title: 'Account',
@@ -129,7 +131,11 @@ function SettingsBody({ me, section }: { me: Me; section: Section }) {
   // On a narrow screen the window shows the list first, then one section with a Back button;
   // a link to another section opens it directly.
   const [listShown, setListShown] = useState(narrow && section === 'profile')
-  const groups = GROUPS.filter((group) => !group.admin || me.role === 'admin')
+  const groups = GROUPS.filter((group) => !group.admin || me.role === 'admin').map((group) => ({
+    ...group,
+    // A demo visitor has no name, password or tracker of their own until they sign up.
+    entries: group.entries.filter((item) => !me.demo_expires_at || !VISITOR_HIDDEN.has(item.id)),
+  }))
   const entries = groups.flatMap((group) => group.entries)
   // A section the person cannot use, such as an admin one in a shared link, opens Profile.
   const entry = entries.find((item) => item.id === section) ?? entries[0]

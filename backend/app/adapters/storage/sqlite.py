@@ -64,9 +64,21 @@ class SqliteBoardRepo:
     def __init__(self, db: Database) -> None:
         self._db = db
 
-    def listing(self, user_id: str, board_id: str | None = None) -> list[BoardRow]:
-        where = "WHERE b.id = ?" if board_id else ""
-        params = (user_id, board_id) if board_id else (user_id,)
+    def listing(
+        self, user_id: str, board_id: str | None = None, others: bool = False
+    ) -> list[BoardRow]:
+        if board_id:
+            where, params = "WHERE b.id = ?", (user_id, board_id)
+        elif others:
+            # A demo visitor's boards are theirs alone and gone in days; they would bury the rest.
+            where = "WHERE m.role IS NOT NULL OR u.demo_expires_at IS NULL"
+            params = (user_id,)
+        else:
+            where = (
+                "WHERE b.id IN (SELECT board_id FROM board_members WHERE user_id = ?)"
+                " OR b.everyone_role IS NOT NULL"
+            )
+            params = (user_id, user_id)
         with self._db.transaction() as conn:
             rows = conn.execute(
                 "SELECT b.id, b.name, b.updated_at, b.everyone_role, m.role AS member_role,"
@@ -114,6 +126,21 @@ class SqliteBoardRepo:
             (now, owner_id),
         )
         return board_id
+
+    def owned(self, user_id: str) -> int:
+        with self._db.transaction() as conn:
+            return conn.execute(
+                "SELECT COUNT(*) FROM board_members WHERE user_id = ? AND role = 'owner'",
+                (user_id,),
+            ).fetchone()[0]
+
+    def owner(self, board_id: str) -> str | None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT user_id FROM board_members WHERE board_id = ? AND role = 'owner'",
+                (board_id,),
+            ).fetchone()
+        return row["user_id"] if row else None
 
     def get(self, board_id: str) -> BoardRecord | None:
         with self._db.transaction() as conn:
@@ -322,7 +349,14 @@ class SqliteSettingsRepo:
                     )
 
 
-_PERSON = "u.id, u.username, u.name, u.role, u.disabled_at"
+_PERSON = "u.id, u.username, u.name, u.role, u.disabled_at, u.demo_expires_at"
+# A demo visitor who changed nothing: at most the welcome board, as it was made.
+_UNTOUCHED = (
+    "NOT EXISTS (SELECT 1 FROM board_members m JOIN boards b ON b.id = m.board_id"
+    " WHERE m.user_id = users.id AND m.role = 'owner' AND b.version > 1)"
+    " AND (SELECT COUNT(*) FROM board_members m"
+    " WHERE m.user_id = users.id AND m.role = 'owner') <= 1"
+)
 
 
 def _person(row: sqlite3.Row) -> Person:
@@ -332,7 +366,36 @@ def _person(row: sqlite3.Row) -> Person:
         name=row["name"],
         role=row["role"],
         disabled=row["disabled_at"] is not None,
+        demo_expires_at=row["demo_expires_at"],
     )
+
+
+# People and boards that were deleted. Named here: SqliteUserRepo has a method called `list`.
+_Gone = tuple[list[str], list[str]]
+
+
+def _delete_people(conn: sqlite3.Connection, user_ids: list[str]) -> list[str]:
+    """Deletes people with everything of theirs; returns the ids of the boards that went."""
+    board_ids: list[str] = []
+    for user_id in user_ids:
+        owned = conn.execute(
+            "SELECT board_id FROM board_members WHERE user_id = ? AND role = 'owner'", (user_id,)
+        ).fetchall()
+        for row in owned:
+            board_ids.append(row["board_id"])
+            conn.execute("DELETE FROM board_members WHERE board_id = ?", (row["board_id"],))
+            conn.execute("DELETE FROM boards WHERE id = ?", (row["board_id"],))
+        for table in (
+            "board_members",
+            "sessions",
+            "user_credentials",
+            "task_snapshots_v2",
+            "demo_statuses",
+            "invites",
+        ):
+            conn.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    return board_ids
 
 
 class SqliteUserRepo:
@@ -347,8 +410,8 @@ class SqliteUserRepo:
         try:
             with self._db.transaction() as conn:
                 conn.execute(
-                    "INSERT INTO users (id, username, name, password_hash, role, created_at)"
-                    " VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO users (id, username, name, password_hash, role, created_at,"
+                    " demo_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (
                         person.id,
                         person.username,
@@ -356,6 +419,7 @@ class SqliteUserRepo:
                         password_hash,
                         person.role,
                         now_iso(),
+                        person.demo_expires_at,
                     ),
                 )
         except sqlite3.IntegrityError as error:
@@ -397,7 +461,7 @@ class SqliteUserRepo:
         with self._db.transaction() as conn:
             rows = conn.execute(
                 f"SELECT {_PERSON}, u.last_sign_in_at, u.created_at FROM users u"
-                " ORDER BY lower(u.name), lower(u.username)"
+                " WHERE u.demo_expires_at IS NULL ORDER BY lower(u.name), lower(u.username)"
             ).fetchall()
         return [
             PersonRecord(
@@ -428,6 +492,60 @@ class SqliteUserRepo:
     def touch_sign_in(self, user_id: str) -> None:
         with self._db.transaction() as conn:
             conn.execute("UPDATE users SET last_sign_in_at = ? WHERE id = ?", (now_iso(), user_id))
+
+    def touch_demo(self, user_id: str, until: str) -> bool:
+        with self._db.transaction() as conn:
+            cursor = conn.execute(
+                "UPDATE users SET demo_expires_at = ? WHERE id = ? AND demo_expires_at IS NOT NULL",
+                (until, user_id),
+            )
+        return cursor.rowcount == 1
+
+    def demo_alive(self, now: str) -> int:
+        with self._db.transaction() as conn:
+            return conn.execute(
+                "SELECT COUNT(*) FROM users WHERE demo_expires_at > ?", (now,)
+            ).fetchone()[0]
+
+    def delete_expired_demo(self, now: str, untouched: str) -> _Gone:
+        with self._db.transaction() as conn:
+            rows = conn.execute(
+                "SELECT id FROM users WHERE demo_expires_at <= ?"
+                f" OR (demo_expires_at <= ? AND {_UNTOUCHED})",
+                (now, untouched),
+            ).fetchall()
+            user_ids = [row["id"] for row in rows]
+            return user_ids, _delete_people(conn, user_ids)
+
+    def evict_untouched_demo(self) -> _Gone:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                f"SELECT id FROM users WHERE demo_expires_at IS NOT NULL AND {_UNTOUCHED}"
+                " ORDER BY demo_expires_at LIMIT 1"
+            ).fetchone()
+            user_ids = [row["id"]] if row else []
+            return user_ids, _delete_people(conn, user_ids)
+
+
+class SqliteDemoStatusRepo:
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    def get(self, user_id: str) -> dict[str, tuple[str, str]]:
+        with self._db.transaction() as conn:
+            rows = conn.execute(
+                "SELECT key, status, updated_at FROM demo_statuses WHERE user_id = ?", (user_id,)
+            ).fetchall()
+        return {row["key"]: (row["status"], row["updated_at"]) for row in rows}
+
+    def set(self, user_id: str, key: str, status: str, updated_at: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO demo_statuses (user_id, key, status, updated_at) VALUES (?, ?, ?, ?)"
+                " ON CONFLICT (user_id, key) DO UPDATE SET"
+                " status = excluded.status, updated_at = excluded.updated_at",
+                (user_id, key, status, updated_at),
+            )
 
 
 class SqliteSessionRepo:

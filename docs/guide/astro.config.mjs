@@ -31,7 +31,7 @@ export default defineConfig({
         { label: 'Trackers', items: ['trackers', 'jira-data-center'] },
         {
           label: 'Self-hosting',
-          items: ['configuration', 'data-and-upgrades', 'security'],
+          items: ['configuration', 'data-and-upgrades', 'security', 'demo'],
         },
         { label: 'Project', items: ['roadmap', 'architecture'] },
       ],

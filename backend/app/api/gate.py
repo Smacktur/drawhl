@@ -9,7 +9,15 @@ from app.domain.sessions import Sessions
 
 COOKIE = "tiko_session"
 # Platform health checks must pass before anyone signs in.
-OPEN_PATHS = {"/health", "/ready", "/api/auth/status", "/api/auth/login", "/api/auth/logout"}
+OPEN_PATHS = {
+    "/health",
+    "/ready",
+    "/api/auth/status",
+    "/api/auth/login",
+    "/api/auth/logout",
+    # Answers 404 unless the instance is a demo.
+    "/api/auth/demo",
+}
 INVITES = "/api/invites/"
 # Boards shown by their public link; the routes there only read.
 PUBLIC = "/api/public/"

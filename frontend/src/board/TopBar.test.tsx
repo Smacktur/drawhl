@@ -108,6 +108,35 @@ test('shows who is signed in and opens settings with mod+comma', async () => {
   vi.unstubAllGlobals()
 })
 
+test('a demo visitor sees the demo mark, no Share, and is asked before signing out', async () => {
+  const fetch = vi.fn(async (url: string, _init?: RequestInit) =>
+    url === '/api/auth/status'
+      ? Response.json({
+          signed_in: true,
+          demo: true,
+          me: {
+            id: 'u9',
+            username: '~0a1b2c3d4e5f',
+            name: 'Demo visitor',
+            role: 'member',
+            demo_expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+          },
+        })
+      : new Response(null, { status: 204 }),
+  )
+  vi.stubGlobal('fetch', fetch)
+  renderBar()
+  expect(await screen.findByText('Demo · kept for 7 days')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Share' })).toBeNull()
+  fireEvent.keyDown(screen.getByRole('button', { name: 'Main menu' }), { key: 'Enter' })
+  expect(await screen.findByText('Demo visitor')).toBeInTheDocument()
+  expect(screen.queryByText('~0a1b2c3d4e5f')).toBeNull()
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+  expect(await screen.findByRole('dialog', { name: 'Leave the demo?' })).toBeInTheDocument()
+  expect(fetch).not.toHaveBeenCalledWith('/api/auth/logout', expect.anything())
+  vi.unstubAllGlobals()
+})
+
 test('a viewer sees View only and cannot rename or delete', async () => {
   render(
     <QueryClientProvider client={new QueryClient()}>

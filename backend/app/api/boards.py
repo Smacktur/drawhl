@@ -5,9 +5,18 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
 from app.api import deps
-from app.api.deps import CanEdit, CanView, CurrentPerson, IsOwner, MembersDep
+from app.api.deps import (
+    CanEdit,
+    CanView,
+    CurrentPerson,
+    IsOwner,
+    MembersDep,
+    NotDemoVisitor,
+    NotOnDemo,
+)
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
+from app.domain.demo import check_board_limit
 from app.domain.members import Member, ShareRole
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo, TaskProvider
 from app.domain.public import PublicLinks
@@ -83,7 +92,14 @@ def list_boards(person: CurrentPerson, boards: Boards) -> BoardList:
 
 
 @router.post("", status_code=201)
-def create_board(body: BoardIn, person: CurrentPerson, boards: Boards) -> BoardSummary:
+def create_board(
+    body: BoardIn,
+    person: CurrentPerson,
+    boards: Boards,
+    demo: Annotated[bool, Depends(deps.is_demo)],
+) -> BoardSummary:
+    if demo:
+        check_board_limit(person, boards)
     return service.create_board(person, body.name, boards)
 
 
@@ -146,20 +162,20 @@ def list_members(
     )
 
 
-@router.put("/{board_id}/members/{user_id}")
+@router.put("/{board_id}/members/{user_id}", dependencies=[NotDemoVisitor])
 def share_board(
     board_id: str, user_id: str, body: MemberIn, _: IsOwner, members: MembersDep
 ) -> Member:
     return members.share(board_id, user_id, body.role)
 
 
-@router.delete("/{board_id}/members/{user_id}", status_code=204)
+@router.delete("/{board_id}/members/{user_id}", status_code=204, dependencies=[NotDemoVisitor])
 def unshare_board(board_id: str, user_id: str, _: IsOwner, members: MembersDep) -> Response:
     members.remove(board_id, user_id)
     return Response(status_code=204)
 
 
-@router.put("/{board_id}/everyone", status_code=204)
+@router.put("/{board_id}/everyone", status_code=204, dependencies=[NotOnDemo])
 def share_with_everyone(
     board_id: str, body: EveryoneIn, _: IsOwner, members: MembersDep
 ) -> Response:
@@ -167,7 +183,7 @@ def share_with_everyone(
     return Response(status_code=204)
 
 
-@router.put("/{board_id}/public")
+@router.put("/{board_id}/public", dependencies=[NotDemoVisitor])
 def set_public_link(
     board_id: str,
     body: PublicIn,
@@ -178,7 +194,7 @@ def set_public_link(
     return PublicOut(public=token is not None, public_token=token)
 
 
-@router.post("/{board_id}/transfer", status_code=204)
+@router.post("/{board_id}/transfer", status_code=204, dependencies=[NotDemoVisitor])
 def transfer_board(board_id: str, body: TransferIn, _: IsOwner, members: MembersDep) -> Response:
     members.transfer(board_id, body.user_id)
     return Response(status_code=204)

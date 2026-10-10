@@ -1,7 +1,11 @@
+import asyncio
 import logging
 import ssl
+import time
 from contextlib import asynccontextmanager
+from functools import partial
 
+import anyio.to_thread
 import httpx
 from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
@@ -14,6 +18,7 @@ from app.adapters.storage.sqlite import (
     Database,
     SqliteBoardRepo,
     SqliteCredentialRepo,
+    SqliteDemoStatusRepo,
     SqliteInviteRepo,
     SqliteMemberRepo,
     SqliteSessionRepo,
@@ -27,6 +32,7 @@ from app.api.errors import register_error_handlers
 from app.api.gate import PasswordGate
 from app.api.routes import router
 from app.config import Settings, get_settings
+from app.domain import demo
 from app.domain.accounts import Accounts
 from app.domain.invites import Invites
 from app.domain.members import Members
@@ -77,7 +83,9 @@ def _password(settings: Settings) -> str:
 
 def _tracker_env(settings: Settings) -> dict[LockedField, str]:
     env: dict[LockedField, str] = {}
-    if settings.tiko_tracker:
+    if settings.tiko_demo:
+        env["provider"] = "demo"
+    elif settings.tiko_tracker:
         env["provider"] = settings.tiko_tracker
     if settings.jira_base_url:
         # A typo here should stop the start, not surface later as failing cards.
@@ -97,9 +105,24 @@ def create_app(
     if key and len(key) < MIN_SECRET_KEY_LENGTH:
         log.warning("TIKO_SECRET_KEY is short; use openssl rand -base64 32")
 
+    async def clean_demo(visitors: demo.DemoVisitors) -> None:
+        while True:
+            try:
+                gone = await anyio.to_thread.run_sync(visitors.cleanup, time.time())
+                if gone:
+                    log.info("demo cleanup: %d visitors deleted", gone)
+            except Exception:
+                log.exception("demo cleanup failed")
+            await asyncio.sleep(demo.CLEANUP_EVERY_S)
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        cleaner = (
+            asyncio.create_task(clean_demo(app.state.visitors)) if app.state.visitors else None
+        )
         yield
+        if cleaner:
+            cleaner.cancel()
         # Open boards are saved and their sockets told to come back.
         await app.state.live.shutdown()
 
@@ -109,8 +132,16 @@ def create_app(
     member_repo = SqliteMemberRepo(db)
     app.state.boards = SqliteBoardRepo(db)
     app.state.live = LiveRooms(app.state.boards, member_repo)
-    app.state.sessions = Sessions(SqliteSessionRepo(db), app.state.live)
+    app.state.sessions = Sessions(
+        SqliteSessionRepo(db),
+        app.state.live,
+        touch_demo=partial(demo.touch, users) if settings.tiko_demo else None,
+    )
     app.state.accounts = Accounts(users, app.state.sessions)
+    # None unless the instance is a demo; routes and dependencies read the switch from here.
+    app.state.visitors = (
+        demo.DemoVisitors(users, app.state.sessions, app.state.live) if settings.tiko_demo else None
+    )
     app.state.invites = Invites(SqliteInviteRepo(db), app.state.accounts, app.state.sessions)
     created = bootstrap_admin(app.state.accounts, users, lambda: _password(settings))
     env_password = settings.tiko_password and settings.tiko_password.get_secret_value()
@@ -139,7 +170,7 @@ def create_app(
     )
     app.state.settings = service
     app.state.public_links = PublicLinks(app.state.boards, service.public_links, app.state.live)
-    app.state.demo = DemoTaskProvider()
+    app.state.demo = DemoTaskProvider(SqliteDemoStatusRepo(db) if settings.tiko_demo else None)
     client = _jira_client(settings, jira_transport)
     # Built per request from the signed-in person's own token.
     app.state.jira = lambda creds: JiraDcProvider(lambda: creds, client)

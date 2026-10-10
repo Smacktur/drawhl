@@ -46,6 +46,8 @@ class Person(BaseModel):
     name: str
     role: Role
     disabled: bool = False
+    # Set for a demo visitor only: when they are deleted unless they come back or sign up.
+    demo_expires_at: str | None = None
 
 
 class PersonRecord(Person):
@@ -101,9 +103,15 @@ def check_password(value: str) -> str:
 class Limiter:
     """Counts failures per key in a sliding window."""
 
-    def __init__(self, limit: int, window_s: float) -> None:
+    def __init__(
+        self,
+        limit: int,
+        window_s: float,
+        message: str = "too many wrong passwords, try again later",
+    ) -> None:
         self._limit = limit
         self._window_s = window_s
+        self._message = message
         self._failures: dict[str, deque[float]] = {}
         self._lock = threading.Lock()
 
@@ -118,7 +126,7 @@ class Limiter:
                 del self._failures[key]
             elif len(failures) >= self._limit:
                 wait = math.ceil(failures[0] + self._window_s - now)
-                raise TooManyAttempts("too many wrong passwords, try again later", max(wait, 1))
+                raise TooManyAttempts(self._message, max(wait, 1))
 
     def fail(self, key: str, now: float) -> None:
         with self._lock:
@@ -179,6 +187,8 @@ class Accounts:
     def change(self, user_id: str, role: Role | None, disabled: bool | None) -> PersonRecord:
         """Admin changes to a person; the last active admin cannot be demoted or disabled."""
         person = self.get(user_id)
+        if person.demo_expires_at:
+            raise NotFound("person not found")
         loses_admin = person.role == "admin" and not person.disabled
         loses_admin = loses_admin and (role == "member" or disabled is True)
         if loses_admin and self._users.active_admins() <= 1:

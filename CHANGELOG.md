@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. See "Running a demo" in the guide.
+
 ### Fixed
 
 - The web container starts as many nginx workers as it has CPUs to use. On Railway it started one per core of the host, 48 of them.
