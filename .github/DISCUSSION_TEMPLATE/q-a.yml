@@ -1,0 +1,32 @@
+body:
+  - type: markdown
+    attributes:
+      value: Hide real task names and tokens in screenshots and logs before you post them.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do, and what happens instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: tiko version
+      description: The About panel shows it.
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you run tiko
+      options:
+        - Installer (install.sh or install.ps1)
+        - Docker Compose from source
+        - Railway
+        - Render
+        - Other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: What `docker compose logs api` prints around the problem.
+      render: text
