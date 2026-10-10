@@ -39,6 +39,8 @@ To sign in after the deploy:
 
 The Blueprint creates `tiko-api`, a private service with a 1 GB disk for your boards, and `tiko-web`, the public one. The disk needs paid instances, about $15 a month for both. Updates are manual: Deploy → Deploy latest reference on each service.
 
+Render asks for a Blueprint name: any name will do. Leave "Blueprint Path" empty, the file is found on its own.
+
 To sign in after the deploy:
 
 1. Open the address of `tiko-web` from the Render dashboard.
