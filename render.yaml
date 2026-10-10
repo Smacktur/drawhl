@@ -1,42 +1,47 @@
 # Render Blueprint behind the "Deploy to Render" button: released images, boards on a disk.
 # Validate: make render-validate. Spec: https://render.com/docs/blueprint-spec
-services:
-  # Private: reachable only from tiko-web, so the API never faces the internet on its own.
-  - type: pserv
-    name: tiko-api
-    runtime: image
-    image:
-      url: ghcr.io/tiko-run/tiko-api:latest
-    plan: starter  # a disk needs a paid plan
-    region: frankfurt
-    autoDeployTrigger: "off"
-    disk:
-      name: data
-      mountPath: /app/data
-      sizeGB: 1
-    envVars:
-      - key: PORT
-        value: "8000"
-      # Sign in as admin with this value from the service's Environment tab.
-      - key: TIKO_PASSWORD
-        generateValue: true
-      - key: TIKO_SECRET_KEY
-        generateValue: true
+# The services live in a project of their own, so they do not land among "Ungrouped Services".
+projects:
+  - name: tiko
+    environments:
+      - name: production
+        services:
+          # Private: reachable only from tiko-web, so the API never faces the internet on its own.
+          - type: pserv
+            name: tiko-api
+            runtime: image
+            image:
+              url: ghcr.io/tiko-run/tiko-api:latest
+            plan: starter  # a disk needs a paid plan
+            region: frankfurt
+            autoDeployTrigger: "off"
+            disk:
+              name: data
+              mountPath: /app/data
+              sizeGB: 1
+            envVars:
+              - key: PORT
+                value: "8000"
+              # Sign in as admin with this value from the service's Environment tab.
+              - key: TIKO_PASSWORD
+                generateValue: true
+              - key: TIKO_SECRET_KEY
+                generateValue: true
 
-  - type: web
-    name: tiko-web
-    runtime: image
-    image:
-      url: ghcr.io/tiko-run/tiko-web:latest
-    plan: starter
-    region: frankfurt
-    autoDeployTrigger: "off"
-    healthCheckPath: /
-    envVars:
-      - key: PORT
-        value: "3000"
-      - key: API_UPSTREAM
-        fromService:
-          type: pserv
-          name: tiko-api
-          property: hostport
+          - type: web
+            name: tiko-web
+            runtime: image
+            image:
+              url: ghcr.io/tiko-run/tiko-web:latest
+            plan: starter
+            region: frankfurt
+            autoDeployTrigger: "off"
+            healthCheckPath: /
+            envVars:
+              - key: PORT
+                value: "3000"
+              - key: API_UPSTREAM
+                fromService:
+                  type: pserv
+                  name: tiko-api
+                  property: hostport
