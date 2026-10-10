@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   packages: write
+  discussions: write
 
 jobs:
   images:
@@ -54,6 +55,6 @@ jobs:
       # install.sh downloads this asset; TAG defaults to this release instead of latest.
       - name: Compose file pinned to this release
         run: mkdir pinned && sed "s/\${TAG:-latest}/\${TAG:-${GITHUB_REF_NAME#v}}/" compose.release.yml > pinned/compose.release.yml && grep -q "${GITHUB_REF_NAME#v}" pinned/compose.release.yml
-      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag pinned/compose.release.yml
+      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag --discussion-category Announcements pinned/compose.release.yml
         env:
           GH_TOKEN: ${{ github.token }}

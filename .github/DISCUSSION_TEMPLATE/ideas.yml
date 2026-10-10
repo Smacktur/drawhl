@@ -1,7 +1,27 @@
 body:
   - type: markdown
     attributes:
-      value: Search Ideas first. If the idea is already there, upvote it and add how you would use it.
+      value: |
+        Search Ideas first. If the idea is already there, upvote it and add how you would use it.
+
+        <details>
+        <summary>Example of an idea that is easy to act on</summary>
+
+        **What do you want?**
+        A pin on the board that pulls matching tasks to it.
+
+        **What problem does it solve?**
+        I add thirty tasks from one release and then drag them into a group one by one. When new tasks appear in the tracker, I have to notice and add them myself.
+
+        **How would you use it?**
+        Once per release, on a board four people look at every day. I would drop a pin, give it a query and stop maintaining the group by hand.
+
+        **How do you see it working?**
+        The pin takes a query or a word from the title and lays the matching cards out in a grid next to it. Miro has nothing like it; the closest thing I know is a saved filter in Jira.
+
+        **Your tracker**
+        Jira Data Center
+        </details>
   - type: textarea
     id: want
     attributes:
