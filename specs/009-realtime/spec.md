@@ -25,7 +25,7 @@ Answers to the skeleton's open questions:
 
 1. **The encoded CRDT state is stored** next to the JSON doc (`boards.ydoc`). A room rebuilt from JSON would get new item ids, and a tab that reconnects with edits made offline would then merge into a doc it shares no history with and duplicate every node. Stored state keeps identity across room and server restarts.
 2. **The server repairs, clients tolerate.** After every update the server checks the board rules and fixes violations in its own transaction; it is the only repairer, so two clients never fight over a fix. A client hides what it cannot draw (a child whose frame is gone, an arrow to a missing node) until the repair arrives and never writes repairs itself.
-3. **Presence color comes from the person's id**, one of 8 theme colors. Initials only; no color picker, no avatars.
+3. **Presence color comes from the person's id**, one of 8 theme colors. A person's avatar is a circle with their initials on that color, the same in the top bar and next to their cursor (asked for by the owner on 2026-10-10: a color alone does not say who it is). No color picker, no uploaded pictures.
 4. **One value per field, last writer wins** (confirmed by the owner for v1). A node's place, size, each data field and a module's whole `content` are single values. Ann moving a sticky while Bob retypes it both survive; two people typing in the same sticky, or editing the same Gantt, at the same moment do not merge, the later write wins. Others see who has the node selected, which is the cue to stay out. Character-level text merging and nested module CRDTs are out of scope.
 5. **`PUT /boards/{id}` stays and goes through the CRDT.** With a current `version` it is applied to the shared doc as one update, so people on the board see it; with a stale one it answers `version_conflict` as today. The web app stops calling it; smoke, scripts and an old tab keep working.
 6. **Limits**: 30 connections per board, 1 MiB per message, 2000 nodes as today. No rate limit in v1: every sender is a signed-in editor of that board.
@@ -62,7 +62,7 @@ Ann and Bob open the same board. Ann moves a card, writes on a sticky note, draw
 
 ### User Story 2 - Who is here and where (Priority: P2)
 
-The top bar shows the initials of the people on the board. Each person has a cursor with their name in their color; an element someone else has selected shows their color around it, and an element someone is dragging moves on everyone's screen before it is dropped.
+The top bar shows the avatars of the people on the board. Each person has a cursor in their color with their small avatar next to it, so it is clear at a glance who is doing what; an element someone else has selected shows their color around it, and an element someone is dragging moves on everyone's screen before it is dropped.
 
 **Why this priority**: Without it people edit the same thing without knowing; with one value per field (decision 4) presence is what keeps them apart.
 
@@ -72,8 +72,8 @@ The top bar shows the initials of the people on the board. Each person has a cur
 
 1. **Given** people on a board, **Then** the top bar shows up to 5 faces (initials on the person's color) and "+N" for the rest; hovering shows the names; the person themselves is not listed.
 2. **Given** one person with two tabs on the board, **Then** they show as one face and two cursors.
-3. **Given** a person moves the mouse over the canvas, **Then** others see a cursor with the name at the same board position at any zoom, updated at most every 50 ms; a cursor that leaves the canvas disappears.
-4. **Given** a person selects elements, **Then** others see an outline in that person's color with the name; the person's own selection looks as today.
+3. **Given** a person moves the mouse over the canvas, **Then** others see a cursor with that person's small avatar (initials on their color) at the same board position, the same size at any zoom; the full name shows on hover and for 2 s after the person joins. The cursor is updated at most every 50 ms; a cursor that leaves the canvas disappears.
+4. **Given** a person selects elements, **Then** others see an outline in that person's color with their avatar on its corner; the person's own selection looks as today.
 5. **Given** a person drags elements, **Then** others see them move during the drag; the document changes once, on the drop.
 6. **Given** a viewer, **Then** they are shown in the faces and have a cursor; they cannot select for editing, as today.
 7. **Given** a tab closes or loses its connection, **Then** its cursor, selection and face are gone for others within 3 s of a clean close and 30 s of a lost connection.

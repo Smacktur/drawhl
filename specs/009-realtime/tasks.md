@@ -40,7 +40,7 @@ description: "Task list for Real-time boards"
 - [ ] T015 [US2] `DESIGN.md`: presence entry (8 palette tokens for both themes with contrast for the name label, cursor, selection outline, faces in the top bar, reduced motion); `/hallmark` pass before code
 - [ ] T016 [P] [US2] `live/presence.ts`: awareness state per contracts/live.md, color from the person's id, cursor throttled to 50 ms and cleared off-canvas, selection capped at 200 ids. Tests
 - [ ] T017 [US2] Faces in the top bar: up to 5 and "+N", names on hover, one face per person across tabs, the person themselves left out. Tests
-- [ ] T018 [US2] Remote cursors layer in flow coordinates, outside xyflow's node tree; remote selection outline with the name. Tests at several zoom levels
+- [ ] T018 [US2] Remote cursors layer in flow coordinates, outside xyflow's node tree, each with the person's small avatar (the same component as in the top bar; full name on hover and for 2 s after joining); remote selection outline with the avatar on its corner. Tests at several zoom levels
 - [ ] T026 [US2] Changes made by others glide into place instead of jumping: a short transition on position and size for remote updates only, off under `prefers-reduced-motion`; a person's own changes stay instant. Tests
 - [ ] T019 [US2] Live drags: positions in presence during a drag, the document written once on drop; a remote drag moves the node without entering undo. Tests
 - [ ] T020 [US2] SC-005 measured (2000 nodes, 10 clients, 20 dragged elements); `/ui-review`; guide; `CHANGELOG.md`; screenshot in both themes
