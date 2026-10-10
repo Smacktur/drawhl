@@ -123,7 +123,7 @@ function Install-DockerDesktop {
     Say "Docker Desktop is not installed and winget is missing. Install Docker Desktop from $DockerDocs"
     Fail 'Docker Desktop is required; run the installer again once it is installed'
   }
-  Say 'Docker Desktop is free for personal use and small companies, paid above 250 people or $10M revenue.'
+  Say 'Docker Desktop is free to install and use; only large companies need a Docker license.'
   if (-not (Read-Consent 'Docker Desktop is not installed. Install it with winget (Windows asks for administrator rights)?')) {
     Fail "tiko runs in Docker; install Docker Desktop and run the installer again: $DockerDocs"
   }
