@@ -4,6 +4,8 @@ import { z } from 'zod'
 /** Colors a person can get; `--presence-0` … `--presence-7` in index.css. */
 export const PRESENCE_COLORS = 8
 const MAX_SELECTED = 200
+/** Past this many nodes a drag is not shown live; the others see the result on the drop. */
+export const MAX_LIVE_DRAG = 200
 export const CURSOR_INTERVAL_MS = 50
 
 const xy = z.object({ x: z.number(), y: z.number() })

@@ -50,6 +50,7 @@ import { useRefresh } from '@/board/useRefresh'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
 import { remoteDrags, withRemoteMotion } from '@/live/drags'
+import { MAX_LIVE_DRAG } from '@/live/presence'
 import { PresenceLayer } from '@/live/PresenceLayer'
 import { getAuthStatus } from '@/api/auth'
 import { useLiveBoard } from '@/live/useLiveBoard'
@@ -184,7 +185,7 @@ function BoardCanvas({
   }, [presence, selectedKey])
   useEffect(() => {
     const dragged = nodes.filter((n) => n.dragging)
-    if (dragged.length === 0) {
+    if (dragged.length === 0 || dragged.length > MAX_LIVE_DRAG) {
       presence.drag.cancel()
       presence.drag(null)
       return
