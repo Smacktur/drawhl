@@ -114,6 +114,7 @@ export function useLiveBoard(
         cursor: null,
         selected: [],
         drag: null,
+        hold: null,
       } satisfies PresenceState)
       mine = presenceSender((patch) => {
         for (const [field, value] of Object.entries(patch)) {
