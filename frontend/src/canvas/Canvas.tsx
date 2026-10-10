@@ -46,7 +46,7 @@ import { TasksContext } from '@/canvas/tasks-context'
 import { Toolbar, type Tool } from '@/canvas/Toolbar'
 import { RefreshIndicator } from '@/board/RefreshIndicator'
 import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
-import { useRefresh } from '@/board/useRefresh'
+import { useRefresh, type Guest } from '@/board/useRefresh'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
 import { useRemoteMotion } from '@/live/motion'
@@ -118,17 +118,21 @@ const LIVE_NOTICE: Partial<Record<LiveStatus, string>> = {
   full: 'This board is full right now.',
 }
 
-function BoardCanvas({
+export function BoardCanvas({
   board,
   viewer,
   onAccessChanged,
+  guest,
 }: {
   board: Board
   viewer: boolean
   onAccessChanged: () => void
+  /** Set when the board is shown by its public link: view-only, no socket, no people. */
+  guest?: Guest
 }) {
-  const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me ?? undefined
-  const live = useLiveBoard(board, viewer, onAccessChanged, me)
+  const me =
+    useQuery({ queryKey: ['auth'], queryFn: getAuthStatus, enabled: !guest }).data?.me ?? undefined
+  const live = useLiveBoard(board, viewer, onAccessChanged, me, !guest)
   const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange } = live
   // Until the first sync the saved board is shown and cannot be edited.
   const readOnly = viewer || !live.editable
@@ -138,7 +142,7 @@ function BoardCanvas({
   const [tool, setTool] = useState<Tool>('select')
   const [connecting, setConnecting] = useState(false)
   const [menuTarget, setMenuTarget] = useState<MenuTarget | null>(null)
-  const refresh = useRefresh(board.id, { background: waitsForStatus(nodes) })
+  const refresh = useRefresh(board.id, { background: !guest && waitsForStatus(nodes), guest })
   const tasks = useMemo(
     () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
     [board.tasks, added, refresh.data],
@@ -682,6 +686,16 @@ function BoardCanvas({
     </div>
   )
 
+  const indicator = (
+    <RefreshIndicator
+      sources={refresh.data?.sources ?? []}
+      serverError={refresh.error}
+      syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
+      refreshing={refresh.isFetching}
+      onRefresh={() => void refresh.refetch()}
+    />
+  )
+
   return (
     <TasksContext.Provider value={tasks}>
       <ReadOnlyContext.Provider value={readOnly}>
@@ -705,15 +719,14 @@ function BoardCanvas({
             )}
           </ModuleHostContext.Provider>
         </SelectedByContext.Provider>
-        <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
-          <RefreshIndicator
-            sources={refresh.data?.sources ?? []}
-            serverError={refresh.error}
-            syncedAt={lastSynced(refresh.data?.sources ?? []) || lastFetched(board.tasks)}
-            refreshing={refresh.isFetching}
-            onRefresh={() => void refresh.refetch()}
-          />
-        </BoardTimers>
+        {guest ? (
+          // Timers on the board are its people's reminders: a guest sees them, nothing rings.
+          <div className="absolute top-4 right-4 z-10">{indicator}</div>
+        ) : (
+          <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
+            {indicator}
+          </BoardTimers>
+        )}
         <BoardSearch
           boardId={board.id}
           nodes={nodes}

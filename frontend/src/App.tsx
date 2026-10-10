@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react
 import { getAuthStatus } from '@/api/auth'
 import { listBoards } from '@/api/boards'
 import { AUTH_REQUIRED_EVENT } from '@/api/client'
+import { readPublicToken } from '@/api/public'
 import { AcceptInvite, readInviteLink } from '@/auth/AcceptInvite'
 import { SignIn } from '@/auth/SignIn'
 import { SettingsDialog } from '@/settings/SettingsDialog'
@@ -43,6 +44,9 @@ const Canvas = lazy(() =>
   }, reloadOnce),
 )
 
+// Loaded with the canvas, for the same reason.
+const PublicBoard = lazy(() => import('@/public/PublicBoard'))
+
 const LAST_BOARD = 'tiko.lastBoard'
 
 // Server snapshot is false, client snapshot is true: tells prerender and hydration apart.
@@ -73,8 +77,14 @@ export default function App() {
   const focusVisible = useFocusVisible()
   const notice = useNotice()
   const [inviteLink] = useState(readInviteLink)
+  // A public link is a page of its own: no sign-in, no boards of the person who opened it.
+  const [publicToken] = useState(() => (typeof window === 'undefined' ? null : readPublicToken()))
   const queryClient = useQueryClient()
-  const auth = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus, enabled: mounted })
+  const auth = useQuery({
+    queryKey: ['auth'],
+    queryFn: getAuthStatus,
+    enabled: mounted && !publicToken,
+  })
   const signedIn = auth.data?.signed_in === true
   const boards = useQuery({
     queryKey: ['boards'],
@@ -95,6 +105,17 @@ export default function App() {
     window.addEventListener(AUTH_REQUIRED_EVENT, signedOut)
     return () => window.removeEventListener(AUTH_REQUIRED_EVENT, signedOut)
   }, [queryClient])
+
+  if (mounted && publicToken) {
+    return (
+      <main className="bg-background relative h-dvh w-full overflow-hidden">
+        <h1 className="sr-only">tiko</h1>
+        <Suspense fallback={<Skeleton className="absolute inset-0 rounded-none" />}>
+          <PublicBoard token={publicToken} />
+        </Suspense>
+      </main>
+    )
+  }
 
   if (mounted && inviteLink) {
     return (

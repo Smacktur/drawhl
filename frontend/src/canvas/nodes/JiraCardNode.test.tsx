@@ -98,3 +98,22 @@ test('a card without a token of your own shows only the key and how to connect',
   fireEvent.click(screen.getByText('Connect your Jira token to see this task'))
   expect(new URL(window.location.href).searchParams.get('settings')).toBe('tracker')
 })
+
+test('a guest of a public board sees the key and its link, nothing else', () => {
+  const hidden: Task = {
+    ...task,
+    state: 'private',
+    summary: '',
+    status_name: '',
+    type_name: '',
+    assignee_name: null,
+    priority_name: null,
+  }
+  renderCard({ key: 'DEMO-1', collapsed: true }, { 'DEMO-1': hidden })
+  const key = screen.getByText('DEMO-1')
+  expect(key.closest('a')?.getAttribute('href')).toBe(task.url)
+  expect(key.closest('.react-flow__node')?.textContent).toBe('DEMO-1')
+  fireEvent.pointerDown(key)
+  fireEvent.click(key)
+  expect(screen.queryByRole('dialog')).toBeNull()
+})

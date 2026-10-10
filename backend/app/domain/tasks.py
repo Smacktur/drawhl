@@ -17,7 +17,8 @@ StatusCategory = Literal["new", "indeterminate", "done"]
 class Task(BaseModel):
     key: str
     # not_found also covers a task the person's own token may not see: Jira hides both alike.
-    state: Literal["ok", "not_found", "no_token"] = "ok"
+    # private: a guest of a public board sees the key only.
+    state: Literal["ok", "not_found", "no_token", "private"] = "ok"
     summary: str = ""
     status_name: str = ""
     status_category: StatusCategory = "new"

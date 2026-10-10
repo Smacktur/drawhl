@@ -9,6 +9,8 @@ const settingsSchema = z.object({
     base_url: z.string().nullable(),
     token_state: z.enum(['none', 'set', 'unreadable']),
   }),
+  /** Whether board owners may make a public link. */
+  public_links: z.boolean(),
   // Set in the environment by whoever deployed tiko; the form shows them read-only.
   locked: z.array(z.enum(['provider', 'jira_base_url'])).default([]),
 })
@@ -20,6 +22,7 @@ export type SettingsChange = {
   refresh_interval_s?: number
   // An omitted token keeps the stored one.
   jira?: { base_url: string; token?: string }
+  public_links?: boolean
 }
 
 export function getSettings() {

@@ -5,9 +5,10 @@ import type { BoardSummary } from '@/api/boards'
 import { TopBar } from '@/board/TopBar'
 
 const owner = { id: 'u1', name: 'Admin' }
+const base = { updated_at: '2026-10-05T07:00:00Z', my_role: 'owner', owner, public: false } as const
 const boards = [
-  { id: 'a', name: 'Q4 goals', updated_at: '2026-10-05T07:00:00Z', my_role: 'owner', owner },
-  { id: 'b', name: 'Team Platform', updated_at: '2026-10-05T07:00:00Z', my_role: 'owner', owner },
+  { id: 'a', name: 'Q4 goals', ...base },
+  { id: 'b', name: 'Team Platform', ...base },
 ] satisfies BoardSummary[]
 
 afterEach(() => {

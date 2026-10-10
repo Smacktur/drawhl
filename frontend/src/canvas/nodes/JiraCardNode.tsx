@@ -24,7 +24,9 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
   const [open, setOpen] = useState(false)
   const pressedAt = useRef<{ x: number; y: number } | null>(null)
   const noToken = task?.state === 'no_token'
-  const missing = task?.state === 'not_found' || noToken
+  // On a public board a guest gets the key and its link, nothing else.
+  const hidden = task?.state === 'private'
+  const missing = task?.state === 'not_found' || noToken || hidden
   const done = task?.status_category === 'done'
   const collapsed = Boolean(data.collapsed)
 
@@ -56,12 +58,12 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
             selected && 'border-primary ring-primary/30 ring-2',
           )}
         >
-          {task && (
+          {task && !hidden && (
             <span className="text-muted-foreground mr-1.5 inline-block align-[-2px]">
               <TypeIcon typeName={task.type_name} />
             </span>
           )}
-          {collapsed ? (
+          {collapsed && !hidden ? (
             // Collapsed, the whole card is the click target for the mini-card.
             <span
               className={cn(
@@ -77,7 +79,8 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
               target="_blank"
               rel="noreferrer"
               className={cn(
-                'text-primary mr-1.5 font-mono text-xs tabular-nums hover:underline',
+                'text-primary font-mono text-xs tabular-nums hover:underline',
+                !hidden && 'mr-1.5',
                 done && 'line-through',
               )}
             >

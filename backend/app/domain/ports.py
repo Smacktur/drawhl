@@ -82,6 +82,14 @@ class BoardRepo(Protocol):
         """Raises NotFound."""
         ...
 
+    def public_token(self, board_id: str) -> str | None: ...
+
+    def set_public_token(self, board_id: str, token: str | None) -> None: ...
+
+    def by_public_token(self, token: str) -> tuple[str, int] | None:
+        """The id and version of the board with this public link."""
+        ...
+
 
 class LiveBoards(Protocol):
     """Open sockets of live boards. Every call returns at once and is safe from any thread."""

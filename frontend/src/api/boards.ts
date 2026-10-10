@@ -13,6 +13,8 @@ const summarySchema = z.object({
   updated_at: z.string(),
   my_role: boardRoleSchema,
   owner: z.object({ id: z.string(), name: z.string() }).nullable(),
+  /** Anyone with the board's public link can view it. */
+  public: z.boolean(),
 })
 
 export type BoardSummary = z.infer<typeof summarySchema>
@@ -75,9 +77,26 @@ export type Member = z.infer<typeof memberSchema>
 export function listMembers(boardId: string) {
   return fetchJson(
     `/api/boards/${boardId}/members`,
-    z.object({ members: z.array(memberSchema), everyone_role: shareRoleSchema.nullable() }),
+    z.object({
+      members: z.array(memberSchema),
+      everyone_role: shareRoleSchema.nullable(),
+      public: z.boolean(),
+      // Only the owner gets the link itself.
+      public_token: z.string().nullable(),
+    }),
   )
 }
+
+/** Turns the board's public link on or off; a link turned off never works again. */
+export function setPublicLink(boardId: string, isPublic: boolean) {
+  return fetchJson(
+    `/api/boards/${boardId}/public`,
+    z.object({ public: z.boolean(), public_token: z.string().nullable() }),
+    { method: 'PUT', body: JSON.stringify({ public: isPublic }) },
+  )
+}
+
+export const publicUrl = (token: string) => `${window.location.origin}/p/${token}`
 
 export function shareBoard(boardId: string, userId: string, role: ShareRole) {
   return fetchJson(`/api/boards/${boardId}/members/${userId}`, memberSchema, {
@@ -146,7 +165,7 @@ const sourceSchema = z.object({
 
 export type SyncSource = z.infer<typeof sourceSchema>
 
-const refreshSchema = z.object({
+export const refreshSchema = z.object({
   tasks: z.record(z.string(), taskSchema),
   fetched_at: z.string(),
   sources: z.array(sourceSchema),

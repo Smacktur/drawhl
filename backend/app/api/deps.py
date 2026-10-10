@@ -7,6 +7,7 @@ from app.domain.errors import Forbidden, JiraNotConfigured
 from app.domain.invites import Invites
 from app.domain.members import BoardRole, Members
 from app.domain.ports import BoardRepo, DemoTasks, LiveBoards, SnapshotRepo, TaskProvider
+from app.domain.public import PublicLinks
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
 from app.domain.settings import SettingsService
@@ -92,6 +93,10 @@ def board_role(needed: BoardRole):
         return members(request).require(current_person(request), board_id, needed)
 
     return Depends(check)
+
+
+def public_links(request: Request) -> PublicLinks:
+    return request.app.state.public_links
 
 
 def invites(request: Request) -> Invites:

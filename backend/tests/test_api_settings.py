@@ -15,6 +15,7 @@ def test_defaults(client):
         "refresh_interval_s": 30,
         "secret_key_configured": False,
         "jira": {"base_url": None, "token_state": "none"},
+        "public_links": True,
         "locked": [],
     }
 

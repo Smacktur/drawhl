@@ -11,13 +11,34 @@ const members = {
     { user: user('u2', 'Bob'), role: 'editor' },
   ],
   everyone_role: null,
+  public: false,
+  public_token: null,
+}
+const settings = {
+  provider: 'demo',
+  refresh_interval_s: 30,
+  secret_key_configured: false,
+  jira: { base_url: null, token_state: 'none' },
+  public_links: true,
+  locked: [],
 }
 
 afterEach(() => vi.unstubAllGlobals())
 
-function show(myRole: BoardRole) {
+function show(myRole: BoardRole, link: string | null = null, allowed = true) {
+  let token = link
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url === '/api/boards/b1/members') return Response.json(members)
+    if (url === '/api/boards/b1/members')
+      return Response.json({
+        ...members,
+        public: token !== null,
+        public_token: myRole === 'owner' ? token : null,
+      })
+    if (url === '/api/settings') return Response.json({ ...settings, public_links: allowed })
+    if (url === '/api/boards/b1/public') {
+      token = JSON.parse(String(init?.body)).public ? 'tok123' : null
+      return Response.json({ public: token !== null, public_token: token })
+    }
     if (url.startsWith('/api/people/directory'))
       return Response.json({ people: [user('u2', 'Bob'), user('u3', 'Carl')] })
     if (init?.method === 'PUT' && url.includes('/members/'))
@@ -31,6 +52,7 @@ function show(myRole: BoardRole) {
     updated_at: '',
     my_role: myRole,
     owner: { id: 'u1', name: 'Ann' },
+    public: link !== null,
   }
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -66,4 +88,26 @@ test('others see who has access but cannot change it', async () => {
   expect(screen.getByText('Only the owner can change who has access.')).toBeInTheDocument()
   expect(screen.queryByLabelText('Add people')).toBeNull()
   expect(screen.queryByRole('button', { name: /Can edit/ })).toBeNull()
+})
+
+test('the owner turns the public link on and gets the address', async () => {
+  const fetchMock = show('owner')
+  fireEvent.click(await screen.findByRole('switch', { name: 'Public link' }))
+  await waitFor(() => expect(calls(fetchMock)).toContain('PUT /api/boards/b1/public'))
+  const address = await screen.findByLabelText('Public link address')
+  expect(address).toHaveValue(`${window.location.origin}/p/tok123`)
+})
+
+test('an editor sees that the board is public, without the link', async () => {
+  show('editor', 'tok123')
+  const section = await screen.findByRole('region', { name: 'Public link' })
+  expect(section).toHaveTextContent('On')
+  expect(screen.queryByRole('switch', { name: 'Public link' })).toBeNull()
+  expect(screen.queryByLabelText('Public link address')).toBeNull()
+})
+
+test('public links switched off by an admin cannot be turned on', async () => {
+  show('owner', null, false)
+  expect(await screen.findByText(/An admin switched public links off/)).toBeInTheDocument()
+  expect(screen.getByRole('switch', { name: 'Public link' })).toBeDisabled()
 })

@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   KeyRound,
+  Link2,
   Plug,
   ListTodo,
   SlidersHorizontal,
@@ -26,6 +27,7 @@ import { People } from '@/settings/sections/People'
 import { Preferences } from '@/settings/sections/Preferences'
 import { Profile } from '@/settings/sections/Profile'
 import { Security } from '@/settings/sections/Security'
+import { Sharing } from '@/settings/sections/Sharing'
 import { TaskSource } from '@/settings/sections/TaskSource'
 import { openSettings, useSettingsSection, type Section } from '@/settings/store'
 
@@ -58,6 +60,7 @@ const GROUPS: { title: string; admin: boolean; entries: Entry[] }[] = [
     entries: [
       { id: 'task-source', label: 'Task source', Icon: ListTodo, render: () => <TaskSource /> },
       { id: 'people', label: 'People', Icon: Users, render: (me) => <People me={me} /> },
+      { id: 'sharing', label: 'Sharing', Icon: Link2, render: () => <Sharing /> },
     ],
   },
 ]

@@ -34,6 +34,20 @@ Pan and zoom are kept per person in the browser. A board you have not opened in 
 
 People with "Can view" see changes live too. They cannot change anything, and the server ignores edits sent from their browser.
 
+## Public link
+
+The owner of a board can show it to anyone, with no account: in "Share", turn on "Anyone with the link can view" and copy the link.
+
+- Whoever opens the link sees the board and can pan, zoom and search it. Nothing can be moved or changed, and changes made by people on the board show up within a few seconds.
+- A guest does not see who is on the board, and nobody sees the guest.
+- Tasks from your tracker show a guest only their key, as a link to the tracker. Titles, statuses and assignees are fetched with each person's own token and are never published. Demo tasks are shown in full.
+- The focus timer and its music work for a guest: they live in the guest's browser. Timers on the board are shown, but they ring only for the people on it.
+- Turning the link off stops it at once, and it never works again: turning it on later makes a new link. Deleting the board stops it too.
+- A board with a link has a "Public" mark in the top bar and a globe in the board menu, for everyone on it. Only the owner (and an admin) sees the link itself.
+- An admin can switch public links off for the whole tiko in Settings → Sharing. Every link stops while it is off.
+
+A link is the access: anyone it is forwarded to can open the board. Pages opened by a link ask search engines not to index them.
+
 ## When the connection drops
 
 - **A blip.** You keep working. "Reconnecting…" shows at the top right, and when the connection is back your changes and everyone else's merge, with nothing doubled and nothing lost.
