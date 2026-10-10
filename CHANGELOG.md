@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- The web container starts as many nginx workers as it has CPUs to use. On Railway it started one per core of the host, 48 of them.
+
 ## [2026.10.14] - 2026-10-10
 
 ### Added
