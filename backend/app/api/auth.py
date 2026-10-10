@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 from app.api.deps import AccountsDep, CurrentPerson, SessionsDep
 from app.api.gate import COOKIE
 from app.domain.accounts import Person
+from app.domain.demo import DemoVisitors
+from app.domain.errors import NotFound
 from app.domain.sessions import SESSION_TTL_S
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -16,8 +18,10 @@ class SignInRequest(BaseModel):
     password: str = Field(max_length=1024)
 
 
-def me(person: Person) -> dict:
-    return person.model_dump(include={"id", "username", "name", "role"})
+def me(person: Person, demo: bool = False) -> dict:
+    fields = {"id", "username", "name", "role"}
+    # Only a demo instance tells who is a demo visitor; elsewhere the answer is as it was.
+    return person.model_dump(include=fields | {"demo_expires_at"} if demo else fields)
 
 
 def _https(request: Request) -> bool:
@@ -35,7 +39,10 @@ def _signed_out() -> Response:
 @router.get("/status")
 def status(request: Request) -> dict:
     person = getattr(request.state, "person", None)
-    return {"signed_in": person is not None, "me": me(person) if person else None}
+    if request.app.state.visitors is None:
+        return {"signed_in": person is not None, "me": me(person) if person else None}
+    signed_in = person is not None
+    return {"signed_in": signed_in, "me": me(person, True) if person else None, "demo": True}
 
 
 def signed_in(request: Request, token: str) -> Response:
@@ -55,6 +62,23 @@ def signed_in(request: Request, token: str) -> Response:
 @router.post("/login", status_code=204)
 def login(body: SignInRequest, request: Request, accounts: AccountsDep) -> Response:
     return signed_in(request, accounts.sign_in(body.username, body.password, time.time()))
+
+
+def _address(request: Request) -> str:
+    # The web container's nginx works the client out and is the only way in to a demo.
+    peer = request.client.host if request.client else ""
+    return request.headers.get("x-real-ip") or peer
+
+
+@router.post("/demo", status_code=204)
+def start_demo(request: Request) -> Response:
+    """Makes a demo visitor and signs them in; only on a demo instance."""
+    visitors: DemoVisitors | None = request.app.state.visitors
+    if visitors is None:
+        raise NotFound("not found")
+    if getattr(request.state, "person", None) is not None:
+        return Response(status_code=204)
+    return signed_in(request, visitors.create(_address(request), time.time()))
 
 
 @router.post("/logout", status_code=204)

@@ -2,12 +2,12 @@
 
 Additions to the contracts of [spec 008](../../008-accounts/contracts/api.md) and [spec 012](../../012-public-link/contracts/api.md). Errors use the common body `{"error": {"code", "message"}}`.
 
-Everything here exists only on an instance started with `TIKO_DEMO=1`. Without it the two new routes answer 404 `not_found`, the new fields are `false` and `null`, and no other answer changes.
+Everything here exists only on an instance started with `TIKO_DEMO=1`. Without it the two new routes answer 404 `not_found`, the new fields are absent, and no answer changes.
 
 ## Types
 
 ```text
-Me gains demo_expires_at: string | null    (set for a demo visitor, null for everyone else)
+Me gains demo_expires_at: string | null    (set for a demo visitor, null for everyone else on a demo instance)
 ```
 
 ## Auth

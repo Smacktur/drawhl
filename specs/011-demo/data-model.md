@@ -25,7 +25,7 @@ A row in `users`:
 | `name` | `Demo visitor` |
 | `password_hash` | `!`, which no password matches |
 | `role` | `member` |
-| `demo_expires_at` | 7 days after the last request, or 1 hour after it while the visitor changed nothing; moved at most once a minute |
+| `demo_expires_at` | 7 days after the last request, moved at most once a minute. The cleanup takes a visitor who changed nothing when under 6 days 23 hours of it are left, which is an hour after their last request |
 
 - After the migration nobody is a demo visitor.
 - Sign-up writes the chosen `username`, `name` and `password_hash` and sets `demo_expires_at` to NULL in one statement that matches only a row that still has an expiry.

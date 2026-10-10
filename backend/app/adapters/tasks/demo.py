@@ -2,6 +2,7 @@ import re
 
 from app.domain.errors import InvalidJql, TaskNotFound
 from app.domain.jql import JqlField, JqlValue, JqlVocabulary
+from app.domain.ports import DemoStatusRepo
 from app.domain.tasks import StatusCategory, Task, now_iso
 
 DEMO_HOST = "jira.example.com"
@@ -65,8 +66,8 @@ class DemoTaskProvider:
     source_id = "demo"
     source_name = "Demo tasks"
 
-    def __init__(self) -> None:
-        self._tasks = {
+    def __init__(self, statuses: DemoStatusRepo | None = None, owner: str = "") -> None:
+        self._seed = {
             key: {
                 "type_name": type_name,
                 "summary": summary,
@@ -77,9 +78,28 @@ class DemoTaskProvider:
             }
             for key, type_name, summary, status, assignee, priority in _SEED
         }
+        # With a store each person has their own statuses; without one the instance shares them.
+        self._statuses = statuses
+        self._owner = owner
 
-    def _task(self, key: str) -> Task:
-        fields = self._tasks[key]
+    def scoped(self, owner: str) -> "DemoTaskProvider":
+        """The demo tasks as this person sees them."""
+        return DemoTaskProvider(self._statuses, owner) if self._statuses else self
+
+    @property
+    def _tasks(self) -> dict[str, dict]:
+        if self._statuses is None:
+            return self._seed
+        changed = self._statuses.get(self._owner)
+        return {
+            key: {**fields, "status_name": changed[key][0], "updated": changed[key][1]}
+            if key in changed
+            else fields
+            for key, fields in self._seed.items()
+        }
+
+    def _task(self, key: str, tasks: dict[str, dict] | None = None) -> Task:
+        fields = (tasks or self._tasks)[key]
         return Task(
             key=key,
             status_category=_CATEGORY.get(fields["status_name"], "new"),
@@ -89,14 +109,15 @@ class DemoTaskProvider:
         )
 
     def resolve(self, key: str) -> Task:
-        if key not in self._tasks:
+        if key not in self._seed:
             raise TaskNotFound(f"{key} not found")
         return self._task(key)
 
     def poll(self, keys: list[str]) -> list[Task]:
+        tasks = self._tasks
         return [
-            self._task(key)
-            if key in self._tasks
+            self._task(key, tasks)
+            if key in tasks
             else Task(
                 key=key,
                 state="not_found",
@@ -108,10 +129,13 @@ class DemoTaskProvider:
 
     def set_status(self, key: str, status: str) -> Task:
         """Lets smoke tests and demos change a status the way Jira would."""
-        if key not in self._tasks:
+        if key not in self._seed:
             raise TaskNotFound(f"{key} not found")
-        self._tasks[key]["status_name"] = status
-        self._tasks[key]["updated"] = now_iso()
+        if self._statuses is None:
+            self._seed[key]["status_name"] = status
+            self._seed[key]["updated"] = now_iso()
+        else:
+            self._statuses.set(self._owner, key, status, now_iso())
         return self._task(key)
 
     def search(self, jql: str, limit: int) -> tuple[list[Task], int]:
@@ -119,12 +143,13 @@ class DemoTaskProvider:
         if jql.count('"') % 2:
             raise InvalidJql("The query has an unclosed quote.")
         needles = [value.lower() for value in _QUOTED.findall(jql)]
+        tasks = self._tasks
         keys = [
             key
-            for key, fields in self._tasks.items()
+            for key, fields in tasks.items()
             if all(needle in self._text(key, fields) for needle in needles)
         ]
-        return [self._task(key) for key in keys[:limit]], len(keys)
+        return [self._task(key, tasks) for key in keys[:limit]], len(keys)
 
     def jql_vocabulary(self) -> JqlVocabulary:
         return JqlVocabulary(

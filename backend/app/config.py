@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     jira_ca_bundle: str | None = None
     # Asks GitHub for the latest release every 6 hours to show "update available".
     update_check: bool = True
+    # A public demo: visitors start without an account, on the demo tasks only.
+    tiko_demo: bool = False
+
+    @model_validator(mode="after")
+    def _demo_has_no_tracker(self) -> "Settings":
+        if self.tiko_demo and self.tiko_tracker == "jira":
+            raise ValueError("TIKO_DEMO=1 runs on the demo tasks; remove TIKO_TRACKER=jira")
+        return self
 
 
 @lru_cache

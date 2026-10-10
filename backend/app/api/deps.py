@@ -22,9 +22,15 @@ def live(request: Request) -> LiveBoards:
     return request.app.state.live
 
 
+def is_demo(request: Request) -> bool:
+    """Whether the instance is a public demo (TIKO_DEMO)."""
+    return request.app.state.visitors is not None
+
+
 def _owner(request: Request) -> str:
-    """Whose task cache a request reads: the person's for Jira, the shared one for demo tasks."""
-    if request.app.state.settings.provider() != "jira":
+    """Whose task cache a request reads: the person's for Jira and on a demo instance, the
+    shared one for demo tasks anywhere else."""
+    if request.app.state.settings.provider() != "jira" and not is_demo(request):
         return ""
     return current_person(request).id
 
@@ -41,7 +47,7 @@ def provider(request: Request) -> TaskProvider:
     """The demo tasks, or Jira with the signed-in person's own token."""
     state = request.app.state
     if state.settings.provider() != "jira":
-        return state.demo
+        return state.demo.scoped(_owner(request))
     settings: SettingsService = state.settings
     try:
         creds = settings.jira_credentials(current_person(request).id)
@@ -59,7 +65,7 @@ def refresher(request: Request) -> RefreshService:
 
 
 def demo(request: Request) -> DemoTasks:
-    return request.app.state.demo
+    return request.app.state.demo.scoped(_owner(request))
 
 
 def accounts(request: Request) -> Accounts:
@@ -80,6 +86,17 @@ def current_admin(request: Request) -> Person:
     if person.role != "admin":
         raise Forbidden("Only an admin can do this.")
     return person
+
+
+def not_demo_visitor(request: Request) -> None:
+    """Sharing and account changes wait until a demo visitor signs up."""
+    if current_person(request).demo_expires_at:
+        raise Forbidden("Sign up to do this.")
+
+
+def not_on_demo(request: Request) -> None:
+    if is_demo(request):
+        raise Forbidden("This is switched off on the demo.")
 
 
 def members(request: Request) -> Members:
@@ -112,3 +129,5 @@ MembersDep = Annotated[Members, Depends(members)]
 CanView = Annotated[BoardRole, board_role("viewer")]
 CanEdit = Annotated[BoardRole, board_role("editor")]
 IsOwner = Annotated[BoardRole, board_role("owner")]
+NotDemoVisitor = Depends(not_demo_visitor)
+NotOnDemo = Depends(not_on_demo)

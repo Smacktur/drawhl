@@ -104,6 +104,14 @@ class OwnerRequired(DomainError):
     code = "owner_required"
 
 
+class DemoFull(DomainError):
+    code = "demo_full"
+
+
+class BoardLimit(DomainError):
+    code = "board_limit"
+
+
 class TooManyAttempts(DomainError):
     code = "too_many_attempts"
 
