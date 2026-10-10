@@ -1,50 +1,78 @@
-# Implementation Plan: Real-time boards (skeleton)
+# Implementation Plan: Real-time boards
 
-**Spec**: [spec.md](spec.md) | **Status**: skeleton, to be filled before G2
+**Spec**: [spec.md](spec.md) | **Data**: [data-model.md](data-model.md) | **Contract**: [contracts/live.md](contracts/live.md)
+
+## Summary
+
+A board becomes a `Y.Doc` shared over one WebSocket per board. The server keeps a room per open board in memory, enforces roles per connection, repairs rule violations after merges, and saves the JSON doc and the encoded state together, so every REST reader keeps working. The browser binds xyflow to the document, shows presence from the awareness protocol and keeps the viewport to itself.
 
 ## Starting points in the code
 
 ```text
-backend/app/api/gate.py            PasswordGate already closes sockets without a session (1008)
-backend/app/domain/members.py      Members.require: the one role check, reuse for sockets
-backend/app/domain/sessions.py     sessions cache 30 s; needs a hook to kick open sockets
-backend/app/domain/boards.py       BoardDoc, check_doc, task_keys, MAX_NODES
-backend/app/adapters/storage/sqlite.py   boards.doc JSON + version; one connection behind a lock
-frontend/src/canvas/useBoardDoc.ts debounced CAS saves; the place the CRDT provider replaces
-frontend/src/canvas/useHistory.ts  local undo; becomes Y.UndoManager
-frontend/src/canvas/Canvas.tsx     xyflow nodes and edges, read-only wiring, conflict banner
-frontend/nginx.conf.template       needs WebSocket upgrade headers and a longer read timeout
+backend/app/api/gate.py            PasswordGate puts the person on the socket scope, closes 1008 without a session
+backend/app/domain/members.py      Members.require: the one role check, reused for sockets
+backend/app/domain/sessions.py     end, end_all, forget: where sockets get kicked
+backend/app/domain/boards.py       BoardDoc, check_doc, save_board, MAX_NODES
+backend/app/adapters/storage/sqlite.py   boards.doc JSON + version; one connection behind a lock (blocking)
+frontend/src/canvas/useBoardDoc.ts debounced CAS saves; replaced by the live binding
+frontend/src/canvas/useHistory.ts  snapshot undo; replaced by Y.UndoManager
+frontend/src/canvas/Canvas.tsx     xyflow wiring, read-only wiring, conflict banner, fitView on version 1
+frontend/nginx.conf.template       /api/ has no upgrade headers, 60 s read timeout
 frontend/vite.config.ts            dev proxy needs ws: true
 ```
 
-## Shape to evaluate (not decided)
+## Structure
 
-- `GET /api/boards/{id}/live` WebSocket, y-websocket protocol through `pycrdt-websocket`; one room per board in memory, created on first join, persisted debounced to `boards.doc` (JSON) and dropped after the last person leaves.
-- Board content in a `Y.Doc`: `nodes` and `edges` as `Y.Map` by id, each node's fields in a nested `Y.Map`; text of stickies, texts and frame titles as `Y.Text` if character-level merging is wanted.
-- Presence through the awareness protocol: user id, name, color, cursor in flow coordinates, selected ids.
-- Viewport out of the shared doc.
+```text
+backend/app/domain/live.py         projection, apply_json, repair; the LiveRooms port (kick person, kick session,
+                                   recheck board, close board, apply REST save). Imports pycrdt, no FastAPI
+backend/app/adapters/live/rooms.py rooms in memory on pycrdt-websocket: join, save timer, idle drop
+backend/app/adapters/live/socket.py  the per-connection channel: role filter, size limit, session re-check
+backend/app/api/live.py            the WebSocket route: origin, role, close codes
+frontend/src/live/                 doc.ts (schema, projection), useLiveBoard.ts (provider, binding, status),
+                                   presence.ts, viewport.ts
+```
 
-## Slices (draft, to confirm)
+`pycrdt` in the domain is a deliberate exception to "no provider SDKs": it is the data structure, not a service, and the repair rules are business logic that must be tested there.
 
-| # | Branch | Story | Done when |
-|---|---|---|---|
-| 42 | `feat/live-sync` | US1 | two browsers edit one board and converge; viewer updates are dropped by the server; no task data in the socket |
-| 43 | `feat/presence` | US2 | faces in the top bar, named cursors, remote selection |
-| 44 | `feat/live-undo` | US3 | undo only reverts the person's own changes |
-| 45 | `feat/reconnect` | US4 | offline edits merge on reconnect; revoked people are kicked |
+## Decisions
 
-## Risks (draft)
+- **The role filter sits in the connection wrapper**, not in the room. `YRoom.on_message` sees bytes without a sender, so the object handed to `room.serve()` filters what its own client sent, by message type, before the room reads it.
+- **Storage runs in a worker thread** (`anyio.to_thread`): the SQLite repo is blocking and shares one connection behind a lock.
+- **Saves are whole-state**: `ydoc` holds the full encoded state, not an update log. A board is small (2000 nodes), and one row per board keeps backup and restore as they are.
+- **`PUT /boards/{id}` calls the room** when one is open and the same `apply_json` on a stored doc when none is, so there is one write path.
+- **The first paint comes from `GET /boards/{id}`**, as today, view-only; the canvas turns editable on the first sync. Edits are never accepted into a doc that has not synced once, so nothing can be stranded in a tab.
+- **A drag writes the document once, on drop**; positions during the drag travel as presence. This keeps a drag one undo step and keeps update traffic low.
+- **Remote changes are applied per animation frame**, and the binding touches only the nodes that changed, so xyflow does not re-render the board on every update.
+- **nginx**: `proxy_http_version 1.1`, `Upgrade` and `Connection` headers through a `map`, `proxy_read_timeout 1h`; the provider's awareness heartbeat (every 15 s) keeps the socket busy anyway.
+
+## Slices
+
+| Branch | Story | Done when |
+|---|---|---|
+| `feat/live-sync` | US1, US3 | two browsers edit one board and converge; a viewer's updates are dropped; no task data on the socket; undo reverts only the person's own steps; boards from v2026.10.13 open live |
+| `feat/presence` | US2 | faces in the top bar, named cursors, remote selection and live drags |
+| `feat/reconnect` | US4 | offline edits merge on return; revoked people are off the board within a second; the API restarts under open boards |
+
+US3 ships inside the first slice: the snapshot undo of today would roll back other people's work the moment sync is on, so main would not be releasable between them. A minimal kick on sign-out and role change also ships in the first slice (FR-010 server side); the third slice adds the client's handling of each close code and the offline indicator.
+
+No release between `feat/live-sync` and `feat/reconnect` unless the first has passed the access matrix: an editor made viewer must lose write access on the open socket from the first slice on.
+
+## Risks
 
 | Risk | Plan B |
 |---|---|
-| Merged docs break `check_doc` rules | Repair on persist (drop dangling edges, re-order parents) and log it |
-| Memory of rooms on big boards | Cap people per room and update size; drop idle rooms |
-| xyflow re-renders on every remote update | Batch remote updates per animation frame |
-| A per-person snapshot leaks through the doc | Keep task data out of the Y.Doc by schema; a test checks socket traffic |
+| Merged docs break `check_doc` rules | Server repair after every update; the persisted doc is validated before the write, a failed validation keeps the previous save and logs |
+| The Python and TypeScript projections drift | One set of JSON fixtures run by both test suites |
+| xyflow re-renders on every remote update | Batch per animation frame, update only changed nodes; measure SC-005 before G3 |
+| Room memory on big boards | 30 connections, 1 MiB messages, idle rooms dropped after 30 s |
+| A person's task data leaks through the doc | No task field in the schema; SC-004 records socket bytes |
+| Self-hosters' own proxies block WebSockets | View-only with a clear notice; "Breaking" in `CHANGELOG.md`; proxy snippets for nginx, Caddy and Traefik in the guide |
+| `pycrdt-websocket` API differs from what the docs showed | Its part is small (room, sync, awareness); the wrapper keeps it behind `adapters/live` |
+| Encoded state grows with deletions | Garbage collection stays on; SC-005 measures a board after 10 000 edits |
 
 ## Lessons from spec 008 to reuse
 
 - Gate every board route and socket through one domain function; test with an access matrix.
 - Library docs come from context7; new dependencies go through `make licenses` and `THIRD_PARTY.md`.
-- Release tags are `vYYYY.M.N`, images are tagged `YYYY.M.N` without the `v`.
-- The CLA bot sometimes posts no status on a PR; opening `https://cla-assistant.io/check/tiko-run/tiko?pullRequest=<n>` makes it check again.
+- A user-visible slice updates the guide in `docs/guide`.
