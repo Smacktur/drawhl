@@ -6,9 +6,9 @@ description: How tiko is built, the two containers, the code layout and how stat
 ## Overview
 
 ```text
-Browser ──> Web UI (React, nginx :3000) ──/api──> API (FastAPI :8000) ──> SQLite (data/app.db)
-                                                        │
-                                                        └──REST──> Task tracker (Jira Data Center today)
+Browser ──> Web UI (React, nginx :3000) ──/api, WebSocket──> API (FastAPI :8000) ──> SQLite (data/app.db)
+                                                                   │
+                                                                   └──REST──> Task tracker (Jira Data Center today)
 ```
 
 tiko runs as two containers. nginx serves the built UI and proxies `/api` to the API, so the browser sees one origin. The API keeps everything in one SQLite file under `./data`.
@@ -19,25 +19,26 @@ The backend has three layers with one dependency rule, `api → domain ← adapt
 
 ```text
 backend/app/
-  api/        routes: auth, boards, tasks, jql, settings, people, invites, me, demo, version;
+  api/        routes: auth, boards, live (WebSocket), tasks, jql, settings, people, invites, me, demo, version;
               the sign-in gate and error mapping to HTTP
-  domain/     accounts, sessions, invites, members, boards, tasks, refresh and backoff,
+  domain/     accounts, sessions, invites, members, boards, live (shared document), tasks, refresh and backoff,
               jql, settings, modules, updates; ports.py
   adapters/
     tasks/    jira_dc.py (httpx), demo.py (in-memory seed)
     storage/  sqlite.py, migrations/*.sql (PRAGMA user_version)
     secrets/  fernet.py (token encryption with TIKO_SECRET_KEY)
+    live/     rooms.py (open boards and their sockets)
     releases/ github.py (latest release for "update available")
   config.py   ENV, the single entry point
 ```
 
-Everything external sits behind a port in `domain/ports.py`. `TaskProvider` is the tracker interface: `resolve`, `poll`, `search`, `check`, plus the query vocabulary and values. The other ports are repositories (`BoardRepo`, `MemberRepo`, `UserRepo`, `SessionRepo`, `InviteRepo`, `CredentialRepo`, `SnapshotRepo`, `SettingsRepo`), `SecretBox` for encryption and `ReleaseFeed` for the update check. The tracker is a runtime setting (`demo` or `jira`), so connecting Jira needs no restart.
+Everything external sits behind a port in `domain/ports.py`. `TaskProvider` is the tracker interface: `resolve`, `poll`, `search`, `check`, plus the query vocabulary and values. The other ports are repositories (`BoardRepo`, `MemberRepo`, `UserRepo`, `SessionRepo`, `InviteRepo`, `CredentialRepo`, `SnapshotRepo`, `SettingsRepo`), `SecretBox` for encryption, `LiveBoards` for the open sockets of live boards and `ReleaseFeed` for the update check. The tracker is a runtime setting (`demo` or `jira`), so connecting Jira needs no restart.
 
 The main tables:
 
 | Table | Holds |
 |---|---|
-| `boards` | One JSON document per board, with a `version` for compare-and-set saves |
+| `boards` | One JSON document per board, with a `version` for compare-and-set saves, and the encoded shared document of the live board |
 | `board_members` | Who can view or edit each board |
 | `users`, `sessions`, `invites` | Accounts, sign-ins and one-time links |
 | `user_credentials` | Each person's encrypted tracker token |
@@ -54,6 +55,7 @@ frontend/src/
   auth/       sign-in and invite screens
   board/      top bar, board menu, sharing, shortcuts dialog
   canvas/     React Flow canvas, nodes, toolbar, context menu, clipboard, undo history
+  live/       shared document and its WebSocket sync
   modules/    board modules, Gantt first
   timers/     card timers
   focus/      focus timer and player
@@ -63,7 +65,9 @@ frontend/src/
   lib/        theme, shortcuts registry, query helpers
 ```
 
-The board lives in React Flow state and is saved as a whole document after a short debounce. A `409` on save means someone else saved first.
+## Live boards
+
+An open board is a shared document (a CRDT: Yjs in the browser, pycrdt on the server) synced over a WebSocket at `/api/boards/{id}/live`. The canvas edits that document, and the server merges everyone's changes, checks the person's role on every change and saves the result. `PUT /api/boards/{id}` still works: it is applied to the shared document, so people who have the board open see the change. What merges and what wins is described in [Working together](../working-together/).
 
 ## Status refresh
 

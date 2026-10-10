@@ -87,11 +87,11 @@ Put a timer next to a card. It goes off after a set time or when the task leaves
 
 <!-- demo: GIF or screencast of the palette -->
 
-### Share boards with your team
+### Work on a board together
 
-Invite people with a link and give each board viewers and editors. [Sharing →](https://docs.tiko.run/security/#sharing-boards)
+Invite people with a link and give each board viewers and editors. Everyone on a board sees each other's changes as they happen. [Working together →](https://docs.tiko.run/working-together/) · [Sharing →](https://docs.tiko.run/security/#sharing-boards)
 
-<!-- demo: GIF or screencast of sharing -->
+<!-- demo: GIF or screencast of two people on one board -->
 
 ## Install
 
@@ -147,7 +147,7 @@ Everything else lives at [docs.tiko.run](https://docs.tiko.run/).
 | | |
 |---|---|
 | Get started | [Install](https://docs.tiko.run/install/) · [Quick start](https://docs.tiko.run/quick-start/) |
-| Use tiko | [Adding tasks](https://docs.tiko.run/adding-tasks/) · [Search](https://docs.tiko.run/search/) · [Gantt](https://docs.tiko.run/gantt/) · [Timers and focus](https://docs.tiko.run/focus-and-timers/) · [Shortcuts](https://docs.tiko.run/keyboard-shortcuts/) |
+| Use tiko | [Adding tasks](https://docs.tiko.run/adding-tasks/) · [Working together](https://docs.tiko.run/working-together/) · [Search](https://docs.tiko.run/search/) · [Gantt](https://docs.tiko.run/gantt/) · [Timers and focus](https://docs.tiko.run/focus-and-timers/) · [Shortcuts](https://docs.tiko.run/keyboard-shortcuts/) |
 | Trackers | [Supported trackers](https://docs.tiko.run/trackers/) · [Connect Jira Data Center](https://docs.tiko.run/jira-data-center/) |
 | Self-host | [Configuration](https://docs.tiko.run/configuration/) · [Data, backups and upgrades](https://docs.tiko.run/data-and-upgrades/) · [Security and privacy](https://docs.tiko.run/security/) |
 | Project | [Roadmap](https://docs.tiko.run/roadmap/) · [Architecture](https://docs.tiko.run/architecture/) · [Changelog](CHANGELOG.md) |

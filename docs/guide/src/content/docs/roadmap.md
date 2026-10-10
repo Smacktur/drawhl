@@ -7,7 +7,8 @@ What we plan next, roughly in order. To ask for something sooner or suggest what
 
 ## Working together
 
-- Real-time boards: see other people's cursors and changes as they happen
+- Presence on a live board: who is here, their cursors and selections
+- Changes kept through a dropped connection and merged when it comes back
 
 ## More trackers
 
@@ -43,7 +44,6 @@ What we plan next, roughly in order. To ask for something sooner or suggest what
 
 - The tracker stays the source of truth: tiko doesn't change status or edit tasks.
 - Statuses come from polling the open board, not webhooks.
-- Boards are shared, but two people editing at once do not see each other live yet.
 - Desktop only, English only.
 
 What already shipped is in the [changelog](https://github.com/tiko-run/tiko/blob/main/CHANGELOG.md).
