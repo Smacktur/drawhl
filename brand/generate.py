@@ -271,32 +271,47 @@ for dark in (False, True):
 # Button -------------------------------------------------------------------
 
 def cloud_button():
-    """README button for tiko Cloud; the card shrinks to a dot and grows back every 6 s."""
+    """README button for tiko Cloud. Every 6 s the card shrinks to a dot and grows back,
+    then the FREE tag pops and a light band runs across it."""
     h, pad, em, gap = 40, 12, 22, 9
-    label, ls = "Start on tiko Cloud", 15
+    bold = Face(PLEX, 700)
+    parts = [(SANS4, "Start on", 15, 0.0, 0.85), (bold, "tiko", 17.5, WM_TRACK, 1), (SANS6, "Cloud", 15, 0.0, 1)]
+    space = 4.5
     tag, ts = "FREE", 11
-    lw = SANS6.width(label, ls)
     gw = SANS6.width(tag, ts, 0.04) + 14
     gh = 20
-    w = round(pad + em + gap + lw + 10 + gw + pad)
+    dur = 'dur="6s" repeatCount="indefinite"'
     frames = dict(x="10.6;10.6;13.6;10.6;10.6", y="10.8;10.8;13.6;10.8;10.8",
                   width="18.8;18.8;4.8;18.8;18.8", height="10.4;10.4;4.8;10.4;10.4",
                   rx="2.6;2.6;2.4;2.6;2.6")
     anim = "".join(
-        f'<animate attributeName="{a}" values="{v}" keyTimes="0;0.72;0.8;0.9;1" dur="6s" '
-        f'calcMode="spline" keySplines="0 0 1 1;0.4 0 0.2 1;0.2 0.8 0.2 1;0 0 1 1" repeatCount="indefinite"/>'
+        f'<animate attributeName="{a}" values="{v}" keyTimes="0;0.66;0.74;0.84;1" {dur} '
+        f'calcMode="spline" keySplines="0 0 1 1;0.4 0 0.2 1;0.2 0.8 0.2 1;0 0 1 1"/>'
         for a, v in frames.items())
     dots = "".join(f'<circle cx="{x}" cy="{y}" r="2.4" fill="#FFFFFF" fill-opacity="0.5"/>' for x, y in DOTS)
     emblem = f'{dots}<rect x="10.6" y="10.8" width="18.8" height="10.4" rx="2.6" fill="#FFFFFF">{anim}</rect>'
+    text, x = "", pad + em + gap
+    for face, word, size, track, op in parts:
+        o = f' fill-opacity="{op}"' if op < 1 else ""
+        text += f'<path d="{face.path(word, size, x, h / 2 + 15 * 0.35, track)}" fill="#FFFFFF"{o}/>'
+        x += face.width(word, size, track) + space
+    gx = x - space + 11
+    w = round(gx + gw + pad)
+    # The tag is drawn around its own centre so the pop scales in place.
+    pop = (f'<animateTransform attributeName="transform" type="scale" values="1;1;1.12;1;1" '
+           f'keyTimes="0;0.84;0.89;0.96;1" {dur} calcMode="spline" '
+           f'keySplines="0 0 1 1;0.2 0.8 0.2 1;0.4 0 0.2 1;0 0 1 1"/>')
+    band = (f'<rect x="{-gw / 2 - 12:.1f}" y="{-gh}" width="7" height="{gh * 2}" fill="{C["brand"]}" fill-opacity="0.22" '
+            f'transform="skewX(-20)"><animate attributeName="x" values="{-gw / 2 - 12:.1f};{-gw / 2 - 12:.1f};{gw / 2 + 12:.1f}" '
+            f'keyTimes="0;0.86;1" {dur}/></rect>')
+    free = (f'<clipPath id="t"><rect x="{-gw / 2:.1f}" y="{-gh / 2}" width="{gw:.1f}" height="{gh}" rx="4"/></clipPath>'
+            f'<g transform="translate({gx + gw / 2:.1f} {h / 2})"><g>{pop}'
+            f'<rect x="{-gw / 2:.1f}" y="{-gh / 2}" width="{gw:.1f}" height="{gh}" rx="4" fill="#FFFFFF"/>'
+            f'<path d="{SANS6.path(tag, ts, -gw / 2 + 7, ts * 0.36, 0.04)}" fill="{C["brand"]}"/>'
+            f'<g clip-path="url(#t)">{band}</g></g></g>')
     body = f'<rect width="{w}" height="{h}" rx="8" fill="{C["brand"]}"/>'
-    body += placed(emblem, pad, (h - em) / 2, em)
-    tx = pad + em + gap
-    body += f'<path d="{SANS6.path(label, ls, tx, h / 2 + ls * 0.35)}" fill="#FFFFFF"/>'
-    gx = tx + lw + 10
-    body += f'<rect x="{gx:.1f}" y="{(h - gh) / 2}" width="{gw:.1f}" height="{gh}" rx="4" fill="#FFFFFF"/>'
-    body += f'<path d="{SANS6.path(tag, ts, gx + 7, h / 2 + ts * 0.36, 0.04)}" fill="{C["brand"]}"/>'
+    body += placed(emblem, pad, (h - em) / 2, em) + text + free
     return svg(w, h, body, "Start on tiko Cloud, free")
-
 
 write("button/tiko-cloud-button.svg", cloud_button(), [("tiko-cloud-button.png", 640)])
 
