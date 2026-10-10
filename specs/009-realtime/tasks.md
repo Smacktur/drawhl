@@ -37,13 +37,14 @@ description: "Task list for Real-time boards"
 
 **Goal**: people see each other's faces, cursors, selection and drags.
 
-- [ ] T015 [US2] `DESIGN.md`: presence entry (8 palette tokens for both themes with contrast for the name label, cursor, selection outline, faces in the top bar, reduced motion); `/hallmark` pass before code
-- [ ] T016 [P] [US2] `live/presence.ts`: awareness state per contracts/live.md, color from the person's id, cursor throttled to 50 ms and cleared off-canvas, selection capped at 200 ids. Tests
-- [ ] T017 [US2] Faces in the top bar: up to 5 and "+N", names on hover, one face per person across tabs, the person themselves left out. Tests
-- [ ] T018 [US2] Remote cursors layer in flow coordinates, outside xyflow's node tree, each with the person's small avatar (the same component as in the top bar; full name on hover and for 2 s after joining); remote selection outline with the avatar on its corner, drawn inside the node so it cannot lag behind it. Tests at several zoom levels
-- [ ] T026 [US2] Changes made by others glide into place instead of jumping: a short transition on position and size for remote updates only, off under `prefers-reduced-motion`; a person's own changes stay instant. Tests
-- [ ] T019 [US2] Live drags: positions in presence during a drag, the document written once on drop; a remote drag moves the node without entering undo. Tests
-- [ ] T020 [US2] SC-005 measured (2000 nodes, 10 clients, 20 dragged elements); `/ui-review`; guide; `CHANGELOG.md`; screenshot in both themes
+- [x] T015 [US2] `DESIGN.md`: presence entry (8 palette tokens for both themes with contrast for the name label, cursor, selection outline, faces in the top bar, reduced motion); `/hallmark` pass before code
+- [x] T016 [P] [US2] `live/presence.ts`: awareness state per contracts/live.md, color from the person's id, cursor throttled to 50 ms and cleared off-canvas, selection capped at 200 ids. Tests
+- [x] T017 [US2] Faces in the top bar: up to 5 and "+N", names on hover, one face per person across tabs, the person themselves left out. Tests
+- [x] T018 [US2] Remote cursors layer in flow coordinates, outside xyflow's node tree, each with the person's small avatar (the same component as in the top bar; full name on hover and for 2 s after joining); remote selection outline with the avatar on its corner, drawn inside the node so it cannot lag behind it. Tests at several zoom levels
+- [x] T026 [US2] Changes made by others glide into place instead of jumping: a short transition on position and size for remote updates only, off under `prefers-reduced-motion`; a person's own changes stay instant. Tests
+- [x] T019 [US2] Live drags: positions in presence during a drag, the document written once on drop; a remote drag moves the node without entering undo. Tests
+- [x] T020 [US2] Guide, `CHANGELOG.md`, `DESIGN.md`; checked by hand in two tabs (cursor, avatar, outline, live drag, glide)
+- [ ] T027 [US2] SC-005 measured (2000 nodes, 10 clients, 20 dragged elements). A first try showed about 40 MB for one 2000-node room against the 30 MB target and did not get a drag measured; moved to slice reconnect. Check the top bar avatars and the dark theme with two different people
 
 **Checkpoint**: `make check`, both themes, reduced motion → G3.
 

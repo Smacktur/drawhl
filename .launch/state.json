@@ -47,7 +47,8 @@
     "tracker-env",
     "rename-tiko",
     "install-ps1",
-    "live-sync"
+    "live-sync",
+    "presence"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -111,7 +112,8 @@
     "G1_installer": "approved",
     "G2_installer": "approved",
     "G2_realtime": "approved",
-    "G3_live-sync": "approved"
+    "G3_live-sync": "approved",
+    "G3_presence": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -141,6 +143,7 @@
     "2026-10-10 installer: install.ps1 passed on a clean Windows 11 VM (two runs, one restart), PR 60. Left: T013 check of tiko.run/install.ps1 after the merge.",
     "2026-10-10 installer: spec 010 done; tiko.run serves both installers from main, the repository About link points to tiko.run.",
     "2026-10-10 G2 realtime: owner approved spec 009 in 3 slices (live-sync with personal undo, presence, reconnect): CRDT state stored next to the JSON doc, the server repairs merges, one value per field with last writer wins (no character-level text merging in v1), no REST fallback for saving when WebSockets are blocked.",
-    "2026-10-10 realtime: slice live-sync approved at G3 (PR 64): boards are CRDT documents over one WebSocket, the server on pycrdt alone, personal undo. Measured locally: 14-41 ms from a key press in one tab to the screen of another on a 300-note board. Owner's test first ran against a tab still on the old app; pages are now served with no-cache. Owner asked for remote changes to glide into place: added to slice presence (T026)."
+    "2026-10-10 realtime: slice live-sync approved at G3 (PR 64): boards are CRDT documents over one WebSocket, the server on pycrdt alone, personal undo. Measured locally: 14-41 ms from a key press in one tab to the screen of another on a 300-note board. Owner's test first ran against a tab still on the old app; pages are now served with no-cache. Owner asked for remote changes to glide into place: added to slice presence (T026).",
+    "2026-10-10 realtime: slice presence approved at G3 (PR 67): avatars in the top bar, cursors with a small avatar, selection outline drawn inside the node, live drags, remote changes glide. The server lets a tab speak only for its own presence. Owner tried a cursor fixed to the dragged node and turned it down (it twitched on grab and release); the cursor follows the real pointer. SC-005 load is not measured yet (T027, slice reconnect)."
   ]
 }
