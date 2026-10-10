@@ -1,0 +1,8 @@
+# Orca (https://github.com/stablyai/orca) worktree setup; nothing else reads this file.
+scripts:
+  setup: scripts/worktree-setup.sh
+
+worktree:
+  # Agent notes are one folder for all worktrees, not one per branch.
+  sharedDirectories:
+    - tmp
