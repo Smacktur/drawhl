@@ -26,10 +26,10 @@ description: "Task list for One-command installer"
 
 ## Phase 2: Slice `feat/install-ps1` — one line on Windows (US2, US3)
 
-- [ ] T008 [US2] `install/install.ps1`: checks, WSL 2, Docker Desktop via `winget`, restart handoff, folder, `.env`, start, open the browser
-- [ ] T009 [US2] CI: `PSScriptAnalyzer` on a Windows runner
-- [ ] T010 [US3] Guide page Windows part; README
-- [ ] T011 [US2] Clean Windows 11 VM: two runs, one restart, signed in
+- [x] T008 [US2] `install/install.ps1`: checks, WSL 2, Docker Desktop via `winget`, restart handoff, folder, `.env`, start, open the browser
+- [x] T009 [US2] CI: `PSScriptAnalyzer` on a Windows runner
+- [x] T010 [US3] Guide page Windows part; README
+- [x] T011 [US2] Clean Windows 11 VM: two runs, one restart, signed in
 
 **Checkpoint**: CI, VM run → G3.
 
