@@ -1,14 +1,18 @@
 body:
   - type: markdown
     attributes:
-      value: Hide real task names and tokens in screenshots and logs before you post them.
+      value: Hide real task names and tokens in screenshots and logs before you post them. If something is broken, open a bug report in Issues instead.
   - type: textarea
     id: question
     attributes:
-      label: Question
-      description: What are you trying to do, and what happens instead?
+      label: What are you trying to do?
+      description: The goal, not only the step that fails.
     validations:
       required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried, and what happened?
   - type: input
     id: version
     attributes:
