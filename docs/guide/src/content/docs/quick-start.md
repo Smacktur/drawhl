@@ -25,18 +25,30 @@ docker compose up --build
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/tiko?referralCode=wFuy8y&utm_medium=integration&utm_source=button&utm_campaign=tiko)
 
-The template runs the released images: `api` keeps your boards on a volume, `web` is the only public service, and the key that encrypts tracker tokens and the password are generated on deploy. Sign in as `admin` with `TIKO_PASSWORD` from the `api` service's Variables. A tracker that is reachable only from a corporate network is out of reach from Railway.
+The template runs the released images: `api` keeps your boards on a volume, `web` is the only public service, and the key that encrypts tracker tokens and the password are generated on deploy. A tracker that is reachable only from a corporate network is out of reach from Railway.
+
+To sign in after the deploy:
+
+1. In the Railway project open the `web` service and click its public address.
+2. Open the `api` service, then the Variables tab, and reveal `TIKO_PASSWORD`.
+3. Sign in with the username `admin` and that password, then change it in Settings → Security.
 
 ## On Render
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tiko-run/tiko)
 
-The Blueprint creates `tiko-api`, a private service with a 1 GB disk for your boards, and `tiko-web`, the public one. The disk needs paid instances, about $15 a month for both. Sign in as `admin` with `TIKO_PASSWORD` from the `tiko-api` service's Environment. Updates are manual: Deploy → Deploy latest reference on each service.
+The Blueprint creates `tiko-api`, a private service with a 1 GB disk for your boards, and `tiko-web`, the public one. The disk needs paid instances, about $15 a month for both. Updates are manual: Deploy → Deploy latest reference on each service.
+
+To sign in after the deploy:
+
+1. Open the address of `tiko-web` from the Render dashboard.
+2. Open the `tiko-api` service, then Environment, and reveal `TIKO_PASSWORD`.
+3. Sign in with the username `admin` and that password, then change it in Settings → Security.
 
 To upgrade, redeploy `api` and `web`: they pull the latest release.
 
 ## First look
 
-Open http://localhost:3000, or the Railway or Render URL, and sign in as `admin`. On your machine the password is in the log: `docker compose logs api | grep 'tiko password'`. A fresh install opens on a sample board built from demo tasks. Move things around, then add more with the card tool at the bottom: type `DEMO-5` for one task, or `project = DEMO` for all twelve. Delete the sample board when you are done with it.
+Open http://localhost:3000, or the Railway or Render URL, and sign in as `admin`. On your machine the password is in the log: `docker compose logs api | grep 'tiko password'`. On Railway and Render it is the `TIKO_PASSWORD` variable of the API service, as described above. A fresh install opens on a sample board built from demo tasks. Move things around, then add more with the card tool at the bottom: type `DEMO-5` for one task, or `project = DEMO` for all twelve. Delete the sample board when you are done with it.
 
 No keys or accounts are needed for the demo. To see your real tasks, [connect Jira Data Center](../jira-data-center/).

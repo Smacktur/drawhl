@@ -138,7 +138,7 @@ Or deploy your own copy:
 | Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tiko-run/tiko) |
 | DigitalOcean | Coming soon |
 
-Costs, passwords and limits of each platform are in the [quick start](https://docs.tiko.run/quick-start/#on-railway).
+After the deploy sign in as `admin`. The password is generated for you: it is the `TIKO_PASSWORD` variable of the `api` service on Railway, or of `tiko-api` on Render. Costs and limits of each platform are in the [quick start](https://docs.tiko.run/quick-start/#on-railway).
 
 A fresh install opens on a sample board with demo tasks, so you can try everything before you [connect your tracker](https://docs.tiko.run/jira-data-center/).
 
