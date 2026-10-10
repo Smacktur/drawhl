@@ -1,6 +1,7 @@
 """US4: each person's tracker token; no task data fetched with one token reaches another."""
 
 import sqlite3
+from contextlib import ExitStack
 
 import httpx
 import pytest
@@ -11,6 +12,7 @@ from app.config import Settings
 from app.main import create_app
 from tests.conftest import signed_in
 from tests.jira_fake import FakeJira
+from tests.test_live import Tab
 
 LONG = "long-enough-password"
 T_ANN = "-".join(["ann", "token", "for", "tests"])
@@ -140,3 +142,33 @@ def test_upgrade_moves_the_instance_token_and_cache_to_the_admin(tmp_path):
     assert rows == [("", "DEMO-1"), ("admin", "DEV-7")]
     assert conn.execute("SELECT key FROM settings WHERE key = 'jira_token_enc'").fetchall() == []
     assert SqliteSnapshotRepo(db).scoped("bob").get_many(["DEV-7"]) == {}
+
+
+def test_no_task_data_travels_through_the_live_socket(team):
+    """SC-004: the shared document carries card keys only, whoever's token filled the cards."""
+    people, _ = team
+    board_id = shared_board(people["ann"])
+    assert people["ann"].put(f"/api/boards/{board_id}/everyone", json={"role": "editor"}).is_success
+    app = people["ann"].app
+    app.state.live.save_idle_s = app.state.live.check_delay_s = 0.01
+    seen: list[bytes] = []
+    with TestClient(app) as sockets, ExitStack() as open_sockets:
+        tabs = {}
+        for name in ("ann", "bob"):
+            cookie = people[name].cookies.get("tiko_session")
+            socket = sockets.websocket_connect(
+                f"/api/boards/{board_id}/live", headers={"cookie": f"tiko_session={cookie}"}
+            )
+            tabs[name] = Tab(open_sockets.enter_context(socket))
+        for name, tab in tabs.items():
+            assert states(people[name], board_id)["DEV-1"] == "ok"
+            tab.add(card({"ann": "NEW-1", "bob": "NEW-2"}[name]), order=5)
+            tab.sync()
+        for tab in tabs.values():
+            tab.sync()
+            seen.extend(tab.received)
+    stored = app.state.boards.load(board_id)
+    wire = b"".join(seen) + stored[1] + stored[0].doc.model_dump_json().encode()
+    assert b"DEV-2" in wire
+    for secret in (b"Summary of", b"Alex Rivera", b"In Progress"):
+        assert secret not in wire

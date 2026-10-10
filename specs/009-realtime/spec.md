@@ -16,7 +16,7 @@ Spec 008 lets people share a board, but two editors on one board still collide: 
 
 From the spec 008 session:
 
-- **CRDT, not locking or last-writer-wins on the whole board**: `yjs`, `y-websocket` and `y-protocols` in the browser, `pycrdt` and `pycrdt-websocket` on the server. All MIT; run `make licenses` and add them to `THIRD_PARTY.md`.
+- **CRDT, not locking or last-writer-wins on the whole board**: `yjs`, `y-websocket` and `y-protocols` in the browser, `pycrdt` on the server (its sync and awareness helpers are enough, so `pycrdt-websocket` is not used). All MIT; run `make licenses` and add them to `THIRD_PARTY.md`.
 - **Monolith stays**: one FastAPI process serves WebSockets next to the REST API. The API runs as a single uvicorn process (`backend/Dockerfile`), so rooms live in memory. Several API replicas need Redis pub/sub; that belongs to the Postgres and Helm step.
 - **Open core**: real-time is AGPL, like accounts and sharing.
 - **Works without keys**: no external service; real-time works on a laptop with `docker compose up`.
@@ -77,7 +77,8 @@ The top bar shows the initials of the people on the board. Each person has a cur
 5. **Given** a person drags elements, **Then** others see them move during the drag; the document changes once, on the drop.
 6. **Given** a viewer, **Then** they are shown in the faces and have a cursor; they cannot select for editing, as today.
 7. **Given** a tab closes or loses its connection, **Then** its cursor, selection and face are gone for others within 3 s of a clean close and 30 s of a lost connection.
-8. **Given** `prefers-reduced-motion`, **Then** remote cursors and drags jump instead of gliding.
+8. **Given** someone else moves or resizes an element, **Then** it glides to its new place in about 150 ms instead of jumping; the person's own changes stay instant.
+9. **Given** `prefers-reduced-motion`, **Then** remote cursors, drags and changes jump instead of gliding.
 
 ---
 

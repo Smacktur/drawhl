@@ -111,7 +111,7 @@ What we plan next, roughly in order. Want something sooner or missing here? Open
 **Access and hosting**
 
 - Optional password login, so tiko can run on a public server
-- Accounts and shared boards for a team
+- Accounts and shared boards for a team, edited live by several people at once
 
 **More trackers**
 

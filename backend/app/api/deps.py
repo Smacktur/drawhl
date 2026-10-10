@@ -6,7 +6,7 @@ from app.domain.accounts import Accounts, Person
 from app.domain.errors import Forbidden, JiraNotConfigured
 from app.domain.invites import Invites
 from app.domain.members import BoardRole, Members
-from app.domain.ports import BoardRepo, DemoTasks, SnapshotRepo, TaskProvider
+from app.domain.ports import BoardRepo, DemoTasks, LiveBoards, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
 from app.domain.settings import SettingsService
@@ -15,6 +15,10 @@ from app.domain.tasks import NoTokenProvider
 
 def boards(request: Request) -> BoardRepo:
     return request.app.state.boards
+
+
+def live(request: Request) -> LiveBoards:
+    return request.app.state.live
 
 
 def _owner(request: Request) -> str:

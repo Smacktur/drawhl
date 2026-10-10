@@ -19,7 +19,14 @@ export default defineConfig({
         { label: 'Getting started', items: ['index', 'install', 'quick-start'] },
         {
           label: 'Using tiko',
-          items: ['adding-tasks', 'search', 'gantt', 'focus-and-timers', 'keyboard-shortcuts'],
+          items: [
+            'adding-tasks',
+            'working-together',
+            'search',
+            'gantt',
+            'focus-and-timers',
+            'keyboard-shortcuts',
+          ],
         },
         {
           label: 'Self-hosting',
