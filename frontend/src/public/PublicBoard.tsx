@@ -85,14 +85,21 @@ export default function PublicBoard({ token }: { token: string }) {
     queryKey: ['public-version', token],
     queryFn: () => getPublicVersion(token),
     refetchInterval: VERSION_POLL_MS,
-    enabled: board.isSuccess,
+    // A failed reload keeps the last board on screen, and the checks go on.
+    enabled: board.data !== undefined,
     retry: false,
   })
   const { refetch } = board
-  const stale = version.data !== undefined && version.data.version !== board.data?.version
+  const seen = version.data
+  // A rename changes the time and not the version.
+  const stale =
+    seen !== undefined &&
+    (seen.version !== board.data?.version || seen.updated_at !== board.data?.updated_at)
+  const checkedAt = version.dataUpdatedAt
   useEffect(() => {
+    // Runs again on every check while the board is behind, so a reload that failed is retried.
     if (stale) void refetch()
-  }, [stale, refetch])
+  }, [stale, checkedAt, refetch])
 
   const data = board.data
   const shown = useMemo<Board | null>(
@@ -118,7 +125,7 @@ export default function PublicBoard({ token }: { token: string }) {
       </div>
     )
   }
-  if (board.isError) {
+  if (board.isError && !shown) {
     return (
       <Alert variant="destructive" className="absolute top-20 left-1/2 w-96 -translate-x-1/2">
         <AlertDescription>{board.error.message}</AlertDescription>

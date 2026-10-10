@@ -22,13 +22,15 @@ Settings = Annotated[SettingsService, Depends(deps.settings)]
 
 class VersionOut(BaseModel):
     version: int
+    # A rename changes this and not the version.
+    updated_at: str
 
 
 @router.get("/{token}")
 def get_public_board(
     token: str, request: Request, links: Links, boards: Boards, settings: Settings
 ) -> PublicBoard:
-    board_id, _ = links.find(token)
+    board_id, *_ = links.find(token)
     # Only the demo tasks belong to no person; anything else was fetched with someone's token.
     shared = request.app.state.snapshots if settings.provider() == "demo" else None
     return public_board(
@@ -38,14 +40,15 @@ def get_public_board(
 
 @router.get("/{token}/version")
 def get_public_version(token: str, links: Links) -> VersionOut:
-    return VersionOut(version=links.find(token)[1])
+    _, version, updated_at = links.find(token)
+    return VersionOut(version=version, updated_at=updated_at)
 
 
 @router.post("/{token}/refresh")
 def refresh_public_board(
     token: str, request: Request, links: Links, boards: Boards, settings: Settings
 ) -> RefreshOut:
-    board_id, _ = links.find(token)
+    board_id, *_ = links.find(token)
     state = request.app.state
     if settings.provider() == "demo":
         tasks, sources = state.refresher.refresh(

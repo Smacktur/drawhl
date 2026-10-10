@@ -43,7 +43,10 @@ def test_guest_reads_a_public_board(client):
     assert set(body) == {"name", "updated_at", "version", "doc", "tasks", "refresh_interval_s"}
     assert body["name"] == "Roadmap" and body["doc"]["nodes"][0]["data"]["key"] == "DEMO-1"
     assert body["tasks"]["DEMO-1"]["summary"] == summary
-    assert anyone.get(f"/api/public/{token}/version").json() == {"version": body["version"]}
+    assert anyone.get(f"/api/public/{token}/version").json() == {
+        "version": body["version"],
+        "updated_at": body["updated_at"],
+    }
     # The link opens that one board and nothing else.
     assert anyone.get(f"/api/boards/{board_id}").status_code == 401
     assert anyone.get("/api/boards").status_code == 401
@@ -192,7 +195,7 @@ def test_guest_gets_only_keys_of_tracker_tasks(jira_client):
 def test_one_link_cannot_take_the_whole_instance():
     class Boards:
         def by_public_token(self, token):
-            return ("b", 1)
+            return ("b", 1, "")
 
     now = [0.0]
     links = PublicLinks(Boards(), lambda: True, clock=lambda: now[0])
@@ -201,9 +204,9 @@ def test_one_link_cannot_take_the_whole_instance():
     with pytest.raises(Exception) as caught:
         links.find("t")
     assert caught.value.code == "too_many_attempts" and caught.value.retry_after == 60
-    assert links.find("other") == ("b", 1)
+    assert links.find("other") == ("b", 1, "")
     now[0] = 61.0
-    assert links.find("t") == ("b", 1)
+    assert links.find("t") == ("b", 1, "")
 
 
 def test_upgrade_leaves_every_board_private(client):
@@ -211,3 +214,43 @@ def test_upgrade_leaves_every_board_private(client):
     body = client.get(f"/api/boards/{board_id}/members").json()
     assert (body["public"], body["public_token"]) == (False, None)
     assert client.get(f"/api/boards/{board_id}").json()["public"] is False
+
+
+def test_two_owners_turning_the_link_on_get_the_same_link(client):
+    """Whoever comes second gets the link that is stored, not one of their own."""
+    boards = client.app.state.boards
+    board_id = board_with(client, "DEMO-1")
+    first = boards.ensure_public_token(board_id, "first-token")
+    second = boards.ensure_public_token(board_id, "second-token")
+    assert first == second == "first-token"
+    assert guest(client).get("/api/public/first-token").status_code == 200
+    assert boards.ensure_public_token("no-such-board", "x") is None
+
+
+def test_a_rename_reaches_the_guest_check(client):
+    board_id = board_with(client, "DEMO-1")
+    token = publish(client, board_id)
+    anyone = guest(client)
+    before = anyone.get(f"/api/public/{token}/version").json()
+    boards = client.app.state.boards
+    with boards._db.transaction() as conn:
+        conn.execute("UPDATE boards SET updated_at = '2020-01-01T00:00:00+00:00'")
+    client.patch(f"/api/boards/{board_id}", json={"name": "Renamed"})
+    after = anyone.get(f"/api/public/{token}/version").json()
+    assert (
+        after["version"] == before["version"] and after["updated_at"] != "2020-01-01T00:00:00+00:00"
+    )
+    assert anyone.get(f"/api/public/{token}").json()["name"] == "Renamed"
+
+
+def test_quiet_links_do_not_pile_up_in_memory():
+    class Boards:
+        def by_public_token(self, token):
+            return ("b", 1, "")
+
+    now = [0.0]
+    links = PublicLinks(Boards(), lambda: True, clock=lambda: now[0])
+    for n in range(2000):
+        links.find(f"old-{n}")
+        now[0] += 1.0
+    assert len(links._budget._windows) <= 1024

@@ -21,7 +21,8 @@ type Props = {
 export function GanttAdd({ disabled, onTasks, onPlain }: Props) {
   const [open, setOpen] = useState(false)
   const [source, setSource] = useState<'tracker' | 'plain'>('tracker')
-  const settings = useQuery({ queryKey: ['settings'], queryFn: getSettings })
+  // Asked only when the popover opens: a view-only board, or a guest's, never needs it.
+  const settings = useQuery({ queryKey: ['settings'], queryFn: getSettings, enabled: open })
   const tracker = settings.data ? TRACKER_NAMES[settings.data.provider] : 'Tracker'
 
   return (

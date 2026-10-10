@@ -16,6 +16,7 @@ from app.domain.tasks import Task, now_iso
 # The API sits behind proxies and cannot tell guests apart by address.
 LINK_REQUESTS = 3000
 LINK_WINDOW_S = 60.0
+_KEEP_WINDOWS = 1024
 
 
 class PublicBoard(BaseModel):
@@ -48,6 +49,11 @@ class _Budget:
             if used >= self._limit:
                 wait = math.ceil(started + self._window_s - now)
                 raise TooManyAttempts("This board is busy. Try again in a moment.", max(wait, 1))
+            if key not in self._windows and len(self._windows) >= _KEEP_WINDOWS:
+                # Links that were deleted or went quiet would otherwise stay here for good.
+                self._windows = {
+                    k: w for k, w in self._windows.items() if now - w[0] < self._window_s
+                }
             self._windows[key] = (started, used + 1)
 
     def drop(self, key: str) -> None:
@@ -73,23 +79,20 @@ class PublicLinks:
 
     def set(self, board_id: str, public: bool) -> str | None:
         """Turns the link on or off. A link turned off is gone: turning it on makes a new one."""
-        current = self._boards.public_token(board_id)
         if not public:
-            if current:
-                self._boards.set_public_token(board_id, None)
-                self._budget.drop(current)
+            if old := self._boards.clear_public_token(board_id):
+                self._budget.drop(old)
             return None
         if not self._allowed():
             raise Forbidden("Public links are switched off on this tiko.")
-        if current:
-            return current
-        token = secrets.token_urlsafe(24)
-        self._boards.set_public_token(board_id, token)
+        token = self._boards.ensure_public_token(board_id, secrets.token_urlsafe(24))
+        if token is None:
+            raise NotFound("board not found")
         return token
 
-    def find(self, token: str) -> tuple[str, int]:
-        """The id and version of the board behind a link. A wrong link, a link turned off and
-        an instance without public links all answer like a missing board."""
+    def find(self, token: str) -> tuple[str, int, str]:
+        """The id, version and last change time of the board behind a link. A wrong link, a
+        link turned off and an instance without public links all answer like a missing board."""
         found = self._boards.by_public_token(token) if self._allowed() else None
         if found is None:
             raise NotFound("board not found")

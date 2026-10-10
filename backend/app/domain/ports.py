@@ -84,10 +84,17 @@ class BoardRepo(Protocol):
 
     def public_token(self, board_id: str) -> str | None: ...
 
-    def set_public_token(self, board_id: str, token: str | None) -> None: ...
+    def ensure_public_token(self, board_id: str, token: str) -> str | None:
+        """Stores the token unless the board has one already, and returns the stored one;
+        None when the board is gone. One step, so two callers end up with the same link."""
+        ...
 
-    def by_public_token(self, token: str) -> tuple[str, int] | None:
-        """The id and version of the board with this public link."""
+    def clear_public_token(self, board_id: str) -> str | None:
+        """Removes the board's token and returns it."""
+        ...
+
+    def by_public_token(self, token: str) -> tuple[str, int, str] | None:
+        """The id, version and last change time of the board with this public link."""
         ...
 
 

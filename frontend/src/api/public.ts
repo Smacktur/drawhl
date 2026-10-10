@@ -18,7 +18,10 @@ export function getPublicBoard(token: string) {
 }
 
 export function getPublicVersion(token: string) {
-  return fetchJson(`/api/public/${token}/version`, z.object({ version: z.number() }))
+  return fetchJson(
+    `/api/public/${token}/version`,
+    z.object({ version: z.number(), updated_at: z.string() }),
+  )
 }
 
 export function refreshPublicBoard(token: string) {

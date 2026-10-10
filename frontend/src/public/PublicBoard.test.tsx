@@ -37,6 +37,11 @@ function board(version: number, nodes: string[]) {
   }
 }
 
+const stamp = (version: number, updated_at = '2026-10-10T00:00:00+00:00') => ({
+  version,
+  updated_at,
+})
+
 const gone = () =>
   Response.json({ error: { code: 'not_found', message: 'board not found' } }, { status: 404 })
 
@@ -50,7 +55,7 @@ function show() {
 
 test('a guest gets the board view-only and asks only the public routes', async () => {
   const fetchMock = vi.fn(async (url: string) =>
-    url.endsWith('/version') ? Response.json({ version: 4 }) : Response.json(board(4, ['a'])),
+    url.endsWith('/version') ? Response.json(stamp(4)) : Response.json(board(4, ['a'])),
   )
   vi.stubGlobal('fetch', fetchMock)
   show()
@@ -69,7 +74,7 @@ test('a change on the board reaches the guest on the next check', async () => {
     'fetch',
     vi.fn(async (url: string) =>
       url.endsWith('/version')
-        ? Response.json({ version })
+        ? Response.json(stamp(version))
         : Response.json(board(version, version === 4 ? ['a'] : ['a', 'b'])),
     ),
   )
@@ -87,7 +92,7 @@ test('a link that was turned off says so', async () => {
     'fetch',
     vi.fn(async (url: string) => {
       if (off) return gone()
-      return url.endsWith('/version') ? Response.json({ version: 4 }) : Response.json(board(4, []))
+      return url.endsWith('/version') ? Response.json(stamp(4)) : Response.json(board(4, []))
     }),
   )
   show()
@@ -102,4 +107,47 @@ test('a wrong link says the same', async () => {
   vi.stubGlobal('fetch', vi.fn(gone))
   show()
   expect(await screen.findByText('This board is not available.')).toBeInTheDocument()
+})
+
+test('a reload that fails keeps the board on screen and is tried again', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  let version = 4
+  let failing = false
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      if (url.endsWith('/version')) return Response.json(stamp(version))
+      if (failing) return new Response('upstream down', { status: 502 })
+      return Response.json(board(version, version === 4 ? ['a'] : ['a', 'b']))
+    }),
+  )
+  show()
+  expect(await screen.findByTestId('canvas')).toHaveTextContent('1 nodes, v4')
+  version = 5
+  failing = true
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(screen.getByTestId('canvas')).toHaveTextContent('1 nodes, v4')
+  failing = false
+  await vi.advanceTimersByTimeAsync(5000)
+  await waitFor(() => expect(screen.getByTestId('canvas')).toHaveTextContent('2 nodes, v5'))
+})
+
+test('a renamed board shows its new name to the guest', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  let renamed = false
+  const later = '2026-10-10T01:00:00+00:00'
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      if (url.endsWith('/version')) return Response.json(stamp(4, renamed ? later : undefined))
+      return Response.json(
+        renamed ? { ...board(4, ['a']), name: 'Plan', updated_at: later } : board(4, ['a']),
+      )
+    }),
+  )
+  show()
+  expect(await screen.findByText('Roadmap')).toBeInTheDocument()
+  renamed = true
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(await screen.findByText('Plan')).toBeInTheDocument()
 })
