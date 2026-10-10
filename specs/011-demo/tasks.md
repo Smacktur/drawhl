@@ -34,6 +34,7 @@ description: "Task list for Demo accounts"
 
 - [ ] T012 [US2] `DemoVisitors.sign_up` in place and `POST /auth/signup`; sockets recheck the person. Tests: same ids, content and versions of the boards before and after (SC-002), errors as an invite gives, 404 for a member and with the switch off, the race with the cleanup and with a touch, the cleanup leaves a signed-up person alone, the public link and sharing work after sign-up, three boards still
 - [x] T013 [P] [US2] `GET /people/directory` on a demo instance: an exact username or nobody. Tests (done in slice 1, see T005)
+- [ ] T017 [US2] The cleanup deletes a signed-up account on a demo instance 90 days after its last sign-in, with its boards and public links; admins are never deleted. Tests
 - [ ] T014 [US2] `auth/SignUp.tsx` opened from the bar: name, username, password; the bar goes without a reload, and in a second tab on its next request. Tests; `/ui-review`
 - [ ] T015 [US2] Check on the compose stack: sign up, sign in from another browser, both boards and a changed status are there, a public link opens in a clean browser; `make check`
 - [ ] T016 [US2] Guide ("Running a demo": sign-up, limits), `CHANGELOG.md`

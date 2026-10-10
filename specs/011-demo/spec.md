@@ -117,7 +117,7 @@ The visitor spent twenty minutes on a board and wants to keep it. They press "Si
 - Deploying the demo, its domain and proxy, Privacy and Terms pages and the links to them on the sign-up form. The legal gate requires Privacy and Terms before a demo instance goes public.
 - A GitHub Issues provider, a landing page, the roadmap board.
 - Moving a board from the demo to a self-hosted instance (export and import).
-- Mail, password reset by mail, captcha, deleting inactive signed-up accounts.
+- Mail, password reset by mail, captcha.
 - Open sign-up on an ordinary instance: people still join by invite.
 - Personal demo task statuses on an ordinary instance.
 - Settings for the limits.
@@ -139,7 +139,5 @@ The visitor spent twenty minutes on a board and wants to keep it. They press "Si
 7. The demo stays as specified, with sign-up. A public link that lets a guest edit does not replace it: one board for a crowd, and a token that can write on every install.
 8. The first screen of a demo instance puts "Try the demo" first and the sign-in form behind a link.
 9. Approved at G2. Asked about bots that breed dead accounts: answered with the one-hour life of an account that changed nothing, eviction at the cap and counting IPv6 by /64.
-
-## Open before slice 2
-
-- Accounts signed up by a bot are kept for good under answer 1 and are not bounded by the cap of 500. Whether a signed-up account on a demo instance is deleted after a long time without a sign-in is the owner's call before `feat/demo-signup`.
+10. Slice `feat/demo-sandbox` approved at G3.
+11. On a demo instance a signed-up account that nobody signed in to for 90 days is deleted with its boards; built in `feat/demo-signup`. This replaces answer 1 for accounts left unused.
