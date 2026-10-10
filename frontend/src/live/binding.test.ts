@@ -246,3 +246,20 @@ test('the first sync replaces what the tab showed from the saved board', () => {
   sync(ann, late)
   expect(ann.ids()).toEqual(['a', 'b'])
 })
+
+test('edits made offline on both sides merge with nothing doubled and nothing lost', () => {
+  // Neither tab hears the other until the end, as after a dropped connection.
+  ann.set([
+    ...ann.nodes.map((n) => (n.id === 'a' ? { ...n, position: { x: 70, y: 70 } } : n)),
+    sticky('ann-offline'),
+  ])
+  ann.set(ann.nodes, [{ id: 'e1', source: 'a', target: 'ann-offline' }])
+  bob.set([...bob.nodes, sticky('bob-meanwhile')])
+  bob.set(bob.nodes.filter((n) => n.id !== 'b'))
+  sync(ann, bob)
+  for (const tab of [ann, bob]) {
+    expect(tab.ids().sort()).toEqual(['a', 'ann-offline', 'bob-meanwhile'])
+    expect(tab.nodes.find((n) => n.id === 'a')?.position).toEqual({ x: 70, y: 70 })
+    expect(tab.edges.map((edge) => edge.id)).toEqual(['e1'])
+  }
+})

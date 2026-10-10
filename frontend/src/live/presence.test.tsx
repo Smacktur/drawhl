@@ -173,3 +173,33 @@ test('who has a node selected: each person once, in the order they are known', (
   expect(by.get('b')?.map((person) => person.name)).toEqual(['Ann'])
   expect(by.get('c')).toBeUndefined()
 })
+
+test('what a dragged frame carries moves the same way as the frame', () => {
+  const nodes = [
+    node('f', { type: 'frame' } as Partial<AppNode>),
+    node('in', { parentId: 'f' }),
+    node('timer', { parentId: 'in' }),
+    node('out'),
+  ]
+  const dragged = withRemoteMotion(
+    nodes,
+    new Map([['f', { x: 5, y: 5 }]]),
+    new Set(),
+    () => undefined,
+  )
+  expect(dragged.map((n) => n.className)).toEqual([
+    'node-glide-drag',
+    'node-glide-drag',
+    'node-glide-drag',
+    undefined,
+  ])
+  // Children keep their place inside the frame; only the frame's own position is overridden.
+  expect(dragged[1].position).toEqual({ x: 0, y: 0 })
+  const glided = withRemoteMotion(nodes, new Map(), new Set(['f']), () => undefined)
+  expect(glided.map((n) => n.className)).toEqual([
+    'node-glide',
+    'node-glide',
+    'node-glide',
+    undefined,
+  ])
+})

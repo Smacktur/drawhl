@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Live boards: everyone on a shared board sees each other's changes as they happen. Changes to different parts of one element merge; when two people change the same thing at once, the later change wins. Viewers watch live. See "Working together" in the guide.
 - Undo and redo go through your own changes only.
+- A dropped connection no longer costs work: you keep editing, "Reconnecting…" shows, and changes merge when the connection is back. After 30 seconds offline with unsent changes tiko warns and the browser asks before the tab is closed. Restarting tiko under open boards loses nothing.
+- A role change, lost access or an ended session reaches an open board at once and says what happened.
 - Presence on shared boards: avatars of the people on the board in the top bar, each person's cursor with their avatar, an outline around what they have selected, elements that move while someone drags them, and other people's changes gliding into place.
 - One-command install for Windows 10 and 11: `irm https://tiko.run/install.ps1 | iex` installs WSL 2 and Docker Desktop after asking, with one restart, then starts tiko and opens the browser.
 
@@ -16,6 +18,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - **Breaking for instances behind their own reverse proxy:** boards are edited over a WebSocket at `/api/boards/<id>/live`. A proxy that does not pass WebSocket upgrades leaves boards view-only; the guide has settings for nginx, Caddy and Traefik under Configuration. `docker compose`, Railway and Render need no changes.
 - Reload tabs that were open during the upgrade: a tab still running the old app saves the old way and keeps reloading the board. Pages are now served with `Cache-Control: no-cache`, so a reload always gets the current app.
 - The "This board changed in another tab" reload is gone: two tabs or two people no longer overwrite each other.
+- Selecting an element no longer brings it to the front: stacking is the same for everyone on the board.
 - Pan and zoom are remembered per person in the browser instead of being saved with the board.
 - `PUT /api/boards/{id}` keeps working and is applied to the live board, so people who have it open see the change.
 - The installers print the address, username and password as a highlighted block.

@@ -156,7 +156,7 @@ Wi-Fi drops for a minute: the person keeps working, a quiet "Reconnecting…" sh
 - **SC-002**: A change reaches another browser on the same network in under 300 ms at the 95th percentile on a 500-node board.
 - **SC-003**: The socket access matrix (role × action) passes: no board content reaches a person without a role, and no update from a viewer is applied.
 - **SC-004**: A test that records every byte sent on two people's sockets finds no task summary from either person's token.
-- **SC-005**: A room for a 2000-node board with 10 people uses under 30 MB of API memory, and the canvas keeps 50 fps while another person drags 20 elements.
+- **SC-005**: A room for a 2000-node board with 10 people uses under 30 MB of API memory, and the canvas keeps 50 fps while another person drags 20 elements. Measured on 2026-10-10 with two tabs: 100 fps with 352 of the notes on screen, 12-17 fps with all 2000 on screen (the dragging tab itself has 41 there), about 40 MB for the room. Met at a working zoom, not met for the whole board on screen or for memory.
 - **SC-006**: A database from v2026.10.13 opens every board live with identical content.
 
 ## Out of scope

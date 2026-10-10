@@ -1,23 +1,29 @@
-import { useEdgesState, useNodesState } from '@xyflow/react'
+import { useEdgesState, useNodesState, type XYPosition } from '@xyflow/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { WebsocketProvider } from 'y-websocket'
 import * as Y from 'yjs'
 import type { Board } from '@/api/boards'
+import { getAuthStatus } from '@/api/auth'
 import { AUTH_REQUIRED_EVENT } from '@/api/client'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { LOCAL, LiveBinding } from '@/live/binding'
+import { remoteDrags } from '@/live/drags'
 import {
   colorOf,
   parsePeers,
-  peopleOf,
   presenceSender,
-  setBoardPeople,
-  type Peer,
+  selectedBy,
+  setBoardPeers,
   type PresenceState,
+  type PresenceUser,
 } from '@/live/presence'
 
-/** connecting: no sync yet; unavailable: none after a while; live: synced at least once. */
-export type LiveStatus = 'connecting' | 'unavailable' | 'live'
+/**
+ * connecting: no sync yet; unavailable: none after a while; live: in step with the server;
+ * reconnecting: the connection dropped after a sync, edits go on; unsaved: it has been down for
+ * a while and this tab holds changes the server has not seen; full: the board has no free place.
+ */
+export type LiveStatus = 'connecting' | 'unavailable' | 'live' | 'reconnecting' | 'unsaved' | 'full'
 
 // A burst of changes, like typing or a resize, is one undo step.
 const UNDO_CAPTURE_MS = 300
@@ -25,8 +31,17 @@ const UNAVAILABLE_AFTER_MS = 5000
 // A little longer than the transition, so it always finishes.
 const GLIDE_MS = 250
 const NO_GLIDE: ReadonlySet<string> = new Set()
+const NO_SELECTIONS = new Map<string, PresenceUser[]>()
+const NO_DRAGS = new Map<string, XYPosition>()
+const UNSAVED_AFTER_MS = 30_000
+const RECONNECT_AFTER_ACCESS_MS = 1000
+const RETRY_FULL_MS = 30_000
+const AUTH_PROBE_MS = 5000
+const TOO_BIG = 1009
 const SESSION_ENDED = 4401
 const ACCESS_CHANGED = 4403
+const ROOM_FULL = 4429
+const EDITABLE: LiveStatus[] = ['live', 'reconnecting', 'unsaved']
 
 // Until the board is connected there is nobody to tell.
 const IDLE = presenceSender(() => {})
@@ -54,7 +69,10 @@ export function useLiveBoard(
   const binding = useRef<LiveBinding | null>(null)
   const history = useRef<Y.UndoManager | null>(null)
   const synced = useRef(false)
-  const [peers, setPeers] = useState<Peer[]>([])
+  // What others have selected and what they drag change rarely; their cursors, which change
+  // all the time, go past this hook straight to the cursor layer.
+  const [selections, setSelections] = useState(NO_SELECTIONS)
+  const [drags, setDrags] = useState(NO_DRAGS)
   // Nodes someone else just moved or resized: drawn with a short glide.
   const [glide, setGlide] = useState(NO_GLIDE)
   const latest = useRef(nodes)
@@ -121,40 +139,96 @@ export function useLiveBoard(
         }
       })
     }
-    let shown = ''
+    let shown = { selections: '', drags: '' }
     const onPresence = () => {
       const next = parsePeers(awareness.getStates(), doc.clientID)
-      setBoardPeople(peopleOf(next, meId))
-      const text = JSON.stringify(next)
-      if (text !== shown) setPeers(next)
-      shown = text
+      setBoardPeers(next, meId)
+      const texts = {
+        selections: JSON.stringify(next.map((peer) => [peer.user, peer.selected])),
+        drags: JSON.stringify(next.map((peer) => peer.drag)),
+      }
+      if (texts.selections !== shown.selections) setSelections(selectedBy(next))
+      if (texts.drags !== shown.drags) setDrags(remoteDrags(next))
+      shown = texts
     }
     awareness.on('change', onPresence)
     const waiting = setTimeout(
       () => setStatus((now) => (now === 'connecting' ? 'unavailable' : now)),
       UNAVAILABLE_AFTER_MS,
     )
+    // Changes made while the connection is down live only in this tab until it is back.
+    let offlineEdits = false
+    let unsaved: ReturnType<typeof setTimeout> | undefined
+    let retry: ReturnType<typeof setTimeout> | undefined
+    let probed = 0
+    doc.on('update', (_update: Uint8Array, origin: unknown) => {
+      if (origin !== provider && !provider.wsconnected) offlineEdits = true
+    })
     provider.on('sync', (isSynced: boolean) => {
-      if (!isSynced || synced.current) return
+      if (!isSynced) return
+      // On a reconnect the two sides have just exchanged what each was missing.
+      offlineEdits = false
+      clearTimeout(unsaved)
+      setStatus('live')
+      if (synced.current) return
       const all = live.reset()
       synced.current = true
       setNodes(all.nodes)
       setEdges(all.edges)
-      setStatus('live')
       setPresence(mine)
     })
-    provider.on('closed', ({ code }) => {
-      if (code === SESSION_ENDED) window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT))
-      if (code === ACCESS_CHANGED) accessChanged.current()
+    provider.on('status', ({ status: link }) => {
+      if (link !== 'disconnected' || !synced.current) return
+      setStatus((now) => (now === 'live' ? 'reconnecting' : now))
+      clearTimeout(unsaved)
+      unsaved = setTimeout(() => {
+        if (offlineEdits) setStatus((now) => (now === 'reconnecting' ? 'unsaved' : now))
+      }, UNSAVED_AFTER_MS)
     })
+    provider.on('connection-close', (event) => {
+      // A change too big for the server would be sent again on every reconnect.
+      if (event?.code === TOO_BIG) window.location.reload()
+    })
+    provider.on('connection-error', () => {
+      // A refused upgrade carries no code; a signed-out tab is told apart by asking.
+      if (Date.now() - probed < AUTH_PROBE_MS) return
+      probed = Date.now()
+      void getAuthStatus()
+        .then((auth) => {
+          if (!auth.signed_in) window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT))
+        })
+        .catch(() => {})
+    })
+    // Codes 4400-4499 are final for the provider: it waits to be told to connect again.
+    provider.on('closed', ({ code }) => {
+      clearTimeout(retry)
+      if (code === SESSION_ENDED) window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT))
+      if (code === ACCESS_CHANGED) {
+        accessChanged.current()
+        // A new role remounts the board with a new connection; the same role comes back here.
+        retry = setTimeout(() => provider.connect(), RECONNECT_AFTER_ACCESS_MS)
+      }
+      if (code === ROOM_FULL) {
+        setStatus('full')
+        retry = setTimeout(() => provider.connect(), RETRY_FULL_MS)
+      }
+    })
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      if (offlineEdits && !provider.wsconnected) event.preventDefault()
+    }
+    window.addEventListener('beforeunload', beforeUnload)
     return () => {
+      window.removeEventListener('beforeunload', beforeUnload)
+      clearTimeout(unsaved)
+      clearTimeout(retry)
       clearTimeout(waiting)
       clearTimeout(gliding)
       cancelAnimationFrame(frame)
       mine.cancel()
       setPresence(IDLE)
-      setBoardPeople([])
-      setPeers([])
+      setBoardPeers([], meId)
+      setSelections(NO_SELECTIONS)
+      setDrags(NO_DRAGS)
       synced.current = false
       binding.current = history.current = null
       provider.destroy()
@@ -178,9 +252,12 @@ export function useLiveBoard(
     setEdges,
     onEdgesChange,
     status,
+    /** Whether the person may change the board: synced once and not turned away. */
+    editable: EDITABLE.includes(status),
     undo,
     redo,
-    peers,
+    selections,
+    drags,
     glide,
     presence,
   }

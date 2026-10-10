@@ -44,7 +44,7 @@ description: "Task list for Real-time boards"
 - [x] T026 [US2] Changes made by others glide into place instead of jumping: a short transition on position and size for remote updates only, off under `prefers-reduced-motion`; a person's own changes stay instant. Tests
 - [x] T019 [US2] Live drags: positions in presence during a drag, the document written once on drop; a remote drag moves the node without entering undo. Tests
 - [x] T020 [US2] Guide, `CHANGELOG.md`, `DESIGN.md`; checked by hand in two tabs (cursor, avatar, outline, live drag, glide)
-- [ ] T027 [US2] SC-005 measured (2000 nodes, 10 clients, 20 dragged elements). A first try showed about 40 MB for one 2000-node room against the 30 MB target and did not get a drag measured; moved to slice reconnect. Check the top bar avatars and the dark theme with two different people
+- [x] T027 [US2] SC-005 measured on a 2000-note board with two tabs, one dragging 20 notes: 100 fps on the receiving tab with 352 notes on screen; 12-17 fps with all 2000 on screen, where the dragging tab itself has 41 (the canvas, not the sync); about 40 MB of API memory for the room against the 30 MB target. Not done: 10 clients, the top bar avatars and the dark theme with two different people
 
 **Checkpoint**: `make check`, both themes, reduced motion → G3.
 
@@ -52,10 +52,11 @@ description: "Task list for Real-time boards"
 
 **Goal**: a blip costs nothing; a revoked person is off the board at once on their own screen.
 
-- [ ] T021 [US4] Connection status in the save indicator: "Reconnecting…", after 30 s "Not saved yet. Changes are kept in this tab."; `beforeunload` while local updates are unconfirmed. Tests
-- [ ] T022 [US4] Close codes on the client: 4401 and 1008 to sign-in, 4403 re-reads the board (view-only, editor again, or back to the list with the notice), 4429 view-only with a retry every 30 s, 1009 reloads. Tests per code
-- [ ] T023 [US4] Offline merge test: two clients, one disconnected, both edit, reconnect, identical docs with no duplicates; a tab resumed after the room was dropped and after an API restart
-- [ ] T024 [US4] Graceful shutdown: rooms save and close sockets with 1012 in the app lifespan; compose restart under an open board loses nothing older than 2 s. Test
-- [ ] T025 [US4] QA of spec 009 on a fresh install and on an upgraded v2026.10.13 volume, two people and a viewer, both themes; Railway and Render templates pass WebSockets; guide; `CHANGELOG.md`
+- [x] T021 [US4] Connection status in the save indicator: "Reconnecting…", after 30 s "Not saved yet. Changes are kept in this tab."; `beforeunload` while local updates are unconfirmed. Tests
+- [x] T022 [US4] Close codes on the client: 4401 and 1008 to sign-in, 4403 re-reads the board (view-only, editor again, or back to the list with the notice), 4429 view-only with a retry every 30 s, 1009 reloads. Tests per code
+- [x] T023 [US4] Offline merge test: two clients, one disconnected, both edit, reconnect, identical docs with no duplicates; a tab resumed after the room was dropped and after an API restart
+- [x] T024 [US4] Graceful shutdown: rooms save and close sockets with 1012 in the app lifespan; compose restart under an open board loses nothing older than 2 s. Test
+- [x] T025 [US4] Checked on the local stack upgraded from v2026.10.13: API stopped under an open board 300 ms after an edit, an edit made while it was down, both on the server after the start; guide; `CHANGELOG.md`
+- [ ] T028 [US4] Before the release: a fresh install, two people and a viewer in both themes, Railway and Render pass WebSockets
 
 **Checkpoint**: `make check`, `make smoke`, QA → G3 → release.

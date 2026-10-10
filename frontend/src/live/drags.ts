@@ -23,12 +23,21 @@ export function withRemoteMotion(
   originOf: (parentId: string) => XYPosition | undefined,
 ): AppNode[] {
   if (drags.size === 0 && glide.size === 0) return nodes
+  // What sits in a frame, and a timer on a card, is drawn as its own element. It has to move
+  // the same way as the element that carries it, or the two come apart on the way.
+  const motion = new Map<string, string>()
+  for (const node of nodes) {
+    if (drags.has(node.id) && !node.dragging) motion.set(node.id, 'node-glide-drag')
+    else if (glide.has(node.id)) motion.set(node.id, 'node-glide')
+    else if (node.parentId && motion.has(node.parentId)) {
+      motion.set(node.id, motion.get(node.parentId)!)
+    }
+  }
   return nodes.map((node) => {
+    const moving = motion.get(node.id)
+    if (!moving) return node
+    const className = [node.className, moving].filter(Boolean).join(' ')
     const at = node.dragging ? undefined : drags.get(node.id)
-    if (!at && !glide.has(node.id)) return node
-    const className = [node.className, at ? 'node-glide-drag' : 'node-glide']
-      .filter(Boolean)
-      .join(' ')
     if (!at) return { ...node, className }
     const origin = (node.parentId && originOf(node.parentId)) || { x: 0, y: 0 }
     return { ...node, className, position: { x: at.x - origin.x, y: at.y - origin.y } }

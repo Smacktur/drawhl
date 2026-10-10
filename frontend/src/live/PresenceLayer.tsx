@@ -1,6 +1,6 @@
 import { ViewportPortal, useViewport } from '@xyflow/react'
 import { Avatar } from '@/live/Avatar'
-import type { Peer } from '@/live/presence'
+import { useBoardPeers } from '@/live/presence'
 
 /**
  * Other people's cursors on the canvas. What they have selected is drawn by the nodes
@@ -9,7 +9,8 @@ import type { Peer } from '@/live/presence'
  * Drawn in board coordinates and scaled back, so a cursor is the same size at any zoom.
  * Nothing here takes pointer events: a cursor passing under the mouse must not steal a click.
  */
-export function PresenceLayer({ peers }: { peers: Peer[] }) {
+export function PresenceLayer() {
+  const peers = useBoardPeers()
   const { zoom } = useViewport()
   if (peers.length === 0) return null
   const unscale = { transform: `scale(${1 / zoom})` }
