@@ -15,7 +15,7 @@ from app.domain.accounts import Person
 from app.domain.errors import NotFound, ValidationFailed
 from app.domain.members import BoardRole, ShareRole, effective_role, granted_role
 from app.domain.modules import KIND_PATTERN, module_keys, validate_module
-from app.domain.ports import BoardRepo, SnapshotRepo
+from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo
 from app.domain.tasks import KEY_RE, Task
 from app.domain.welcome import WELCOME_NAME, welcome_doc
 
@@ -309,10 +309,11 @@ def rename_board(person: Person, board_id: str, name: str, boards: BoardRepo) ->
     return summary(person, board_id, boards)
 
 
-def delete_board(board_id: str, boards: BoardRepo) -> None:
+def delete_board(board_id: str, boards: BoardRepo, live: LiveBoards) -> None:
     boards.delete(board_id)
+    live.recheck_board(board_id)
 
 
-def save_board(board_id: str, version: int, doc: BoardDoc, boards: BoardRepo) -> int:
+def save_board(board_id: str, version: int, doc: BoardDoc, live: LiveBoards) -> int:
     check_doc(doc)
-    return boards.save(board_id, version, doc)
+    return live.put(board_id, version, doc)

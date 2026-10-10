@@ -9,7 +9,7 @@ from app.api.deps import CanEdit, CanView, CurrentPerson, IsOwner, MembersDep
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
 from app.domain.members import Member, ShareRole
-from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
+from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo, TaskProvider
 from app.domain.refresh import RefreshService, SourceStatus
 from app.domain.settings import SettingsService
 from app.domain.tasks import Task, now_iso
@@ -18,6 +18,7 @@ router = APIRouter(prefix="/boards", tags=["boards"])
 
 Boards = Annotated[BoardRepo, Depends(deps.boards)]
 Snapshots = Annotated[SnapshotRepo, Depends(deps.snapshots)]
+Live = Annotated[LiveBoards, Depends(deps.live)]
 
 
 class BoardIn(BaseModel):
@@ -81,8 +82,8 @@ def get_board(
 
 
 @router.put("/{board_id}")
-def save_board(board_id: str, body: SaveIn, _: CanEdit, boards: Boards) -> SaveOut:
-    return SaveOut(version=service.save_board(board_id, body.version, body.doc, boards))
+def save_board(board_id: str, body: SaveIn, _: CanEdit, live: Live) -> SaveOut:
+    return SaveOut(version=service.save_board(board_id, body.version, body.doc, live))
 
 
 @router.patch("/{board_id}")
@@ -93,8 +94,8 @@ def rename_board(
 
 
 @router.delete("/{board_id}", status_code=204)
-def delete_board(board_id: str, _: IsOwner, boards: Boards) -> Response:
-    service.delete_board(board_id, boards)
+def delete_board(board_id: str, _: IsOwner, boards: Boards, live: Live) -> Response:
+    service.delete_board(board_id, boards, live)
     return Response(status_code=204)
 
 

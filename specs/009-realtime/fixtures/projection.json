@@ -1,0 +1,417 @@
+[
+  {
+    "name": "stacking order, ties by id",
+    "nodes": {
+      "b": {
+        "type": "sticky",
+        "place": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {},
+        "order": 1,
+        "data": {
+          "text": "b",
+          "color": "yellow"
+        }
+      },
+      "a": {
+        "type": "sticky",
+        "place": {
+          "x": 5,
+          "y": 5
+        },
+        "size": {},
+        "order": 1,
+        "data": {
+          "text": "a",
+          "color": "pink"
+        }
+      },
+      "c": {
+        "type": "text",
+        "place": {
+          "x": 9,
+          "y": 9
+        },
+        "size": {},
+        "order": 0,
+        "data": {
+          "text": "c"
+        }
+      }
+    },
+    "edges": {},
+    "json": {
+      "nodes": [
+        {
+          "id": "c",
+          "type": "text",
+          "position": {
+            "x": 9,
+            "y": 9
+          },
+          "data": {
+            "text": "c"
+          }
+        },
+        {
+          "id": "a",
+          "type": "sticky",
+          "position": {
+            "x": 5,
+            "y": 5
+          },
+          "data": {
+            "text": "a",
+            "color": "pink"
+          }
+        },
+        {
+          "id": "b",
+          "type": "sticky",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "text": "b",
+            "color": "yellow"
+          }
+        }
+      ],
+      "edges": []
+    }
+  },
+  {
+    "name": "children follow their frame",
+    "nodes": {
+      "card": {
+        "type": "jira_card",
+        "place": {
+          "x": 10,
+          "y": 20,
+          "parentId": "frame"
+        },
+        "size": {},
+        "order": 0,
+        "data": {
+          "key": "DEV-1",
+          "collapsed": false
+        }
+      },
+      "top": {
+        "type": "sticky",
+        "place": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {},
+        "order": 1,
+        "data": {
+          "text": "",
+          "color": "yellow"
+        }
+      },
+      "frame": {
+        "type": "frame",
+        "place": {
+          "x": 100,
+          "y": 100
+        },
+        "size": {
+          "width": 400,
+          "height": 300
+        },
+        "order": 5,
+        "data": {
+          "title": "Sprint"
+        }
+      },
+      "card2": {
+        "type": "jira_card",
+        "place": {
+          "x": 30,
+          "y": 40,
+          "parentId": "frame"
+        },
+        "size": {},
+        "order": 9,
+        "data": {
+          "key": "DEV-2",
+          "collapsed": true
+        }
+      }
+    },
+    "edges": {},
+    "json": {
+      "nodes": [
+        {
+          "id": "top",
+          "type": "sticky",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "text": "",
+            "color": "yellow"
+          }
+        },
+        {
+          "id": "frame",
+          "type": "frame",
+          "position": {
+            "x": 100,
+            "y": 100
+          },
+          "data": {
+            "title": "Sprint"
+          },
+          "width": 400,
+          "height": 300
+        },
+        {
+          "id": "card",
+          "type": "jira_card",
+          "position": {
+            "x": 10,
+            "y": 20
+          },
+          "data": {
+            "key": "DEV-1",
+            "collapsed": false
+          },
+          "parentId": "frame"
+        },
+        {
+          "id": "card2",
+          "type": "jira_card",
+          "position": {
+            "x": 30,
+            "y": 40
+          },
+          "data": {
+            "key": "DEV-2",
+            "collapsed": true
+          },
+          "parentId": "frame"
+        }
+      ],
+      "edges": []
+    }
+  },
+  {
+    "name": "a timer on a card inside a frame",
+    "nodes": {
+      "timer": {
+        "type": "timer",
+        "place": {
+          "x": 4,
+          "y": 4,
+          "parentId": "card"
+        },
+        "size": {},
+        "order": 0,
+        "data": {
+          "note": "ping",
+          "done": false
+        }
+      },
+      "card": {
+        "type": "jira_card",
+        "place": {
+          "x": 10,
+          "y": 20,
+          "parentId": "frame"
+        },
+        "size": {},
+        "order": 1,
+        "data": {
+          "key": "DEV-1",
+          "collapsed": false
+        }
+      },
+      "frame": {
+        "type": "frame",
+        "place": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {},
+        "order": 2,
+        "data": {
+          "title": ""
+        }
+      }
+    },
+    "edges": {},
+    "json": {
+      "nodes": [
+        {
+          "id": "frame",
+          "type": "frame",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "title": ""
+          }
+        },
+        {
+          "id": "card",
+          "type": "jira_card",
+          "position": {
+            "x": 10,
+            "y": 20
+          },
+          "data": {
+            "key": "DEV-1",
+            "collapsed": false
+          },
+          "parentId": "frame"
+        },
+        {
+          "id": "timer",
+          "type": "timer",
+          "position": {
+            "x": 4,
+            "y": 4
+          },
+          "data": {
+            "note": "ping",
+            "done": false
+          },
+          "parentId": "card"
+        }
+      ],
+      "edges": []
+    }
+  },
+  {
+    "name": "an orphan is left out until it is repaired",
+    "nodes": {
+      "lost": {
+        "type": "sticky",
+        "place": {
+          "x": 1,
+          "y": 1,
+          "parentId": "gone"
+        },
+        "size": {},
+        "order": 0,
+        "data": {
+          "text": "x",
+          "color": "yellow"
+        }
+      },
+      "kept": {
+        "type": "text",
+        "place": {
+          "x": 2,
+          "y": 2
+        },
+        "size": {},
+        "order": 1,
+        "data": {
+          "text": "y"
+        }
+      }
+    },
+    "edges": {},
+    "json": {
+      "nodes": [
+        {
+          "id": "kept",
+          "type": "text",
+          "position": {
+            "x": 2,
+            "y": 2
+          },
+          "data": {
+            "text": "y"
+          }
+        }
+      ],
+      "edges": []
+    }
+  },
+  {
+    "name": "edges by id, anchors and handles",
+    "nodes": {
+      "a": {
+        "type": "sticky",
+        "place": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {},
+        "order": 0,
+        "data": {
+          "text": "",
+          "color": "yellow"
+        }
+      },
+      "free": {
+        "type": "anchor",
+        "place": {
+          "x": 50,
+          "y": 50
+        },
+        "size": {},
+        "order": 1,
+        "data": {}
+      }
+    },
+    "edges": {
+      "e2": {
+        "source": "a",
+        "target": "free",
+        "sourceHandle": "right"
+      },
+      "e1": {
+        "source": "free",
+        "target": "a"
+      }
+    },
+    "json": {
+      "nodes": [
+        {
+          "id": "a",
+          "type": "sticky",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "text": "",
+            "color": "yellow"
+          }
+        },
+        {
+          "id": "free",
+          "type": "anchor",
+          "position": {
+            "x": 50,
+            "y": 50
+          },
+          "data": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "free",
+          "target": "a"
+        },
+        {
+          "id": "e2",
+          "source": "a",
+          "target": "free",
+          "sourceHandle": "right"
+        }
+      ]
+    }
+  }
+]

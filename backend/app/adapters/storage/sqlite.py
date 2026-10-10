@@ -129,12 +129,31 @@ class SqliteBoardRepo:
             doc=BoardDoc.model_validate_json(row["doc"]),
         )
 
-    def save(self, board_id: str, version: int, doc: BoardDoc) -> int:
+    def load(self, board_id: str) -> tuple[BoardRecord, bytes | None] | None:
+        record = self.get(board_id)
+        if record is None:
+            return None
+        with self._db.transaction() as conn:
+            row = conn.execute("SELECT ydoc FROM boards WHERE id = ?", (board_id,)).fetchone()
+        return record, row["ydoc"] if row else None
+
+    def save_live(self, board_id: str, doc: BoardDoc, ydoc: bytes) -> int:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "UPDATE boards SET doc = ?, ydoc = ?, version = version + 1, updated_at = ?"
+                " WHERE id = ? RETURNING version",
+                (doc.model_dump_json(exclude_none=True), ydoc, now_iso(), board_id),
+            ).fetchone()
+        if row is None:
+            raise NotFound("board not found")
+        return row["version"]
+
+    def save(self, board_id: str, version: int, doc: BoardDoc, ydoc: bytes | None = None) -> int:
         with self._db.transaction() as conn:
             cursor = conn.execute(
-                "UPDATE boards SET doc = ?, version = version + 1, updated_at = ?"
+                "UPDATE boards SET doc = ?, ydoc = ?, version = version + 1, updated_at = ?"
                 " WHERE id = ? AND version = ?",
-                (doc.model_dump_json(exclude_none=True), now_iso(), board_id, version),
+                (doc.model_dump_json(exclude_none=True), ydoc, now_iso(), board_id, version),
             )
             if cursor.rowcount == 0:
                 exists = conn.execute("SELECT 1 FROM boards WHERE id = ?", (board_id,)).fetchone()
