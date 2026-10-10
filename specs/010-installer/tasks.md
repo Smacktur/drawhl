@@ -20,16 +20,16 @@ description: "Task list for One-command installer"
 - [x] T004 [US1] Folder, `.env` once with mode 0600, download compose, pull, up, wait, print; re-run upgrades
 - [x] T005 [US1] Docs workflow publishes `install/*` with the guide; CI: `shellcheck` and an end-to-end `install.sh --yes`
 - [x] T006 [US3] Guide page "Install": one line, manual Docker on macOS, Ubuntu and Debian, update, uninstall, fixes; README quick start; `CHANGELOG.md`
-- [ ] T007 [US1] Clean Ubuntu 24.04 VM without Docker; owner's Mac with Docker and with Colima; second run keeps data
+- [x] T007 [US1] Clean Ubuntu 24.04 VM without Docker; owner's Mac with Docker and with Colima; second run keeps data (Debian 12 too; on a clean macOS VM the Homebrew step passed, `colima start` needs nested virtualization a macOS guest does not have)
 
 **Checkpoint**: `make check`, CI install job, VM run → G3.
 
 ## Phase 2: Slice `feat/install-ps1` — one line on Windows (US2, US3)
 
-- [ ] T008 [US2] `install/install.ps1`: checks, WSL 2, Docker Desktop via `winget`, restart handoff, folder, `.env`, start, open the browser
-- [ ] T009 [US2] CI: `PSScriptAnalyzer` on a Windows runner
-- [ ] T010 [US3] Guide page Windows part; README
-- [ ] T011 [US2] Clean Windows 11 VM: two runs, one restart, signed in
+- [x] T008 [US2] `install/install.ps1`: checks, WSL 2, Docker Desktop via `winget`, restart handoff, folder, `.env`, start, open the browser
+- [x] T009 [US2] CI: `PSScriptAnalyzer` on a Windows runner
+- [x] T010 [US3] Guide page Windows part; README
+- [x] T011 [US2] Clean Windows 11 VM: two runs, one restart, signed in
 
 **Checkpoint**: CI, VM run → G3.
 
@@ -37,7 +37,7 @@ description: "Task list for One-command installer"
 
 **Needs**: the owner's Cloudflare setup from [plan.md](plan.md#domain-owner-outside-the-repository).
 
-- [ ] T012 Guide `site` and `base` to `https://docs.tiko.run`; every link to the guide in the repository and the app
+- [x] T012 Guide `site` and `base` to `https://docs.tiko.run`; every link to the guide in the repository and the app
 - [ ] T013 Install lines to `https://tiko.run/install.sh` and `.ps1` in README and the guide; curl both through the redirect
 
 **Checkpoint**: both lines work from a clean machine → G3.

@@ -4,7 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- One-command install for Windows 10 and 11: `irm https://tiko.run/install.ps1 | iex` installs WSL 2 and Docker Desktop after asking, with one restart, then starts tiko and opens the browser.
+
 ### Changed
+
+- The installers print the address, username and password as a highlighted block.
 
 - The guide moved to [docs.tiko.run](https://docs.tiko.run), and the installer is `curl -fsSL https://tiko.run/install.sh | sh`. Old `tiko-run.github.io/tiko` links redirect.
 

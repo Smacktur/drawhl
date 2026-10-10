@@ -30,7 +30,7 @@ jobs:
           cache-dependency-path: docs/guide/package-lock.json
       - run: npm ci
       # The installers are served next to the guide, so the published ones are always main's.
-      - run: cp ../../install/install.sh public/
+      - run: cp ../../install/install.sh ../../install/install.ps1 public/
       - run: npm run build
       - uses: actions/upload-pages-artifact@v5
         with:
