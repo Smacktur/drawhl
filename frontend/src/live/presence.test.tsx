@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import type { AppNode } from '@/canvas/types'
 import { Faces } from '@/live/Avatar'
-import { remoteDrags, withRemoteMotion } from '@/live/drags'
 import {
   PRESENCE_COLORS,
   colorOf,
@@ -106,44 +104,6 @@ test('throttle: the first call at once, then the latest value once per interval'
   send.cancel()
   vi.advanceTimersByTime(100)
   expect(seen).toEqual([1, 3])
-})
-
-const node = (id: string, extra: Partial<AppNode> = {}): AppNode =>
-  ({
-    id,
-    type: 'sticky',
-    position: { x: 0, y: 0 },
-    data: { text: '', color: 'yellow' },
-    ...extra,
-  }) as AppNode
-
-test('a node someone drags follows them on screen; the board state is untouched', () => {
-  const nodes = [
-    node('a'),
-    node('in', { parentId: 'f' }),
-    node('mine', { dragging: true }),
-    node('b'),
-  ]
-  const peers = [
-    {
-      ...state('u2', 'Bob', {
-        drag: { a: { x: 50, y: 60 }, in: { x: 130, y: 140 }, mine: { x: 9, y: 9 } },
-      }),
-      client: 2,
-    },
-  ] as Peer[]
-  const shown = withRemoteMotion(nodes, remoteDrags(peers), new Set(['b']), () => ({
-    x: 100,
-    y: 100,
-  }))
-  expect(shown[0]).toMatchObject({ position: { x: 50, y: 60 }, className: 'node-glide-drag' })
-  // A child is placed relative to its frame.
-  expect(shown[1].position).toEqual({ x: 30, y: 40 })
-  // What this person drags themselves is theirs.
-  expect(shown[2]).toBe(nodes[2])
-  expect(shown[3]).toMatchObject({ position: { x: 0, y: 0 }, className: 'node-glide' })
-  expect(nodes[0].position).toEqual({ x: 0, y: 0 })
-  expect(withRemoteMotion(nodes, new Map(), new Set(), () => undefined)).toBe(nodes)
 })
 
 test('cursor and drag leave in one message, so a dragged node stays under its cursor', () => {

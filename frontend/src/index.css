@@ -397,17 +397,9 @@
   box-shadow: 0 0 0 2px var(--primary);
 }
 
-/* Someone else's change glides into place; the person's own changes are never slowed down. */
-.react-flow__node.node-glide {
-  transition:
-    transform 150ms ease-out,
-    width 150ms ease-out,
-    height 150ms ease-out;
-}
-/* A node someone is dragging follows their updates, one every 50 ms. */
-.react-flow__node.node-glide-drag {
-  transition: transform 80ms linear;
-}
+/* Remote cursors move evenly between updates, one every 50 ms. Nodes moved by others are
+   animated in their positions (live/motion.ts), never here: a transition on the element would
+   leave its arrows and whatever it carries behind. */
 .presence-cursor {
   transition: transform 80ms linear;
 }
@@ -483,8 +475,6 @@
   .react-flow__node.node-flash {
     animation: none;
   }
-  .react-flow__node.node-glide,
-  .react-flow__node.node-glide-drag,
   .presence-cursor {
     transition: none;
   }

@@ -137,25 +137,39 @@ export function selectedBy(peers: Peer[]): Map<string, PresenceUser[]> {
   return byNode
 }
 
-// The canvas publishes who is on the open board; the top bar, in another tree, shows them.
+// The canvas publishes who is on the open board. The top bar, in another tree, shows the people;
+// the cursor layer reads the tabs itself, so a moving cursor redraws only that layer and not
+// the whole canvas.
 let people: PresenceUser[] = []
+let tabs: Peer[] = []
 const listeners = new Set<() => void>()
+const NOBODY: PresenceUser[] = []
+const NO_TABS: Peer[] = []
 
-export function setBoardPeople(next: PresenceUser[]) {
-  if (JSON.stringify(next) === JSON.stringify(people)) return
-  people = next
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+export function setBoardPeers(next: Peer[], me: string | undefined) {
+  tabs = next
+  const nextPeople = peopleOf(next, me)
+  if (JSON.stringify(nextPeople) !== JSON.stringify(people)) people = nextPeople
   for (const listener of listeners) listener()
 }
 
-const NOBODY: PresenceUser[] = []
-
 export function useBoardPeople() {
   return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener)
-      return () => listeners.delete(listener)
-    },
+    subscribe,
     () => people,
     () => NOBODY,
+  )
+}
+
+export function useBoardPeers() {
+  return useSyncExternalStore(
+    subscribe,
+    () => tabs,
+    () => NO_TABS,
   )
 }

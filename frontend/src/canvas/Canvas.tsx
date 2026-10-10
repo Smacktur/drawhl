@@ -49,12 +49,13 @@ import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
-import { remoteDrags, withRemoteMotion } from '@/live/drags'
-import { MAX_LIVE_DRAG, selectedBy } from '@/live/presence'
+import { useRemoteMotion } from '@/live/motion'
+import { MAX_LIVE_DRAG } from '@/live/presence'
 import { SelectedByContext, withPresence } from '@/live/PresenceRing'
 import { PresenceLayer } from '@/live/PresenceLayer'
 import { getAuthStatus } from '@/api/auth'
-import { useLiveBoard } from '@/live/useLiveBoard'
+import { useLiveBoard, type LiveStatus } from '@/live/useLiveBoard'
+import { setNotice } from '@/live/notice'
 import { readViewport, saveViewport } from '@/live/viewport'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
 import { newId } from '@/lib/id'
@@ -110,6 +111,13 @@ const NEW_NODES = {
   text: { width: 240, height: undefined, data: { text: '' } },
 } as const
 
+const LIVE_NOTICE: Partial<Record<LiveStatus, string>> = {
+  unavailable: 'Live connection unavailable. Viewing the last saved version.',
+  reconnecting: 'Reconnecting…',
+  unsaved: 'Not saved yet. Changes are kept in this tab.',
+  full: 'This board is full right now.',
+}
+
 function BoardCanvas({
   board,
   viewer,
@@ -123,7 +131,7 @@ function BoardCanvas({
   const live = useLiveBoard(board, viewer, onAccessChanged, me)
   const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange } = live
   // Until the first sync the saved board is shown and cannot be edited.
-  const readOnly = viewer || live.status !== 'live'
+  const readOnly = viewer || !live.editable
   // Each person keeps their own view of a board; one they have not opened here fits its content.
   const [lastView] = useState(() => readViewport(board.id))
   const [added, setAdded] = useState<Record<string, Task>>({})
@@ -148,15 +156,14 @@ function BoardCanvas({
 
   const flashId = useFlashingId()
   const hits = useSearchHits()
-  const drags = useMemo(() => remoteDrags(live.peers), [live.peers])
-  const selectedByOthers = useMemo(() => selectedBy(live.peers), [live.peers])
+  const { drags } = live
+  const originOf = useCallback(
+    (id: string) => flow.getInternalNode(id)?.internals.positionAbsolute,
+    [flow],
+  )
+  // Other people's moves in progress; arrows and everything else placed from a node follow.
+  const moving = useRemoteMotion(nodes, drags, live.glide, originOf)
   const shown = useMemo(() => {
-    const moving = withRemoteMotion(
-      nodes,
-      drags,
-      live.glide,
-      (id) => flow.getInternalNode(id)?.internals.positionAbsolute,
-    )
     const raised = raiseAnchors(moving, edges)
     if (!flashId && !hits) return raised
     return {
@@ -174,7 +181,7 @@ function BoardCanvas({
         }
       }),
     }
-  }, [nodes, edges, flashId, hits, drags, live.glide, flow])
+  }, [moving, edges, flashId, hits])
 
   // What the others see of this person: what is selected, and nodes on their way while dragged.
   const { presence } = live
@@ -632,6 +639,9 @@ function BoardCanvas({
         fitView={lastView === null}
         fitViewOptions={FIT_NEW_BOARD}
         onlyRenderVisibleElements
+        // Selecting must not restack: a frame someone selects would cover, for them alone, what
+        // everyone else sees lying on top of it.
+        elevateNodesOnSelect={false}
         colorMode={theme}
         proOptions={{ hideAttribution: true }}
         minZoom={0.1}
@@ -656,7 +666,7 @@ function BoardCanvas({
         <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
         <Controls showInteractive={false} position="bottom-right" />
         <Guides guides={guides.guides} />
-        <PresenceLayer peers={live.peers} />
+        <PresenceLayer />
       </ReactFlow>
       {draw.preview && (
         <div
@@ -675,7 +685,7 @@ function BoardCanvas({
   return (
     <TasksContext.Provider value={tasks}>
       <ReadOnlyContext.Provider value={readOnly}>
-        <SelectedByContext.Provider value={selectedByOthers}>
+        <SelectedByContext.Provider value={live.selections}>
           <ModuleHostContext.Provider value={moduleHost}>
             {readOnly ? (
               surface
@@ -718,11 +728,12 @@ function BoardCanvas({
             </AlertDescription>
           </Alert>
         )}
-        {live.status === 'unavailable' && (
-          <Alert className="absolute top-16 right-4 z-10 w-80">
-            <AlertDescription>
-              Live connection unavailable. Viewing the last saved version.
-            </AlertDescription>
+        {LIVE_NOTICE[live.status] && (
+          <Alert
+            variant={live.status === 'unsaved' ? 'destructive' : 'default'}
+            className="absolute top-16 right-4 z-10 w-80"
+          >
+            <AlertDescription>{LIVE_NOTICE[live.status]}</AlertDescription>
           </Alert>
         )}
         {!readOnly && (
@@ -754,6 +765,12 @@ export default function Canvas({ boardId }: { boardId: string }) {
     void queryClient.invalidateQueries({ queryKey: ['board', boardId] })
     void queryClient.invalidateQueries({ queryKey: ['boards'] })
   }, [queryClient, boardId])
+
+  // The board is gone for this person: the app moves on to another one and says why.
+  const lost = accessChanged && board.isError
+  useEffect(() => {
+    if (lost) setNotice('You no longer have access to this board.')
+  }, [lost])
 
   if (board.isPending) return <Skeleton className="absolute inset-0" />
   if (board.isError) {
