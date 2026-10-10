@@ -1,0 +1,21 @@
+name: installer-windows
+# Runs only when the Windows installer changes. install.ps1 is linted, not run: hosted Windows
+# runners have no WSL 2 for Docker Desktop.
+on:
+  pull_request:
+    paths:
+      - install/install.ps1
+      - .github/workflows/installer-windows.yml
+
+jobs:
+  lint:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: PSScriptAnalyzer
+        shell: powershell
+        run: |
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          $issues = Invoke-ScriptAnalyzer -Path install/install.ps1 -Severity Warning, Error -ExcludeRule PSAvoidUsingWriteHost
+          $issues | Format-Table -AutoSize
+          if ($issues) { exit 1 }
