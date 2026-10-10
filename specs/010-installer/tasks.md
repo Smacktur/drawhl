@@ -38,6 +38,6 @@ description: "Task list for One-command installer"
 **Needs**: the owner's Cloudflare setup from [plan.md](plan.md#domain-owner-outside-the-repository).
 
 - [x] T012 Guide `site` and `base` to `https://docs.tiko.run`; every link to the guide in the repository and the app
-- [ ] T013 Install lines to `https://tiko.run/install.sh` and `.ps1` in README and the guide; curl both through the redirect
+- [x] T013 Install lines to `https://tiko.run/install.sh` and `.ps1` in README and the guide; curl both through the redirect
 
 **Checkpoint**: both lines work from a clean machine → G3.

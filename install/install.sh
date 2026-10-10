@@ -162,7 +162,7 @@ install_docker() {
       say "Docker is not installed. Pick one, then run the installer again:"
       say "  - Homebrew (https://brew.sh): the installer then sets up Colima, a free Docker engine;"
       say "  - Docker Desktop (https://docs.docker.com/desktop/setup/install/mac-install/),"
-      say "    free for personal use and small companies, paid above 250 people or \$10M revenue."
+      say "    free to install and use; only companies with over 250 people or \$10M revenue need a Docker license."
       die "Docker is required"
     fi
     ask "Docker is not installed. Install Colima, the Docker CLI and Compose with Homebrew?" ||
