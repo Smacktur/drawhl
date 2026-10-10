@@ -171,7 +171,7 @@ test('a renamed board shows its new name to the guest', async () => {
   expect(await screen.findByText('Plan')).toBeInTheDocument()
 })
 
-test('a live board is not asked for its version, and a closed socket reads it again', async () => {
+test('a live board is checked once, and a closed socket reads it again', async () => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
   socket.live = true
   let renamed = false
@@ -184,7 +184,8 @@ test('a live board is not asked for its version, and a closed socket reads it ag
   show()
   await screen.findByTestId('canvas')
   await vi.advanceTimersByTimeAsync(60_000)
-  expect(fetchMock).toHaveBeenCalledOnce()
+  // The board, then one check for what changed while the socket was connecting.
+  expect(fetchMock).toHaveBeenCalledTimes(2)
 
   renamed = true
   socket.closed()
@@ -192,4 +193,49 @@ test('a live board is not asked for its version, and a closed socket reads it ag
   off = true
   socket.closed()
   expect(await screen.findByText('This board is not available.')).toBeInTheDocument()
+})
+
+test('a change made while the socket was connecting is read once it is live', async () => {
+  socket.live = true
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      if (url.endsWith('/version')) return Response.json(stamp(4, '2026-10-10T01:00:00+00:00'))
+      const first = vi.mocked(fetch).mock.calls.length === 1
+      return Response.json(
+        first
+          ? board(4, ['a'])
+          : { ...board(4, ['a']), name: 'Plan', updated_at: '2026-10-10T01:00:00+00:00' },
+      )
+    }),
+  )
+  show()
+  expect(await screen.findByText('Plan')).toBeInTheDocument()
+})
+
+test('a reload after a rename that fails is tried until it works', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  socket.live = true
+  const later = '2026-10-10T01:00:00+00:00'
+  let renamed = false
+  let failing = false
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      if (url.endsWith('/version')) return Response.json(stamp(4, renamed ? later : undefined))
+      if (failing) return new Response('upstream down', { status: 502 })
+      return Response.json(
+        renamed ? { ...board(4, ['a']), name: 'Plan', updated_at: later } : board(4, ['a']),
+      )
+    }),
+  )
+  show()
+  expect(await screen.findByText('Roadmap')).toBeInTheDocument()
+  renamed = failing = true
+  socket.closed()
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(screen.getByText('Roadmap')).toBeInTheDocument()
+  failing = false
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(await screen.findByText('Plan')).toBeInTheDocument()
 })

@@ -219,6 +219,14 @@ test('a guest of a public link listens on the socket of the link and says nothin
   act(() => provider.emit('sync', true))
   expect(shown()).toEqual([])
 
+  // A socket that dropped and may never come back: reloads are shown too.
+  act(() => provider.drop())
+  expect(result.current.status).toBe('reconnecting')
+  rerender({ shown: reloaded(['d']) })
+  expect(shown()).toEqual(['d'])
+  act(() => provider.back())
+  expect(shown()).toEqual([])
+
   // A dead link or a rename: the page reads the board again, nobody is sent to sign in.
   const signIn = vi.fn()
   window.addEventListener(AUTH_REQUIRED_EVENT, signIn)

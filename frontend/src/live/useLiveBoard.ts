@@ -94,8 +94,8 @@ export function useLiveBoard(
   useEffect(() => {
     if (!guest || reloaded.current === board.doc) return
     reloaded.current = board.doc
-    // A socket that is live, or about to be again, knows the board better than a reload.
-    if (status === 'live' || status === 'reconnecting') return
+    // A live socket knows the board better than a reload; one that dropped may never return.
+    if (status === 'live') return
     setNodes(board.doc.nodes as AppNode[])
     setEdges(board.doc.edges)
   }, [guest, status, board.doc, setNodes, setEdges])

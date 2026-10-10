@@ -82,8 +82,10 @@ export default function PublicBoard({ token }: { token: string }) {
     const timer = setTimeout(() => setWaited(true), LIVE_WAIT_MS)
     return () => clearTimeout(timer)
   }, [])
+  // A reload the socket asked for that has not succeeded yet.
+  const [owed, setOwed] = useState(false)
   // The socket brings changes on its own; the checks are for when it is full or blocked.
-  const polling = waited && !live
+  const polling = owed || (waited && !live)
   const board = useQuery({
     queryKey: ['public', token],
     queryFn: () => getPublicBoard(token),
@@ -99,6 +101,18 @@ export default function PublicBoard({ token }: { token: string }) {
     retry: false,
   })
   const { refetch } = board
+  const reload = useCallback(
+    () =>
+      void refetch().then((result) => {
+        if (result.isSuccess) setOwed(false)
+      }),
+    [refetch],
+  )
+  const { refetch: check } = version
+  useEffect(() => {
+    // A rename or a change made while the socket was connecting never came through it.
+    if (live) void check()
+  }, [live, check])
   const seen = version.data
   // A rename changes the time and not the version.
   const stale =
@@ -107,10 +121,14 @@ export default function PublicBoard({ token }: { token: string }) {
   const checkedAt = version.dataUpdatedAt
   useEffect(() => {
     // Runs again on every check while the board is behind, so a reload that failed is retried.
-    if (polling && stale) void refetch()
-  }, [polling, stale, checkedAt, refetch])
+    if (stale) reload()
+  }, [stale, checkedAt, reload])
   // The socket closes when the link dies or the board is renamed: both are read from the board.
-  const reread = useCallback(() => void refetch(), [refetch])
+  // Until that reload succeeds the checks go on, even with the socket back.
+  const reread = useCallback(() => {
+    setOwed(true)
+    reload()
+  }, [reload])
 
   const data = board.data
   const shown = useMemo<Board | null>(

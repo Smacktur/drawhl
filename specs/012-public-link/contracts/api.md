@@ -61,7 +61,7 @@ The server sends sync step 1 on accept and then every document update. It never 
 | 4429 | no free place for a guest | shows the board from `GET /api/public/{token}`, checks `/version` every 5 s, says "Many people are viewing this board. It updates every few seconds." and tries the socket again every 30 s |
 | 1009, 1008 | a frame over 1 MiB, a frame that cannot be read | – |
 
-Guests do not count toward the 30 connections of the people on the board, and people do not take guests' places. While the socket is live the page does not ask `/version`; when it cannot connect within 5 s it checks as in slice 1.
+Guests do not count toward the 30 connections of the people on the board, and people do not take guests' places. Each time the socket becomes live the page asks `/version` once, to catch a rename or a change made while it was connecting, and then stops asking. When the socket is not live for 5 s, or a reload asked for by a 4403 has not succeeded yet, it checks every 5 s as in slice 1 and shows what it reloads.
 
 The server's own log never carries a token: the path of an accepted socket is written as `/api/public/***/live`.
 
