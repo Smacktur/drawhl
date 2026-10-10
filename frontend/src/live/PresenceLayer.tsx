@@ -1,52 +1,20 @@
-import { ViewportPortal, useReactFlow, useViewport } from '@xyflow/react'
-import type { AppEdge, AppNode } from '@/canvas/types'
+import { ViewportPortal, useViewport } from '@xyflow/react'
 import { Avatar } from '@/live/Avatar'
 import type { Peer } from '@/live/presence'
 
 /**
- * Other people on the canvas: their cursors and what they have selected.
+ * Other people's cursors on the canvas. What they have selected is drawn by the nodes
+ * themselves (`PresenceRing`), so an outline can never lag behind its node.
  *
  * Drawn in board coordinates and scaled back, so a cursor is the same size at any zoom.
  * Nothing here takes pointer events: a cursor passing under the mouse must not steal a click.
  */
-export function PresenceLayer({ peers, nodes }: { peers: Peer[]; nodes: AppNode[] }) {
+export function PresenceLayer({ peers }: { peers: Peer[] }) {
   const { zoom } = useViewport()
-  const { getInternalNode } = useReactFlow<AppNode, AppEdge>()
   if (peers.length === 0) return null
   const unscale = { transform: `scale(${1 / zoom})` }
-  // Read through `nodes` so outlines follow a selected node as it moves.
-  const known = new Set(nodes.map((node) => node.id))
   return (
     <ViewportPortal>
-      {peers.flatMap((peer) =>
-        peer.selected.map((id) => {
-          const node = known.has(id) ? getInternalNode(id) : undefined
-          const width = node?.measured.width ?? node?.width
-          const height = node?.measured.height ?? node?.height
-          if (!node || !width || !height) return null
-          const { x, y } = node.internals.positionAbsolute
-          return (
-            <div
-              key={`${peer.client}:${id}`}
-              className="presence-outline pointer-events-none absolute"
-              style={{
-                transform: `translate(${x}px, ${y}px)`,
-                width,
-                height,
-                borderColor: `var(--presence-${peer.user.color})`,
-                zIndex: 1000,
-              }}
-            >
-              <span className="absolute top-0 right-0 origin-top-right" style={unscale}>
-                <Avatar
-                  user={peer.user}
-                  className="size-4 -translate-y-1/2 translate-x-1/2 text-[8px]"
-                />
-              </span>
-            </div>
-          )
-        }),
-      )}
       {peers.map(
         (peer) =>
           peer.cursor && (

@@ -7,13 +7,11 @@ import { AUTH_REQUIRED_EVENT } from '@/api/client'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { LOCAL, LiveBinding } from '@/live/binding'
 import {
-  CURSOR_INTERVAL_MS,
   colorOf,
   parsePeers,
   peopleOf,
-  selection,
+  presenceSender,
   setBoardPeople,
-  throttle,
   type Peer,
   type PresenceState,
 } from '@/live/presence'
@@ -30,16 +28,8 @@ const NO_GLIDE: ReadonlySet<string> = new Set()
 const SESSION_ENDED = 4401
 const ACCESS_CHANGED = 4403
 
-/** What this tab tells the others; cursor and drag at most every 50 ms. */
-function presenceOf(send: (patch: Partial<PresenceState>) => void) {
-  return {
-    cursor: throttle((cursor: PresenceState['cursor']) => send({ cursor }), CURSOR_INTERVAL_MS),
-    drag: throttle((drag: PresenceState['drag']) => send({ drag }), CURSOR_INTERVAL_MS),
-    selected: (ids: string[]) => send({ selected: selection(ids) }),
-  }
-}
 // Until the board is connected there is nobody to tell.
-const IDLE = presenceOf(() => {})
+const IDLE = presenceSender(() => {})
 
 function socketUrl() {
   const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
@@ -125,7 +115,7 @@ export function useLiveBoard(
         selected: [],
         drag: null,
       } satisfies PresenceState)
-      mine = presenceOf((patch) => {
+      mine = presenceSender((patch) => {
         for (const [field, value] of Object.entries(patch)) {
           awareness.setLocalStateField(field, value)
         }
@@ -161,8 +151,7 @@ export function useLiveBoard(
       clearTimeout(waiting)
       clearTimeout(gliding)
       cancelAnimationFrame(frame)
-      mine.cursor.cancel()
-      mine.drag.cancel()
+      mine.cancel()
       setPresence(IDLE)
       setBoardPeople([])
       setPeers([])

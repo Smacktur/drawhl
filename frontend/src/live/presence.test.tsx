@@ -9,6 +9,8 @@ import {
   initials,
   parsePeers,
   peopleOf,
+  presenceSender,
+  selectedBy,
   throttle,
   type Peer,
 } from '@/live/presence'
@@ -142,4 +144,32 @@ test('a node someone drags follows them on screen; the board state is untouched'
   expect(shown[3]).toMatchObject({ position: { x: 0, y: 0 }, className: 'node-glide' })
   expect(nodes[0].position).toEqual({ x: 0, y: 0 })
   expect(withRemoteMotion(nodes, new Map(), new Set(), () => undefined)).toBe(nodes)
+})
+
+test('cursor and drag leave in one message, so a dragged node stays under its cursor', () => {
+  const sent: object[] = []
+  const mine = presenceSender((patch) => sent.push(patch))
+  mine.cursor({ x: 1, y: 1 })
+  mine.cursor({ x: 2, y: 2 })
+  mine.drag({ a: { x: 5, y: 5 } })
+  vi.advanceTimersByTime(50)
+  expect(sent).toEqual([
+    { cursor: { x: 1, y: 1 } },
+    { cursor: { x: 2, y: 2 }, drag: { a: { x: 5, y: 5 } } },
+  ])
+  mine.drag(null)
+  vi.advanceTimersByTime(50)
+  expect(sent[2]).toEqual({ drag: null })
+})
+
+test('who has a node selected: each person once, in the order they are known', () => {
+  const peers = [
+    { ...state('u1', 'Ann', { selected: ['a', 'b'] }), client: 1 },
+    { ...state('u1', 'Ann', { selected: ['a'] }), client: 2 },
+    { ...state('u2', 'Bob', { selected: ['a'] }), client: 3 },
+  ] as Peer[]
+  const by = selectedBy(peers)
+  expect(by.get('a')?.map((person) => person.name)).toEqual(['Ann', 'Bob'])
+  expect(by.get('b')?.map((person) => person.name)).toEqual(['Ann'])
+  expect(by.get('c')).toBeUndefined()
 })

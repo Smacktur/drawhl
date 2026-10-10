@@ -96,6 +96,47 @@ export function throttle<A extends unknown[]>(run: (...args: A) => void, interva
   return throttled
 }
 
+/**
+ * What a tab tells the others. The cursor and the nodes it drags travel in one message, at most
+ * every 50 ms, so on the other screens a dragged node keeps its place under the cursor.
+ */
+export function presenceSender(send: (patch: Partial<PresenceState>) => void) {
+  let patch: Partial<PresenceState> = {}
+  const flush = throttle(() => {
+    const next = patch
+    patch = {}
+    send(next)
+  }, CURSOR_INTERVAL_MS)
+  return {
+    cursor: (cursor: PresenceState['cursor']) => {
+      patch.cursor = cursor
+      flush()
+    },
+    drag: (drag: PresenceState['drag']) => {
+      patch.drag = drag
+      flush()
+    },
+    selected: (ids: string[]) => send({ selected: selection(ids) }),
+    cancel: () => {
+      flush.cancel()
+      patch = {}
+    },
+  }
+}
+
+/** Who has each node selected: one entry per person, however many tabs they have. */
+export function selectedBy(peers: Peer[]): Map<string, PresenceUser[]> {
+  const byNode = new Map<string, PresenceUser[]>()
+  for (const peer of peers) {
+    for (const id of peer.selected) {
+      const users = byNode.get(id) ?? []
+      if (!users.some((user) => user.id === peer.user.id)) users.push(peer.user)
+      byNode.set(id, users)
+    }
+  }
+  return byNode
+}
+
 // The canvas publishes who is on the open board; the top bar, in another tree, shows them.
 let people: PresenceUser[] = []
 const listeners = new Set<() => void>()
