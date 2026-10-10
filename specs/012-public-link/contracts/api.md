@@ -35,7 +35,35 @@ Open without a session. A session cookie, when the browser sends one, is ignored
 - With any tracker that is read with a person's token every task comes as `{key, state: "private", url}` with the other fields empty, and `sources` is empty. `Task.state` gains the value `private`.
 - An unknown token, a token that was turned off, a deleted board and an instance with `public_links` off all answer 404 `not_found` with the same body.
 - More than 3000 requests a minute through one link answer 429 `too_many_attempts` with `Retry-After`. The limit is per link, not per address: the API runs behind proxies and does not see who is asking.
-- No other method or path under `/api/public/` exists.
+- No other method or path under `/api/public/` exists, except the socket below.
+
+## Guest socket
+
+`GET /api/public/{token}/live`, upgraded to a WebSocket: the live document of [spec 009](../../009-realtime/contracts/live.md), for reading. No session is needed or used.
+
+| Check | Result when it fails |
+|---|---|
+| The link opens a board (as `GET /api/public/{token}`) | accepted, then closed with 4403 |
+| The link's request budget | accepted, then closed with 4429 |
+| Under 200 guests in the room | accepted, then closed with 4429 |
+
+| From a guest | What happens |
+|---|---|
+| sync step 1 | answered with step 2 |
+| sync step 2, update | dropped |
+| awareness | dropped; nobody on the board learns of the guest |
+
+The server sends sync step 1 on accept and then every document update. It never sends awareness to a guest. Nothing is sent on a quiet board, so the web app asks for sync step 1 every 20 s to keep the socket open.
+
+| Close code | Meaning | What the web app does |
+|---|---|---|
+| 4403 | the link was turned off, the board was deleted or renamed, or public links were switched off; also sent when a check once a minute finds the link dead | reads `GET /api/public/{token}` again: 404 shows "This board is not available."; otherwise takes the new name and connects again after 1 s |
+| 4429 | no free place for a guest | shows the board from `GET /api/public/{token}`, checks `/version` every 5 s, says "Many people are viewing this board. It updates every few seconds." and tries the socket again every 30 s |
+| 1009, 1008 | a frame over 1 MiB, a frame that cannot be read | – |
+
+Guests do not count toward the 30 connections of the people on the board, and people do not take guests' places. While the socket is live the page does not ask `/version`; when it cannot connect within 5 s it checks as in slice 1.
+
+The server's own log never carries a token: the path of an accepted socket is written as `/api/public/***/live`.
 
 ## Headers of the page
 

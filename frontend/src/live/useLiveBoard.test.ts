@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import type { Awareness } from 'y-protocols/awareness'
 import * as Y from 'yjs'
 import type { Board } from '@/api/boards'
 import { AUTH_REQUIRED_EVENT } from '@/api/client'
@@ -17,9 +18,13 @@ const { providers, FakeProvider } = vi.hoisted(() => {
     destroy = vi.fn()
     awareness: unknown
     doc: Y.Doc
+    url: string
+    room: string
     private handlers = new Map<string, Handler[]>()
 
-    constructor(_url: string, _room: string, doc: Y.Doc) {
+    constructor(url: string, room: string, doc: Y.Doc) {
+      this.url = url
+      this.room = room
       this.doc = doc
       providers.push(this)
     }
@@ -185,16 +190,42 @@ test('leaving the board ends its connection and its timers', () => {
   expect(provider.connect).not.toHaveBeenCalled()
 })
 
-test('a guest of a public link gets the board as given, with no connection', () => {
+test('a guest of a public link listens on the socket of the link and says nothing', () => {
+  const onAccessChanged = vi.fn()
   const { result, rerender } = renderHook(
-    ({ shown }: { shown: Board }) => useLiveBoard(shown, true, vi.fn(), undefined, false),
+    ({ shown }: { shown: Board }) => useLiveBoard(shown, true, onAccessChanged, undefined, 'tok'),
     { initialProps: { shown: board } },
   )
-  expect(providers).toHaveLength(0)
-  expect(result.current.editable).toBe(false)
-  rerender({ shown: { ...board, version: 4, doc: { ...board.doc, nodes: [sticky('a')] } } })
-  expect(result.current.nodes.map((node) => node.id)).toEqual(['a'])
-  act(() => vi.advanceTimersByTime(60_000))
-  expect(result.current.status).toBe('connecting')
-  expect(providers).toHaveLength(0)
+  const [provider] = providers
+  expect(provider.url).toMatch(/\/api\/public$/)
+  expect(provider.room).toBe('tok/live')
+  expect((provider.awareness as Awareness).getLocalState()).toBeNull()
+  const reloaded = (ids: string[]) => ({ ...board, doc: { ...board.doc, nodes: ids.map(sticky) } })
+  const shown = () => result.current.nodes.map((node) => node.id)
+
+  // Until the socket is live the board is the one the page loads.
+  rerender({ shown: reloaded(['a']) })
+  expect(shown()).toEqual(['a'])
+  act(() => provider.emit('sync', true))
+  expect(result.current.status).toBe('live')
+  expect(shown()).toEqual([])
+  rerender({ shown: reloaded(['a', 'b']) })
+  expect(shown()).toEqual([])
+
+  // A full board: the page's reloads are shown again.
+  act(() => provider.emit('closed', { code: 4429, reason: '' }))
+  rerender({ shown: reloaded(['c']) })
+  expect(shown()).toEqual(['c'])
+  act(() => provider.emit('sync', true))
+  expect(shown()).toEqual([])
+
+  // A dead link or a rename: the page reads the board again, nobody is sent to sign in.
+  const signIn = vi.fn()
+  window.addEventListener(AUTH_REQUIRED_EVENT, signIn)
+  act(() => provider.emit('closed', { code: 4403, reason: '' }))
+  act(() => provider.emit('connection-error'))
+  expect(onAccessChanged).toHaveBeenCalledOnce()
+  expect(fetch).not.toHaveBeenCalled()
+  expect(signIn).not.toHaveBeenCalled()
+  window.removeEventListener(AUTH_REQUIRED_EVENT, signIn)
 })

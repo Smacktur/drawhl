@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ReactFlowProvider } from '@xyflow/react'
 import { Moon, Search, Sun, Timer } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Board } from '@/api/boards'
 import { ApiError } from '@/api/client'
 import { getPublicBoard, getPublicVersion } from '@/api/public'
@@ -16,9 +16,10 @@ import { setFocusVisible, useFocusVisible } from '@/focus/store'
 import { useTheme } from '@/lib/theme'
 import { setSearchOpen } from '@/search/palette'
 
-// How soon a guest sees a change, or that the link was turned off.
+// Without the socket: how soon a guest sees a change, or that the link was turned off.
 const VERSION_POLL_MS = 5000
-const noop = () => {}
+// How long the socket has to connect before the page starts asking instead.
+const LIVE_WAIT_MS = 5000
 
 const isGone = (error: unknown) => error instanceof ApiError && error.code === 'not_found'
 
@@ -75,6 +76,14 @@ function PublicBar({ name }: { name: string }) {
 /** A board opened by its public link: anyone can look, nobody can change it. */
 export default function PublicBoard({ token }: { token: string }) {
   const focusVisible = useFocusVisible()
+  const [live, setLive] = useState(false)
+  const [waited, setWaited] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setWaited(true), LIVE_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [])
+  // The socket brings changes on its own; the checks are for when it is full or blocked.
+  const polling = waited && !live
   const board = useQuery({
     queryKey: ['public', token],
     queryFn: () => getPublicBoard(token),
@@ -86,7 +95,7 @@ export default function PublicBoard({ token }: { token: string }) {
     queryFn: () => getPublicVersion(token),
     refetchInterval: VERSION_POLL_MS,
     // A failed reload keeps the last board on screen, and the checks go on.
-    enabled: board.data !== undefined,
+    enabled: polling && board.data !== undefined,
     retry: false,
   })
   const { refetch } = board
@@ -98,8 +107,10 @@ export default function PublicBoard({ token }: { token: string }) {
   const checkedAt = version.dataUpdatedAt
   useEffect(() => {
     // Runs again on every check while the board is behind, so a reload that failed is retried.
-    if (stale) void refetch()
-  }, [stale, checkedAt, refetch])
+    if (polling && stale) void refetch()
+  }, [polling, stale, checkedAt, refetch])
+  // The socket closes when the link dies or the board is renamed: both are read from the board.
+  const reread = useCallback(() => void refetch(), [refetch])
 
   const data = board.data
   const shown = useMemo<Board | null>(
@@ -110,7 +121,7 @@ export default function PublicBoard({ token }: { token: string }) {
     [data, token],
   )
   const guest = useMemo(
-    () => ({ token, intervalS: data?.refresh_interval_s ?? 30 }),
+    () => ({ token, intervalS: data?.refresh_interval_s ?? 30, onLive: setLive }),
     [token, data?.refresh_interval_s],
   )
 
@@ -136,7 +147,7 @@ export default function PublicBoard({ token }: { token: string }) {
   return (
     <>
       <ReactFlowProvider>
-        <BoardCanvas board={shown} viewer onAccessChanged={noop} guest={guest} />
+        <BoardCanvas board={shown} viewer onAccessChanged={reread} guest={guest} />
       </ReactFlowProvider>
       <PublicBar name={shown.name} />
       {focusVisible && <FocusCapsule />}

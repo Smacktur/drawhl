@@ -38,7 +38,7 @@ People with "Can view" see changes live too. They cannot change anything, and th
 
 The owner of a board can show it to anyone, with no account: in "Share", turn on "Anyone with the link can view" and copy the link.
 
-- Whoever opens the link sees the board and can pan, zoom and search it. Nothing can be moved or changed, and changes made by people on the board show up within a few seconds.
+- Whoever opens the link sees the board and can pan, zoom and search it. Nothing can be moved or changed, and changes made by people on the board show up as they happen. When more than 200 guests watch one board, or the guest's network blocks WebSockets, the page checks for changes every few seconds instead.
 - A guest does not see who is on the board, and nobody sees the guest.
 - Tasks from your tracker show a guest only their key, as a link to the tracker. Titles, statuses and assignees are fetched with each person's own token and are never published. Demo tasks are shown in full.
 - The focus timer and its music work for a guest: they live in the guest's browser. Timers on the board are shown, but they ring only for the people on it.

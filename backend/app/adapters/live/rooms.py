@@ -32,6 +32,7 @@ from app.domain.live import (
     ACCESS_CHANGED,
     GOING_AWAY,
     MAX_CONNECTIONS,
+    MAX_GUESTS,
     ROOM_FULL,
     SESSION_ENDED,
     TOO_SLOW,
@@ -49,15 +50,12 @@ _EMPTY_UPDATE = b"\x00\x00"
 _WRITES = (YSyncMessageType.SYNC_STEP2, YSyncMessageType.SYNC_UPDATE)
 
 
-class Connection:
-    """One socket: who it belongs to, what it may do and what is waiting to be sent to it."""
+class Listener:
+    """One socket and what is waiting to be sent to it. On its own it is a guest of a public
+    link: it hears the board and has no say in it."""
 
-    def __init__(self, room: "Room", person: Person, session: str, can_edit: bool) -> None:
+    def __init__(self, room: "Room") -> None:
         self.room = room
-        self.person = person
-        self.session = session
-        self.can_edit = can_edit
-        self.clients: set[int] = set()
         # Bytes to send, or an int: the code to close the socket with.
         self.outbox: asyncio.Queue[bytes | int] = asyncio.Queue(QUEUE_SIZE)
         self.closing = False
@@ -79,6 +77,17 @@ class Connection:
         self.outbox.put_nowait(code)
 
 
+class Connection(Listener):
+    """A signed-in person's socket: who it belongs to and what it may do."""
+
+    def __init__(self, room: "Room", person: Person, session: str, can_edit: bool) -> None:
+        super().__init__(room)
+        self.person = person
+        self.session = session
+        self.can_edit = can_edit
+        self.clients: set[int] = set()
+
+
 class Room:
     def __init__(
         self, rooms: "LiveRooms", board_id: str, doc: BoardDoc, version: int, state: bytes | None
@@ -89,6 +98,8 @@ class Room:
         self.last = doc
         self.version = version
         self.connections: set[Connection] = set()
+        # Guests of the public link: they get the document and never presence.
+        self.guests: set[Listener] = set()
         # Latest presence of each tab by its Yjs client id: (clock, state as JSON text).
         self.presence: dict[int, tuple[int, str]] = {}
         # Which connection each presence state belongs to.
@@ -112,7 +123,7 @@ class Room:
         if event.update == _EMPTY_UPDATE:
             return
         message = create_update_message(event.update)
-        for connection in self.connections:
+        for connection in (*self.connections, *self.guests):
             if connection is not self._sender:
                 connection.push(message)
         loop = asyncio.get_running_loop()
@@ -121,10 +132,40 @@ class Room:
         if self._check_timer is None:
             self._check_timer = loop.call_later(self._rooms.check_delay_s, self.check)
 
-    def join(self, connection: Connection) -> None:
+    def _stay(self) -> None:
         if self._drop_timer:
             self._drop_timer.cancel()
             self._drop_timer = None
+
+    def _left(self) -> None:
+        if self.connections or self.guests:
+            return
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.save())
+        self._drop_timer = loop.call_later(
+            self._rooms.idle_s, lambda: loop.create_task(self._rooms.drop(self))
+        )
+
+    def join_guest(self, guest: Listener) -> None:
+        self._stay()
+        self.guests.add(guest)
+        guest.push(create_sync_message(self.live.doc))
+
+    def leave_guest(self, guest: Listener) -> None:
+        self.guests.discard(guest)
+        self._left()
+
+    def answer(self, guest: Listener, data: bytes) -> None:
+        """A guest may ask for the board; whatever else it sends is dropped."""
+        if len(data) < 2 or data[0] != YMessageType.SYNC:
+            return
+        if data[1] == YSyncMessageType.SYNC_STEP1:
+            reply = handle_sync_message(data[1:], self.live.doc)
+            if reply:
+                guest.push(reply)
+
+    def join(self, connection: Connection) -> None:
+        self._stay()
         self.connections.add(connection)
         connection.push(create_sync_message(self.live.doc))
         if self.presence:
@@ -144,12 +185,7 @@ class Room:
             message = _presence_message(gone)
             for other in self.connections:
                 other.push(message)
-        if not self.connections:
-            loop = asyncio.get_running_loop()
-            loop.create_task(self.save())
-            self._drop_timer = loop.call_later(
-                self._rooms.idle_s, lambda: loop.create_task(self._rooms.drop(self))
-            )
+        self._left()
 
     def receive(self, connection: Connection, data: bytes) -> None:
         if len(data) < 2:
@@ -249,7 +285,7 @@ class Room:
         return self.version
 
     def close(self, code: int) -> None:
-        for connection in self.connections:
+        for connection in (*self.connections, *self.guests):
             connection.kick(code)
 
     def stop(self) -> None:
@@ -318,11 +354,22 @@ class LiveRooms:
         room.join(connection)
         return connection
 
+    async def join_guest(self, board_id: str) -> Listener | int:
+        """A guest's place in the board's room, or the code to close the socket with."""
+        room = await self._room(board_id)
+        if room is None:
+            return ACCESS_CHANGED
+        if len(room.guests) >= MAX_GUESTS:
+            return ROOM_FULL
+        guest = Listener(room)
+        room.join_guest(guest)
+        return guest
+
     async def drop(self, room: Room) -> None:
-        if room.connections or self._rooms.get(room.board_id) is not room:
+        if room.connections or room.guests or self._rooms.get(room.board_id) is not room:
             return
         await room.save()
-        if not room.connections:
+        if not (room.connections or room.guests):
             del self._rooms[room.board_id]
             room.stop()
 
@@ -375,6 +422,19 @@ class LiveRooms:
 
     def recheck_person(self, user_id: str) -> None:
         self._each(lambda _, c: c.person.id == user_id, lambda _, c: c.kick(ACCESS_CHANGED))
+
+    def end_public(self, board_id: str | None = None) -> None:
+        loop = self._loop
+        if loop is None or not loop.is_running():
+            return
+
+        def run() -> None:
+            for room in list(self._rooms.values()):
+                if board_id in (None, room.board_id):
+                    for guest in list(room.guests):
+                        guest.kick(ACCESS_CHANGED)
+
+        loop.call_soon_threadsafe(run)
 
     def recheck_board(self, board_id: str) -> None:
         def recheck(room: Room, connection: Connection) -> None:

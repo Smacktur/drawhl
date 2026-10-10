@@ -16,6 +16,8 @@ from app.domain.boards import MAX_NODES, BoardDoc, Edge, Node, check_doc
 SERVER = "server"
 MAX_EDGES = MAX_NODES * 2
 MAX_CONNECTIONS = 30
+# Guests of a public link have places of their own and never take a person's.
+MAX_GUESTS = 200
 MAX_MESSAGE_BYTES = 1024 * 1024
 
 # Close codes of the live socket (specs/009-realtime/contracts/live.md).

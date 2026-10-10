@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 import uuid
 from contextvars import ContextVar
@@ -50,12 +51,26 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, ensure_ascii=False)
 
 
+_PUBLIC_LINK = re.compile(r"(/api/public/)[\w-]+")
+
+
+class _HidePublicLinks(logging.Filter):
+    """uvicorn logs the path of every socket it accepts, and a public link is its own key."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.msg, record.args = _PUBLIC_LINK.sub(r"\1***", record.getMessage()), None
+        return True
+
+
 def setup_logging(level: str) -> None:
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())
     logging.basicConfig(level=level.upper(), handlers=[handler], force=True)
     # uvicorn's access log duplicates ours without request ids.
     logging.getLogger("uvicorn.access").disabled = True
+    errors = logging.getLogger("uvicorn.error")
+    if not any(isinstance(known, _HidePublicLinks) for known in errors.filters):
+        errors.addFilter(_HidePublicLinks())
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
