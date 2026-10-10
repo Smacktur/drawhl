@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/009-realtime",
+  "feature": "specs/012-public-link",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -49,7 +49,8 @@
     "install-ps1",
     "live-sync",
     "presence",
-    "reconnect"
+    "reconnect",
+    "public-link"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -115,7 +116,11 @@
     "G2_realtime": "approved",
     "G3_live-sync": "approved",
     "G3_presence": "approved",
-    "G3_reconnect": "approved"
+    "G3_reconnect": "approved",
+    "G1_demo": "approved",
+    "G1_public-link": "approved",
+    "G2_public-link": "approved",
+    "G3_public-link": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -147,6 +152,9 @@
     "2026-10-10 G2 realtime: owner approved spec 009 in 3 slices (live-sync with personal undo, presence, reconnect): CRDT state stored next to the JSON doc, the server repairs merges, one value per field with last writer wins (no character-level text merging in v1), no REST fallback for saving when WebSockets are blocked.",
     "2026-10-10 realtime: slice live-sync approved at G3 (PR 64): boards are CRDT documents over one WebSocket, the server on pycrdt alone, personal undo. Measured locally: 14-41 ms from a key press in one tab to the screen of another on a 300-note board. Owner's test first ran against a tab still on the old app; pages are now served with no-cache. Owner asked for remote changes to glide into place: added to slice presence (T026).",
     "2026-10-10 realtime: slice presence approved at G3 (PR 67): avatars in the top bar, cursors with a small avatar, selection outline drawn inside the node, live drags, remote changes glide. The server lets a tab speak only for its own presence. Owner tried a cursor fixed to the dragged node and turned it down (it twitched on grab and release); the cursor follows the real pointer. SC-005 load is not measured yet (T027, slice reconnect).",
-    "2026-10-10 realtime: spec 009 done in slices live-sync, presence, reconnect (PR 64, 67, 70). Other people's moves are animated in node positions, not with CSS, so arrows and frame contents cannot trail. Left for later by the owner's word: T028 (fresh install, two people and a viewer in both themes, Railway and Render pass WebSockets) and the load target: about 40 MB per 2000-node room against 30 MB, 12-17 fps on the receiving tab with all 2000 notes on screen. Not released yet."
+    "2026-10-10 realtime: spec 009 done in slices live-sync, presence, reconnect (PR 64, 67, 70). Other people's moves are animated in node positions, not with CSS, so arrows and frame contents cannot trail. Left for later by the owner's word: T028 (fresh install, two people and a viewer in both themes, Railway and Render pass WebSockets) and the load target: about 40 MB per 2000-node room against 30 MB, 12-17 fps on the receiving tab with all 2000 notes on screen. Not released yet.",
+    "2026-10-10 G1 demo and public link: of the launch plan the owner builds one thing now, guest mode: a public view-only link to a board (spec 012, awaits G2). Terms: a guest only looks; a demo visitor is a temporary person on a demo instance who can edit and keeps their work on sign-up (spec 011, drafted and parked).",
+    "2026-10-10 G2 public link: owner approved spec 012: only the owner of a board turns its link on, public links are allowed on an instance by default (an admin can switch them off), a guest sees everything on the board but task data from a personal tracker shows as a key only, demo tasks in full; the focus timer and music work for a guest. Demo answers kept in spec 011: signed-up people stay for good, a demo visitor lives 7 days, demo task statuses per person (about half a day).",
+    "2026-10-10 public link: slice public-link approved at G3: an owner turns on a view-only link in Share, a guest page at /p/<token> without a socket (a version check every 5 s), keys only for tracker tasks, a request budget per link, an admin switch in Settings. Left: slice public-live (guest socket, T012-T014)."
   ]
 }
