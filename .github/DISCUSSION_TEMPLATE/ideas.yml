@@ -3,19 +3,31 @@ body:
     attributes:
       value: Search Ideas first. If the idea is already there, upvote it and add how you would use it.
   - type: textarea
+    id: want
+    attributes:
+      label: What do you want?
+      description: One or two sentences. One idea per thread.
+    validations:
+      required: true
+  - type: textarea
     id: problem
     attributes:
-      label: Problem
+      label: What problem does it solve?
       description: What are you trying to do, and what gets in the way today?
     validations:
       required: true
   - type: textarea
+    id: usage
+    attributes:
+      label: How would you use it?
+      description: A real case from your work, how often it comes up and for how many people.
+  - type: textarea
     id: proposal
     attributes:
-      label: Proposal
-      description: How it could work. Sketches and examples help.
-  - type: textarea
-    id: alternatives
+      label: How do you see it working?
+      description: Optional. Sketches, examples and other tools that do it well all help.
+  - type: input
+    id: tracker
     attributes:
-      label: Alternatives
-      description: Workarounds or other tools you have tried.
+      label: Your tracker
+      description: Jira Data Center, Jira Cloud, Linear, GitHub Issues and so on, if it matters for the idea.

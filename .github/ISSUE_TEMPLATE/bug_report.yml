@@ -2,17 +2,27 @@ name: Bug report
 description: Something does not work as documented
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: Remove tokens, internal hostnames and real task names from logs and screenshots before you post them.
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you did, what you expected, what you saw instead.
+      description: What you did and what you saw. A screenshot or a short recording helps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
+      description: Does it happen every time?
       placeholder: |
         1. ...
         2. ...
@@ -22,17 +32,34 @@ body:
     id: version
     attributes:
       label: Version
-      description: Release tag or commit SHA.
+      description: The About panel shows it. A release tag or a commit SHA also works.
     validations:
       required: true
-  - type: textarea
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you run tiko
+      options:
+        - Installer (install.sh or install.ps1)
+        - Docker Compose from source
+        - Railway
+        - Render
+        - Other
+    validations:
+      required: true
+  - type: input
     id: environment
     attributes:
-      label: Environment
-      description: OS, browser, Docker version, how you run it.
+      label: Browser and OS
+      description: For example, Chrome 141 on macOS 15.
+  - type: input
+    id: tracker
+    attributes:
+      label: Tracker
+      description: Demo tasks or Jira Data Center with its version, if the bug involves cards.
   - type: textarea
     id: logs
     attributes:
       label: Logs
-      description: Relevant output of `docker compose logs`. Remove tokens and internal hostnames.
+      description: Output of `docker compose logs api` around the problem, and errors from the browser console if the page misbehaves.
       render: text
