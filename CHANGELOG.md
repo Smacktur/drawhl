@@ -6,10 +6,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Live boards: everyone on a shared board sees each other's changes as they happen. Changes to different parts of one element merge; when two people change the same thing at once, the later change wins. Viewers watch live. See "Working together" in the guide.
+- Undo and redo go through your own changes only.
 - One-command install for Windows 10 and 11: `irm https://tiko.run/install.ps1 | iex` installs WSL 2 and Docker Desktop after asking, with one restart, then starts tiko and opens the browser.
 
 ### Changed
 
+- **Breaking for instances behind their own reverse proxy:** boards are edited over a WebSocket at `/api/boards/<id>/live`. A proxy that does not pass WebSocket upgrades leaves boards view-only; the guide has settings for nginx, Caddy and Traefik under Configuration. `docker compose`, Railway and Render need no changes.
+- Reload tabs that were open during the upgrade: a tab still running the old app saves the old way and keeps reloading the board. Pages are now served with `Cache-Control: no-cache`, so a reload always gets the current app.
+- The "This board changed in another tab" reload is gone: two tabs or two people no longer overwrite each other.
+- Pan and zoom are remembered per person in the browser instead of being saved with the board.
+- `PUT /api/boards/{id}` keeps working and is applied to the live board, so people who have it open see the change.
 - The installers print the address, username and password as a highlighted block.
 
 - The README is shorter. The roadmap, the list of trackers and the architecture overview moved to the guide: [Roadmap](https://docs.tiko.run/roadmap/), [Task trackers](https://docs.tiko.run/trackers/), [Architecture](https://docs.tiko.run/architecture/).

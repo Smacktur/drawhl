@@ -58,8 +58,20 @@ class BoardRepo(Protocol):
 
     def get(self, board_id: str) -> BoardRecord | None: ...
 
-    def save(self, board_id: str, version: int, doc: BoardDoc) -> int:
-        """Compare-and-set on version; raises NotFound or VersionConflict, returns new version."""
+    def save(self, board_id: str, version: int, doc: BoardDoc, ydoc: bytes | None = None) -> int:
+        """Compare-and-set on version; raises NotFound or VersionConflict, returns new version.
+
+        The doc and its CRDT state are written together; without a state the stored one is
+        cleared, so the two never disagree.
+        """
+        ...
+
+    def load(self, board_id: str) -> tuple[BoardRecord, bytes | None] | None:
+        """The board with its CRDT state, for opening it live."""
+        ...
+
+    def save_live(self, board_id: str, doc: BoardDoc, ydoc: bytes) -> int:
+        """Saves an open board whatever the stored version; raises NotFound, returns new version."""
         ...
 
     def rename(self, board_id: str, name: str) -> None:
@@ -68,6 +80,31 @@ class BoardRepo(Protocol):
 
     def delete(self, board_id: str) -> None:
         """Raises NotFound."""
+        ...
+
+
+class LiveBoards(Protocol):
+    """Open sockets of live boards. Every call returns at once and is safe from any thread."""
+
+    def end_session(self, token: str) -> None:
+        """Closes the sockets opened with this session."""
+        ...
+
+    def end_person(self, user_id: str, keep_token: str | None = None) -> None:
+        """Closes the person's sockets, except those of the session to keep."""
+        ...
+
+    def recheck_person(self, user_id: str) -> None:
+        """The person's account changed: their sockets reconnect with the new rights."""
+        ...
+
+    def recheck_board(self, board_id: str) -> None:
+        """Access to the board changed: sockets whose role is no longer the same are closed."""
+        ...
+
+    def put(self, board_id: str, version: int, doc: BoardDoc) -> int:
+        """A REST save, applied to the shared document as one update so people on the board
+        see it; compare-and-set on version like `BoardRepo.save`."""
         ...
 
 

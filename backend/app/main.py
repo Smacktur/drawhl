@@ -1,11 +1,13 @@
 import logging
 import ssl
+from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
 
 from app.adapters import password_file
+from app.adapters.live.rooms import LiveRooms
 from app.adapters.releases.github import GitHubReleaseFeed
 from app.adapters.secrets.fernet import FernetSecretBox, NullSecretBox
 from app.adapters.storage.sqlite import (
@@ -93,26 +95,34 @@ def create_app(
     key = settings.tiko_secret_key.get_secret_value() if settings.tiko_secret_key else ""
     if key and len(key) < MIN_SECRET_KEY_LENGTH:
         log.warning("TIKO_SECRET_KEY is short; use openssl rand -base64 32")
-    app = FastAPI(title=settings.app_name)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        yield
+        # Open boards are saved and their sockets told to come back.
+        await app.state.live.shutdown()
+
+    app = FastAPI(title=settings.app_name, lifespan=lifespan)
     db = Database(settings.db_path)
     users = SqliteUserRepo(db)
-    app.state.sessions = Sessions(SqliteSessionRepo(db))
+    member_repo = SqliteMemberRepo(db)
+    app.state.boards = SqliteBoardRepo(db)
+    app.state.live = LiveRooms(app.state.boards, member_repo)
+    app.state.sessions = Sessions(SqliteSessionRepo(db), app.state.live)
     app.state.accounts = Accounts(users, app.state.sessions)
     app.state.invites = Invites(SqliteInviteRepo(db), app.state.accounts, app.state.sessions)
     created = bootstrap_admin(app.state.accounts, users, lambda: _password(settings))
     env_password = settings.tiko_password and settings.tiko_password.get_secret_value()
     if not created and env_password:
         log.info("TIKO_PASSWORD is not used once people exist; each signs in with their own")
-    member_repo = SqliteMemberRepo(db)
     credentials = SqliteCredentialRepo(db)
     adopt_orphans(users, member_repo, credentials)
-    app.state.members = Members(member_repo, users)
+    app.state.members = Members(member_repo, users, app.state.live)
     # Added before the request context, so it runs inside it and 401s are logged and counted.
     app.add_middleware(PasswordGate, sessions=app.state.sessions)
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
 
-    app.state.boards = SqliteBoardRepo(db)
     app.state.snapshots = SqliteSnapshotRepo(db)
     box = FernetSecretBox(key) if key else NullSecretBox()
     app.state.refresher = RefreshService()

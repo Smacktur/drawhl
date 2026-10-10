@@ -6,7 +6,7 @@ import threading
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from app.domain.ports import SessionRepo
+from app.domain.ports import LiveBoards, SessionRepo
 
 if TYPE_CHECKING:
     from app.domain.accounts import Person
@@ -31,8 +31,10 @@ def _ts(iso: str) -> float:
 class Sessions:
     """Random cookie tokens; only their hashes are stored, so a leaked database signs no one in."""
 
-    def __init__(self, repo: SessionRepo) -> None:
+    def __init__(self, repo: SessionRepo, live: LiveBoards | None = None) -> None:
         self._repo = repo
+        # Open sockets outlive the 30 s cache, so they are told about every ended session.
+        self._live = live
         self._cache: dict[str, tuple[Person, float, float]] = {}
         self._lock = threading.Lock()
 
@@ -63,13 +65,22 @@ class Sessions:
         self._repo.delete(key)
         with self._lock:
             self._cache.pop(key, None)
+        if self._live:
+            self._live.end_session(token)
 
     def end_all(self, user_id: str, keep_token: str | None = None) -> None:
         self._repo.delete_for_user(user_id, token_hash(keep_token) if keep_token else None)
-        self.forget(user_id)
+        self._forget(user_id)
+        if self._live:
+            self._live.end_person(user_id, keep_token)
 
     def forget(self, user_id: str) -> None:
-        """Drops cached sessions of this person so the next request reads them fresh."""
+        """The person's record changed: the next request and their sockets read it fresh."""
+        self._forget(user_id)
+        if self._live:
+            self._live.recheck_person(user_id)
+
+    def _forget(self, user_id: str) -> None:
         with self._lock:
             for key in [k for k, v in self._cache.items() if v[0].id == user_id]:
                 del self._cache[key]

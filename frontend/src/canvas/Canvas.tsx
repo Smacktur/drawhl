@@ -19,7 +19,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { canEdit, getBoard, type Board } from '@/api/boards'
 import type { Task } from '@/api/tasks'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { anchorAt, orphanAnchors, raiseAnchors } from '@/canvas/anchors'
 import { CanvasContextMenu, type MenuTarget, type PlaceTool } from '@/canvas/CanvasContextMenu'
@@ -48,10 +47,10 @@ import { Toolbar, type Tool } from '@/canvas/Toolbar'
 import { RefreshIndicator } from '@/board/RefreshIndicator'
 import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
-import { useBoardDoc } from '@/canvas/useBoardDoc'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
-import { useHistory } from '@/canvas/useHistory'
+import { useLiveBoard } from '@/live/useLiveBoard'
+import { readViewport, saveViewport } from '@/live/viewport'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { STICKY_MAX_CHARS } from '@/canvas/fit'
@@ -108,17 +107,19 @@ const NEW_NODES = {
 
 function BoardCanvas({
   board,
-  onConflict,
-  readOnly,
-  onForbidden,
+  viewer,
+  onAccessChanged,
 }: {
   board: Board
-  onConflict: () => void
-  readOnly: boolean
-  onForbidden: () => void
+  viewer: boolean
+  onAccessChanged: () => void
 }) {
-  const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange, setViewport, saveError } =
-    useBoardDoc(board, onConflict, readOnly, onForbidden)
+  const live = useLiveBoard(board, viewer, onAccessChanged)
+  const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange } = live
+  // Until the first sync the saved board is shown and cannot be edited.
+  const readOnly = viewer || live.status !== 'live'
+  // Each person keeps their own view of a board; one they have not opened here fits its content.
+  const [lastView] = useState(() => readViewport(board.id))
   const [added, setAdded] = useState<Record<string, Task>>({})
   const [tool, setTool] = useState<Tool>('select')
   const [connecting, setConnecting] = useState(false)
@@ -158,10 +159,9 @@ function BoardCanvas({
       }),
     }
   }, [nodes, edges, flashId, hits])
-  const history = useHistory(nodes, edges, setNodes, setEdges)
   const guides = useGuides(onNodesChange)
-  useShortcut('undo', history.undo, { enabled: !readOnly })
-  useShortcut('redo', history.redo, { enabled: !readOnly })
+  useShortcut('undo', live.undo, { enabled: !readOnly })
+  useShortcut('redo', live.redo, { enabled: !readOnly })
 
   // One card goes to the point or cascades from the viewport center; several form a grid there.
   const addCards = useCallback(
@@ -577,13 +577,12 @@ function BoardCanvas({
         }}
         onSelectionContextMenu={() => !readOnly && setMenuTarget({ kind: 'selection' })}
         onNodeClick={(event) => place(event)}
-        onMoveEnd={(_, viewport) => setViewport(viewport)}
+        onMoveEnd={(_, viewport) => saveViewport(board.id, viewport)}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         connectionMode={ConnectionMode.Loose}
-        defaultViewport={board.doc.viewport}
-        // A board nobody has saved yet, like the welcome board, opens showing all of it.
-        fitView={board.version === 1}
+        defaultViewport={lastView ?? undefined}
+        fitView={lastView === null}
         fitViewOptions={FIT_NEW_BOARD}
         onlyRenderVisibleElements
         colorMode={theme}
@@ -669,9 +668,11 @@ function BoardCanvas({
             </AlertDescription>
           </Alert>
         )}
-        {saveError && (
-          <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
-            <AlertDescription>Not saved: {saveError}</AlertDescription>
+        {live.status === 'unavailable' && (
+          <Alert className="absolute top-16 right-4 z-10 w-80">
+            <AlertDescription>
+              Live connection unavailable. Viewing the last saved version.
+            </AlertDescription>
           </Alert>
         )}
         {!readOnly && (
@@ -689,7 +690,6 @@ function BoardCanvas({
 
 export default function Canvas({ boardId }: { boardId: string }) {
   const queryClient = useQueryClient()
-  const [conflict, setConflict] = useState(false)
   const board = useQuery({
     queryKey: ['board', boardId],
     queryFn: () => getBoard(boardId),
@@ -697,16 +697,13 @@ export default function Canvas({ boardId }: { boardId: string }) {
     gcTime: 0,
   })
 
-  const onConflict = useCallback(() => {
-    setConflict(true)
+  // The server closed the socket because this person's access changed: read the role again.
+  const [accessChanged, setAccessChanged] = useState(false)
+  const onAccessChanged = useCallback(() => {
+    setAccessChanged(true)
     void queryClient.invalidateQueries({ queryKey: ['board', boardId] })
-  }, [queryClient, boardId])
-  // The owner took edit rights away while the board was open.
-  const [revoked, setRevoked] = useState(false)
-  const onForbidden = useCallback(() => {
-    setRevoked(true)
     void queryClient.invalidateQueries({ queryKey: ['boards'] })
-  }, [queryClient])
+  }, [queryClient, boardId])
 
   if (board.isPending) return <Skeleton className="absolute inset-0" />
   if (board.isError) {
@@ -716,31 +713,20 @@ export default function Canvas({ boardId }: { boardId: string }) {
       </Alert>
     )
   }
+  const viewer = !canEdit(board.data.my_role)
   return (
     <ReactFlowProvider>
-      {conflict && (
-        <Alert className="absolute top-4 left-1/2 z-10 flex w-96 -translate-x-1/2 items-center justify-between gap-2">
-          <AlertDescription>
-            This board changed in another tab. Showing the latest version.
-          </AlertDescription>
-          <Button variant="ghost" size="sm" onClick={() => setConflict(false)}>
-            Dismiss
-          </Button>
-        </Alert>
-      )}
-      {revoked && (
+      {accessChanged && viewer && (
         <Alert className="absolute top-4 left-1/2 z-10 w-96 -translate-x-1/2">
-          <AlertDescription>
-            You can only view this board now. Your last change was not saved.
-          </AlertDescription>
+          <AlertDescription>You can only view this board now.</AlertDescription>
         </Alert>
       )}
       <BoardCanvas
-        key={`${board.data.id}:${board.data.version}`}
+        // A new role is a new connection with new rights.
+        key={`${board.data.id}:${board.data.my_role}`}
         board={board.data}
-        onConflict={onConflict}
-        readOnly={revoked || !canEdit(board.data.my_role)}
-        onForbidden={onForbidden}
+        viewer={viewer}
+        onAccessChanged={onAccessChanged}
       />
     </ReactFlowProvider>
   )
