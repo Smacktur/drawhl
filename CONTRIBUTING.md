@@ -4,8 +4,9 @@ Thanks for taking the time to help. Bug reports, ideas, docs fixes and code are 
 
 ## Before you start
 
-- **Bugs and ideas** — open an issue using a template. Search existing issues first.
-- **Questions** — ask in [Discussions](https://github.com/tiko-run/tiko/discussions/categories/q-a), not in an issue.
+- **Bugs** — open an issue using the template. Search existing issues first.
+- **Ideas and feature requests** — post in [Ideas](https://github.com/tiko-run/tiko/discussions/categories/ideas), or upvote the thread if it is already there.
+- **Questions** — ask in [Q&A](https://github.com/tiko-run/tiko/discussions/categories/q-a), not in an issue.
 - **Security issues** — never in public issues; see [SECURITY.md](SECURITY.md).
 - **Larger changes** — open an issue or discussion before writing code, so we agree on the approach and you don't lose work.
 - Issues labelled `good first issue` are a good starting point.
