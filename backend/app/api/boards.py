@@ -101,9 +101,9 @@ def save_board(board_id: str, body: SaveIn, _: CanEdit, live: Live) -> SaveOut:
 
 @router.patch("/{board_id}")
 def rename_board(
-    board_id: str, body: BoardIn, _: CanEdit, person: CurrentPerson, boards: Boards
+    board_id: str, body: BoardIn, _: CanEdit, person: CurrentPerson, boards: Boards, live: Live
 ) -> BoardSummary:
-    return service.rename_board(person, board_id, body.name, boards)
+    return service.rename_board(person, board_id, body.name, boards, live)
 
 
 @router.delete("/{board_id}", status_code=204)

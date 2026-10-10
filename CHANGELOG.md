@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- Public link: the owner of a board turns on "Anyone with the link can view" in Share, and anyone opens the board without an account, view-only. Tasks from a tracker show a guest only their key. Turning the link off stops it for good; an admin can switch public links off in Settings → Sharing. See "Working together" in the guide.
+- Public link: the owner of a board turns on "Anyone with the link can view" in Share, and anyone opens the board without an account, view-only. Tasks from a tracker show a guest only their key, and the board updates live as people change it. Turning the link off stops it for good; an admin can switch public links off in Settings → Sharing. See "Working together" in the guide.
 - Live boards: everyone on a shared board sees each other's changes as they happen. Changes to different parts of one element merge; when two people change the same thing at once, the later change wins. Viewers watch live. See "Working together" in the guide.
 - Undo and redo go through your own changes only.
 - A dropped connection no longer costs work: you keep editing, "Reconnecting…" shows, and changes merge when the connection is back. After 30 seconds offline with unsent changes tiko warns and the browser asks before the tab is closed. Restarting tiko under open boards loses nothing.

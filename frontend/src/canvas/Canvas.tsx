@@ -117,6 +117,7 @@ const LIVE_NOTICE: Partial<Record<LiveStatus, string>> = {
   unsaved: 'Not saved yet. Changes are kept in this tab.',
   full: 'This board is full right now.',
 }
+const GUEST_FULL = 'Many people are viewing this board. It updates every few seconds.'
 
 export function BoardCanvas({
   board,
@@ -132,7 +133,10 @@ export function BoardCanvas({
 }) {
   const me =
     useQuery({ queryKey: ['auth'], queryFn: getAuthStatus, enabled: !guest }).data?.me ?? undefined
-  const live = useLiveBoard(board, viewer, onAccessChanged, me, !guest)
+  const live = useLiveBoard(board, viewer, onAccessChanged, me, guest?.token)
+  const liveNotice = guest && live.status === 'full' ? GUEST_FULL : LIVE_NOTICE[live.status]
+  const onLive = guest?.onLive
+  useEffect(() => onLive?.(live.status === 'live'), [onLive, live.status])
   const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange } = live
   // Until the first sync the saved board is shown and cannot be edited.
   const readOnly = viewer || !live.editable
@@ -741,12 +745,12 @@ export function BoardCanvas({
             </AlertDescription>
           </Alert>
         )}
-        {LIVE_NOTICE[live.status] && (
+        {liveNotice && (
           <Alert
             variant={live.status === 'unsaved' ? 'destructive' : 'default'}
             className="absolute top-16 right-4 z-10 w-80"
           >
-            <AlertDescription>{LIVE_NOTICE[live.status]}</AlertDescription>
+            <AlertDescription>{liveNotice}</AlertDescription>
           </Alert>
         )}
         {!readOnly && (

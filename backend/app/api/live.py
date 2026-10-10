@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import time
+from collections.abc import Callable
+from typing import Protocol
 from urllib.parse import urlsplit
 
 import anyio.to_thread
@@ -12,6 +14,15 @@ router = APIRouter(tags=["live"])
 log = logging.getLogger(__name__)
 
 SESSION_CHECK_S = 60.0
+
+
+class Listener(Protocol):
+    """A place in a board's room, as the socket loop needs it."""
+
+    outbox: asyncio.Queue[bytes | int]
+    closing: bool
+
+    def kick(self, code: int) -> None: ...
 
 
 def _same_origin(websocket: WebSocket) -> bool:
@@ -41,6 +52,30 @@ async def live_board(websocket: WebSocket, board_id: str) -> None:
         await websocket.close(connection)
         return
     room = connection.room
+    try:
+        await serve(
+            websocket,
+            board_id,
+            connection,
+            lambda data: room.receive(connection, data),
+            lambda: state.sessions.resolve(session, time.time()) is not None,
+            SESSION_ENDED,
+        )
+    finally:
+        # Nothing awaited here: a cancelled handler must still leave the room.
+        room.leave(connection)
+
+
+async def serve(
+    websocket: WebSocket,
+    board_id: str,
+    listener: Listener,
+    receive: Callable[[bytes], None],
+    allowed: Callable[[], bool],
+    ended: int,
+) -> None:
+    """Carries an accepted socket until either side leaves. `allowed` is asked once a minute;
+    when it says no, the socket is closed with `ended`."""
 
     async def read() -> None:
         while True:
@@ -51,42 +86,39 @@ async def live_board(websocket: WebSocket, board_id: str) -> None:
             if data is None:
                 continue
             if len(data) > MAX_MESSAGE_BYTES:
-                connection.kick(TOO_BIG)
+                listener.kick(TOO_BIG)
                 return
             try:
-                room.receive(connection, data)
+                receive(data)
             except Exception:
                 log.warning("live board %s: a message could not be read", board_id)
-                connection.kick(POLICY)
+                listener.kick(POLICY)
                 return
 
     async def write() -> None:
         while True:
-            item = await connection.outbox.get()
+            item = await listener.outbox.get()
             if isinstance(item, int):
                 await websocket.close(item)
                 return
             await websocket.send_bytes(item)
 
-    async def watch_session() -> None:
+    async def watch() -> None:
         while True:
             await asyncio.sleep(SESSION_CHECK_S)
-            found = await anyio.to_thread.run_sync(state.sessions.resolve, session, time.time())
-            if found is None:
-                connection.kick(SESSION_ENDED)
+            if not await anyio.to_thread.run_sync(allowed):
+                listener.kick(ended)
                 return
 
-    tasks = reader, writer, _ = [asyncio.create_task(job()) for job in (read, write, watch_session)]
+    tasks = reader, writer, _ = [asyncio.create_task(job()) for job in (read, write, watch)]
     for task in tasks:
         # A socket that broke mid-send is an ordinary way to leave, not an error to report.
         task.add_done_callback(lambda done: done.cancelled() or done.exception())
     try:
         await asyncio.wait({reader, writer}, return_when=asyncio.FIRST_COMPLETED)
-        if connection.closing and not writer.done():
+        if listener.closing and not writer.done():
             # The close code is still in the outbox.
             await asyncio.wait({writer}, timeout=2)
     finally:
-        # Nothing awaited here: a cancelled handler must still leave the room.
         for task in tasks:
             task.cancel()
-        room.leave(connection)

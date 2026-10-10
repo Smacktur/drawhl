@@ -24,7 +24,7 @@ The refresh interval is set in Settings → Task source, not in the environment.
 
 ## Behind your own reverse proxy
 
-Live boards use a WebSocket at `/api/boards/<id>/live`, on the same address as the rest of tiko. The proxy in front of tiko has to pass WebSocket upgrades to the web container (port 3000) and keep idle connections open. Without that, boards open view-only with "Live connection unavailable".
+Live boards use a WebSocket at `/api/boards/<id>/live`, on the same address as the rest of tiko. The proxy in front of tiko has to pass WebSocket upgrades to the web container (port 3000) and keep idle connections open. Without that, boards open view-only with "Live connection unavailable". Public links use `/api/public/<token>/live` the same way and fall back to checking for changes every few seconds.
 
 Caddy and Traefik pass WebSockets without extra settings:
 

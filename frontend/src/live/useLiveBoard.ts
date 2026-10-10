@@ -41,14 +41,16 @@ const TOO_BIG = 1009
 const SESSION_ENDED = 4401
 const ACCESS_CHANGED = 4403
 const ROOM_FULL = 4429
+// A guest sends nothing on its own, and the provider drops a socket that is silent for 30 s.
+const GUEST_RESYNC_MS = 20_000
 const EDITABLE: LiveStatus[] = ['live', 'reconnecting', 'unsaved']
 
 // Until the board is connected there is nobody to tell.
 const IDLE = presenceSender(() => {})
 
-function socketUrl() {
+function socketUrl(guest: boolean) {
   const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${scheme}://${window.location.host}/api/boards`
+  return `${scheme}://${window.location.host}/api/${guest ? 'public' : 'boards'}`
 }
 
 /**
@@ -62,8 +64,11 @@ export function useLiveBoard(
   readOnly: boolean,
   onAccessChanged: () => void,
   me: { id: string; name: string } | undefined,
-  /** False for a guest of a public link: the board comes from `board` alone and is never live. */
-  socket = true,
+  /**
+   * The token of a public link, for a guest: the socket is the link's, carries no presence, and
+   * while it is not live the board follows `board`, which the page reloads.
+   */
+  guest?: string,
 ) {
   const [nodes, setNodes, onNodesChange] = useNodesState(board.doc.nodes as AppNode[])
   const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>(board.doc.edges)
@@ -85,14 +90,17 @@ export function useLiveBoard(
     accessChanged.current = onAccessChanged
   }, [onAccessChanged])
 
+  const reloaded = useRef(board.doc)
   useEffect(() => {
-    if (socket) return
+    if (!guest || reloaded.current === board.doc) return
+    reloaded.current = board.doc
+    // A live socket knows the board better than a reload; one that dropped may never return.
+    if (status === 'live') return
     setNodes(board.doc.nodes as AppNode[])
     setEdges(board.doc.edges)
-  }, [socket, board.doc, setNodes, setEdges])
+  }, [guest, status, board.doc, setNodes, setEdges])
 
   useEffect(() => {
-    if (!socket) return
     const doc = new Y.Doc()
     let frame = 0
     let gliding: ReturnType<typeof setTimeout> | undefined
@@ -130,10 +138,15 @@ export function useLiveBoard(
       captureTimeout: UNDO_CAPTURE_MS,
     })
     // Other tabs of this browser go through the server too, so roles hold for them as well.
-    const provider = new WebsocketProvider(socketUrl(), `${board.id}/live`, doc, {
-      disableBc: true,
-    })
+    const provider = new WebsocketProvider(
+      socketUrl(guest !== undefined),
+      `${guest ?? board.id}/live`,
+      doc,
+      { disableBc: true, resyncInterval: guest ? GUEST_RESYNC_MS : -1 },
+    )
     const awareness = provider.awareness
+    // The people on the board never learn that a guest is looking.
+    if (guest) awareness.setLocalState(null)
     let mine = IDLE
     if (meId !== undefined) {
       awareness.setLocalState({
@@ -179,7 +192,8 @@ export function useLiveBoard(
       offlineEdits = false
       clearTimeout(unsaved)
       setStatus('live')
-      if (synced.current) return
+      // A guest may have been shown a reloaded board in between, so the canvas starts over.
+      if (synced.current && !guest) return
       const all = live.reset()
       synced.current = true
       setNodes(all.nodes)
@@ -200,7 +214,7 @@ export function useLiveBoard(
     })
     provider.on('connection-error', () => {
       // A refused upgrade carries no code; a signed-out tab is told apart by asking.
-      if (Date.now() - probed < AUTH_PROBE_MS) return
+      if (guest || Date.now() - probed < AUTH_PROBE_MS) return
       probed = Date.now()
       void getAuthStatus()
         .then((auth) => {
@@ -243,7 +257,7 @@ export function useLiveBoard(
       provider.destroy()
       doc.destroy()
     }
-  }, [board.id, readOnly, setNodes, setEdges, meId, meName, socket])
+  }, [board.id, readOnly, setNodes, setEdges, meId, meName, guest])
 
   // A layout effect: nothing can arrive between a change on the canvas and its write.
   useLayoutEffect(() => {

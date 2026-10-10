@@ -134,10 +134,11 @@ def create_app(
         secret_key_configured=bool(key),
         on_token=register_secret,
         on_change=app.state.refresher.reset,
+        on_public_off=app.state.live.end_public,
         env=_tracker_env(settings),
     )
     app.state.settings = service
-    app.state.public_links = PublicLinks(app.state.boards, service.public_links)
+    app.state.public_links = PublicLinks(app.state.boards, service.public_links, app.state.live)
     app.state.demo = DemoTaskProvider()
     client = _jira_client(settings, jira_transport)
     # Built per request from the signed-in person's own token.
