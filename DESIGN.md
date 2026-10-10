@@ -26,11 +26,11 @@ Light theme (default; Light, Dark or System from the main menu, stored in the br
 - Sticky text: 14px, shrinking with no lower bound so the whole text always fits the note, never scrolled or cut, like Miro. At 2000 characters input stops and a lucide `Ban` sign at 60% of the note, in `--sticky-foreground`, fades out over 0.9 s.
 - Timers: `--timer` `oklch(0.82 0.16 75)` with `--timer-foreground` `oklch(0.3 0.07 60)`, the only saturated fill on the canvas, so waiting spots stand out; `--timer-fired` `oklch(0.66 0.19 30)` with near-white text; the same in both themes
 
-Dark theme:
-- `--background` `oklch(0.18 0.006 260)`, grid `oklch(0.27 0.006 260)`
-- `--card` `oklch(0.22 0.007 260)`, `--border` `oklch(0.30 0.008 260)`
-- `--foreground` `oklch(0.93 0.004 260)`, `--muted-foreground` `oklch(0.68 0.01 260)`
-- `--primary` `oklch(0.70 0.14 255)`, `--accent` `oklch(0.27 0.02 255)`
+Dark theme (a soft slate after GitHub's dark dimmed theme, never near-black; surfaces step up in lightness: canvas, card, muted, border):
+- `--background` `oklch(0.274 0.018 252)`, grid `oklch(0.345 0.018 255)`
+- `--card` `oklch(0.311 0.022 259)`, `--muted` `oklch(0.35 0.022 257)`, `--border` `oklch(0.384 0.018 255)`
+- `--foreground` `oklch(0.877 0.014 258)`, `--muted-foreground` `oklch(0.71 0.016 255)`
+- `--primary` `oklch(0.684 0.152 255)`, `--accent` `oklch(0.35 0.035 255)`, `--destructive` `oklch(0.702 0.164 26)`
 - Statuses: the same light fills as in the light theme, like Confluence lozenges
 
 ## Typography
