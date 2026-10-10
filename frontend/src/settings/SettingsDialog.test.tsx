@@ -155,3 +155,20 @@ test('an admin switches public links off for the instance', async () => {
   )
   await waitFor(() => expect(toggle).not.toBeChecked())
 })
+
+test('a demo visitor gets no Profile, Security or My tracker', async () => {
+  const visitor = {
+    id: 'u9',
+    username: '~0a1b2c3d4e5f',
+    name: 'Demo visitor',
+    role: 'member',
+    demo_expires_at: '2026-10-18T10:00:00+00:00',
+  }
+  mockApi({}, visitor)
+  show()
+  const nav = await screen.findByRole('navigation', { name: 'Settings sections' })
+  expect(nav).toHaveTextContent('Preferences')
+  for (const hidden of ['Profile', 'Security', 'My tracker']) {
+    expect(nav).not.toHaveTextContent(hidden)
+  }
+})

@@ -3,6 +3,7 @@ import { LogIn } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { ApiError } from '@/api/client'
 import { signIn } from '@/api/auth'
+import { DemoStart } from '@/auth/DemoStart'
 import { Emblem } from '@/components/Emblem'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,13 +18,18 @@ function message(error: Error) {
   return error.message
 }
 
-export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
+export function SignIn({ onSignedIn, demo = false }: { onSignedIn: () => void; demo?: boolean }) {
+  // A demo opens on its one button; the form is for those who already signed up.
+  const [formShown, setFormShown] = useState(!demo)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const login = useMutation({ mutationFn: signIn, onSuccess: onSignedIn })
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (username && password) login.mutate({ username: username.trim(), password })
+  }
+  if (!formShown) {
+    return <DemoStart onStarted={onSignedIn} onSignIn={() => setFormShown(true)} />
   }
   return (
     <form

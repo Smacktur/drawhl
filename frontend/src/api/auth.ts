@@ -6,10 +6,17 @@ export const meSchema = z.object({
   username: z.string(),
   name: z.string(),
   role: z.enum(['admin', 'member']),
+  // Set for a demo visitor: when their boards are deleted unless they come back.
+  demo_expires_at: z.string().nullish(),
 })
 export type Me = z.infer<typeof meSchema>
 
-const statusSchema = z.object({ signed_in: z.boolean(), me: meSchema.nullable() })
+const statusSchema = z.object({
+  signed_in: z.boolean(),
+  me: meSchema.nullable(),
+  // The instance is a public demo: anyone starts without an account.
+  demo: z.boolean().optional(),
+})
 
 export function getAuthStatus() {
   return fetchJson('/api/auth/status', statusSchema)
@@ -20,6 +27,10 @@ export function signIn(credentials: { username: string; password: string }) {
     method: 'POST',
     body: JSON.stringify(credentials),
   })
+}
+
+export function startDemo() {
+  return fetchJson('/api/auth/demo', z.null(), { method: 'POST' })
 }
 
 export function signOut() {

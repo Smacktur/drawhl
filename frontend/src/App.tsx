@@ -130,7 +130,7 @@ export default function App() {
     return (
       <main className="bg-background relative h-dvh w-full overflow-hidden">
         <h1 className="sr-only">tiko</h1>
-        <SignIn onSignedIn={() => void queryClient.invalidateQueries()} />
+        <SignIn demo={auth.data.demo} onSignedIn={() => void queryClient.invalidateQueries()} />
       </main>
     )
   }

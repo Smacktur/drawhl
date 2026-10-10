@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. See "Running a demo" in the guide.
 - Public link: the owner of a board turns on "Anyone with the link can view" in Share, and anyone opens the board without an account, view-only. Tasks from a tracker show a guest only their key, and the board updates live as people change it. Turning the link off stops it for good; an admin can switch public links off in Settings → Sharing. See "Working together" in the guide.
 - Live boards: everyone on a shared board sees each other's changes as they happen. Changes to different parts of one element merge; when two people change the same thing at once, the later change wins. Viewers watch live. See "Working together" in the guide.
 - Undo and redo go through your own changes only.
