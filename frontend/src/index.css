@@ -20,6 +20,7 @@
   --color-sync-ok: var(--sync-ok);
   --color-sync-partial: var(--sync-partial);
   --color-warning: var(--warning);
+  --color-presence-foreground: var(--presence-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -91,6 +92,16 @@
   --status-progress-foreground: oklch(0.45 0.13 255);
   --status-done: oklch(0.93 0.06 150);
   --status-done-foreground: oklch(0.42 0.11 150);
+  /* People on a shared board: 8 hues at one lightness, white initials on each, in both themes. */
+  --presence-0: oklch(0.58 0.17 25);
+  --presence-1: oklch(0.58 0.14 60);
+  --presence-2: oklch(0.58 0.13 125);
+  --presence-3: oklch(0.58 0.13 165);
+  --presence-4: oklch(0.58 0.11 205);
+  --presence-5: oklch(0.58 0.16 255);
+  --presence-6: oklch(0.58 0.18 295);
+  --presence-7: oklch(0.58 0.19 340);
+  --presence-foreground: oklch(0.99 0 0);
   /* Sticky notes keep the same light fills in both themes, like status lozenges. */
   --sticky-yellow: oklch(0.94 0.05 95);
   --sticky-orange: oklch(0.94 0.05 60);
@@ -386,6 +397,39 @@
   box-shadow: 0 0 0 2px var(--primary);
 }
 
+/* Someone else's change glides into place; the person's own changes are never slowed down. */
+.react-flow__node.node-glide {
+  transition:
+    transform 150ms ease-out,
+    width 150ms ease-out,
+    height 150ms ease-out;
+}
+/* A node someone is dragging follows their updates, one every 50 ms. */
+.react-flow__node.node-glide-drag {
+  transition: transform 80ms linear;
+}
+.presence-cursor {
+  transition: transform 80ms linear;
+}
+.presence-outline {
+  border: 2px solid;
+  border-radius: var(--radius);
+}
+/* The name is read once, when the person arrives; after that the avatar says who it is. */
+.presence-name {
+  animation: presence-name 2.4s ease-out forwards;
+}
+@keyframes presence-name {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 /* Any other node the board moved to: a ring that blinks three times. */
 .react-flow__node.node-flash {
   border-radius: var(--radius);
@@ -438,6 +482,15 @@
   .react-flow__node .timer-cube[data-flash],
   .react-flow__node.node-flash {
     animation: none;
+  }
+  .react-flow__node.node-glide,
+  .react-flow__node.node-glide-drag,
+  .presence-cursor {
+    transition: none;
+  }
+  .presence-name {
+    animation-duration: 2.4s;
+    animation-timing-function: step-end;
   }
   .react-flow.searching .react-flow__node,
   .react-flow.searching .react-flow__edge {

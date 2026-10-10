@@ -325,6 +325,25 @@ def test_presence_is_relayed_handed_to_newcomers_and_cleared_on_leave(world):
     assert world.stored(board_id)["doc"]["nodes"] == []
 
 
+def test_a_tab_speaks_only_for_itself_in_presence(world):
+    """Browsers send back every presence change they hear; that must not make it theirs."""
+    board_id = world.board()
+    hello = presence(7, 1, '{"user":{"name":"Carl"}}')
+    with world.tab("ann", board_id) as ann, world.tab("carl", board_id) as carl:
+        carl.send(hello)
+        assert ann.read() == hello and carl.read() == hello
+        with world.tab("bob", board_id) as bob:
+            # Bob's browser repeats Carl's state, and tries to move Carl's cursor.
+            bob.send(hello)
+            bob.send(presence(7, 9, '{"user":{"name":"Not Carl"}}'))
+            bob.send(presence(8, 1, '{"user":{"name":"Bob"}}'))
+            assert ann.read() == presence(8, 1, '{"user":{"name":"Bob"}}')
+        # Bob leaves: only his own state goes, Carl's stays.
+        assert ann.read() == presence(8, 2, "null")
+        with world.tab("bob", board_id) as back:
+            assert hello in back.received
+
+
 def test_access_changes_reach_open_sockets(world):
     ann_rest, ids = world.clients["ann"], world.ids
     board_id = world.board()

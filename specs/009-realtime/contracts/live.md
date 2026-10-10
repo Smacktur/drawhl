@@ -20,7 +20,7 @@ Binary frames of the y-websocket protocol, each starting with a varuint message 
 | 0, sync step 1 (0) | state vector | answered with step 2 | answered with step 2 |
 | 0, sync step 2 (1) | missing updates | dropped | applied |
 | 0, update (2) | document update | dropped | applied and sent to the others |
-| 1, awareness | presence states | sent to the others | sent to the others |
+| 1, awareness | presence states | the tab's own state is sent to everyone, the sender included; states of other tabs in the message are dropped | the same |
 | anything else | – | dropped | dropped |
 
 Text frames are ignored. A frame over 1 MiB closes the socket with 1009.
