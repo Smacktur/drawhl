@@ -269,7 +269,7 @@ for dark in (False, True):
     write(f"social/producthunt-gallery{sfx}.svg", cover(1270, 760, dark),
           [(f"producthunt-gallery{sfx}.png", 1270)])
     t = theme(dark)
-    # README banner: the logo fills the height, its dots sit on the grid, cards fill the sides.
+    # Banner: the logo fills the height and its dots sit on the grid.
     W, H, step = 1280, 352, 44
     lh = on_grid(step)
     _, lw = lockup(t["lockup"], lh, 0, 0)
@@ -278,21 +278,6 @@ for dark in (False, True):
     tl = "Open-source infinite canvas for your tasks"
     tw = SANS4.width(tl, 30)
     banner = dotgrid(W, H, t, step, 2)
-    side = ""
-    for x, y, key, title, status, done in [
-        (52, 70, "DEMO-12", "Ship onboarding tour", "IN PROGRESS", False),
-        (96, 136, "DEMO-9", "Import from CSV", "TO DO", False),
-        (40, 246, "DEMO-4", "Dark theme", "DONE", True),
-        (930, 92, "DEMO-21", "Release notes", "IN PROGRESS", False),
-        (968, 248, "DEMO-17", "Fix flaky sync", "TO DO", False),
-    ]:
-        c, _ = task_card(t, x, y, key, title, status, 1.25, done)
-        side += c
-    sx, sy, sw = 1112, 136, 96
-    side += f'<rect x="{sx}" y="{sy}" width="{sw}" height="{sw}" rx="5" fill="{t["sticky"]}"/>'
-    for j, line in enumerate(["Ask design", "about empty", "states"]):
-        side += f'<path d="{SANS4.path(line, 13, sx + 10, sy + 26 + j * 18)}" fill="{t["ink"]}" fill-opacity="0.85"/>'
-    banner += f'<g opacity="0.6">{side}</g>'
     banner += lk
     banner += f'<path d="{SANS4.path(tl, 30, (W - tw) / 2, ly + lh + 74)}" fill="{t["muted"]}"/>'
     write(f"social/readme-banner{sfx}.svg", svg(W, H, banner, "tiko"), [(f"readme-banner{sfx}.png", 2560)])
