@@ -1,5 +1,6 @@
 ---
 title: Keyboard shortcuts
+description: Every tool and action has a key.
 ---
 
 Press `?` in the app to see this list. `⌘` is `Ctrl` on Windows and Linux.

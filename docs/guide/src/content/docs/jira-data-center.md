@@ -1,5 +1,6 @@
 ---
 title: Connect Jira Data Center
+description: Connect Jira Data Center or Server with your own personal access token.
 ---
 
 tiko supports Jira Data Center and Server 8.14 and later. It uses your own personal access token, so a Jira admin doesn't need to set anything up.

@@ -1,0 +1,39 @@
+---
+title: Welcome to tiko
+description: An open-source, self-hosted whiteboard where the tasks from your tracker live as cards.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components'
+
+![A tiko board: frames of live task cards with timers, sticky notes, arrows, a Gantt release plan and the focus timer](../../../../assets/board.png)
+
+Put tasks in frames, circle a group, leave a sticky note beside it and draw arrows between them. Statuses update on their own while the board is open, so the board stays true without manual upkeep.
+
+tiko is for people who keep a lot of work in their head and think spatially: leads, managers, anyone juggling tasks across projects.
+
+## Start here
+
+<CardGrid>
+  <LinkCard title="Install" description="One command on Linux, macOS or Windows, or step by step." href="install/" />
+  <LinkCard title="Quick start" description="Run tiko and take a first look at the sample board." href="quick-start/" />
+  <LinkCard title="Connect your tracker" description="Replace the demo tasks with your own from Jira Data Center." href="jira-data-center/" />
+  <LinkCard title="Adding tasks" description="Cards by key, link, query or paste." href="adding-tasks/" />
+</CardGrid>
+
+## Go further
+
+<CardGrid>
+  <LinkCard title="Working together" description="Share a board and edit it live with others." href="working-together/" />
+  <LinkCard title="Gantt" description="Plan tasks on a timeline right on the board." href="gantt/" />
+  <LinkCard title="Timers and focus" description="Wait for a time or a status change without watching." href="focus-and-timers/" />
+  <LinkCard title="Keyboard shortcuts" description="Every tool has a key." href="keyboard-shortcuts/" />
+  <LinkCard title="Self-hosting" description="Configuration, backups, upgrades and security." href="configuration/" />
+  <LinkCard title="Roadmap" description="What comes next." href="roadmap/" />
+</CardGrid>
+
+## What tiko is not
+
+- The tracker stays the source of truth: tiko doesn't change status or edit tasks.
+- Desktop only, English only.
+
+The source code, issues and releases live on [GitHub](https://github.com/tiko-run/tiko). Questions and ideas go to [Discussions](https://github.com/tiko-run/tiko/discussions).

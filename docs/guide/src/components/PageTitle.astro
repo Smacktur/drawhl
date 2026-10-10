@@ -1,0 +1,15 @@
+---
+import type { StarlightRouteData } from '@astrojs/starlight/route-data'
+
+type Entry = StarlightRouteData['sidebar'][number]
+
+const { entry, sidebar } = Astro.locals.starlightRoute
+
+const hasCurrent = (item: Entry): boolean =>
+  item.type === 'link' ? item.isCurrent : item.entries.some(hasCurrent)
+const group = sidebar.find((item) => item.type === 'group' && hasCurrent(item))
+---
+
+{group && <p class="tiko-eyebrow">{group.label}</p>}
+<h1 id="_top" class="tiko-title">{entry.data.title}</h1>
+{entry.data.description && <p class="tiko-lead">{entry.data.description}</p>}

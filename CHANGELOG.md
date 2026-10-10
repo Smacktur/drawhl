@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - `PUT /api/boards/{id}` keeps working and is applied to the live board, so people who have it open see the change.
 - The installers print the address, username and password as a highlighted block.
 
+- The guide at [docs.tiko.run](https://docs.tiko.run) has a new look in tiko's colors and fonts, a start page with links to every section, and a regrouped sidebar. Page addresses did not change.
 - The README is shorter. The roadmap, the list of trackers and the architecture overview moved to the guide: [Roadmap](https://docs.tiko.run/roadmap/), [Task trackers](https://docs.tiko.run/trackers/), [Architecture](https://docs.tiko.run/architecture/).
 
 - The guide moved to [docs.tiko.run](https://docs.tiko.run), and the installer is `curl -fsSL https://tiko.run/install.sh | sh`. Old `tiko-run.github.io/tiko` links redirect.

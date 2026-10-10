@@ -1,5 +1,6 @@
 ---
 title: Data, backups and upgrades
+description: Where tiko keeps its data, how to back it up and how to upgrade.
 ---
 
 All data is one SQLite file in `./data`, which survives rebuilds and upgrades.

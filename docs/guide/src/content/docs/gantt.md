@@ -1,5 +1,6 @@
 ---
 title: Gantt module
+description: Plan tasks on a timeline right on the board.
 ---
 
 Add a Gantt from the modules tool (`M`) to plan tasks on a timeline right on the board.

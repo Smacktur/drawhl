@@ -1,5 +1,6 @@
 ---
 title: Quick start
+description: Run tiko with one command, from source or in the cloud, and take a first look.
 ---
 
 ## One command
