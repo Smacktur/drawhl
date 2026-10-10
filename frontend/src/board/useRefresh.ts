@@ -7,7 +7,12 @@ import { nextDelayS } from '@/board/refresh-timing'
 const DEFAULT_INTERVAL_S = 30
 
 /** Someone viewing a board by its public link, without an account. */
-export type Guest = { token: string; intervalS: number }
+export type Guest = {
+  token: string
+  intervalS: number
+  /** Told whether the board is fed by its socket; while it is not, the page reloads it. */
+  onLive?: (live: boolean) => void
+}
 
 /**
  * Polls the open board; pauses in a background tab unless `background` is set.

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.domain.boards import task_keys
 from app.domain.errors import Forbidden, NotFound, TooManyAttempts
-from app.domain.ports import BoardRepo, SnapshotRepo
+from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo
 from app.domain.tasks import Task, now_iso
 
 # Guests of one link share this budget, so one link going viral cannot starve the instance.
@@ -68,10 +68,12 @@ class PublicLinks:
         self,
         boards: BoardRepo,
         allowed: Callable[[], bool],
+        live: LiveBoards | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._boards = boards
         self._allowed = allowed
+        self._live = live
         self._budget = _Budget(LINK_REQUESTS, LINK_WINDOW_S, clock)
 
     def token(self, board_id: str) -> str | None:
@@ -82,6 +84,8 @@ class PublicLinks:
         if not public:
             if old := self._boards.clear_public_token(board_id):
                 self._budget.drop(old)
+                if self._live:
+                    self._live.end_public(board_id)
             return None
         if not self._allowed():
             raise Forbidden("Public links are switched off on this tiko.")
@@ -98,6 +102,11 @@ class PublicLinks:
             raise NotFound("board not found")
         self._budget.spend(token)
         return found
+
+    def alive(self, token: str, board_id: str) -> bool:
+        """Whether the link still opens this board; asked for an open socket, outside the budget."""
+        found = self._boards.by_public_token(token) if self._allowed() else None
+        return found is not None and found[0] == board_id
 
 
 def private_tasks(keys: list[str], base_url: str | None) -> list[Task]:

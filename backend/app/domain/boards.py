@@ -312,14 +312,19 @@ def get_board(
     )
 
 
-def rename_board(person: Person, board_id: str, name: str, boards: BoardRepo) -> BoardSummary:
+def rename_board(
+    person: Person, board_id: str, name: str, boards: BoardRepo, live: LiveBoards
+) -> BoardSummary:
     boards.rename(board_id, name)
+    # The name is not in the live document: guests read it again when their socket closes.
+    live.end_public(board_id)
     return summary(person, board_id, boards)
 
 
 def delete_board(board_id: str, boards: BoardRepo, live: LiveBoards) -> None:
     boards.delete(board_id)
     live.recheck_board(board_id)
+    live.end_public(board_id)
 
 
 def save_board(board_id: str, version: int, doc: BoardDoc, live: LiveBoards) -> int:

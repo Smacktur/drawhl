@@ -1,5 +1,7 @@
 """Spec 012: a board shown by its public link, view-only and without its people."""
 
+import logging
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -254,3 +256,12 @@ def test_quiet_links_do_not_pile_up_in_memory():
         links.find(f"old-{n}")
         now[0] += 1.0
     assert len(links._budget._windows) <= 1024
+
+
+def test_a_public_link_is_not_written_to_the_server_log(client, caplog):
+    with caplog.at_level(logging.INFO, logger="uvicorn.error"):
+        logging.getLogger("uvicorn.error").info(
+            '%s - "WebSocket %s" [accepted]', "10.0.0.1:1", "/api/public/s3cr3t-Link_1/live"
+        )
+    assert "s3cr3t" not in caplog.text
+    assert "/api/public/***/live" in caplog.text

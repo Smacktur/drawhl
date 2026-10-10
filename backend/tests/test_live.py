@@ -124,6 +124,21 @@ class World:
         ) as socket:
             yield Tab(socket)
 
+    def publish(self, board_id: str) -> str:
+        response = self.clients["ann"].put(f"/api/boards/{board_id}/public", json={"public": True})
+        return response.json()["public_token"]
+
+    @contextmanager
+    def guest(self, token: str):
+        """Someone with the public link and no session."""
+        with self.sockets.websocket_connect(f"/api/public/{token}/live") as socket:
+            yield Tab(socket)
+
+    def guest_close_code(self, token: str) -> int:
+        with pytest.raises(WebSocketDisconnect) as closed, self.guest(token):
+            pass
+        return closed.value.code
+
     def close_code(self, who: str, board_id: str, origin: str | None = None) -> int:
         with pytest.raises(WebSocketDisconnect) as closed, self.tab(who, board_id, origin):
             pass
@@ -414,3 +429,91 @@ def test_shutdown_saves_open_boards_and_tells_tabs_to_come_back(world):
     assert [n["id"] for n in admin.get(f"/api/boards/{board_id}").json()["doc"]["nodes"]] == [
         "unsaved"
     ]
+
+
+def test_a_guest_sees_edits_live_and_changes_nothing(world):
+    board_id = world.board([sticky("a")])
+    token = world.publish(board_id)
+    with world.tab("ann", board_id) as ann, world.guest(token) as guest:
+        assert guest.ids() == {"a"}
+        ann.add(sticky("b"), order=2)
+        ann.sync()
+        # Pushed to the guest, who did not ask.
+        update = guest.read()
+        assert (update[0], update[1]) == (YMessageType.SYNC, YSyncMessageType.SYNC_UPDATE)
+        assert set(guest.live.read()[0]) == {"a", "b"}
+        guest.add(sticky("forged"), order=3)
+        guest.sync()
+        assert ann.ids() == {"a", "b"}
+    eventually(lambda: len(world.stored(board_id)["doc"]["nodes"]) == 2)
+
+
+def test_a_guest_gets_no_presence_and_gives_none(world):
+    board_id = world.board()
+    token = world.publish(board_id)
+    with world.tab("ann", board_id) as ann:
+        ann.send(presence(7, 1, '{"user":{"name":"Ann"}}'))
+        ann.read()
+        with world.guest(token) as guest:
+            guest.send(presence(9, 1, '{"user":{"name":"Guest"}}'))
+            ann.send(presence(7, 2, '{"user":{"name":"Ann"},"cursor":{"x":1,"y":2}}'))
+            ann.read()
+            ann.add(sticky("a"))
+            guest.ids()
+            assert all(data[0] == YMessageType.SYNC for data in guest.received)
+            assert not any(b"Ann" in data for data in guest.received)
+        # A guest coming and going is not seen by the people on the board.
+        ann.sync()
+        assert not any(b"Guest" in data for data in ann.received)
+        assert sum(data[0] == YMessageType.AWARENESS for data in ann.received) == 2
+
+
+def test_a_dead_link_closes_guest_sockets(world):
+    ann, admin = world.clients["ann"], world.clients["admin"]
+    board_id = world.board()
+    public = f"/api/boards/{board_id}/public"
+    token = world.publish(board_id)
+    with world.guest(token) as guest, world.tab("ann", board_id) as owner:
+        ann.put(public, json={"public": False})
+        assert closed_with(guest) == 4403
+        assert owner.ids() == set()
+    assert world.guest_close_code(token) == 4403
+    assert world.guest_close_code("no-such-link") == 4403
+
+    token = world.publish(board_id)
+    with world.guest(token) as guest:
+        admin.put("/api/settings", json={"public_links": False})
+        assert closed_with(guest) == 4403
+    assert world.guest_close_code(token) == 4403
+    admin.put("/api/settings", json={"public_links": True})
+
+    with world.guest(token) as guest:
+        # The name comes with the board, so a rename sends guests to read it again.
+        ann.patch(f"/api/boards/{board_id}", json={"name": "Plan"})
+        assert closed_with(guest) == 4403
+    with world.guest(token) as guest:
+        ann.delete(f"/api/boards/{board_id}")
+        assert closed_with(guest) == 4403
+
+
+def test_guests_have_places_of_their_own(world):
+    board_id = world.board()
+    token = world.publish(board_id)
+    with world.guest(token) as guest:
+        room = world.rooms._rooms[board_id]
+        # A board full of people still takes a guest, and a board full of guests takes people.
+        room.connections.update(object() for _ in range(30))
+        try:
+            with world.guest(token) as another:
+                assert another.ids() == set()
+        finally:
+            room.connections.clear()
+        places = {object() for _ in range(199)}
+        room.guests.update(places)
+        try:
+            assert world.guest_close_code(token) == 4429
+            with world.tab("ann", board_id) as ann:
+                assert ann.ids() == set()
+        finally:
+            room.guests -= places
+        assert guest.ids() == set()

@@ -25,6 +25,8 @@ frontend/nginx.conf.template       /p/ with noindex and no-referrer
 
 - **Guest routes take no dependency on a person.** They read the board through `PublicLinks.find`, never through `Members`, and never call `deps.provider`, which would need a session.
 - **Tasks for a guest come only from the cache that belongs to nobody.** With the demo tracker that is the shared cache and the demo provider. With Jira the routes build `private` tasks from the keys in the document and never read a person's cache.
+- **A rename closes guest sockets.** The name is not in the live document; a guest whose socket closes with 4403 reads the board again and reconnects, so the same path serves a rename and a dead link.
+- **Guests are a second set in the room.** They get document updates and nothing else, so no code that looks at people (presence, sessions, roles) ever meets a guest.
 - **Slice 1 has no guest socket.** The page reads the board once, asks `/version` every 5 s and reads the board again when the number changes; a 404 there shows "This board is not available." This meets "within 5 s" for both a change and a dead link. Slice 2 replaces the poll with a read-only socket.
 - **The limit is per link.** nginx and the platform edge sit in front of the API, so a client address is not known without trusting `X-Forwarded-For`. A budget per token keeps one popular link from taking the instance down and needs no address.
 - **The real board id never reaches a guest.** The web app keys the guest's viewport and recent search by `public:{token}`.

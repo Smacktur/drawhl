@@ -90,6 +90,7 @@ class SettingsService:
         secret_key_configured: bool,
         on_token: Callable[[str], None] = lambda _: None,
         on_change: Callable[[], None] = lambda: None,
+        on_public_off: Callable[[], None] = lambda: None,
         env: dict[LockedField, str] | None = None,
     ) -> None:
         self._env = env or {}
@@ -100,6 +101,8 @@ class SettingsService:
         # Lets the log formatter mask the token wherever it might appear.
         self._on_token = on_token
         self._on_change = on_change
+        # Guests already on a board must go when public links are switched off.
+        self._on_public_off = on_public_off
 
     def _token(self, user_id: str, base_url: str | None) -> tuple[TokenState, SecretStr | None]:
         stored = self._credentials.get(user_id, "jira")
@@ -172,6 +175,8 @@ class SettingsService:
         self._repo.set_many(values)
         if change.jira is not None and (plain := _clean(change.jira.token)) is not None:
             self.set_token(user_id, SecretStr(plain))
+        if change.public_links is False:
+            self._on_public_off()
         self._on_change()
         return self.view(user_id)
 

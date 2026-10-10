@@ -117,6 +117,11 @@ class LiveBoards(Protocol):
         """Access to the board changed: sockets whose role is no longer the same are closed."""
         ...
 
+    def end_public(self, board_id: str | None = None) -> None:
+        """The public link of the board, or of every board, stopped working: its guests'
+        sockets are closed."""
+        ...
+
     def put(self, board_id: str, version: int, doc: BoardDoc) -> int:
         """A REST save, applied to the shared document as one update so people on the board
         see it; compare-and-set on version like `BoardRepo.save`."""

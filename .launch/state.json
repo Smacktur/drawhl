@@ -50,7 +50,8 @@
     "live-sync",
     "presence",
     "reconnect",
-    "public-link"
+    "public-link",
+    "public-live"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -120,7 +121,8 @@
     "G1_demo": "approved",
     "G1_public-link": "approved",
     "G2_public-link": "approved",
-    "G3_public-link": "approved"
+    "G3_public-link": "approved",
+    "G3_public-live": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -155,6 +157,7 @@
     "2026-10-10 realtime: spec 009 done in slices live-sync, presence, reconnect (PR 64, 67, 70). Other people's moves are animated in node positions, not with CSS, so arrows and frame contents cannot trail. Left for later by the owner's word: T028 (fresh install, two people and a viewer in both themes, Railway and Render pass WebSockets) and the load target: about 40 MB per 2000-node room against 30 MB, 12-17 fps on the receiving tab with all 2000 notes on screen. Not released yet.",
     "2026-10-10 G1 demo and public link: of the launch plan the owner builds one thing now, guest mode: a public view-only link to a board (spec 012, awaits G2). Terms: a guest only looks; a demo visitor is a temporary person on a demo instance who can edit and keeps their work on sign-up (spec 011, drafted and parked).",
     "2026-10-10 G2 public link: owner approved spec 012: only the owner of a board turns its link on, public links are allowed on an instance by default (an admin can switch them off), a guest sees everything on the board but task data from a personal tracker shows as a key only, demo tasks in full; the focus timer and music work for a guest. Demo answers kept in spec 011: signed-up people stay for good, a demo visitor lives 7 days, demo task statuses per person (about half a day).",
-    "2026-10-10 public link: slice public-link approved at G3: an owner turns on a view-only link in Share, a guest page at /p/<token> without a socket (a version check every 5 s), keys only for tracker tasks, a request budget per link, an admin switch in Settings. Left: slice public-live (guest socket, T012-T014)."
+    "2026-10-10 public link: slice public-link approved at G3: an owner turns on a view-only link in Share, a guest page at /p/<token> without a socket (a version check every 5 s), keys only for tracker tasks, a request budget per link, an admin switch in Settings. Left: slice public-live (guest socket, T012-T014).",
+    "2026-10-11 public link: slice public-live approved at G3; spec 012 done: the guest page listens on a read-only socket of its link (no presence either way, 200 places per board apart from the people's 30), falls back to the 5 s check when the board is full or WebSockets are blocked; a rename, a link turned off, a deleted board and the admin's switch close guest sockets. SC-005: 100 guests leave an edit between two editors at about 1.3 ms median. Public link tokens are masked in the server's socket log."
   ]
 }

@@ -30,6 +30,6 @@ description: "Task list for Public link"
 
 ## Phase 2: Slice `feat/public-live` — the guest sees the board live (US2)
 
-- [ ] T012 [US2] Guest socket `/api/public/{token}/live`: read-only, awareness dropped both ways, its own limit per board, closed through the live port when the link is turned off, the board is deleted or public links are switched off. Tests
-- [ ] T013 [US2] The guest page on the socket instead of the version check; a full board falls back to reload with a note. Tests
-- [ ] T014 [US2] SC-005: 100 guests on a board do not slow an editor
+- [x] T012 [US2] Guest socket `/api/public/{token}/live`: read-only, awareness dropped both ways, its own limit per board, closed through the live port when the link is turned off, the board is deleted or public links are switched off. Tests
+- [x] T013 [US2] The guest page on the socket instead of the version check; a full board falls back to reload with a note. Tests
+- [x] T014 [US2] SC-005: 100 guests on a board do not slow an editor. Measured on the compose stack through nginx, a 300-note board, 300 edits at 30 a second from one editor to another: median 1.3 ms and p95 2.7 ms with no guests, median 1.3 ms and p95 1.9 ms with 100 guests, every guest got all 300 updates (a second run: 1.4 and 1.1 ms)
