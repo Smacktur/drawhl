@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.14] - 2026-10-10
+
 ### Added
 
 - Public link: the owner of a board turns on "Anyone with the link can view" in Share, and anyone opens the board without an account, view-only. Tasks from a tracker show a guest only their key, and the board updates live as people change it. Turning the link off stops it for good; an admin can switch public links off in Settings → Sharing. See "Working together" in the guide.
