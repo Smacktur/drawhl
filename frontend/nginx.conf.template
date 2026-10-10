@@ -1,3 +1,9 @@
+# Live boards are WebSockets under /api/; every other request keeps a plain connection.
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
     listen 3000;
     root /usr/share/nginx/html;
@@ -12,6 +18,12 @@ server {
         proxy_set_header X-Request-Id $request_id;
         # The platform edge ends TLS; the API needs the scheme to mark the session cookie Secure.
         proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        # An open board is quiet for long stretches; the default 60 s would cut its socket.
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
     }
 
     # Prerendered pages live in <path>/index.html; unknown paths fall back to the SPA.

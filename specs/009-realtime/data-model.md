@@ -48,7 +48,7 @@ Run after every applied update, in one transaction with the server's origin; the
 | A frame or module with a parent | same: made top-level |
 | A timer whose holder is missing, an anchor or a timer | the timer is deleted |
 | An edge with a missing end | the edge is deleted; an anchor left with no edge is deleted |
-| A node or field that fails `BoardDoc` validation | a field with a previous valid value is reverted to it; otherwise the node is deleted |
+| A node that fails `BoardDoc` validation | restored to its last valid state; a node that never had one is deleted |
 | More than `MAX_NODES` nodes | the nodes added by that update are deleted |
 
 Every repair is logged with the board id and the rule, never with content.

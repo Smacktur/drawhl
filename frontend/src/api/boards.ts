@@ -134,14 +134,6 @@ export function getBoard(id: string) {
   return fetchJson(`/api/boards/${id}`, boardSchema)
 }
 
-export function saveBoard(id: string, version: number, doc: BoardDoc, keepalive = false) {
-  return fetchJson(`/api/boards/${id}`, z.object({ version: z.number() }), {
-    method: 'PUT',
-    body: JSON.stringify({ version, doc }),
-    keepalive,
-  }).then((body) => body.version)
-}
-
 const sourceSchema = z.object({
   id: z.string(),
   name: z.string(),

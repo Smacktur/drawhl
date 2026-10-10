@@ -10,6 +10,7 @@
 | prometheus-client | Apache-2.0 | Metrics |
 | httpx | BSD-3-Clause | HTTP client for Jira Data Center |
 | cryptography | Apache-2.0 / BSD-3-Clause | Fernet encryption of the Jira token |
+| pycrdt | MIT | Shared document (CRDT) of a live board on the server; bundles Yrs (MIT) |
 | React | MIT | UI |
 | Vite | MIT | Build |
 | Tailwind CSS | MIT | Styles |
@@ -18,6 +19,7 @@
 | lucide-react | ISC | Icons |
 | Octicons `mark-github` (inlined SVG path) | MIT | GitHub icon in the About panel |
 | React Flow (@xyflow/react) | MIT | Infinite canvas, nodes and edges |
+| Yjs, y-websocket, y-protocols, lib0 | MIT | Shared document (CRDT) of a live board in the browser and its WebSocket sync |
 | IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font; outlined in the logo and covers in `brand/` |
 | JetBrains Mono (@fontsource-variable/jetbrains-mono) | OFL-1.1 | Monospace font for task keys |
 | fake-indexeddb | Apache-2.0 | IndexedDB in frontend tests (dev only) |

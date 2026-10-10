@@ -20,3 +20,40 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 To trust a corporate CA, put the bundle in `./data` (for example `data/corp-ca.pem`) and set `JIRA_CA_BUNDLE=data/corp-ca.pem`.
 
 The refresh interval is set in Settings → Task source, not in the environment.
+
+## Behind your own reverse proxy
+
+Live boards use a WebSocket at `/api/boards/<id>/live`, on the same address as the rest of tiko. The proxy in front of tiko has to pass WebSocket upgrades to the web container (port 3000) and keep idle connections open. Without that, boards open view-only with "Live connection unavailable".
+
+Caddy and Traefik pass WebSockets without extra settings:
+
+```text
+tiko.example.com {
+    reverse_proxy localhost:3000
+}
+```
+
+nginx needs the upgrade headers and a longer read timeout:
+
+```nginx
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    server_name tiko.example.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 1h;
+    }
+}
+```
+
+Keep the `Host` header as the browser sent it: tiko refuses a live connection whose page address differs from the host it was asked for. Railway, Render and plain `docker compose` need no changes.

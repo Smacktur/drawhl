@@ -16,7 +16,7 @@ Spec 008 lets people share a board, but two editors on one board still collide: 
 
 From the spec 008 session:
 
-- **CRDT, not locking or last-writer-wins on the whole board**: `yjs`, `y-websocket` and `y-protocols` in the browser, `pycrdt` and `pycrdt-websocket` on the server. All MIT; run `make licenses` and add them to `THIRD_PARTY.md`.
+- **CRDT, not locking or last-writer-wins on the whole board**: `yjs`, `y-websocket` and `y-protocols` in the browser, `pycrdt` on the server (its sync and awareness helpers are enough, so `pycrdt-websocket` is not used). All MIT; run `make licenses` and add them to `THIRD_PARTY.md`.
 - **Monolith stays**: one FastAPI process serves WebSockets next to the REST API. The API runs as a single uvicorn process (`backend/Dockerfile`), so rooms live in memory. Several API replicas need Redis pub/sub; that belongs to the Postgres and Helm step.
 - **Open core**: real-time is AGPL, like accounts and sharing.
 - **Works without keys**: no external service; real-time works on a laptop with `docker compose up`.

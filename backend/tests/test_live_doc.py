@@ -11,7 +11,7 @@ from app.domain.tasks import now_iso  # noqa: F401 - keeps the import graph as t
 from app.domain.welcome import welcome_doc
 
 FIXTURES = json.loads(
-    (Path(__file__).parents[2] / "specs/009-realtime/fixtures/projection.json").read_text()
+    (Path(__file__).parents[2] / "frontend/src/live/projection.fixtures.json").read_text()
 )
 
 

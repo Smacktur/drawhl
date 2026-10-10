@@ -26,18 +26,17 @@ frontend/vite.config.ts            dev proxy needs ws: true
 ```text
 backend/app/domain/live.py         projection, apply_json, repair; the LiveRooms port (kick person, kick session,
                                    recheck board, close board, apply REST save). Imports pycrdt, no FastAPI
-backend/app/adapters/live/rooms.py rooms in memory on pycrdt-websocket: join, save timer, idle drop
-backend/app/adapters/live/socket.py  the per-connection channel: role filter, size limit, session re-check
-backend/app/api/live.py            the WebSocket route: origin, role, close codes
-frontend/src/live/                 doc.ts (schema, projection), useLiveBoard.ts (provider, binding, status),
-                                   presence.ts, viewport.ts
+backend/app/adapters/live/rooms.py rooms and connections in memory: role filter, save timer, idle drop
+backend/app/api/live.py            the WebSocket route: origin, role, size limit, session re-check
+frontend/src/live/                 doc.ts (schema, projection), binding.ts (canvas state and the document),
+                                   useLiveBoard.ts (provider, status, undo), viewport.ts, presence.ts
 ```
 
 `pycrdt` in the domain is a deliberate exception to "no provider SDKs": it is the data structure, not a service, and the repair rules are business logic that must be tested there.
 
 ## Decisions
 
-- **The role filter sits in the connection wrapper**, not in the room. `YRoom.on_message` sees bytes without a sender, so the object handed to `room.serve()` filters what its own client sent, by message type, before the room reads it.
+- **The room is written on `pycrdt` directly, without `pycrdt-websocket`.** Its `YRoom.on_message` sees bytes without a sender, and roles must be checked per connection; `pycrdt` already has the sync and awareness messages, so the room is about 200 lines that filter each connection's writes by message type before they reach the document.
 - **Storage runs in a worker thread** (`anyio.to_thread`): the SQLite repo is blocking and shares one connection behind a lock.
 - **Saves are whole-state**: `ydoc` holds the full encoded state, not an update log. A board is small (2000 nodes), and one row per board keeps backup and restore as they are.
 - **`PUT /boards/{id}` calls the room** when one is open and the same `apply_json` on a stored doc when none is, so there is one write path.
@@ -68,7 +67,7 @@ No release between `feat/live-sync` and `feat/reconnect` unless the first has pa
 | Room memory on big boards | 30 connections, 1 MiB messages, idle rooms dropped after 30 s |
 | A person's task data leaks through the doc | No task field in the schema; SC-004 records socket bytes |
 | Self-hosters' own proxies block WebSockets | View-only with a clear notice; "Breaking" in `CHANGELOG.md`; proxy snippets for nginx, Caddy and Traefik in the guide |
-| `pycrdt-websocket` API differs from what the docs showed | Its part is small (room, sync, awareness); the wrapper keeps it behind `adapters/live` |
+| pycrdt objects must be freed on the thread that made them | Rooms live on the event loop only; storage threads get plain bytes; a room frees its document when it stops |
 | Encoded state grows with deletions | Garbage collection stays on; SC-005 measures a board after 10 000 edits |
 
 ## Lessons from spec 008 to reuse
