@@ -13,6 +13,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - A role change, lost access or an ended session reaches an open board at once and says what happened.
 - Presence on shared boards: avatars of the people on the board in the top bar, each person's cursor with their avatar, an outline around what they have selected, elements that move while someone drags them, and other people's changes gliding into place.
 - One-command install for Windows 10 and 11: `irm https://tiko.run/install.ps1 | iex` installs WSL 2 and Docker Desktop after asking, with one restart, then starts tiko and opens the browser.
+- From source, `TIKO_PORT` and `TIKO_API_PORT` in `.env` move `docker compose up` to other ports, so a second copy runs next to the first.
 
 ### Changed
 

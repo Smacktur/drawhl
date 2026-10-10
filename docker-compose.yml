@@ -6,11 +6,11 @@ services:
     env_file:
       - path: .env
         required: false
-    ports: ["8000:8000"]
+    ports: ["${TIKO_API_PORT:-8000}:8000"]
     volumes: ["./data:/app/data"]  # SQLite and other local data survive rebuilds
 
   web:
     build: ./frontend
-    ports: ["3000:3000"]
+    ports: ["${TIKO_PORT:-3000}:3000"]
     depends_on:
       api: { condition: service_healthy }

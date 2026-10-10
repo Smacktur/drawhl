@@ -27,6 +27,8 @@ make help         # all commands
 
 Optional: `pre-commit install` runs fast checks on commit and `make check` on push.
 
+In a second `git worktree`, run `scripts/worktree-setup.sh` once: it installs the frontend dependencies and gives the worktree its own compose project and ports, so two stacks run side by side.
+
 ## Pull requests
 
 1. Branch from `main`, keep the change focused on one thing.
