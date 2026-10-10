@@ -1,9 +1,11 @@
-<h1 align="center">
+<p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="brand/social/readme-banner-dark.svg">
-    <img src="brand/social/readme-banner.svg" alt="tiko: open-source infinite canvas for your tasks" width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="brand/logo/tiko-logo-dark.svg">
+    <img src="brand/logo/tiko-logo.svg" alt="tiko" width="420">
   </picture>
-</h1>
+</p>
+
+<p align="center"><b>Open-source infinite canvas for your tasks</b></p>
 
 <p align="center">
   <a href="https://tiko.run"><b>Website</b></a> •

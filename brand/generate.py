@@ -173,10 +173,21 @@ def theme(dark):
     )
 
 
-def dotgrid(w, h, t, step=24):
+def dotgrid(w, h, t, step=24, r=1.5):
     return (f'<defs><pattern id="g" width="{step}" height="{step}" patternUnits="userSpaceOnUse">'
-            f'<circle cx="{step / 2}" cy="{step / 2}" r="1.5" fill="{t["grid"]}"/></pattern></defs>'
+            f'<circle cx="{step / 2}" cy="{step / 2}" r="{r}" fill="{t["grid"]}"/></pattern></defs>'
             f'<rect width="{w}" height="{h}" fill="{t["bg"]}"/><rect width="{w}" height="{h}" fill="url(#g)"/>')
+
+
+def on_grid(step):
+    """Emblem height whose dots are one grid step apart."""
+    return step * 32 / 11
+
+
+def snap(v, step, size):
+    """Nearest emblem origin to v that puts its dots on the dots of the grid."""
+    first = 5 * size / 32
+    return round((v + first - step / 2) / step) * step + step / 2 - first
 
 
 LOZ = {"TO DO": ("todo_f", "todo_i"), "IN PROGRESS": ("prog_f", "prog_i"), "DONE": ("done_f", "done_i")}
@@ -233,9 +244,9 @@ def board(t, x, y, s=1.6):
 def cover(w, h, dark, tagline=True, scene=True, title="tiko"):
     t = theme(dark)
     body = dotgrid(w, h, t)
-    left = 80
-    lh = 72
-    top = h / 2 - (lh + 120) / 2 if tagline else h / 2 - lh / 2
+    lh = on_grid(24)
+    left = snap(80, 24, lh)
+    top = snap(h / 2 - (lh + 120) / 2 if tagline else h / 2 - lh / 2, 24, lh)
     lk, _ = lockup(t["lockup"], lh, left, top)
     body += lk
     if tagline:
@@ -258,15 +269,18 @@ for dark in (False, True):
     write(f"social/producthunt-gallery{sfx}.svg", cover(1270, 760, dark),
           [(f"producthunt-gallery{sfx}.png", 1270)])
     t = theme(dark)
-    lk, lw = lockup(t["lockup"], 64, 0, 0)
+    # Banner: the logo fills the height and its dots sit on the grid.
+    W, H, step = 1280, 352, 44
+    lh = on_grid(step)
+    _, lw = lockup(t["lockup"], lh, 0, 0)
+    lx, ly = snap((W - lw) / 2, step, lh), snap(58, step, lh)
+    lk, _ = lockup(t["lockup"], lh, lx, ly)
     tl = "Open-source infinite canvas for your tasks"
-    tw = SANS4.width(tl, 22)
-    W, H = 1280, 320
-    banner = dotgrid(W, H, t)
-    banner += f'<g transform="translate({(W - lw) / 2:.1f} {H / 2 - 64:.1f})">{lk}</g>'
-    banner += f'<path d="{SANS4.path(tl, 22, (W - tw) / 2, H / 2 + 54)}" fill="{t["muted"]}"/>'
+    tw = SANS4.width(tl, 30)
+    banner = dotgrid(W, H, t, step, 2)
+    banner += lk
+    banner += f'<path d="{SANS4.path(tl, 30, (W - tw) / 2, ly + lh + 74)}" fill="{t["muted"]}"/>'
     write(f"social/readme-banner{sfx}.svg", svg(W, H, banner, "tiko"), [(f"readme-banner{sfx}.png", 2560)])
-
 
 # Button -------------------------------------------------------------------
 
