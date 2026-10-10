@@ -1,7 +1,7 @@
-name: Feature request
-description: Suggest an improvement
-labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: Search Ideas first. If the idea is already there, upvote it and add how you would use it.
   - type: textarea
     id: problem
     attributes:
