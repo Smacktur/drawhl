@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Live boards: everyone on a shared board sees each other's changes as they happen. Changes to different parts of one element merge; when two people change the same thing at once, the later change wins. Viewers watch live. See "Working together" in the guide.
 - Undo and redo go through your own changes only.
+- Presence on shared boards: avatars of the people on the board in the top bar, each person's cursor with their avatar, an outline around what they have selected, elements that move while someone drags them, and other people's changes gliding into place.
 - One-command install for Windows 10 and 11: `irm https://tiko.run/install.ps1 | iex` installs WSL 2 and Docker Desktop after asking, with one restart, then starts tiko and opens the browser.
 
 ### Changed

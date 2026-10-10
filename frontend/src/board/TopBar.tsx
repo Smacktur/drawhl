@@ -26,6 +26,8 @@ import { canEdit, type BoardSummary } from '@/api/boards'
 import { DeleteBoardDialog, RenameBoardForm } from '@/board/BoardActions'
 import { NewBoardForm } from '@/board/NewBoardForm'
 import { ShareDialog } from '@/board/ShareDialog'
+import { Faces } from '@/live/Avatar'
+import { useBoardPeople } from '@/live/presence'
 import { ShortcutsDialog } from '@/board/ShortcutsDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -89,6 +91,7 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [sharing, setSharing] = useState(false)
+  const people = useBoardPeople()
   const [deleting, setDeleting] = useState<BoardSummary | null>(null)
 
   const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me
@@ -355,6 +358,7 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
             Share
           </Button>
           <ShareDialog board={current} open={sharing} onOpenChange={setSharing} />
+          <Faces people={people} />
         </>
       )}
     </div>

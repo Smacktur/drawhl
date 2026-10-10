@@ -91,6 +91,8 @@ class Room:
         self.connections: set[Connection] = set()
         # Latest presence of each tab by its Yjs client id: (clock, state as JSON text).
         self.presence: dict[int, tuple[int, str]] = {}
+        # Which connection each presence state belongs to.
+        self._owners: dict[int, Connection] = {}
         self._sender: Connection | None = None
         self._dirty_since: float | None = None
         if state is None:
@@ -130,6 +132,9 @@ class Room:
 
     def leave(self, connection: Connection) -> None:
         self.connections.discard(connection)
+        for client in connection.clients:
+            if self._owners.get(client) is connection:
+                del self._owners[client]
         gone = {
             client: (self.presence.pop(client)[0] + 1, "null")
             for client in connection.clients
@@ -161,19 +166,31 @@ class Room:
                 finally:
                     self._sender = None
         elif data[0] == YMessageType.AWARENESS:
+            # A browser sends back every presence change it hears, other people's included.
+            # Only a tab's own state counts: otherwise one tab closing would take the others'
+            # cursors with it, and anyone could move anyone's cursor.
+            accepted: dict[int, tuple[int, str]] = {}
             decoder = Decoder(read_message(data[1:]))
             for _ in range(decoder.read_var_uint()):
                 client, clock = decoder.read_var_uint(), decoder.read_var_uint()
                 state = decoder.read_var_string()
+                owner = self._owners.get(client)
+                if owner is None or owner not in self.connections:
+                    owner = self._owners[client] = connection
+                if owner is not connection:
+                    continue
                 connection.clients.add(client)
+                accepted[client] = (clock, state)
                 if state == "null":
                     self.presence.pop(client, None)
                 else:
                     self.presence[client] = (clock, state)
-            # The sender gets it back too: the browser's provider reconnects when it hears
-            # nothing for 30 s, and its own presence heartbeat is what keeps a lone tab connected.
-            for other in self.connections:
-                other.push(data)
+            if accepted:
+                # The sender gets it back too: the browser's provider reconnects when it hears
+                # nothing for 30 s, and its own heartbeat is what keeps a lone tab connected.
+                message = _presence_message(accepted)
+                for other in self.connections:
+                    other.push(message)
 
     def check(self) -> None:
         """Repairs what the last merges broke; `last` is the board as it will be saved."""

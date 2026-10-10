@@ -5,6 +5,13 @@ description: "A shared board is live: what merges, how undo works and what viewe
 
 A shared board is live: everyone who has it open sees each other's changes as they happen, with no reload and no "someone else changed this board" warnings.
 
+## Who is here
+
+- The top bar shows an avatar for everyone else who has the board open: their initials on their own color. Hover one for the name.
+- Each person's cursor carries the same small avatar, so you can tell at a glance who is doing what. The name shows next to it for a moment when they arrive.
+- An element someone else has selected gets an outline in their color with their avatar on its corner. Take it as "busy": two people changing the same thing at once do not merge.
+- An element someone is dragging moves on your screen while they drag it, and other changes glide into place instead of jumping. With reduced motion turned on in the system, they jump.
+
 ## What merges
 
 - Changes to different elements never collide.

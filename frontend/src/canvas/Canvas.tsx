@@ -49,6 +49,11 @@ import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
 import { useRefresh } from '@/board/useRefresh'
 import { useDrawRect, type ScreenRect } from '@/canvas/useDrawRect'
 import { useGuides } from '@/canvas/useGuides'
+import { remoteDrags, withRemoteMotion } from '@/live/drags'
+import { MAX_LIVE_DRAG, selectedBy } from '@/live/presence'
+import { SelectedByContext, withPresence } from '@/live/PresenceRing'
+import { PresenceLayer } from '@/live/PresenceLayer'
+import { getAuthStatus } from '@/api/auth'
 import { useLiveBoard } from '@/live/useLiveBoard'
 import { readViewport, saveViewport } from '@/live/viewport'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
@@ -72,13 +77,13 @@ import { TimerNode } from '@/timers/TimerNode'
 import { useTheme } from '@/lib/theme'
 
 const nodeTypes = {
-  jira_card: JiraCardNode,
-  frame: FrameNode,
-  sticky: StickyNode,
-  text: TextNode,
-  module: ModuleNode,
+  jira_card: withPresence(JiraCardNode),
+  frame: withPresence(FrameNode),
+  sticky: withPresence(StickyNode),
+  text: withPresence(TextNode),
+  module: withPresence(ModuleNode),
   anchor: AnchorNode,
-  timer: TimerNode,
+  timer: withPresence(TimerNode),
 }
 const defaultEdgeOptions = { markerEnd: { type: MarkerType.ArrowClosed } }
 
@@ -114,7 +119,8 @@ function BoardCanvas({
   viewer: boolean
   onAccessChanged: () => void
 }) {
-  const live = useLiveBoard(board, viewer, onAccessChanged)
+  const me = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.me ?? undefined
+  const live = useLiveBoard(board, viewer, onAccessChanged, me)
   const { nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange } = live
   // Until the first sync the saved board is shown and cannot be edited.
   const readOnly = viewer || live.status !== 'live'
@@ -142,8 +148,16 @@ function BoardCanvas({
 
   const flashId = useFlashingId()
   const hits = useSearchHits()
+  const drags = useMemo(() => remoteDrags(live.peers), [live.peers])
+  const selectedByOthers = useMemo(() => selectedBy(live.peers), [live.peers])
   const shown = useMemo(() => {
-    const raised = raiseAnchors(nodes, edges)
+    const moving = withRemoteMotion(
+      nodes,
+      drags,
+      live.glide,
+      (id) => flow.getInternalNode(id)?.internals.positionAbsolute,
+    )
+    const raised = raiseAnchors(moving, edges)
     if (!flashId && !hits) return raised
     return {
       ...raised,
@@ -154,11 +168,38 @@ function BoardCanvas({
         if (!flash && !hit) return n
         return {
           ...n,
-          className: [flash && 'node-flash', hit && 'search-hit'].filter(Boolean).join(' '),
+          className: [n.className, flash && 'node-flash', hit && 'search-hit']
+            .filter(Boolean)
+            .join(' '),
         }
       }),
     }
-  }, [nodes, edges, flashId, hits])
+  }, [nodes, edges, flashId, hits, drags, live.glide, flow])
+
+  // What the others see of this person: what is selected, and nodes on their way while dragged.
+  const { presence } = live
+  const selectedKey = nodes
+    .filter((n) => n.selected)
+    .map((n) => n.id)
+    .join(' ')
+  useEffect(() => {
+    presence.selected(selectedKey ? selectedKey.split(' ') : [])
+  }, [presence, selectedKey])
+  useEffect(() => {
+    const dragged = nodes.filter((n) => n.dragging)
+    if (dragged.length === 0 || dragged.length > MAX_LIVE_DRAG) {
+      presence.drag(null)
+      return
+    }
+    presence.drag(
+      Object.fromEntries(
+        dragged.map((n) => [
+          n.id,
+          flow.getInternalNode(n.id)?.internals.positionAbsolute ?? n.position,
+        ]),
+      ),
+    )
+  }, [presence, nodes, flow])
   const guides = useGuides(onNodesChange)
   useShortcut('undo', live.undo, { enabled: !readOnly })
   useShortcut('redo', live.redo, { enabled: !readOnly })
@@ -542,8 +583,14 @@ function BoardCanvas({
   const surface = (
     <div
       className="absolute inset-0"
-      onPointerMove={(event) => (pointer.current = { x: event.clientX, y: event.clientY })}
-      onPointerLeave={() => (pointer.current = null)}
+      onPointerMove={(event) => {
+        pointer.current = { x: event.clientX, y: event.clientY }
+        presence.cursor(screenToFlowPosition(pointer.current))
+      }}
+      onPointerLeave={() => {
+        pointer.current = null
+        presence.cursor(null)
+      }}
       onPointerDownCapture={draw.onPointerDownCapture}
     >
       <ReactFlow
@@ -609,6 +656,7 @@ function BoardCanvas({
         <Background variant={BackgroundVariant.Dots} gap={16} color="var(--grid)" />
         <Controls showInteractive={false} position="bottom-right" />
         <Guides guides={guides.guides} />
+        <PresenceLayer peers={live.peers} />
       </ReactFlow>
       {draw.preview && (
         <div
@@ -627,24 +675,26 @@ function BoardCanvas({
   return (
     <TasksContext.Provider value={tasks}>
       <ReadOnlyContext.Provider value={readOnly}>
-        <ModuleHostContext.Provider value={moduleHost}>
-          {readOnly ? (
-            surface
-          ) : (
-            <CanvasContextMenu
-              target={menuTarget}
-              onPlace={placeAt}
-              onAddCards={addCards}
-              onAddModule={addModule}
-              onDelete={deleteSelection}
-              cards={cardCounts}
-              onCollapse={setCollapsed}
-              onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
-            >
-              {surface}
-            </CanvasContextMenu>
-          )}
-        </ModuleHostContext.Provider>
+        <SelectedByContext.Provider value={selectedByOthers}>
+          <ModuleHostContext.Provider value={moduleHost}>
+            {readOnly ? (
+              surface
+            ) : (
+              <CanvasContextMenu
+                target={menuTarget}
+                onPlace={placeAt}
+                onAddCards={addCards}
+                onAddModule={addModule}
+                onDelete={deleteSelection}
+                cards={cardCounts}
+                onCollapse={setCollapsed}
+                onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
+              >
+                {surface}
+              </CanvasContextMenu>
+            )}
+          </ModuleHostContext.Provider>
+        </SelectedByContext.Provider>
         <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
           <RefreshIndicator
             sources={refresh.data?.sources ?? []}
