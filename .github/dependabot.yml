@@ -6,7 +6,7 @@ updates:
     groups:
       python: { patterns: ["*"] }
   - package-ecosystem: npm
-    directory: /frontend
+    directories: [/frontend, /docs/guide]
     schedule: { interval: weekly }
     groups:
       npm: { patterns: ["*"] }

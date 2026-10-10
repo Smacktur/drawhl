@@ -1,0 +1,53 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search Ideas first. If the idea is already there, upvote it and add how you would use it.
+
+        <details>
+        <summary>Example of an idea that is easy to act on</summary>
+
+        **What do you want?**
+        A pin on the board that pulls matching tasks to it.
+
+        **What problem does it solve?**
+        I add thirty tasks from one release and then drag them into a group one by one. When new tasks appear in the tracker, I have to notice and add them myself.
+
+        **How would you use it?**
+        Once per release, on a board four people look at every day. I would drop a pin, give it a query and stop maintaining the group by hand.
+
+        **How do you see it working?**
+        The pin takes a query or a word from the title and lays the matching cards out in a grid next to it. Miro has nothing like it; the closest thing I know is a saved filter in Jira.
+
+        **Your tracker**
+        Jira Data Center
+        </details>
+  - type: textarea
+    id: want
+    attributes:
+      label: What do you want?
+      description: One or two sentences. One idea per thread.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve?
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: usage
+    attributes:
+      label: How would you use it?
+      description: A real case from your work, how often it comes up and for how many people.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How do you see it working?
+      description: Optional. Sketches, examples and other tools that do it well all help.
+  - type: input
+    id: tracker
+    attributes:
+      label: Your tracker
+      description: Jira Data Center, Jira Cloud, Linear, GitHub Issues and so on, if it matters for the idea.
