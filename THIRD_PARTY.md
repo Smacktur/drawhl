@@ -58,7 +58,7 @@ Bundled in `frontend/public/music/`, re-encoded to MP3 112 kbps. All CC0 (public
 | Lofi Hip Hop Loop | omfgdude | CC0 | [OpenGameArt](https://opengameart.org/content/lofi-hip-hop-loop) |
 
 - Project skeleton and methodology — [launchpad](https://github.com/Smacktur/launchpad).
-- User guide site — [Astro](https://github.com/withastro/astro) and [Starlight](https://github.com/withastro/starlight) (MIT), built in CI and served from GitHub Pages, not shipped with the app. Astro pulls in [sharp](https://github.com/lovell/sharp) (Apache-2.0) with prebuilt libvips (LGPL-3.0-or-later) for build-time image processing.
+- User guide site — [Astro](https://github.com/withastro/astro) and [Starlight](https://github.com/withastro/starlight) (MIT), with the IBM Plex Sans and JetBrains Mono packages above, built in CI and served from GitHub Pages, not shipped with the app. Astro pulls in [sharp](https://github.com/lovell/sharp) (Apache-2.0) with prebuilt libvips (LGPL-3.0-or-later) for build-time image processing.
 
 ## AI development tools
 

@@ -1,5 +1,6 @@
 ---
 title: Security and privacy
+description: Sign-in, people, board sharing, and what tiko stores and talks to.
 ---
 
 Every page and API route except `/health` and `/ready` asks you to sign in with a username and password, `/metrics` included.

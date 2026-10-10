@@ -1,5 +1,6 @@
 ---
 title: Configuration
+description: Environment variables and reverse proxy settings for a self-hosted tiko.
 ---
 
 Everything works without a `.env` file. To override defaults, copy [`.env.example`](https://github.com/tiko-run/tiko/blob/main/.env.example) to `.env` next to the compose file and edit it.

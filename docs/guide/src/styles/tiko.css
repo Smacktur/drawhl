@@ -1,0 +1,260 @@
+/* tiko theme for Starlight: tokens from DESIGN.md, type and density after Linear's docs. */
+:root {
+  --sl-font: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --sl-text-h1: 2rem;
+  --sl-text-h2: 1.375rem;
+  --sl-text-h3: 1.125rem;
+  --sl-text-h4: 1rem;
+  --sl-line-height: 1.65;
+  --sl-content-width: 44rem;
+  --sl-sidebar-width: 17rem;
+  --sl-nav-height: 3.5rem;
+
+  --sl-color-white: #e6e8ea;
+  --sl-color-gray-1: #e6e8ea;
+  --sl-color-gray-2: #c3c7cc;
+  --sl-color-gray-3: #a3a8af;
+  --sl-color-gray-4: #5a5f66;
+  --sl-color-gray-5: #2b2e32;
+  --sl-color-gray-6: #191b1e;
+  --sl-color-black: #101214;
+  --sl-color-accent-low: #142c4d;
+  --sl-color-accent: #5fa1f3;
+  --sl-color-accent-high: #a9cdf9;
+  --sl-color-bg-nav: var(--sl-color-black);
+  --sl-color-bg-sidebar: var(--sl-color-black);
+  --sl-color-hairline: var(--sl-color-gray-5);
+  --sl-color-hairline-light: var(--sl-color-gray-5);
+  --tiko-active-bg: #1a2433;
+  --tiko-active-text: #8dbcf6;
+}
+
+:root[data-theme='light'] {
+  --sl-color-white: #1c1f24;
+  --sl-color-gray-1: #1c1f24;
+  --sl-color-gray-2: #33373d;
+  --sl-color-gray-3: #656970;
+  --sl-color-gray-4: #8a8f97;
+  --sl-color-gray-5: #c9ccd1;
+  --sl-color-gray-6: #e6e8eb;
+  --sl-color-gray-7: #f5f6f7;
+  --sl-color-black: #ffffff;
+  --sl-color-accent-low: #e3eefb;
+  --sl-color-accent: #096acb;
+  --sl-color-accent-high: #0a4a8f;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #fbfbfc;
+  --sl-color-hairline: var(--sl-color-gray-6);
+  --sl-color-hairline-light: var(--sl-color-gray-6);
+  --tiko-active-bg: #eaf2fc;
+  --tiko-active-text: #096acb;
+}
+
+body {
+  font-feature-settings: 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header: one hairline, no tinted bar. */
+header.header {
+  border-bottom: 1px solid var(--sl-color-hairline);
+}
+
+/* Sidebar: small muted group titles, quiet links, the open page tinted instead of filled. */
+.sidebar-content summary {
+  padding-block: 0.35rem;
+}
+.sidebar-content .group-label .large {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sl-color-white);
+}
+.sidebar-content .caret {
+  color: var(--sl-color-gray-4);
+  width: 1rem;
+  height: 1rem;
+}
+.sidebar-content ul ul li {
+  margin-inline-start: 0;
+  border-inline-start: 0;
+  padding-inline-start: 0;
+}
+.sidebar-content .top-level > li + li {
+  margin-top: 1.25rem;
+}
+.sidebar-content a {
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--sl-color-gray-3);
+}
+.sidebar-content a:hover,
+.sidebar-content a:focus {
+  color: var(--sl-color-white);
+  background: var(--sl-color-gray-6);
+}
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover,
+.sidebar-content a[aria-current='page']:focus {
+  font-weight: 500;
+  color: var(--tiko-active-text);
+  background: var(--tiko-active-bg);
+}
+
+/* Page head: group name over the title, the description as a lead, no rule under it. */
+.content-panel + .content-panel {
+  border-top: 0;
+  padding-top: 0;
+}
+.tiko-eyebrow {
+  margin: 0.75rem 0 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sl-color-gray-3);
+}
+.tiko-title {
+  margin: 0;
+  font-size: var(--sl-text-h1);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--sl-color-white);
+}
+.tiko-lead {
+  margin-top: 0.75rem;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--sl-color-gray-3);
+}
+
+/* Text. */
+.sl-markdown-content {
+  font-size: 0.9375rem;
+}
+.sl-markdown-content :is(h2, h3, h4) {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
+  margin-top: 2.25em;
+}
+.sl-markdown-content .sl-heading-wrapper.level-h3 {
+  margin-top: 1.75em;
+}
+.sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--sl-color-text-accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+}
+.sl-markdown-content a:not(:where(.not-content *)):hover {
+  border-bottom-color: currentColor;
+}
+.sl-markdown-content li + li:not(:where(.not-content *)) {
+  margin-top: 0.375rem;
+}
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 4px;
+  background: var(--sl-color-gray-6);
+  font-size: 0.8125rem;
+  color: var(--sl-color-white);
+}
+:root[data-theme='light'] .sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
+  background: var(--sl-color-gray-7);
+}
+.sl-markdown-content img:not(:where(.not-content *)) {
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 10px;
+}
+
+/* Tables: hairlines only, muted small headers. */
+.sl-markdown-content table:not(:where(.not-content *)) {
+  font-size: 0.875rem;
+}
+.sl-markdown-content th:not(:where(.not-content *)) {
+  border-bottom: 1px solid var(--sl-color-hairline);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sl-color-gray-3);
+}
+.sl-markdown-content td:not(:where(.not-content *)) {
+  border-bottom: 1px solid var(--sl-color-hairline);
+}
+.sl-markdown-content tr:nth-child(2n):not(:where(.not-content *)) {
+  background: transparent;
+}
+
+/* Code blocks and cards share the 1px border and radius of a card on the board. */
+.expressive-code .frame {
+  --ec-brdRad: 8px;
+  box-shadow: none;
+}
+.sl-link-card,
+.card {
+  border-radius: 10px;
+  border-color: var(--sl-color-hairline);
+  box-shadow: none;
+}
+.sl-link-card {
+  padding: 1rem 1.125rem;
+}
+.sl-link-card .title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.sl-link-card .description {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--sl-color-gray-3);
+}
+.sl-link-card:hover {
+  border-color: var(--sl-color-accent);
+  background: var(--tiko-active-bg);
+}
+.card-grid {
+  gap: 0.75rem;
+}
+.card-grid > * {
+  margin-top: 0;
+}
+
+/* On this page: a thin rail, the current section in the brand color. */
+starlight-toc h2,
+mobile-starlight-toc .toggle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sl-color-gray-3);
+}
+starlight-toc a {
+  font-size: 0.8125rem;
+}
+.right-sidebar {
+  border-inline-start: 0;
+}
+
+/* Previous and next. */
+.pagination-links a {
+  border-radius: 10px;
+  border-color: var(--sl-color-hairline);
+  box-shadow: none;
+}
+.pagination-links a:hover {
+  border-color: var(--sl-color-accent);
+}
+.pagination-links .link-title {
+  font-size: 1rem;
+  font-weight: 500;
+}
+.sl-markdown-content .sl-link-card a {
+  border-bottom: 0;
+}
+/* Deploy buttons and badges are images inside links: no frame, no underline. */
+.sl-markdown-content a:has(> img):not(:where(.not-content *)) {
+  border-bottom: 0;
+}
+.sl-markdown-content a > img:not(:where(.not-content *)) {
+  border: 0;
+  border-radius: 0;
+}

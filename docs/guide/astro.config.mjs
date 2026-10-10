@@ -15,19 +15,19 @@ export default defineConfig({
       description: 'User guide for tiko, an open-source infinite canvas for your tasks.',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/tiko-run/tiko' }],
       editLink: { baseUrl: 'https://github.com/tiko-run/tiko/edit/main/docs/guide/' },
+      customCss: [
+        '@fontsource-variable/ibm-plex-sans',
+        '@fontsource-variable/jetbrains-mono',
+        './src/styles/tiko.css',
+      ],
+      components: { PageTitle: './src/components/PageTitle.astro' },
       sidebar: [
-        { label: 'Getting started', items: ['index', 'install', 'quick-start'] },
+        { label: 'Get started', items: ['index', 'install', 'quick-start'] },
         {
-          label: 'Using tiko',
-          items: [
-            'adding-tasks',
-            'working-together',
-            'search',
-            'gantt',
-            'focus-and-timers',
-            'keyboard-shortcuts',
-          ],
+          label: 'The board',
+          items: ['adding-tasks', 'working-together', 'search', 'keyboard-shortcuts'],
         },
+        { label: 'Modules', items: [{ slug: 'gantt', label: 'Gantt' }, 'focus-and-timers'] },
         { label: 'Trackers', items: ['trackers', 'jira-data-center'] },
         {
           label: 'Self-hosting',

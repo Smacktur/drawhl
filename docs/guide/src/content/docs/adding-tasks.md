@@ -1,5 +1,6 @@
 ---
 title: Adding tasks
+description: Put tasks on a board by key, link, query or paste, and arrange things around them.
 ---
 
 Each card shows the task's type, key, title and status from your tracker. Statuses refresh every 30 seconds with one batched request per board, and closed tasks are struck through. A colored dot in the corner of the screen shows whether every tracker syncs and, on click, why one fails.

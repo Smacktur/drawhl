@@ -1,5 +1,6 @@
 ---
 title: Timers and focus
+description: Timers that go off at a time or on a status change, and a focus timer with music.
 ---
 
 ## Timers

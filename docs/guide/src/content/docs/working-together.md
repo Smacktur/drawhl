@@ -1,5 +1,6 @@
 ---
 title: Working together
+description: "A shared board is live: what merges, how undo works and what viewers see."
 ---
 
 A shared board is live: everyone who has it open sees each other's changes as they happen, with no reload and no "someone else changed this board" warnings.
