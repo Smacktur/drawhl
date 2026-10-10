@@ -317,6 +317,8 @@ def test_presence_is_relayed_handed_to_newcomers_and_cleared_on_leave(world):
         with world.tab("carl", board_id) as carl:
             carl.send(hello)
             assert ann.read() == hello
+            # Echoed to the sender: the heartbeat that keeps a lone tab's provider connected.
+            assert carl.read() == hello
             with world.tab("bob", board_id) as bob:
                 assert hello in bob.received
         assert ann.read() == presence(7, 2, "null")

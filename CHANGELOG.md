@@ -13,6 +13,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 
 - **Breaking for instances behind their own reverse proxy:** boards are edited over a WebSocket at `/api/boards/<id>/live`. A proxy that does not pass WebSocket upgrades leaves boards view-only; the guide has settings for nginx, Caddy and Traefik under Configuration. `docker compose`, Railway and Render need no changes.
+- Reload tabs that were open during the upgrade: a tab still running the old app saves the old way and keeps reloading the board. Pages are now served with `Cache-Control: no-cache`, so a reload always gets the current app.
 - The "This board changed in another tab" reload is gone: two tabs or two people no longer overwrite each other.
 - Pan and zoom are remembered per person in the browser instead of being saved with the board.
 - `PUT /api/boards/{id}` keeps working and is applied to the live board, so people who have it open see the change.

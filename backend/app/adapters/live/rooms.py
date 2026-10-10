@@ -170,9 +170,10 @@ class Room:
                     self.presence.pop(client, None)
                 else:
                     self.presence[client] = (clock, state)
+            # The sender gets it back too: the browser's provider reconnects when it hears
+            # nothing for 30 s, and its own presence heartbeat is what keeps a lone tab connected.
             for other in self.connections:
-                if other is not connection:
-                    other.push(data)
+                other.push(data)
 
     def check(self) -> None:
         """Repairs what the last merges broke; `last` is the board as it will be saved."""
