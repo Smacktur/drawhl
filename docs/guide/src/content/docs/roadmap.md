@@ -12,7 +12,7 @@ What we plan next, roughly in order. To ask for something sooner or suggest what
 
 ## More trackers
 
-- Jira Cloud, Linear, Plane, Todoist, TickTick, Windshift. The current list is in [Task trackers](../trackers/).
+- Jira Cloud, GitHub Issues, Linear, Plane, Todoist, TickTick, Windshift. The current list is in [Task trackers](../trackers/).
 
 ## Hosting
 
@@ -39,6 +39,10 @@ What we plan next, roughly in order. To ask for something sooner or suggest what
 - Comment counter on cards and a badge for new comments since your last visit
 - Reminders on a card, delivered in the app, then by email, Telegram, Slack or Mattermost
 - Live blocks from other tools, such as Grafana charts and Metabase numbers
+
+## Not ready to show yet
+
+A few bigger things are in the works that we would rather show than describe. They will appear in [Announcements](https://github.com/tiko-run/tiko/discussions/categories/announcements) as short previews once there is something to look at.
 
 ## Current limits
 

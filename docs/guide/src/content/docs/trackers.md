@@ -10,6 +10,7 @@ tiko reads tasks from your tracker and never changes them. Each person connects 
 | Demo tasks (built in) | Available |
 | Jira Data Center and Server 8.14+ | Available, see [Connect Jira Data Center](../jira-data-center/) |
 | Jira Cloud | Planned |
+| GitHub Issues | Planned |
 | Linear | Planned |
 | Plane | Planned |
 | Todoist | Planned |
