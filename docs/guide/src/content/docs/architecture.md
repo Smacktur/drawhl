@@ -1,72 +1,82 @@
-# Architecture
+---
+title: Architecture
+description: How tiko is built, the two containers, the code layout and how statuses stay fresh.
+---
 
-## Now
+## Overview
 
-```mermaid
-flowchart LR
-  User --> UI[Web UI<br/>React, nginx :3000]
-  UI -->|/api| API[API<br/>FastAPI :8000]
-  API --> DB[(SQLite<br/>data/app.db)]
-  API -->|REST v2, PAT| Jira[Jira Data Center]
+```text
+Browser ──> Web UI (React, nginx :3000) ──/api──> API (FastAPI :8000) ──> SQLite (data/app.db)
+                                                        │
+                                                        └──REST──> Task tracker (Jira Data Center today)
 ```
 
-Two containers. nginx serves the built UI and proxies `/api` to the API, so the browser sees one origin. The API keeps everything in one SQLite file under `./data`. Layers: `api → domain ← adapters`, wiring in `backend/app/main.py`. Details: [playbook/03-architecture.md](playbook/03-architecture.md); the reasons behind each choice are in [decisions.md](decisions.md).
+tiko runs as two containers. nginx serves the built UI and proxies `/api` to the API, so the browser sees one origin. The API keeps everything in one SQLite file under `./data`.
 
-### Backend
+The backend has three layers with one dependency rule, `api → domain ← adapters`: the domain knows nothing about FastAPI or any tracker SDK. Wiring happens in `backend/app/main.py`. The reasons behind each choice are in the [decision log](https://github.com/tiko-run/tiko/blob/main/docs/decisions.md).
+
+## Backend
 
 ```text
 backend/app/
-  api/        routes: boards, tasks, jql, settings, demo; error mapping to HTTP
-  domain/     boards, tasks, refresh and backoff, jql, settings; ports.py
+  api/        routes: auth, boards, tasks, jql, settings, people, invites, me, demo, version;
+              the sign-in gate and error mapping to HTTP
+  domain/     accounts, sessions, invites, members, boards, tasks, refresh and backoff,
+              jql, settings, modules, updates; ports.py
   adapters/
     tasks/    jira_dc.py (httpx), demo.py (in-memory seed)
     storage/  sqlite.py, migrations/*.sql (PRAGMA user_version)
     secrets/  fernet.py (token encryption with TIKO_SECRET_KEY)
+    releases/ github.py (latest release for "update available")
   config.py   ENV, the single entry point
 ```
 
-Ports in `domain/ports.py`: `TaskProvider` (`resolve`, `poll`, `search`, `check`, JQL vocabulary and values), `BoardRepo`, `SnapshotRepo`, `SettingsRepo`, `SecretBox`. The provider is a runtime setting (`demo` or `jira`), so connecting Jira needs no restart.
+Everything external sits behind a port in `domain/ports.py`. `TaskProvider` is the tracker interface: `resolve`, `poll`, `search`, `check`, plus the query vocabulary and values. The other ports are repositories (`BoardRepo`, `MemberRepo`, `UserRepo`, `SessionRepo`, `InviteRepo`, `CredentialRepo`, `SnapshotRepo`, `SettingsRepo`), `SecretBox` for encryption and `ReleaseFeed` for the update check. The tracker is a runtime setting (`demo` or `jira`), so connecting Jira needs no restart.
 
-Tables: `boards` (one JSON doc per board with a `version` for compare-and-set saves), `task_snapshots` (latest fields per issue key), `settings` (provider, Jira URL, encrypted token, refresh interval).
+The main tables:
 
-`/health` and `/metrics` (Prometheus) are served outside `/api`.
+| Table | Holds |
+|---|---|
+| `boards` | One JSON document per board, with a `version` for compare-and-set saves |
+| `board_members` | Who can view or edit each board |
+| `users`, `sessions`, `invites` | Accounts, sign-ins and one-time links |
+| `user_credentials` | Each person's encrypted tracker token |
+| `task_snapshots` | Latest fields per task key, kept apart for each person |
+| `settings` | Tracker, its URL and the refresh interval |
 
-### Frontend
+`/health`, `/ready` and `/metrics` (Prometheus) are served outside `/api`.
+
+## Frontend
 
 ```text
 frontend/src/
   api/        fetch client, zod schemas
-  board/      top bar, board menu, shortcuts dialog
-  canvas/     React Flow canvas, nodes/, toolbar, context menu, clipboard, undo history
-  settings/   Jira connection sheet
+  auth/       sign-in and invite screens
+  board/      top bar, board menu, sharing, shortcuts dialog
+  canvas/     React Flow canvas, nodes, toolbar, context menu, clipboard, undo history
+  modules/    board modules, Gantt first
+  timers/     card timers
+  focus/      focus timer and player
+  search/     the command palette
+  settings/   settings sheets
   components/ui/  shadcn components
-  lib/        theme, shortcuts registry, JQL helpers
+  lib/        theme, shortcuts registry, query helpers
 ```
 
-The board is held in React Flow state and saved as a whole doc after a short debounce. A `409` on save means another tab saved first.
+The board lives in React Flow state and is saved as a whole document after a short debounce. A `409` on save means someone else saved first.
 
-### Status refresh
+## Status refresh
 
-```mermaid
-sequenceDiagram
-  participant B as Browser (open board)
-  participant A as API
-  participant J as Jira DC
-  loop every 30 s (setting), paused in background tabs
-    B->>A: POST /api/boards/{id}/refresh
-    A->>J: POST /rest/api/2/search  key in (...)
-    J-->>A: fields of all cards
-    A-->>B: task snapshots
-  end
-```
+1. Every 30 seconds (a setting), the open board calls `POST /api/boards/{id}/refresh`. Background tabs pause.
+2. The API asks the tracker for all cards on the board in one request. For Jira that is `POST /rest/api/2/search` with `key in (...)`.
+3. The API returns fresh task snapshots, and the cards update.
 
-One batched request per open board per tick. The response lists every tracker with its own state (`sources`), so one failing tracker never hides the others. Backoff lives on the server, per tracker: rate limits and 5xx double the wait (honours `Retry-After`, up to 300 s); network errors retry at the normal interval, so a VPN coming back shows up on the next tick. The client polls at the interval, or at `retry_after` when a tracker asked to wait.
+That is one batched request per open board per tick. The response lists every tracker with its own state (`sources`), so one failing tracker never hides the others. Backoff lives on the server, per tracker: rate limits and 5xx responses double the wait (it honours `Retry-After`, up to 300 s). Network errors retry at the normal interval, so a VPN coming back shows up on the next tick. The client polls at the interval, or at `retry_after` when a tracker asked to wait.
 
-## If it takes off
+## Room to grow
 
-Not built; shown here so the current design does not block it.
+None of this is built. It is listed so the current design does not block it.
 
-- **Several users:** add authentication in front of the API (reverse proxy or OIDC), then a `user_id` on boards and settings. Each user keeps their own token.
-- **More load:** move from SQLite to Postgres behind the same repo ports, run several API replicas, and share refresh results between boards that show the same keys.
-- **Fewer requests to Jira:** a server-side poller with a cache per key, or webhooks where admins allow them.
-- **Other trackers:** a new `TaskProvider` adapter (Jira Cloud, Todoist) without changes to the domain.
+- For more load, move from SQLite to Postgres behind the same repository ports, run several API replicas, and share refresh results between boards that show the same keys.
+- For fewer requests to the tracker, add a server-side poller with a cache per key, or webhooks where admins allow them.
+- A new tracker is a new `TaskProvider` adapter, with no changes to the domain. See [Task trackers](../trackers/).

@@ -2,7 +2,7 @@
 title: Adding tasks
 ---
 
-Each card shows the task's type, key, title and status from your tracker. Statuses refresh every 30 seconds with one batched request per board, and closed tasks are struck through.
+Each card shows the task's type, key, title and status from your tracker. Statuses refresh every 30 seconds with one batched request per board, and closed tasks are struck through. A colored dot in the corner of the screen shows whether every tracker syncs and, on click, why one fails.
 
 ## Ways to add a card
 
@@ -27,6 +27,7 @@ Click a card for assignee, priority, last update and a link to the task. Collaps
 
 - **Frames** (`F`) group cards. Drag cards in and out; moving a frame moves everything inside.
 - **Sticky notes** (`N`) hold up to 2000 characters, and the text shrinks to fit the note.
-- **Text** (`T`) and **arrows** between any elements.
+- **Text** (`T`) and **arrows** between any elements. An arrow can also point at an empty spot.
+- **Smart guides** snap what you drag or resize to the edges, centers and gaps of its neighbors.
 
 The board is saved on the server and reopens exactly as you left it. Keep several boards and switch between them from the menu or the palette.

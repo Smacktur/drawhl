@@ -12,11 +12,12 @@ It is for people who keep a lot of work in their head and think spatially: leads
 - [Adding tasks](adding-tasks/): put cards on the board by key, link, query or paste.
 - [Connect Jira Data Center](jira-data-center/): replace the demo tasks with your own.
 - [Keyboard shortcuts](keyboard-shortcuts/): every tool has a key.
+- [Roadmap](roadmap/): what comes next.
 
 ## What tiko is not
 
 - The tracker stays the source of truth: tiko doesn't change status or edit tasks.
-- One person per instance for now: inviting colleagues and sharing boards come next, real-time collaboration after that. You sign in with a username and password.
+- Boards are shared, but two people editing at once do not see each other live yet.
 - Desktop only, English only.
 
 The source code, issues and releases live on [GitHub](https://github.com/tiko-run/tiko).

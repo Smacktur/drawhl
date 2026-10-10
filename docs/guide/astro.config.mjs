@@ -21,10 +21,12 @@ export default defineConfig({
           label: 'Using tiko',
           items: ['adding-tasks', 'search', 'gantt', 'focus-and-timers', 'keyboard-shortcuts'],
         },
+        { label: 'Trackers', items: ['trackers', 'jira-data-center'] },
         {
           label: 'Self-hosting',
-          items: ['jira-data-center', 'configuration', 'data-and-upgrades', 'security'],
+          items: ['configuration', 'data-and-upgrades', 'security'],
         },
+        { label: 'Project', items: ['roadmap', 'architecture'] },
       ],
     }),
   ],
