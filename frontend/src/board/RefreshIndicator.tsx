@@ -4,6 +4,7 @@ import type { SyncSource } from '@/api/boards'
 import { syncHealth, type SyncHealth } from '@/board/refresh-timing'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { SourceMark } from '@/sources/SourceMark'
 import { cn } from '@/lib/utils'
 
 function ago(timestamp: number, now: number) {
@@ -40,8 +41,11 @@ function SourceRow({
   syncedAt,
   detail,
   now,
+  source,
 }: {
   name: string
+  /** The tracker's id, for its mark; the tiko server's own row has none. */
+  source?: string
   health: SyncHealth
   syncedAt: number
   detail?: string
@@ -51,6 +55,7 @@ function SourceRow({
     <li className="flex flex-col gap-0.5 px-1 py-1.5">
       <div className="flex items-center gap-2">
         <Dot health={health} />
+        {source && <SourceMark source={source} />}
         <span className="text-[13px] font-medium">{name}</span>
         <span className="text-muted-foreground ml-auto text-[12px]">
           {syncedAt ? `Synced ${ago(syncedAt, now)}` : 'Not synced yet'}
@@ -105,6 +110,7 @@ export function RefreshIndicator({ sources, serverError, syncedAt, refreshing, o
             {sources.map((source) => (
               <SourceRow
                 key={source.id}
+                source={source.id}
                 name={source.name}
                 health={source.state === 'ok' ? 'ok' : 'down'}
                 syncedAt={Date.parse(source.synced_at ?? '') || 0}

@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ReactFlow, ReactFlowProvider } from '@xyflow/react'
 import { beforeAll, expect, test } from 'vitest'
 import type { Task } from '@/api/tasks'
 import { TasksContext } from '@/canvas/tasks-context'
 import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
+import { BoardSourcesContext } from '@/sources/board-sources'
 import type { JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 
 const task: Task = {
@@ -32,13 +33,15 @@ beforeAll(() => {
   }
 })
 
-function renderCard(data: JiraCardNodeType['data'], tasks: Record<string, Task>) {
+function renderCard(data: JiraCardNodeType['data'], tasks: Record<string, Task>, mixed = false) {
   const node: JiraCardNodeType = { id: 'n1', type: 'jira_card', position: { x: 0, y: 0 }, data }
   render(
     <div style={{ width: 800, height: 600 }}>
       <ReactFlowProvider>
         <TasksContext.Provider value={tasks}>
-          <ReactFlow nodes={[node]} nodeTypes={nodeTypes} />
+          <BoardSourcesContext.Provider value={{ mixed, defaultSource: 'jira' }}>
+            <ReactFlow nodes={[node]} nodeTypes={nodeTypes} />
+          </BoardSourcesContext.Provider>
         </TasksContext.Provider>
       </ReactFlowProvider>
     </div>,
@@ -126,4 +129,15 @@ test('a card names the tracker its task comes from', () => {
   fireEvent.pointerDown(key, { clientX: 10, clientY: 10 })
   fireEvent.click(key, { clientX: 10, clientY: 10 })
   expect(screen.getByRole('link', { name: /Open in the demo tracker/ })).toBeTruthy()
+})
+
+test('a card starts with the mark of its tracker only on a board that mixes trackers', () => {
+  renderCard({ key: 'DEMO-1' }, { 'DEMO-1': task })
+  expect(document.querySelector('img[alt="Jira"]')).toBeNull()
+  cleanup()
+  renderCard({ key: 'DEMO-1' }, { 'DEMO-1': task }, true)
+  const mark = document.querySelector('img[alt="Jira"]')
+  expect(mark).toBeTruthy()
+  // The mark comes first, before the type icon and the key.
+  expect(mark?.parentElement?.firstElementChild).toBe(mark)
 })

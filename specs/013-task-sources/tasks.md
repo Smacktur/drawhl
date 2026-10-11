@@ -32,10 +32,10 @@ description: "Task list for Task sources"
 
 **Goal**: a mark on every task of a mixed board.
 
-- [ ] T012 [US2] Marks: the Jira mark from Atlassian's official brand files, the tiko emblem for demo; `THIRD_PARTY.md` and `TRADEMARKS.md`; `make licenses`
-- [ ] T013 [P] [US2] `sources/registry.ts` and `SourceMark.tsx` (14px, theme-aware, a neutral icon for an unknown source). Tests
-- [ ] T014 [US2] The mark on cards (expanded, collapsed, private, no token) when the board is mixed; it appears and goes as sources come and go. Tests
-- [ ] T015 [P] [US2] The mark in the mini-card's link button, in the sync list rows and in Gantt task rows. Tests
-- [ ] T016 [US2] `DESIGN.md`: the card anatomy with the mark, the rule for logos in place of the ban
-- [ ] T017 [US2] Screenshots of a mixed and a one-source board in both themes; the one-source board against the previous release (SC-004); `/ui-review`; `make check`
-- [ ] T018 [US2] Guide, `CHANGELOG.md`
+- [x] T012 [US2] Marks: the Jira icon from Atlassian's own `@atlaskit/logo` package, the tiko emblem for demo; `THIRD_PARTY.md` and `TRADEMARKS.md`; `make licenses`
+- [x] T013 [P] [US2] `sources/registry.ts` and `SourceMark.tsx` (14px, theme-aware, a neutral icon for an unknown source). Tests
+- [x] T014 [US2] The mark on cards (expanded, collapsed, private, no token) when the board is mixed; it appears and goes as sources come and go. Tests
+- [x] T015 [P] [US2] The mark in the mini-card's link button, in the sync list rows and in Gantt task rows. Tests
+- [x] T016 [US2] `DESIGN.md`: the card anatomy with the mark, the rule for logos in place of the ban
+- [x] T017 [US2] Checked on the compose stack with two scratch boards of made-up tasks, in both themes: on the mixed board every card and Gantt task row starts with its mark (the tiko emblem on demo tasks, the Jira tile on the others), the mini-card button and the sync list carry it; the board with one tracker shows none (SC-004 by the marks being absent; no pixel diff was taken). `/ui-review` is not installed here and was not run. `make check` and `make licenses` green
+- [x] T018 [US2] Guide, `CHANGELOG.md`
