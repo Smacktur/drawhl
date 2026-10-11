@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronDown, Copy, Globe, Users } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
+import { toast } from 'sonner'
 import { getAuthStatus } from '@/api/auth'
 import {
   findPeople,
@@ -35,6 +36,7 @@ import {
 import { getSettings } from '@/api/settings'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { toastError } from '@/lib/toast'
 
 const LABEL = { owner: 'Owner', editor: 'Can edit', viewer: 'Can view' } as const
 type EveryoneChoice = ShareRole | 'none'
@@ -80,19 +82,17 @@ function MemberRow({
   boardId,
   member,
   manage,
-  onError,
 }: {
   boardId: string
   member: Member
   manage: boolean
-  onError: (error: Error) => void
 }) {
   const queryClient = useQueryClient()
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['members', boardId] })
     void queryClient.invalidateQueries({ queryKey: ['boards'] })
   }
-  const options = { onSuccess: refresh, onError }
+  const options = { onSuccess: refresh, onError: toastError }
   const share = useMutation({
     mutationFn: (role: ShareRole) => shareBoard(boardId, member.user.id, role),
     ...options,
@@ -106,8 +106,9 @@ function MemberRow({
     onSuccess: () => {
       refresh()
       void queryClient.invalidateQueries({ queryKey: ['board', boardId] })
+      toast.success(`${member.user.name} now owns this board`)
     },
-    onError,
+    onError: toastError,
   })
   return (
     <li className="flex items-center gap-3 py-2">
@@ -144,13 +145,11 @@ function AddPeople({
   boardId,
   members,
   exact,
-  onError,
 }: {
   boardId: string
   members: Member[]
   /** Strangers share the instance: a person is found by their whole username only. */
   exact: boolean
-  onError: (error: Error) => void
 }) {
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
@@ -169,12 +168,13 @@ function AddPeople({
     enabled: term.length > 0,
   })
   const share = useMutation({
-    mutationFn: (userId: string) => shareBoard(boardId, userId, role),
-    onSuccess: () => {
+    mutationFn: (person: { id: string; name: string }) => shareBoard(boardId, person.id, role),
+    onSuccess: (_, person) => {
       setQuery('')
+      toast.success(`Shared with ${person.name}`)
       void queryClient.invalidateQueries({ queryKey: ['members', boardId] })
     },
-    onError,
+    onError: toastError,
   })
   const inside = new Set(members.map((member) => member.user.id))
   const matches = (found.data?.people ?? []).filter((person) => !inside.has(person.id))
@@ -208,7 +208,7 @@ function AddPeople({
             <li key={person.id}>
               <button
                 type="button"
-                onClick={() => share.mutate(person.id)}
+                onClick={() => share.mutate(person)}
                 className="hover:bg-accent focus-visible:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left outline-none"
               >
                 <span className="font-medium">{person.name}</span>
@@ -229,13 +229,11 @@ function PublicLink({
   manage,
   isPublic,
   token,
-  onError,
 }: {
   boardId: string
   manage: boolean
   isPublic: boolean
   token: string | null
-  onError: (error: Error) => void
 }) {
   const queryClient = useQueryClient()
   const allowed = useQuery({ queryKey: ['settings'], queryFn: getSettings }).data?.public_links
@@ -246,14 +244,14 @@ function PublicLink({
       void queryClient.invalidateQueries({ queryKey: ['members', boardId] })
       void queryClient.invalidateQueries({ queryKey: ['boards'] })
     },
-    onError,
+    onError: toastError,
   })
   const url = token ? publicUrl(token) : ''
   const copy = () => {
     void navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), COPIED_MS)
-    }, onError)
+    }, toastError)
   }
   return (
     <section className="flex flex-col gap-2 border-t pt-3" aria-label="Public link">
@@ -312,8 +310,6 @@ export function ShareDialog({
 }) {
   const queryClient = useQueryClient()
   const manage = board.my_role === 'owner'
-  const [error, setError] = useState<string | null>(null)
-  const onError = (failed: Error) => setError(failed.message)
   const members = useQuery({
     queryKey: ['members', board.id],
     queryFn: () => listMembers(board.id),
@@ -323,18 +319,12 @@ export function ShareDialog({
     mutationFn: (choice: EveryoneChoice) =>
       shareWithEveryone(board.id, choice === 'none' ? null : choice),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['members', board.id] }),
-    onError,
+    onError: toastError,
   })
   const everyoneRole: EveryoneChoice = members.data?.everyone_role ?? 'none'
   const demo = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.demo ?? false
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setError(null)
-        onOpenChange(next)
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Pinned from the top like the search palette: the match list grows down, the window stays. */}
       <DialogContent className="top-[18%] translate-y-0 gap-4 sm:max-w-[480px]">
         <DialogHeader>
@@ -346,24 +336,13 @@ export function ShareDialog({
           </DialogDescription>
         </DialogHeader>
         {manage && members.data && (
-          <AddPeople
-            boardId={board.id}
-            members={members.data.members}
-            exact={demo}
-            onError={onError}
-          />
+          <AddPeople boardId={board.id} members={members.data.members} exact={demo} />
         )}
         {members.isError && <p className="text-destructive text-[13px]">{members.error.message}</p>}
         {members.data && (
           <ul className="-my-2 flex flex-col">
             {members.data.members.map((member) => (
-              <MemberRow
-                key={member.user.id}
-                boardId={board.id}
-                member={member}
-                manage={manage}
-                onError={onError}
-              />
+              <MemberRow key={member.user.id} boardId={board.id} member={member} manage={manage} />
             ))}
             {/* Where anyone can sign up "everyone" would be strangers; the server refuses it. */}
             {!(demo && everyoneRole === 'none') && (
@@ -408,10 +387,8 @@ export function ShareDialog({
             manage={manage}
             isPublic={members.data.public}
             token={members.data.public_token}
-            onError={onError}
           />
         )}
-        {error && <p className="text-destructive text-[13px]">{error}</p>}
       </DialogContent>
     </Dialog>
   )

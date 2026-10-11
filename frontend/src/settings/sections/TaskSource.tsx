@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { getSettings, saveSettings, type Settings } from '@/api/settings'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,7 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
       void queryClient.invalidateQueries({ queryKey: ['board'] })
       void queryClient.invalidateQueries({ queryKey: ['refresh'] })
       void queryClient.invalidateQueries({ queryKey: ['tracker'] })
+      toast.success('Settings saved')
     },
   })
 
@@ -128,7 +130,6 @@ function TaskSourceForm({ settings }: { settings: Settings }) {
           <AlertDescription>{save.error.message}</AlertDescription>
         </Alert>
       )}
-      {save.isSuccess && <p className="text-muted-foreground text-[13px]">Saved.</p>}
       <div>
         <Button type="submit" size="sm" disabled={save.isPending}>
           Save settings

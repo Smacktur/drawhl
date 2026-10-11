@@ -28,6 +28,7 @@
 | TanStack Query | MIT | Server state |
 | zod | MIT | API response validation |
 | react-hotkeys-hook | MIT | Keyboard shortcuts |
+| sonner | MIT | Toasts |
 | marked | MIT | Markdown → HTML for legal pages at build time |
 | pip-licenses | MIT | Python dependency license check (`make licenses`) |
 | license-checker-rseidelsohn | BSD-3-Clause | npm dependency license check (`make licenses`) |

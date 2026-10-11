@@ -4,6 +4,7 @@ import { marked } from 'marked'
 import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import App from './App.tsx'
+import { Toaster } from '@/components/ui/sonner'
 
 export type Page = {
   path: string
@@ -29,6 +30,7 @@ export function renderPages(): Page[] {
       <StrictMode>
         <QueryClientProvider client={client}>
           <App />
+          <Toaster />
         </QueryClientProvider>
       </StrictMode>,
     ),

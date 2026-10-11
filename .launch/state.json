@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/014-demo-visitor",
+  "feature": "specs/016-toasts",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -57,7 +57,8 @@
     "task-sources",
     "source-mark",
     "demo-visitor",
-    "demo-entry"
+    "demo-entry",
+    "toasts"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -138,7 +139,9 @@
     "G3_source-mark": "approved",
     "G1_demo-visitor": "approved",
     "G3_demo-visitor": "approved",
-    "G3_demo-entry": "approved"
+    "G3_demo-entry": "approved",
+    "G1_toasts": "approved",
+    "G3_toasts": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -191,6 +194,7 @@
     "2026-10-11 task sources: slice source-mark approved at G3 after the owner checked it next to a live Jira: marks appear on a work board once a demo card is pasted in, a card copied between boards keeps its tracker. Spec 013 has no open task. Next: a GitHub Issues provider as its own spec, with the spec's Out of scope list as the checklist of places still tied to one tracker.",
     "2026-10-11 G1 demo visitor: owner decided that the limits of a demo belong to the visitor and the instance keeps its tracker; the whole-username directory and the 90 days stay for everyone on such an instance, boards per person become a setting (TIKO_BOARD_LIMIT). Owner told the agent to build without waiting for G2. Spec 014 in 2 slices (demo-visitor, demo-entry). Slice demo-visitor built, awaits G3: checked on the compose stack with TIKO_DEMO=1 and Jira set, through the API only; the web app did not change. Found on the way: the Jira test route let any signed-in person, a demo visitor included, make the server call an address of their choice; now a visitor has no call and only an admin picks the address.",
     "2026-10-11 demo visitor: slice demo-visitor approved at G3 and merged (PR 110); review found three things, fixed: an empty TIKO_BOARD_LIMIT= stopped the start (so did the empty TIKO_TRACKER= of .env.example on main), a transfer went past the board limit, a long docstring. Slice demo-entry built, awaits G3: the first screen of an instance with TIKO_DEMO=1 is the sign-in form with a link, /demo holds the button; checked on the compose stack in the light theme only.",
-    "2026-10-11 demo visitor: slice demo-entry approved at G3 after the owner's check on the stand (PR 111); spec 014 done."
+    "2026-10-11 demo visitor: slice demo-entry approved at G3 after the owner's check on the stand (PR 111); spec 014 done.",
+    "2026-10-11 G1 toasts: owner asked for toasts in place of text written into components and told the agent to build after a short spec, without G2. Owner's answers: errors of typed input stay under their form, toasts sit bottom right above the zoom buttons. Spec 016 (015 is left to GitHub Issues on its own branch), one slice toasts: sonner on the theme tokens, errors of actions and the timed alerts as toasts, success toasts where the result is not in view, a toast does not close the dialog under it. Checked on the compose stack in both themes. Approved at G3 after the owner's check on the stand; spec 016 done."
   ]
 }

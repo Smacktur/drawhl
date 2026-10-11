@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { deleteBoard, renameBoard, type BoardSummary } from '@/api/boards'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { toastError } from '@/lib/toast'
 
 /** Inline name field in the top bar; Enter saves, Escape or leaving the field cancels. */
 export function RenameBoardForm({ board, onDone }: { board: BoardSummary; onDone: () => void }) {
@@ -23,6 +25,7 @@ export function RenameBoardForm({ board, onDone }: { board: BoardSummary; onDone
       void queryClient.invalidateQueries({ queryKey: ['boards'] })
       onDone()
     },
+    onError: toastError,
   })
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -48,7 +51,6 @@ export function RenameBoardForm({ board, onDone }: { board: BoardSummary; onDone
         onFocus={(event) => event.target.select()}
         disabled={rename.isPending}
         aria-invalid={rename.isError}
-        title={rename.isError ? rename.error.message : undefined}
       />
       <Button type="submit" size="icon" variant="ghost" aria-label="Save name">
         <Check strokeWidth={1.75} />
@@ -69,7 +71,9 @@ export function DeleteBoardDialog({ board, onOpenChange }: DeleteProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['boards'] })
       onOpenChange(false)
+      toast.success('Board deleted')
     },
+    onError: toastError,
   })
   return (
     <Dialog open={board !== null} onOpenChange={onOpenChange}>
@@ -81,7 +85,6 @@ export function DeleteBoardDialog({ board, onOpenChange }: DeleteProps) {
             in the latest backup, if one was made.
           </DialogDescription>
         </DialogHeader>
-        {remove.isError && <p className="text-destructive text-sm">{remove.error.message}</p>}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel

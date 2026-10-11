@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
+import { Toaster } from '@/components/ui/sonner'
 import { SettingsDialog } from '@/settings/SettingsDialog'
 import { openSettings, type Section } from '@/settings/store'
 
@@ -36,6 +37,7 @@ function show(section: Section = 'profile') {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <SettingsDialog />
+      <Toaster />
     </QueryClientProvider>,
   )
   act(() => openSettings(section))
@@ -55,7 +57,7 @@ test('opens on Profile and renames me', async () => {
   expect(screen.getByRole('button', { name: 'Save profile' })).toBeDisabled()
   fireEvent.change(name, { target: { value: 'Ann ' } })
   fireEvent.click(screen.getByRole('button', { name: 'Save profile' }))
-  expect(await screen.findByText('Saved.')).toBeInTheDocument()
+  expect(await screen.findByText('Profile saved')).toBeInTheDocument()
   expect(callTo(fetchMock, '/api/me')).toEqual({
     method: 'PATCH',
     body: { name: 'Ann', username: 'admin' },

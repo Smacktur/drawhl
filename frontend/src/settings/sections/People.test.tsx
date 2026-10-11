@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
+import { Toaster } from '@/components/ui/sonner'
 import { People } from '@/settings/sections/People'
 
 const me = { id: 'u1', username: 'admin', name: 'Admin', role: 'admin' as const }
@@ -24,7 +25,7 @@ const invite = {
 
 afterEach(() => vi.unstubAllGlobals())
 
-function mockApi() {
+function mockApi(revoke = () => new Response(null, { status: 204 })) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     if (url === '/api/people')
       return Response.json({
@@ -35,13 +36,14 @@ function mockApi() {
       return Response.json({ invite, url: '/?invite=tok123' }, { status: 201 })
     if (url === '/api/people/u2' && init?.method === 'PATCH')
       return Response.json({ ...ann, ...JSON.parse(String(init.body)) })
-    if (url === '/api/invites/i1') return new Response(null, { status: 204 })
+    if (url === '/api/invites/i1') return revoke()
     return Response.json({}, { status: 404 })
   })
   vi.stubGlobal('fetch', fetchMock)
   render(
     <QueryClientProvider client={new QueryClient()}>
       <People me={me} />
+      <Toaster />
     </QueryClientProvider>,
   )
   return fetchMock
@@ -78,6 +80,7 @@ test('disables a person from the row menu', async () => {
   await waitFor(() => expect(methods(fetchMock)).toContain('PATCH /api/people/u2'))
   const call = fetchMock.mock.calls.find(([url, init]) => url === '/api/people/u2' && init?.method)
   expect(JSON.parse(String(call?.[1]?.body))).toEqual({ disabled: true })
+  expect(await screen.findByText('Ann Lee disabled')).toBeInTheDocument()
 })
 
 test('revokes an open link', async () => {
@@ -85,4 +88,16 @@ test('revokes an open link', async () => {
   const row = (await screen.findByText('Invite as member')).closest('li')!
   fireEvent.click(within(row).getByRole('button', { name: 'Revoke' }))
   await waitFor(() => expect(methods(fetchMock)).toContain('DELETE /api/invites/i1'))
+})
+
+test('says in a toast why a link was not revoked', async () => {
+  mockApi(() =>
+    Response.json(
+      { error: { code: 'conflict', message: 'This link is already used.' } },
+      { status: 409 },
+    ),
+  )
+  const row = (await screen.findByText('Invite as member')).closest('li')!
+  fireEvent.click(within(row).getByRole('button', { name: 'Revoke' }))
+  expect(await screen.findByText('This link is already used.')).toBeInTheDocument()
 })

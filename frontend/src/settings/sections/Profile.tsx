@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { updateMe, type Me } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,12 +14,14 @@ export function Profile({ me }: { me: Me }) {
   const save = useMutation({
     mutationFn: () => updateMe({ name: name.trim(), username: username.trim() }),
     // The rest of the answer, like the demo mark of the instance, stays as it was.
-    onSuccess: (saved) =>
+    onSuccess: (saved) => {
       queryClient.setQueryData(['auth'], (old: object | undefined) => ({
         ...old,
         signed_in: true,
         me: saved,
-      })),
+      }))
+      toast.success('Profile saved')
+    },
   })
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -56,13 +59,10 @@ export function Profile({ me }: { me: Me }) {
         </p>
       </div>
       {save.isError && <p className="text-destructive text-[13px]">{save.error.message}</p>}
-      <div className="flex items-center gap-2">
+      <div>
         <Button type="submit" size="sm" disabled={save.isPending || !changed}>
           Save profile
         </Button>
-        {save.isSuccess && !changed && (
-          <span className="text-muted-foreground text-[13px]">Saved.</span>
-        )}
       </div>
     </form>
   )
