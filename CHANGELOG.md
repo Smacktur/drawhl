@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [2026.10.15] - 2026-10-11
+
 ### Added
 
 - GitHub cards: the mini-card shows the labels as chips in their GitHub colors and the author. A task without a priority no longer shows an empty Priority row.
