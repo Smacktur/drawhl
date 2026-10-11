@@ -20,6 +20,8 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 | `DB_PATH` | SQLite file inside the container | `data/app.db` |
 | `APP_ENV` | Environment name: `local`, `stage` or `production` | `local` |
 | `UPDATE_CHECK` | Ask GitHub every 6 hours for the latest release to show "update available" in About; `false` turns it off | `true` |
+| `TIKO_PORT` | Port on your machine that Docker Compose gives the web UI | `3000` |
+| `TIKO_API_PORT` | Port on your machine for the API when you run from source with `docker compose up`. The release compose file does not publish the API | `8000` |
 
 To trust a corporate CA, put the bundle in `./data` (for example `data/corp-ca.pem`) and set `JIRA_CA_BUNDLE=data/corp-ca.pem`.
 

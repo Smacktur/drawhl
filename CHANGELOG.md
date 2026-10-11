@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- `make up` prints the addresses of the ports set in `.env`, and `scripts/worktree-setup.sh` gives a worktree a stack of its own when its folder is named like another one or its `.env` came from the main checkout.
 - A variable left empty in `.env` means its default. An `.env` copied from `.env.example` stopped the start on the empty `TIKO_TRACKER=`.
 - "Test connection" checks the Jira address the instance is set to. Only an admin can test another address, so a member cannot make the server call a host of their choice.
 - Deploy to Render puts both services into a project named `tiko` with a `production` environment instead of leaving them ungrouped.
