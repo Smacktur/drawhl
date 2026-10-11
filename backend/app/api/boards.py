@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 
 from app.api import deps
@@ -29,6 +29,7 @@ router = APIRouter(prefix="/boards", tags=["boards"])
 Boards = Annotated[BoardRepo, Depends(deps.boards)]
 Snapshots = Annotated[SnapshotRepo, Depends(deps.snapshots)]
 Live = Annotated[LiveBoards, Depends(deps.live)]
+Tracker = Annotated[str, Depends(deps.tracker)]
 
 
 class BoardIn(BaseModel):
@@ -87,22 +88,16 @@ class PublicOut(BaseModel):
 
 
 @router.get("")
-def list_boards(
-    person: CurrentPerson, boards: Boards, demo: Annotated[bool, Depends(deps.is_demo)]
-) -> BoardList:
-    mine, others = service.list_boards(person, boards, datetime.now(UTC), demo)
+def list_boards(person: CurrentPerson, boards: Boards) -> BoardList:
+    mine, others = service.list_boards(person, boards, datetime.now(UTC))
     return BoardList(boards=mine, all=others)
 
 
 @router.post("", status_code=201)
 def create_board(
-    body: BoardIn,
-    person: CurrentPerson,
-    boards: Boards,
-    demo: Annotated[bool, Depends(deps.is_demo)],
+    body: BoardIn, person: CurrentPerson, boards: Boards, request: Request
 ) -> BoardSummary:
-    if demo:
-        check_board_limit(person, boards)
+    check_board_limit(person, boards, request.app.state.board_limit)
     return service.create_board(person, body.name, boards)
 
 
@@ -113,9 +108,9 @@ def get_board(
     person: CurrentPerson,
     boards: Boards,
     snapshots: Snapshots,
-    settings: Annotated[SettingsService, Depends(deps.settings)],
+    tracker: Tracker,
 ) -> BoardView:
-    return service.get_board(person, role, board_id, boards, snapshots, settings.provider())
+    return service.get_board(person, role, board_id, boards, snapshots, tracker)
 
 
 @router.put("/{board_id}")
@@ -143,6 +138,7 @@ def refresh_board(
     boards: Boards,
     snapshots: Snapshots,
     settings: Annotated[SettingsService, Depends(deps.settings)],
+    tracker: Tracker,
     providers: Annotated[dict[str, TaskProvider], Depends(deps.providers)],
     refresher: Annotated[RefreshService, Depends(deps.refresher)],
     owner: Annotated[str, Depends(deps.owner)],
@@ -153,7 +149,7 @@ def refresh_board(
         boards,
         snapshots,
         providers,
-        settings.provider(),
+        tracker,
         owner,
     )
     return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)

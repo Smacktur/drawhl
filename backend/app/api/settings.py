@@ -5,8 +5,15 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field, SecretStr
 
 from app.api import deps
-from app.api.deps import CurrentAdmin, CurrentPerson
-from app.domain.settings import JiraCredentials, SettingsIn, SettingsService, SettingsView
+from app.api.deps import CurrentAdmin, CurrentPerson, NotDemoVisitor
+from app.domain.errors import Forbidden
+from app.domain.settings import (
+    JiraCredentials,
+    JiraView,
+    SettingsIn,
+    SettingsService,
+    SettingsView,
+)
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -26,7 +33,12 @@ class TestOut(BaseModel):
 @router.get("")
 def get_settings(person: CurrentPerson, settings: Settings) -> SettingsView:
     """Instance settings for everyone; `jira.token_state` is the person's own token."""
-    return settings.view(person.id)
+    view = settings.view(person.id)
+    if person.demo_expires_at:
+        # The instance's tracker is for people with an account; a visitor is not shown it.
+        hidden = {"provider": "demo", "jira": JiraView(base_url=None, token_state="none")}
+        return view.model_copy(update=hidden | {"locked": []})
+    return view
 
 
 @router.put("")
@@ -34,8 +46,11 @@ def put_settings(body: SettingsIn, admin: CurrentAdmin, settings: Settings) -> S
     return settings.update(body, admin.id)
 
 
-@router.post("/jira/test")
+@router.post("/jira/test", dependencies=[NotDemoVisitor])
 def test_jira(body: TestIn, person: CurrentPerson, settings: Settings, request: Request) -> TestOut:
+    # Only an admin picks the address the server calls; anyone else tests the one that is set.
+    if body.base_url is not None and person.role != "admin":
+        raise Forbidden("Only an admin can do this.")
     creds = settings.jira_credentials(person.id, body.base_url, body.token)
     check: Callable[[JiraCredentials], str] = request.app.state.check_jira
     return TestOut(ok=True, user=check(creds))

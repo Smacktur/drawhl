@@ -6,12 +6,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. A visitor who likes it presses "Sign up to keep it" and stays as a regular member with the same boards; an account nobody signs in to for 90 days is deleted. See "Running a demo" in the guide.
+- Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. A visitor who likes it presses "Sign up to keep it" and stays as a regular member with the same boards; an account nobody signs in to for 90 days is deleted. The instance keeps its tracker: visitors work on the demo tasks, and whoever signs up connects their own token and adds real tasks next to the demo cards. See "Running a demo" in the guide.
+- `TIKO_BOARD_LIMIT` sets how many boards a person may own, admins aside. Empty means no limit.
 - Tracker logos: on a board that mixes trackers every card and Gantt row starts with the logo of its tracker, so you see at a glance where a task comes from. A board with one tracker looks as before. The mini-card and the sync list always show the logo.
 - Demo tasks stay live on an instance connected to Jira: the welcome board keeps its titles and statuses next to your Jira cards, and the sync list shows each tracker on its own row. A task now belongs to its tracker, so the same key in two trackers is two tasks.
 
 ### Fixed
 
+- "Test connection" checks the Jira address the instance is set to. Only an admin can test another address, so a member cannot make the server call a host of their choice.
 - Deploy to Render puts both services into a project named `tiko` with a `production` environment instead of leaving them ungrouped.
 - The web container starts as many nginx workers as it has CPUs to use. On Railway it started one per core of the host, 48 of them.
 

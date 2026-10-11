@@ -83,9 +83,7 @@ def _password(settings: Settings) -> str:
 
 def _tracker_env(settings: Settings) -> dict[LockedField, str]:
     env: dict[LockedField, str] = {}
-    if settings.tiko_demo:
-        env["provider"] = "demo"
-    elif settings.tiko_tracker:
+    if settings.tiko_tracker:
         env["provider"] = settings.tiko_tracker
     if settings.jira_base_url:
         # A typo here should stop the start, not surface later as failing cards.
@@ -138,10 +136,11 @@ def create_app(
         touch_demo=partial(demo.touch, users) if settings.tiko_demo else None,
     )
     app.state.accounts = Accounts(users, app.state.sessions)
-    # None unless the instance is a demo; routes and dependencies read the switch from here.
+    # None unless the instance takes demo visitors; routes and dependencies read the switch here.
     app.state.visitors = (
         demo.DemoVisitors(users, app.state.sessions, app.state.live) if settings.tiko_demo else None
     )
+    app.state.board_limit = settings.tiko_board_limit
     app.state.invites = Invites(SqliteInviteRepo(db), app.state.accounts, app.state.sessions)
     created = bootstrap_admin(app.state.accounts, users, lambda: _password(settings))
     env_password = settings.tiko_password and settings.tiko_password.get_secret_value()
