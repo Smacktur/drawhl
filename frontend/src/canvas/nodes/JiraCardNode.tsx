@@ -9,6 +9,7 @@ import { Handles } from '@/canvas/nodes/Handles'
 import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
 import { openSettings } from '@/settings/store'
 import { sourceName } from '@/sources/registry'
+import { BoardSourceMark } from '@/sources/SourceMark'
 
 // Long titles are cut so the status lozenge after them always stays visible.
 const SUMMARY_LIMIT = 120
@@ -59,6 +60,7 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
             selected && 'border-primary ring-primary/30 ring-2',
           )}
         >
+          <BoardSourceMark source={task?.source ?? data.source} className="mr-1.5 align-[-2px]" />
           {task && !hidden && (
             <span className="text-muted-foreground mr-1.5 inline-block align-[-2px]">
               <TypeIcon typeName={task.type_name} />

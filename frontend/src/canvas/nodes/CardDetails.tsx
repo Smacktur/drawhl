@@ -5,6 +5,7 @@ import { relativeTime } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
 import { sourceName } from '@/sources/registry'
+import { SourceMark } from '@/sources/SourceMark'
 
 type Props = {
   task: Task
@@ -56,8 +57,9 @@ export function CardDetails({ task, collapsed, onToggleCollapsed }: Props) {
         </Button>
         <Button variant="outline" size="sm" asChild>
           <a href={task.url} target="_blank" rel="noreferrer">
-            <ExternalLink strokeWidth={1.75} />
+            <SourceMark source={task.source} />
             Open in {sourceName(task.source)}
+            <ExternalLink strokeWidth={1.75} />
           </a>
         </Button>
       </div>

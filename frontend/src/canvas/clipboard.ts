@@ -1,10 +1,10 @@
 import type { XYPosition } from '@xyflow/react'
 import type { Task } from '@/api/tasks'
 import { absolute } from '@/canvas/frames'
-import { taskRef, type TaskLink } from '@/canvas/tasks-context'
+import { nodeTasks } from '@/canvas/node-tasks'
+import { taskRef } from '@/canvas/tasks-context'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
-import { findModule } from '@/modules/registry'
 
 /** Copied elements: top-level nodes in absolute positions, frame contents relative to their frame. */
 export type Snippet = { nodes: AppNode[]; edges: AppEdge[]; tasks: Record<string, Task> }
@@ -59,7 +59,7 @@ export function copySelection(
       const { parentId: _frame, ...rest } = node
       return persistent({ ...rest, position: absolute(node, byId) } as AppNode)
     })
-  const cards = copied.flatMap(taskLinks).flatMap((link) => tasks[taskRef(link)] ?? [])
+  const cards = copied.flatMap(nodeTasks).flatMap((link) => tasks[taskRef(link)] ?? [])
   return {
     nodes: copied,
     edges: edges
@@ -73,14 +73,6 @@ export function copySelection(
       })),
     tasks: Object.fromEntries(cards.map((task) => [taskRef(task), task])),
   }
-}
-
-function taskLinks(node: AppNode): TaskLink[] {
-  if (node.type === 'jira_card') return [node.data]
-  if (node.type !== 'module') return []
-  const def = findModule(node.data.kind)
-  const parsed = def?.schema.safeParse(node.data.content)
-  return def && parsed?.success ? def.keys(parsed.data) : []
 }
 
 /** Top-left corner of the snippet's top-level nodes. */

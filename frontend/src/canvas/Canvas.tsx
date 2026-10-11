@@ -42,7 +42,9 @@ import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { ModuleNode } from '@/canvas/nodes/ModuleNode'
 import { StickyNode } from '@/canvas/nodes/StickyNode'
 import { TextNode } from '@/canvas/nodes/TextNode'
+import { hasMixedSources } from '@/canvas/node-tasks'
 import { indexTasks, taskRef, TasksContext } from '@/canvas/tasks-context'
+import { BoardSourcesContext } from '@/sources/board-sources'
 import { Toolbar, type Tool } from '@/canvas/Toolbar'
 import { RefreshIndicator } from '@/board/RefreshIndicator'
 import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
@@ -150,6 +152,11 @@ export function BoardCanvas({
   const tasks = useMemo(
     () => indexTasks(newest([board.tasks, added, refresh.data?.tasks ?? {}]), board.default_source),
     [board.tasks, board.default_source, added, refresh.data],
+  )
+  const mixed = hasMixedSources(nodes, board.default_source)
+  const boardSources = useMemo(
+    () => ({ mixed, defaultSource: board.default_source }),
+    [mixed, board.default_source],
   )
   const flow = useReactFlow<AppNode, AppEdge>()
   const { screenToFlowPosition, deleteElements, getNodes, getEdges } = flow
@@ -708,66 +715,68 @@ export function BoardCanvas({
 
   return (
     <TasksContext.Provider value={tasks}>
-      <ReadOnlyContext.Provider value={readOnly}>
-        <SelectedByContext.Provider value={live.selections}>
-          <ModuleHostContext.Provider value={moduleHost}>
-            {readOnly ? (
-              surface
-            ) : (
-              <CanvasContextMenu
-                target={menuTarget}
-                onPlace={placeAt}
-                onAddCards={addCards}
-                onAddModule={addModule}
-                onDelete={deleteSelection}
-                cards={cardCounts}
-                onCollapse={setCollapsed}
-                onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
-              >
-                {surface}
-              </CanvasContextMenu>
-            )}
-          </ModuleHostContext.Provider>
-        </SelectedByContext.Provider>
-        {guest ? (
-          // Timers on the board are its people's reminders: a guest sees them, nothing rings.
-          <div className="absolute top-4 right-4 z-10">{indicator}</div>
-        ) : (
-          <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
-            {indicator}
-          </BoardTimers>
-        )}
-        <BoardSearch
-          boardId={board.id}
-          nodes={nodes}
-          tasks={tasks}
-          onJump={jumpTo}
-          onSelect={selectNodes}
-        />
-        {pasteError && (
-          <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
-            <AlertDescription className="whitespace-pre-line">
-              {`Not added:\n${pasteError}`}
-            </AlertDescription>
-          </Alert>
-        )}
-        {liveNotice && (
-          <Alert
-            variant={live.status === 'unsaved' ? 'destructive' : 'default'}
-            className="absolute top-16 right-4 z-10 w-80"
-          >
-            <AlertDescription>{liveNotice}</AlertDescription>
-          </Alert>
-        )}
-        {!readOnly && (
-          <Toolbar
-            tool={tool}
-            onTool={setTool}
-            onAddCards={addCards}
-            onAddModule={(kind) => addModule(kind, viewportCenter())}
+      <BoardSourcesContext.Provider value={boardSources}>
+        <ReadOnlyContext.Provider value={readOnly}>
+          <SelectedByContext.Provider value={live.selections}>
+            <ModuleHostContext.Provider value={moduleHost}>
+              {readOnly ? (
+                surface
+              ) : (
+                <CanvasContextMenu
+                  target={menuTarget}
+                  onPlace={placeAt}
+                  onAddCards={addCards}
+                  onAddModule={addModule}
+                  onDelete={deleteSelection}
+                  cards={cardCounts}
+                  onCollapse={setCollapsed}
+                  onAddTimer={timerHolder && (() => addTimer({ holder: timerHolder }))}
+                >
+                  {surface}
+                </CanvasContextMenu>
+              )}
+            </ModuleHostContext.Provider>
+          </SelectedByContext.Provider>
+          {guest ? (
+            // Timers on the board are its people's reminders: a guest sees them, nothing rings.
+            <div className="absolute top-4 right-4 z-10">{indicator}</div>
+          ) : (
+            <BoardTimers nodes={nodes} tasks={tasks} onOpen={openTimer} onChange={updateTimer}>
+              {indicator}
+            </BoardTimers>
+          )}
+          <BoardSearch
+            boardId={board.id}
+            nodes={nodes}
+            tasks={tasks}
+            onJump={jumpTo}
+            onSelect={selectNodes}
           />
-        )}
-      </ReadOnlyContext.Provider>
+          {pasteError && (
+            <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
+              <AlertDescription className="whitespace-pre-line">
+                {`Not added:\n${pasteError}`}
+              </AlertDescription>
+            </Alert>
+          )}
+          {liveNotice && (
+            <Alert
+              variant={live.status === 'unsaved' ? 'destructive' : 'default'}
+              className="absolute top-16 right-4 z-10 w-80"
+            >
+              <AlertDescription>{liveNotice}</AlertDescription>
+            </Alert>
+          )}
+          {!readOnly && (
+            <Toolbar
+              tool={tool}
+              onTool={setTool}
+              onAddCards={addCards}
+              onAddModule={(kind) => addModule(kind, viewportCenter())}
+            />
+          )}
+        </ReadOnlyContext.Provider>
+      </BoardSourcesContext.Provider>
     </TasksContext.Provider>
   )
 }
