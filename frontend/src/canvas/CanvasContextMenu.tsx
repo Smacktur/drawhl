@@ -61,7 +61,7 @@ export function CanvasContextMenu({
   onAddTimer,
   children,
 }: Props) {
-  // Screen point where "Add Jira card" opens its input; the card lands there too.
+  // Screen point where "Add task card" opens its input; the card lands there too.
   const [cardAt, setCardAt] = useState<XYPosition | null>(null)
   // The menu traps focus while open, so the chosen action runs once it has closed;
   // otherwise a new note or the card input could not take focus.
@@ -94,7 +94,7 @@ export function CanvasContextMenu({
             <>
               <ContextMenuItem onSelect={later(() => setCardAt(target.point))}>
                 <TicketPlus strokeWidth={1.75} />
-                Add Jira card
+                Add task card
               </ContextMenuItem>
               {PLACE.map(({ tool, label, Icon }) => (
                 <ContextMenuItem key={tool} onSelect={later(() => onPlace(tool, target.point))}>

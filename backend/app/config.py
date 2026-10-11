@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     jira_base_url: str | None = None
     jira_tls_verify: bool = True
     jira_ca_bundle: str | None = None
+    # Optional and read-only: raises GitHub's request limit for public issues from 60 to 5000
+    # an hour. It is shared by everyone, so private repositories are never read with it.
+    github_token: SecretStr | None = None
     # Asks GitHub for the latest release every 6 hours to show "update available".
     update_check: bool = True
     # Anyone starts without an account as a demo visitor, on the demo tasks, until they sign up.

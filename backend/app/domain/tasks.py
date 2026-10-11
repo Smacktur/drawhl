@@ -11,6 +11,14 @@ from app.domain.ports import SnapshotRepo, TaskProvider
 KEY_RE = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 _BROWSE_RE = re.compile(r"/browse/([A-Za-z][A-Za-z0-9_]+-\d+)/?$")
 
+GITHUB = "github"
+_REPO = r"[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+"
+GITHUB_KEY_RE = re.compile(rf"^{_REPO}#[1-9]\d*$")
+# A link to an issue or a pull request, with whatever follows: a tab, a comment anchor.
+_GITHUB_LINK_RE = re.compile(
+    rf"^https?://(?:www\.)?github\.com/({_REPO})/(?:issues|pull)/([1-9]\d*)(?:[/?#].*)?$"
+)
+
 SOURCE_PATTERN = r"^[a-z][a-z0-9_]{0,39}$"
 
 StatusCategory = Literal["new", "indeterminate", "done"]
@@ -48,6 +56,19 @@ class Task(BaseModel):
         return task_ref(self.source, self.key)
 
 
+def valid_key(source: str | None, key: str) -> bool:
+    """Whether the key has the shape its tracker uses; a missing source is the instance's."""
+    return bool((GITHUB_KEY_RE if source == GITHUB else KEY_RE).match(key))
+
+
+def github_key(ref: str) -> str | None:
+    """The key in a GitHub link or a typed `owner/repo#number`; None for anything else."""
+    text = ref.strip()
+    if match := _GITHUB_LINK_RE.match(text):
+        return f"{match.group(1)}#{match.group(2)}"
+    return text if GITHUB_KEY_RE.match(text) else None
+
+
 def now_iso() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -69,8 +90,16 @@ def parse_ref(ref: str, base_host: str) -> str:
     return key
 
 
-def resolve_task(ref: str, provider: TaskProvider, snapshots: SnapshotRepo) -> Task:
-    task = provider.resolve(parse_ref(ref, provider.base_host))
+def resolve_task(
+    ref: str, providers: dict[str, TaskProvider], default_source: str, snapshots: SnapshotRepo
+) -> Task:
+    """A GitHub link or key goes to GitHub on any instance, the rest to the instance's tracker."""
+    key = github_key(ref)
+    if key and GITHUB in providers:
+        task = providers[GITHUB].resolve(key)
+    else:
+        provider = providers[default_source]
+        task = provider.resolve(parse_ref(ref, provider.base_host))
     snapshots.put_many([task])
     return task
 
@@ -94,6 +123,7 @@ class NoTokenProvider:
 
     source_id = "jira"
     source_name = "Jira Data Center"
+    source_note = None
 
     def __init__(self, base_url: str | None, reason: DomainError) -> None:
         self._base_url = base_url or ""

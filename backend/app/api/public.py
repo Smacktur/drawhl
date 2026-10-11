@@ -8,11 +8,11 @@ from app.api import deps
 from app.api.boards import RefreshOut
 from app.api.live import serve
 from app.domain.boards import task_refs
-from app.domain.errors import NotFound, TooManyAttempts
+from app.domain.errors import DomainError, NotFound, TooManyAttempts
 from app.domain.live import ACCESS_CHANGED, ROOM_FULL
-from app.domain.ports import BoardRepo
+from app.domain.ports import BoardRepo, TaskProvider
 from app.domain.public import PublicBoard, PublicLinks, guest_tasks, public_board
-from app.domain.refresh import SourceStatus
+from app.domain.refresh import SourceError, SourceStatus
 from app.domain.settings import SettingsService
 from app.domain.tasks import now_iso
 
@@ -24,10 +24,21 @@ Boards = Annotated[BoardRepo, Depends(deps.boards)]
 Settings = Annotated[SettingsService, Depends(deps.settings)]
 
 
-def _statuses_of(request: Request, board_id: str, boards: BoardRepo) -> str:
-    """Whose demo task statuses a guest sees: the board owner's on a demo instance, where
-    each person has their own, and the shared ones anywhere else."""
-    return (boards.owner(board_id) or "") if deps.is_demo(request) else ""
+def _open_sources(request: Request, board_id: str, boards: BoardRepo) -> dict[str, TaskProvider]:
+    """The trackers a guest is answered from, read with nobody's token. The demo statuses are
+    the board owner's on a demo instance, where each person has their own, and the shared ones
+    anywhere else."""
+    owner = (boards.owner(board_id) or "") if deps.is_demo(request) else ""
+    state = request.app.state
+    demo: TaskProvider = state.demo.scoped(owner)
+    github: TaskProvider = state.github
+    return {demo.source_id: demo, github.source_id: github}
+
+
+def _error(exc: DomainError) -> SourceError:
+    return SourceError(
+        code=exc.code, message=exc.message, retry_after=getattr(exc, "retry_after", None)
+    )
 
 
 class VersionOut(BaseModel):
@@ -41,11 +52,10 @@ def get_public_board(
     token: str, request: Request, links: Links, boards: Boards, settings: Settings
 ) -> PublicBoard:
     board_id, *_ = links.find(token)
-    demo = request.app.state.demo.scoped(_statuses_of(request, board_id, boards))
     return public_board(
         board_id,
         boards,
-        demo,
+        _open_sources(request, board_id, boards),
         settings.provider(),
         settings.base_url(),
         settings.refresh_interval_s(),
@@ -66,15 +76,25 @@ def refresh_public_board(
     record = boards.get(board_id)
     if record is None:
         raise NotFound("board not found")
-    demo = request.app.state.demo.scoped(_statuses_of(request, board_id, boards))
-    refs = task_refs(record.doc, settings.provider())
-    tasks = guest_tasks(refs, demo, settings.base_url())
-    # Nothing is polled with anyone's token, so only the demo tasks have a sync to report.
-    synced = any(task.source == demo.source_id for task in tasks.values())
+    open_sources = _open_sources(request, board_id, boards)
+    tasks, failed = guest_tasks(
+        task_refs(record.doc, settings.provider()), open_sources, settings.base_url()
+    )
+    # Nothing is polled with anyone's token, so only the open sources have a sync to report.
+    read = {task.source for task in tasks.values() if task.state == "ok"}
     sources = [
-        SourceStatus(id=demo.source_id, name=demo.source_name, state="ok", synced_at=now_iso())
+        SourceStatus(
+            id=source,
+            name=provider.source_name,
+            state="error" if source in failed else "ok",
+            synced_at=None if source in failed else now_iso(),
+            error=_error(failed[source]) if source in failed else None,
+            note=provider.source_note,
+        )
+        for source, provider in open_sources.items()
+        if source in read or source in failed
     ]
-    return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources if synced else [])
+    return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
 
 
 @router.websocket("/{token}/live")

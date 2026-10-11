@@ -28,7 +28,7 @@ export default defineConfig({
           items: ['adding-tasks', 'working-together', 'search', 'keyboard-shortcuts'],
         },
         { label: 'Modules', items: [{ slug: 'gantt', label: 'Gantt' }, 'focus-and-timers'] },
-        { label: 'Trackers', items: ['trackers', 'jira-data-center'] },
+        { label: 'Trackers', items: ['trackers', 'jira-data-center', 'github-issues'] },
         {
           label: 'Self-hosting',
           items: ['configuration', 'data-and-upgrades', 'security', 'demo'],

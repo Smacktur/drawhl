@@ -7,7 +7,6 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
-    field_validator,
     model_validator,
 )
 
@@ -16,7 +15,7 @@ from app.domain.errors import NotFound, ValidationFailed
 from app.domain.members import BoardRole, ShareRole, effective_role, granted_role
 from app.domain.modules import KIND_PATTERN, module_keys, validate_module
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo
-from app.domain.tasks import KEY_RE, SOURCE_PATTERN, Task, task_ref
+from app.domain.tasks import SOURCE_PATTERN, Task, task_ref, valid_key
 from app.domain.welcome import WELCOME_NAME, welcome_doc
 
 MAX_NODES = 2000
@@ -40,12 +39,11 @@ class JiraCardData(_Strict):
     source: str | None = Field(default=None, pattern=SOURCE_PATTERN)
     collapsed: bool = False
 
-    @field_validator("key")
-    @classmethod
-    def _key(cls, value: str) -> str:
-        if not KEY_RE.match(value):
+    @model_validator(mode="after")
+    def _key(self) -> "JiraCardData":
+        if not valid_key(self.source, self.key):
             raise ValueError("invalid issue key")
-        return value
+        return self
 
 
 class FrameData(_Strict):
@@ -122,12 +120,11 @@ class TimerWatch(_Strict):
     status: str = Field(max_length=200)
     changedTo: str | None = Field(default=None, max_length=200)  # noqa: N815
 
-    @field_validator("key")
-    @classmethod
-    def _key(cls, value: str) -> str:
-        if not KEY_RE.match(value):
+    @model_validator(mode="after")
+    def _key(self) -> "TimerWatch":
+        if not valid_key(self.source, self.key):
             raise ValueError("invalid issue key")
-        return value
+        return self
 
 
 class TimerData(_Strict):

@@ -8,7 +8,7 @@ import { CardDetails } from '@/canvas/nodes/CardDetails'
 import { Handles } from '@/canvas/nodes/Handles'
 import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
 import { openSettings } from '@/settings/store'
-import { sourceName } from '@/sources/registry'
+import { shortKey, sourceName } from '@/sources/registry'
 import { BoardSourceMark } from '@/sources/SourceMark'
 
 // Long titles are cut so the status lozenge after them always stays visible.
@@ -41,7 +41,7 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
   const onClick = (event: MouseEvent) => {
     const start = pressedAt.current
     if (!task || missing || !start) return
-    // Shift-click extends the selection, and the key link goes straight to Jira.
+    // Shift-click extends the selection, and the key link goes straight to the tracker.
     if (event.shiftKey || (event.target as Element).closest('a')) return
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP) return
     setOpen(true)
@@ -74,7 +74,7 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
                 done && 'line-through',
               )}
             >
-              {data.key}
+              {shortKey(task?.source ?? data.source, data.key)}
             </span>
           ) : (
             <a
@@ -87,7 +87,7 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
                 done && 'line-through',
               )}
             >
-              {data.key}
+              {shortKey(task?.source ?? data.source, data.key)}
             </a>
           )}
           {!task && <span className="text-muted-foreground">Loading…</span>}

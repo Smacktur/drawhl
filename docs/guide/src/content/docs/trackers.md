@@ -3,14 +3,15 @@ title: Task trackers
 description: Which task trackers tiko supports today and which are planned.
 ---
 
-tiko reads tasks from your tracker and never changes them. Each person connects their own token, so a card shows only what that person's tracker access allows.
+tiko reads tasks from your tracker and never changes them. Each person connects their own token, so a card shows only what that person's tracker access allows. Public GitHub issues need no token at all.
 
 | Tracker | Status |
 |---|---|
 | Demo tasks (built in) | Available |
 | Jira Data Center and Server 8.14+ | Available, see [Connect Jira Data Center](../jira-data-center/) |
+| GitHub Issues and pull requests, public repositories | Available, see [GitHub Issues](../github-issues/) |
+| GitHub private repositories | Planned |
 | Jira Cloud | Planned |
-| GitHub Issues | Planned |
 | Linear | Planned |
 | Plane | Planned |
 | Todoist | Planned |

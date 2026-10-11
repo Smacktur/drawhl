@@ -141,3 +141,25 @@ test('a card starts with the mark of its tracker only on a board that mixes trac
   // The mark comes first, before the type icon and the key.
   expect(mark?.parentElement?.firstElementChild).toBe(mark)
 })
+
+test('a GitHub card shows the short key, its kind and the full key in the mini-card', () => {
+  const issue: Task = {
+    ...task,
+    source: 'github',
+    key: 'octo-org/widgets#12',
+    type_name: 'Pull request',
+    status_name: 'Draft',
+    priority_name: null,
+    url: 'https://github.com/octo-org/widgets/pull/12',
+  }
+  renderCard(
+    { key: 'octo-org/widgets#12', source: 'github', collapsed: true },
+    { 'github:octo-org/widgets#12': issue },
+  )
+  const key = screen.getByText('widgets#12')
+  expect(screen.getByLabelText('Pull request')).toBeTruthy()
+  fireEvent.pointerDown(key, { clientX: 10, clientY: 10 })
+  fireEvent.click(key, { clientX: 10, clientY: 10 })
+  expect(screen.getByText('octo-org/widgets#12')).toBeTruthy()
+  expect(screen.getByRole('link', { name: /Open in GitHub/ })).toBeTruthy()
+})

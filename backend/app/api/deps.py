@@ -52,12 +52,13 @@ def settings(request: Request) -> SettingsService:
 
 
 def providers(request: Request) -> dict[str, TaskProvider]:
-    """Every tracker this request can read, by source id: the demo tasks always, and Jira
-    with the signed-in person's own token when the instance is set to it. A demo visitor
-    has no token and reads the demo tasks only."""
+    """Every tracker this request can read, by source id: the demo tasks and public GitHub
+    always, and Jira with the signed-in person's own token when the instance is set to it. A
+    demo visitor has no token and reads the demo tasks and public GitHub only."""
     state = request.app.state
     demo_tasks: TaskProvider = state.demo.scoped(_statuses_owner(request))
-    found = {demo_tasks.source_id: demo_tasks}
+    github: TaskProvider = state.github
+    found = {demo_tasks.source_id: demo_tasks, github.source_id: github}
     settings: SettingsService = state.settings
     if tracker(request) == "jira":
         try:

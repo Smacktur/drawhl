@@ -164,6 +164,8 @@ const sourceSchema = z.object({
   error: z
     .object({ code: z.string(), message: z.string(), retry_after: z.number().nullable() })
     .nullable(),
+  // What to know about this tracker's sync while it works, such as a slower pace.
+  note: z.string().nullish(),
 })
 
 export type SyncSource = z.infer<typeof sourceSchema>

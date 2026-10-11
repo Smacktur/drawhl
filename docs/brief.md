@@ -44,7 +44,7 @@ The main hypothesis from the research (top by ICE): a lead will trust the canvas
 - Focus timer and background music ([specs/003-focus](../specs/003-focus/spec.md)): a pomodoro capsule over the board with built-in CC0 lofi tracks and the user's own files; browser-only, no backend.
 - Instance password ([specs/007-instance-password](../specs/007-instance-password/spec.md)): every instance asks for a password: from ENV, or generated on first start and printed to the log; the Railway template generates it.
 - Team mode ([specs/008-accounts](../specs/008-accounts/spec.md) is step 1), for companies that want a Miro-like board inside their network: accounts and roles with a Jira PAT per user, board sharing, real-time editing with cursors (CRDT), then OIDC SSO and Postgres. Stays a monolith. Accounts, sharing and real-time are AGPL; SSO, audit and SCIM go to an enterprise license.
-- Several trackers at once ([specs/013-task-sources](../specs/013-task-sources/spec.md) is step 1): tasks from different trackers on one instance and one board, each task knowing its tracker and showing its logo on a mixed board. GitHub Issues and Jira Cloud follow as providers.
+- Several trackers at once ([specs/013-task-sources](../specs/013-task-sources/spec.md) is step 1): tasks from different trackers on one instance and one board, each task knowing its tracker and showing its logo on a mixed board. GitHub Issues ([specs/015-github-issues](../specs/015-github-issues/spec.md)) reads public issues and pull requests without a key; Jira Cloud follows as a provider.
 
 **Won't**
 - Confluence, Todoist (only a hook in the provider interface)

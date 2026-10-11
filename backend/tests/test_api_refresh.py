@@ -42,6 +42,7 @@ def test_only_open_board_keys_are_polled(jira_client, fake_jira):
         "state": "ok",
         "synced_at": None,
         "error": None,
+        "note": None,
     }
     assert len(fake_jira.requests) == 1
 

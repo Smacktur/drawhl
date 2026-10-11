@@ -16,6 +16,8 @@ class TaskProvider(Protocol):
     source_id: str
     """Stable tracker id, such as "jira"; the sync status is reported per id."""
     source_name: str
+    source_note: str | None
+    """Shown next to the sync status, such as a slower pace without a token."""
 
     @property
     def base_host(self) -> str: ...

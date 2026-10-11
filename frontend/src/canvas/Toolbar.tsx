@@ -123,7 +123,7 @@ export function AddCardForm({
           )}
         >
           {!jql
-            ? 'Separate several with commas, or type a JQL query.'
+            ? 'Keys, links or GitHub tasks like owner/repo#12, separated by commas. Or a JQL query.'
             : count.isError
               ? errorMessage(count.error)
               : count.data !== undefined
@@ -165,11 +165,11 @@ export function Toolbar({ tool, onTool, onAddCards, onAddModule }: Props) {
     })),
     {
       id: 'tool:card',
-      title: 'Add Jira card',
+      title: 'Add task card',
       group: 'Commands',
       Icon: TicketPlus,
       shortcut: 'card',
-      keywords: 'task issue key jql',
+      keywords: 'task issue key jql jira github',
       run: () => setOpen(true),
     },
     {

@@ -29,7 +29,7 @@ function renderToolbar(onAddCards = vi.fn(), onTool = vi.fn(), onAddModule = vi.
   return onAddCards
 }
 
-test('has no card input until the Jira card tool is picked', () => {
+test('has no card input until the task card tool is picked', () => {
   renderToolbar()
   expect(screen.queryByLabelText('Issue keys, links or JQL')).toBeNull()
 })
@@ -40,7 +40,7 @@ test('adds a card from the popover and closes it', async () => {
     vi.fn(async () => new Response(JSON.stringify({ task }), { status: 200 })),
   )
   const onAddCards = renderToolbar()
-  fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Task card' }))
   const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.change(field, { target: { value: 'DEMO-1' } })
   fireEvent.submit(field)
@@ -51,7 +51,7 @@ test('adds a card from the popover and closes it', async () => {
 
 test('closes the popover on Escape', async () => {
   renderToolbar()
-  fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Task card' }))
   const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.keyDown(field, { key: 'Escape' })
   await waitFor(() => expect(screen.queryByLabelText('Issue keys, links or JQL')).toBeNull())
@@ -72,7 +72,7 @@ test('adds several cards at once and keeps the ones that failed in the field', a
     }),
   )
   const onAddCards = renderToolbar()
-  fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Task card' }))
   const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.change(field, { target: { value: 'DEMO-1, DEMO-2,NOPE DEMO-1' } })
   fireEvent.submit(field)
@@ -99,7 +99,7 @@ test('adds the tasks a JQL query finds and keeps the form open when some are lef
   )
   vi.stubGlobal('fetch', fetch)
   const onAddCards = renderToolbar()
-  fireEvent.click(screen.getByRole('button', { name: 'Jira card' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Task card' }))
   const field = await screen.findByLabelText('Issue keys, links or JQL')
   fireEvent.change(field, { target: { value: 'project = DEMO' } })
   fireEvent.submit(field)

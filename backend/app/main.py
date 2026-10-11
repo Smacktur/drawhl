@@ -27,6 +27,7 @@ from app.adapters.storage.sqlite import (
     SqliteUserRepo,
 )
 from app.adapters.tasks.demo import DemoTaskProvider
+from app.adapters.tasks.github import GitHubApi, SharedGitHub
 from app.adapters.tasks.jira_dc import JiraDcProvider
 from app.api.errors import register_error_handlers
 from app.api.gate import PasswordGate
@@ -94,6 +95,7 @@ def _tracker_env(settings: Settings) -> dict[LockedField, str]:
 def create_app(
     settings: Settings | None = None,
     jira_transport: httpx.BaseTransport | None = None,
+    github_transport: httpx.BaseTransport | None = None,
     release_feed: ReleaseFeed | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
@@ -174,6 +176,14 @@ def create_app(
     # Built per request from the signed-in person's own token.
     app.state.jira = lambda creds: JiraDcProvider(lambda: creds, client)
     app.state.check_jira = lambda creds: JiraDcProvider(lambda: creds, client).check()
+    github_token = settings.github_token.get_secret_value().strip() if settings.github_token else ""
+    if github_token:
+        register_secret(github_token)
+    # A renamed repository answers with a redirect to its new name.
+    github_client = httpx.Client(
+        timeout=httpx.Timeout(15.0, connect=5.0), transport=github_transport, follow_redirects=True
+    )
+    app.state.github = SharedGitHub(GitHubApi(github_client, github_token or None))
     if release_feed is None and settings.update_check:
         release_feed = GitHubReleaseFeed("tiko-run/tiko", httpx.Client(timeout=5.0))
     app.state.updates = UpdateService(VERSION, release_feed if settings.update_check else None)

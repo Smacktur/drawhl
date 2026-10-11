@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/016-toasts",
+  "feature": "specs/015-github-issues",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -58,7 +58,8 @@
     "source-mark",
     "demo-visitor",
     "demo-entry",
-    "toasts"
+    "toasts",
+    "github-issues"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -141,7 +142,10 @@
     "G3_demo-visitor": "approved",
     "G3_demo-entry": "approved",
     "G1_toasts": "approved",
-    "G3_toasts": "approved"
+    "G3_toasts": "approved",
+    "G1_github-issues": "approved",
+    "G2_github-issues": "approved",
+    "G3_github-issues": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -195,6 +199,11 @@
     "2026-10-11 G1 demo visitor: owner decided that the limits of a demo belong to the visitor and the instance keeps its tracker; the whole-username directory and the 90 days stay for everyone on such an instance, boards per person become a setting (TIKO_BOARD_LIMIT). Owner told the agent to build without waiting for G2. Spec 014 in 2 slices (demo-visitor, demo-entry). Slice demo-visitor built, awaits G3: checked on the compose stack with TIKO_DEMO=1 and Jira set, through the API only; the web app did not change. Found on the way: the Jira test route let any signed-in person, a demo visitor included, make the server call an address of their choice; now a visitor has no call and only an admin picks the address.",
     "2026-10-11 demo visitor: slice demo-visitor approved at G3 and merged (PR 110); review found three things, fixed: an empty TIKO_BOARD_LIMIT= stopped the start (so did the empty TIKO_TRACKER= of .env.example on main), a transfer went past the board limit, a long docstring. Slice demo-entry built, awaits G3: the first screen of an instance with TIKO_DEMO=1 is the sign-in form with a link, /demo holds the button; checked on the compose stack in the light theme only.",
     "2026-10-11 demo visitor: slice demo-entry approved at G3 after the owner's check on the stand (PR 111); spec 014 done.",
-    "2026-10-11 G1 toasts: owner asked for toasts in place of text written into components and told the agent to build after a short spec, without G2. Owner's answers: errors of typed input stay under their form, toasts sit bottom right above the zoom buttons. Spec 016 (015 is left to GitHub Issues on its own branch), one slice toasts: sonner on the theme tokens, errors of actions and the timed alerts as toasts, success toasts where the result is not in view, a toast does not close the dialog under it. Checked on the compose stack in both themes. Approved at G3 after the owner's check on the stand; spec 016 done."
+    "2026-10-11 G1 toasts: owner asked for toasts in place of text written into components and told the agent to build after a short spec, without G2. Owner's answers: errors of typed input stay under their form, toasts sit bottom right above the zoom buttons. Spec 016 (015 is left to GitHub Issues on its own branch), one slice toasts: sonner on the theme tokens, errors of actions and the timed alerts as toasts, success toasts where the result is not in view, a toast does not close the dialog under it. Checked on the compose stack in both themes. Approved at G3 after the owner's check on the stand; spec 016 done.",
+    "2026-10-11 G1 GitHub Issues: owner asked to add GitHub as a tracker now that tasks know their source. Spec 015 drafted in 3 slices (github-issues: public issues and pull requests by link or key, statuses from state and well-known labels, the mark, a slower pace without a token, GITHUB_TOKEN; github-labels: chips and rows in the mini-card; github-token: a personal token and private repositories). Awaits G2 with five questions: built-in label statuses, GitHub always on, the slice order, \"Task card\" in place of \"Jira card\", visitors adding GitHub tasks on the demo.",
+    "2026-10-11 G2 GitHub Issues: owner approved spec 015: label statuses built in, GitHub always on, slices in the drafted order, any public task on the demo. Owner asked that requests be spread in turn inside GitHub's limit instead of sent at once: the board keeps its 30 s pace and the source asks each repository when its share of the budget comes up. \"Jira card\" becomes \"Task card\" in the texts; the stored node type jira_card is renamed in its own slice after this spec, with a backup first. Sign-in with GitHub is a later spec and will fill the same per-person token.",
+    "2026-10-11 GitHub Issues: slice github-issues built on feat/github-issues, awaits G3: a public issue or pull request is a live card on any instance by its link or owner/repo#number; statuses from state and well-known labels; one shared reader per instance asks each repository in turn inside GitHub's limit (60 an hour without a token, GITHUB_TOKEN for 5000), never serves a private repository; tracker-neutral error bases under the Jira errors; \"Task card\" in place of \"Jira card\". Checked against the real GitHub on the compose stack with a scratch board, both themes and a guest. Left for slice github-labels: the mini-card still shows an empty Priority row for a GitHub task.",
+    "2026-10-11 GitHub Issues: slice github-issues approved at G3 after the owner checked issues and pull requests on the stand. The owner did not see how to use owner/repo#number: the card tool's hint now names that form. Next: slice github-labels.",
+    "2026-10-11 GitHub Issues: the spec is 015 (014 went to demo-visitor while it was drafted). Feature stays on the spec in work, slices github-labels and github-token are next."
   ]
 }

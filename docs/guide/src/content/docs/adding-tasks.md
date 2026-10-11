@@ -11,6 +11,7 @@ Pick the card tool (`C`) and type into its field:
 
 - **A key**, like `DEV-12`.
 - **A link** to the task in your tracker.
+- **A GitHub issue or pull request**, by its link or as `owner/repo#12`. It works on every tiko, whatever tracker is connected: see [GitHub Issues](../github-issues/).
 - **Several keys or links** at once.
 - **A query**, like JQL in Jira: `project = DEV AND status = "In Progress"`. The field suggests fields and values as you type.
 
@@ -18,7 +19,7 @@ New cards land in a neat grid.
 
 ## Paste
 
-Press `⌘V` (`Ctrl+V`) on the board. Links copied from your tracker tabs become cards; any other text becomes a sticky note, placed at the cursor.
+Press `⌘V` (`Ctrl+V`) on the board. Links copied from your tracker tabs or from GitHub become cards; any other text becomes a sticky note, placed at the cursor.
 
 ## Card details
 

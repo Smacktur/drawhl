@@ -42,7 +42,8 @@ def search(
 @router.post("/resolve")
 def resolve(
     body: ResolveIn,
-    provider: Annotated[TaskProvider, Depends(deps.provider)],
+    providers: Annotated[dict[str, TaskProvider], Depends(deps.providers)],
+    tracker: Annotated[str, Depends(deps.tracker)],
     snapshots: Annotated[SnapshotRepo, Depends(deps.snapshots)],
 ) -> ResolveOut:
-    return ResolveOut(task=resolve_task(body.ref, provider, snapshots))
+    return ResolveOut(task=resolve_task(body.ref, providers, tracker, snapshots))

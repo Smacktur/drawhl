@@ -8,9 +8,9 @@ from typing import Any
 from pydantic import BaseModel
 
 from app.domain.boards import task_refs
-from app.domain.errors import Forbidden, NotFound, TooManyAttempts
+from app.domain.errors import DomainError, Forbidden, NotFound, TooManyAttempts
 from app.domain.ports import BoardRepo, LiveBoards, TaskProvider
-from app.domain.tasks import Task, now_iso, split_ref
+from app.domain.tasks import Task, now_iso, split_ref, task_ref
 
 # Guests of one link share this budget, so one link going viral cannot starve the instance.
 # The API sits behind proxies and cannot tell guests apart by address.
@@ -110,34 +110,42 @@ class PublicLinks:
         return found is not None and found[0] == board_id
 
 
-def guest_tasks(refs: list[str], demo: TaskProvider, base_url: str | None) -> dict[str, Task]:
-    """What a guest gets, by ref. Only the demo tasks belong to no person and show in full;
-    a task read with a person's token is its key and its link, nothing else."""
+def guest_tasks(
+    refs: list[str], open_sources: dict[str, TaskProvider], base_url: str | None
+) -> tuple[dict[str, Task], dict[str, DomainError]]:
+    """What a guest gets, by ref, and the open sources that failed, by source id."""
+    # Tasks of the open sources (the demo, public GitHub) belong to no person and show in
+    # full; a task read with a person's token, or one an open source cannot read right now,
+    # is its key and its link, nothing else.
     url = f"{base_url}/browse/" if base_url else ""
-    demo_keys: list[str] = []
-    tasks: list[Task] = []
+    keys: dict[str, list[str]] = {}
     for ref in refs:
         source, key = split_ref(ref)
-        if source == demo.source_id:
-            demo_keys.append(key)
-        else:
-            tasks.append(
-                Task(
-                    source=source,
-                    key=key,
-                    state="private",
-                    url=f"{url}{key}" if url else "",
-                    fetched_at=now_iso(),
+        keys.setdefault(source, []).append(key)
+    tasks: dict[str, Task] = {}
+    failed: dict[str, DomainError] = {}
+    for source, source_keys in keys.items():
+        provider = open_sources.get(source)
+        found: list[Task] = []
+        try:
+            found = provider.poll(source_keys) if provider else []
+        except DomainError as exc:
+            failed[source] = exc
+        tasks |= {task.ref: task for task in found if task.state == "ok"}
+        for key in source_keys:
+            ref = task_ref(source, key)
+            if ref not in tasks:
+                link = f"{url}{key}" if url and provider is None else ""
+                tasks[ref] = Task(
+                    source=source, key=key, state="private", url=link, fetched_at=now_iso()
                 )
-            )
-    tasks += demo.poll(demo_keys) if demo_keys else []
-    return {task.ref: task for task in tasks}
+    return tasks, failed
 
 
 def public_board(
     board_id: str,
     boards: BoardRepo,
-    demo: TaskProvider,
+    open_sources: dict[str, TaskProvider],
     default_source: str,
     base_url: str | None,
     refresh_interval_s: int,
@@ -150,7 +158,7 @@ def public_board(
         updated_at=record.updated_at,
         version=record.version,
         doc=record.doc.model_dump(exclude_none=True),
-        tasks=guest_tasks(task_refs(record.doc, default_source), demo, base_url),
+        tasks=guest_tasks(task_refs(record.doc, default_source), open_sources, base_url)[0],
         default_source=default_source,
         refresh_interval_s=refresh_interval_s,
     )

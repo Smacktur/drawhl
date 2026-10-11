@@ -114,7 +114,7 @@ export function RefreshIndicator({ sources, serverError, syncedAt, refreshing, o
                 name={source.name}
                 health={source.state === 'ok' ? 'ok' : 'down'}
                 syncedAt={Date.parse(source.synced_at ?? '') || 0}
-                detail={source.error ? describe(source.error) : undefined}
+                detail={source.error ? describe(source.error) : (source.note ?? undefined)}
                 now={now}
               />
             ))}
