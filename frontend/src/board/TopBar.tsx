@@ -19,6 +19,7 @@ import {
   SunMoon,
   Timer,
   Trash2,
+  UserPlus,
 } from 'lucide-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -27,6 +28,7 @@ import { canEdit, type BoardSummary } from '@/api/boards'
 import { DeleteBoardDialog, RenameBoardForm } from '@/board/BoardActions'
 import { DemoMark } from '@/board/DemoMark'
 import { NewBoardForm } from '@/board/NewBoardForm'
+import { SignUpDialog } from '@/auth/SignUp'
 import { ShareDialog } from '@/board/ShareDialog'
 import { Faces } from '@/live/Avatar'
 import { useBoardPeople } from '@/live/presence'
@@ -109,6 +111,7 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
   // A demo visitor has no account yet: nothing to share with, no password to come back by.
   const demoUntil = me?.demo_expires_at
   const [leaving, setLeaving] = useState(false)
+  const [signingUp, setSigningUp] = useState(false)
   // A reload drops every cached board and task along with the session.
   const logout = useMutation({ mutationFn: signOut, onSuccess: () => window.location.reload() })
 
@@ -307,7 +310,7 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
             <DialogTitle>Leave the demo?</DialogTitle>
             <DialogDescription>
               Without an account your boards cannot be opened again after you sign out. They are
-              deleted in a week.
+              deleted in a week. Sign up first to keep them.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -397,7 +400,21 @@ export function TopBar({ boards, others = [], current, onSelect }: Props) {
           Public
         </Badge>
       )}
-      {demoUntil && <DemoMark expiresAt={demoUntil} />}
+      {demoUntil && (
+        <>
+          <DemoMark expiresAt={demoUntil} />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[14px] font-normal"
+            onClick={() => setSigningUp(true)}
+          >
+            <UserPlus strokeWidth={1.75} />
+            Sign up to keep it
+          </Button>
+        </>
+      )}
+      <SignUpDialog open={signingUp} onOpenChange={setSigningUp} />
       {current && !demoUntil && (
         <>
           <Button

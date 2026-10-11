@@ -14,9 +14,9 @@ export function DemoMark({ expiresAt }: { expiresAt: string }) {
     <Badge
       variant="outline"
       className="text-muted-foreground mx-1"
-      title="Each visit starts the count again."
+      title="Your boards are kept this long after your last visit."
     >
-      Demo · kept for {demoDaysLeft(expiresAt)}
+      Demo · {demoDaysLeft(expiresAt)}
     </Badge>
   )
 }

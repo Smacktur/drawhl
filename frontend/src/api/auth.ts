@@ -33,6 +33,10 @@ export function startDemo() {
   return fetchJson('/api/auth/demo', z.null(), { method: 'POST' })
 }
 
+export function signUp(account: { name: string; username: string; password: string }) {
+  return fetchJson('/api/auth/signup', meSchema, { method: 'POST', body: JSON.stringify(account) })
+}
+
 export function signOut() {
   return fetchJson('/api/auth/logout', z.null(), { method: 'POST' })
 }

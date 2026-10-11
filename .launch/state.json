@@ -52,7 +52,8 @@
     "reconnect",
     "public-link",
     "public-live",
-    "demo-sandbox"
+    "demo-sandbox",
+    "demo-signup"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -167,6 +168,7 @@
     "2026-10-11 realtime: T029 done, spec 009 has no open task: v2026.10.14 passes WebSockets on Railway (template) and on Render (Blueprint), both deployed by the owner and checked under the admin's login. The nginx worker fix and the password steps in the guide (PR 103) are not released yet.",
     "2026-10-11 demo: spec 011 taken off the shelf and completed with plan, data model, contract and tasks in 2 slices (demo-sandbox, demo-signup); awaits G2. Owner's answers: a demo visitor cannot turn on a public link, a signed-up person can; personal demo task statuses ship in slice 1; three boards per person on a demo instance, for a visitor and after sign-up. Found while planning: nginx does not pass the client address to the API, and the board list reads every board; both are tasks of slice 1.",
     "2026-10-11 G2 demo: owner approved spec 011 with both slices; three boards per person with the welcome board counted, a first screen led by \"Try the demo\". Against bots: an account that changed nothing lives an hour and is evicted at the cap of 500, IPv6 counted by /64. Open before slice demo-signup: whether signed-up accounts unused for long are deleted.",
-    "2026-10-11 demo: slice demo-sandbox approved at G3 (PR 105): TIKO_DEMO, a first screen led by \"Try the demo\", a temporary member per visitor with three boards and their own task statuses, deleted 7 days after the last request (an hour when nothing was changed), eviction at the cap of 500. The people directory answers a whole username only on a demo instance (T013, done early: it showed a visitor the admin). Owner's answer for slice demo-signup: a signed-up account unused for 90 days is deleted. Not checked: a forged forwarded address from outside, needs a Linux host. The welcome board's note about connecting a tracker is wrong on a demo."
+    "2026-10-11 demo: slice demo-sandbox approved at G3 (PR 105): TIKO_DEMO, a first screen led by \"Try the demo\", a temporary member per visitor with three boards and their own task statuses, deleted 7 days after the last request (an hour when nothing was changed), eviction at the cap of 500. The people directory answers a whole username only on a demo instance (T013, done early: it showed a visitor the admin). Owner's answer for slice demo-signup: a signed-up account unused for 90 days is deleted. Not checked: a forged forwarded address from outside, needs a Linux host. The welcome board's note about connecting a tracker is wrong on a demo.",
+    "2026-10-11 demo: slice demo-signup built, awaits G3: a demo visitor signs up from the top bar and stays the same person with the same boards, statuses and session; sharing by a whole username and the public link work after it; on a demo instance an account nobody signed in to for 90 days is deleted with its boards, admins never; the welcome board of a demo says it is a demo instead of sending people to connect a tracker. Spec 011 has no open task. Left for the deployment: Privacy and Terms with links on the sign-up form, protection at the network edge, the forged forwarded address check on a Linux host."
   ]
 }

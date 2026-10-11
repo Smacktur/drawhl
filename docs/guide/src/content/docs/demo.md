@@ -21,6 +21,14 @@ The instance then runs on the demo tasks only. `TIKO_DEMO=1` together with `TIKO
 
 A visitor cannot share a board, turn on a public link, change a name or a password, or reach Settings → Security and My tracker. A visitor who signs out, or clears cookies, cannot open their boards again.
 
+## Signing up
+
+The top bar shows "Demo · 7 days", the time the boards are still kept. "Sign up to keep it" next to it asks for a name, a username and a password. The visitor becomes a regular member on the spot: the same boards, the same task statuses, the same session, and no seven-day clock. From then on they sign in from any device, share boards and turn on public links. The limit of three boards stays.
+
+On a demo instance the share picker finds a person by their whole username only, so strangers are not listed to each other.
+
+There is no mail on a demo, so a forgotten password cannot be reset by the person; an admin can make a reset link in Settings → People. An account that nobody signed in to for 90 days is deleted with its boards. Admins are never deleted.
+
 ## Limits
 
 They are fixed, not settings:
