@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, SecretStr
 
 from app.api import deps
 from app.api.auth import me
-from app.api.deps import AccountsDep, CurrentPerson, NotDemoVisitor, NotOnDemo
+from app.api.deps import AccountsDep, CurrentPerson, NotDemoVisitor
 from app.domain.settings import SettingsService, TokenState
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -65,10 +65,13 @@ def _tracker(person_id: str, settings: SettingsService) -> TrackerView:
 
 @router.get("/tracker")
 def get_tracker(person: CurrentPerson, settings: Settings) -> TrackerView:
+    if person.demo_expires_at:
+        # The instance's tracker is for people with an account; a visitor is not shown it.
+        return TrackerView(provider="demo", base_url=None, token_state="none")
     return _tracker(person.id, settings)
 
 
-@router.put("/tracker", dependencies=[NotOnDemo])
+@router.put("/tracker", dependencies=[NotDemoVisitor])
 def set_tracker_token(body: TokenIn, person: CurrentPerson, settings: Settings) -> TrackerView:
     settings.set_token(person.id, body.token)
     return _tracker(person.id, settings)

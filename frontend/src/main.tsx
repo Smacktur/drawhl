@@ -4,6 +4,7 @@ import { createRoot, hydrateRoot } from 'react-dom/client'
 import App from './App.tsx'
 import { trackInputModality } from '@/lib/input-modality'
 import { initTheme } from '@/lib/theme'
+import { Toaster } from '@/components/ui/sonner'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -18,6 +19,7 @@ const app = (
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
+      <Toaster />
     </QueryClientProvider>
   </StrictMode>
 )

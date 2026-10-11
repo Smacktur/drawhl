@@ -132,6 +132,17 @@ class Limiter:
         with self._lock:
             self._failures.setdefault(key, deque()).append(now)
 
+    def spend(self, key: str, now: float) -> None:
+        """Checks and counts in one step, for a budget of requests instead of failures."""
+        with self._lock:
+            used = self._failures.setdefault(key, deque())
+            while used and used[0] <= now - self._window_s:
+                used.popleft()
+            if len(used) >= self._limit:
+                wait = math.ceil(used[0] + self._window_s - now)
+                raise TooManyAttempts(self._message, max(wait, 1))
+            used.append(now)
+
 
 class Accounts:
     def __init__(self, users: UserRepo, sessions: Sessions) -> None:

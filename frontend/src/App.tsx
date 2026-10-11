@@ -12,7 +12,6 @@ import { AboutButton } from '@/board/AboutButton'
 import { FocusCapsule } from '@/focus/FocusCapsule'
 import { useFocusVisible } from '@/focus/store'
 import { TopBar } from '@/board/TopBar'
-import { useNotice } from '@/live/notice'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -75,7 +74,6 @@ export default function App() {
     typeof window === 'undefined' ? null : readBoardId(),
   )
   const focusVisible = useFocusVisible()
-  const notice = useNotice()
   const [inviteLink] = useState(readInviteLink)
   // A public link is a page of its own: no sign-in, no boards of the person who opened it.
   const [publicToken] = useState(() => (typeof window === 'undefined' ? null : readPublicToken()))
@@ -142,11 +140,6 @@ export default function App() {
       <h1 className="sr-only">tiko</h1>
       {(!mounted || auth.isPending || (signedIn && boards.isPending)) && (
         <Skeleton className="absolute inset-0 rounded-none" />
-      )}
-      {notice && (
-        <Alert className="absolute top-4 left-1/2 z-20 w-96 -translate-x-1/2">
-          <AlertDescription>{notice}</AlertDescription>
-        </Alert>
       )}
       {error && (
         <Alert variant="destructive" className="absolute top-20 left-1/2 w-96 -translate-x-1/2">

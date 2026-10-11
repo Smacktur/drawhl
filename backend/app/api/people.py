@@ -1,12 +1,12 @@
 import time
-from typing import Annotated, Literal
+from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel
 
-from app.api import deps
 from app.api.deps import AccountsDep, CurrentAdmin, CurrentPerson, InvitesDep
 from app.domain.accounts import PersonRecord
+from app.domain.demo import DemoVisitors
 from app.domain.invites import Invite
 
 router = APIRouter(tags=["people"])
@@ -80,11 +80,15 @@ class Directory(BaseModel):
 def directory(
     person: CurrentPerson,
     accounts: AccountsDep,
-    demo: Annotated[bool, Depends(deps.is_demo)],
+    request: Request,
     q: str = Query(default="", max_length=64),
 ) -> Directory:
     """Active people for the share picker; open to everyone signed in."""
     needle = q.strip().lower()
+    visitors: DemoVisitors | None = request.app.state.visitors
+    demo = visitors is not None
+    if visitors and needle:
+        visitors.looked_up(person, time.time())
 
     def matches(name: str, username: str) -> bool:
         # Strangers share a demo instance: a person is found by their whole username only.

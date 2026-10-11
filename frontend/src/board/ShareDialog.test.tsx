@@ -25,7 +25,7 @@ const settings = {
 
 afterEach(() => vi.unstubAllGlobals())
 
-function show(myRole: BoardRole, link: string | null = null, allowed = true) {
+function show(myRole: BoardRole, link: string | null = null, allowed = true, demo = false) {
   let token = link
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     if (url === '/api/boards/b1/members')
@@ -34,6 +34,7 @@ function show(myRole: BoardRole, link: string | null = null, allowed = true) {
         public: token !== null,
         public_token: myRole === 'owner' ? token : null,
       })
+    if (url === '/api/auth/status') return Response.json({ signed_in: true, me: null, demo })
     if (url === '/api/settings') return Response.json({ ...settings, public_links: allowed })
     if (url === '/api/boards/b1/public') {
       token = JSON.parse(String(init?.body)).public ? 'tok123' : null
@@ -110,4 +111,10 @@ test('public links switched off by an admin cannot be turned on', async () => {
   show('owner', null, false)
   expect(await screen.findByText(/An admin switched public links off/)).toBeInTheDocument()
   expect(screen.getByRole('switch', { name: 'Public link' })).toBeDisabled()
+})
+
+test('where anyone can sign up there is no "everyone" and a person is found by username', async () => {
+  show('owner', null, true, true)
+  expect(await screen.findByPlaceholderText('Add a person by their username')).toBeInTheDocument()
+  expect(screen.queryByText('Everyone in tiko')).toBeNull()
 })

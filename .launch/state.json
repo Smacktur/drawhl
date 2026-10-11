@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/014-github-issues",
+  "feature": "specs/015-github-issues",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -56,6 +56,9 @@
     "demo-signup",
     "task-sources",
     "source-mark",
+    "demo-visitor",
+    "demo-entry",
+    "toasts",
     "github-issues"
   ],
   "gates": {
@@ -135,6 +138,11 @@
     "G2_task-sources": "approved",
     "G3_task-sources": "approved",
     "G3_source-mark": "approved",
+    "G1_demo-visitor": "approved",
+    "G3_demo-visitor": "approved",
+    "G3_demo-entry": "approved",
+    "G1_toasts": "approved",
+    "G3_toasts": "approved",
     "G1_github-issues": "approved",
     "G2_github-issues": "approved",
     "G3_github-issues": "approved"
@@ -188,9 +196,14 @@
     "2026-10-11 task sources: slice task-sources approved at G3 after the owner checked it on a real board: old cards from the carried-over cache, the mini-card, the sync list, adding and copying cards. Next: slice source-mark, with the Jira mark in its official blue and the demo source named \"the demo tracker\".",
     "2026-10-11 task sources: slice source-mark built on feat/source-mark, awaits G3: the Jira icon from Atlassian's own @atlaskit/logo package (blue tile, one file for both themes), the tiko emblem for demo tasks, a neutral icon for an unknown tracker; marks on cards and Gantt task rows only on a board that mixes trackers, always in the mini-card button and the sync list. PR 108 landed slice task-sources; its review found that an old Gantt row and the same task with a source could be planned twice, fixed there; the smoke script was moved to refs after CI caught it.",
     "2026-10-11 task sources: slice source-mark approved at G3 after the owner checked it next to a live Jira: marks appear on a work board once a demo card is pasted in, a card copied between boards keeps its tracker. Spec 013 has no open task. Next: a GitHub Issues provider as its own spec, with the spec's Out of scope list as the checklist of places still tied to one tracker.",
-    "2026-10-11 G1 GitHub Issues: owner asked to add GitHub as a tracker now that tasks know their source. Spec 014 drafted in 3 slices (github-issues: public issues and pull requests by link or key, statuses from state and well-known labels, the mark, a slower pace without a token, GITHUB_TOKEN; github-labels: chips and rows in the mini-card; github-token: a personal token and private repositories). Awaits G2 with five questions: built-in label statuses, GitHub always on, the slice order, \"Task card\" in place of \"Jira card\", visitors adding GitHub tasks on the demo.",
-    "2026-10-11 G2 GitHub Issues: owner approved spec 014: label statuses built in, GitHub always on, slices in the drafted order, any public task on the demo. Owner asked that requests be spread in turn inside GitHub's limit instead of sent at once: the board keeps its 30 s pace and the source asks each repository when its share of the budget comes up. \"Jira card\" becomes \"Task card\" in the texts; the stored node type jira_card is renamed in its own slice after this spec, with a backup first. Sign-in with GitHub is a later spec and will fill the same per-person token.",
+    "2026-10-11 G1 demo visitor: owner decided that the limits of a demo belong to the visitor and the instance keeps its tracker; the whole-username directory and the 90 days stay for everyone on such an instance, boards per person become a setting (TIKO_BOARD_LIMIT). Owner told the agent to build without waiting for G2. Spec 014 in 2 slices (demo-visitor, demo-entry). Slice demo-visitor built, awaits G3: checked on the compose stack with TIKO_DEMO=1 and Jira set, through the API only; the web app did not change. Found on the way: the Jira test route let any signed-in person, a demo visitor included, make the server call an address of their choice; now a visitor has no call and only an admin picks the address.",
+    "2026-10-11 demo visitor: slice demo-visitor approved at G3 and merged (PR 110); review found three things, fixed: an empty TIKO_BOARD_LIMIT= stopped the start (so did the empty TIKO_TRACKER= of .env.example on main), a transfer went past the board limit, a long docstring. Slice demo-entry built, awaits G3: the first screen of an instance with TIKO_DEMO=1 is the sign-in form with a link, /demo holds the button; checked on the compose stack in the light theme only.",
+    "2026-10-11 demo visitor: slice demo-entry approved at G3 after the owner's check on the stand (PR 111); spec 014 done.",
+    "2026-10-11 G1 toasts: owner asked for toasts in place of text written into components and told the agent to build after a short spec, without G2. Owner's answers: errors of typed input stay under their form, toasts sit bottom right above the zoom buttons. Spec 016 (015 is left to GitHub Issues on its own branch), one slice toasts: sonner on the theme tokens, errors of actions and the timed alerts as toasts, success toasts where the result is not in view, a toast does not close the dialog under it. Checked on the compose stack in both themes. Approved at G3 after the owner's check on the stand; spec 016 done.",
+    "2026-10-11 G1 GitHub Issues: owner asked to add GitHub as a tracker now that tasks know their source. Spec 015 drafted in 3 slices (github-issues: public issues and pull requests by link or key, statuses from state and well-known labels, the mark, a slower pace without a token, GITHUB_TOKEN; github-labels: chips and rows in the mini-card; github-token: a personal token and private repositories). Awaits G2 with five questions: built-in label statuses, GitHub always on, the slice order, \"Task card\" in place of \"Jira card\", visitors adding GitHub tasks on the demo.",
+    "2026-10-11 G2 GitHub Issues: owner approved spec 015: label statuses built in, GitHub always on, slices in the drafted order, any public task on the demo. Owner asked that requests be spread in turn inside GitHub's limit instead of sent at once: the board keeps its 30 s pace and the source asks each repository when its share of the budget comes up. \"Jira card\" becomes \"Task card\" in the texts; the stored node type jira_card is renamed in its own slice after this spec, with a backup first. Sign-in with GitHub is a later spec and will fill the same per-person token.",
     "2026-10-11 GitHub Issues: slice github-issues built on feat/github-issues, awaits G3: a public issue or pull request is a live card on any instance by its link or owner/repo#number; statuses from state and well-known labels; one shared reader per instance asks each repository in turn inside GitHub's limit (60 an hour without a token, GITHUB_TOKEN for 5000), never serves a private repository; tracker-neutral error bases under the Jira errors; \"Task card\" in place of \"Jira card\". Checked against the real GitHub on the compose stack with a scratch board, both themes and a guest. Left for slice github-labels: the mini-card still shows an empty Priority row for a GitHub task.",
-    "2026-10-11 GitHub Issues: slice github-issues approved at G3 after the owner checked issues and pull requests on the stand. The owner did not see how to use owner/repo#number: the card tool's hint now names that form. Next: slice github-labels."
+    "2026-10-11 GitHub Issues: slice github-issues approved at G3 after the owner checked issues and pull requests on the stand. The owner did not see how to use owner/repo#number: the card tool's hint now names that form. Next: slice github-labels.",
+    "2026-10-11 GitHub Issues: the spec is 015 (014 went to demo-visitor while it was drafted). Feature stays on the spec in work, slices github-labels and github-token are next."
   ]
 }

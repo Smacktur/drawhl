@@ -1,14 +1,15 @@
 import time
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 from starlette.websockets import WebSocketDisconnect
 
 from app.config import Settings
 from app.domain import demo
 from app.main import create_app
 from tests.conftest import signed_in
+from tests.jira_fake import FakeJira
 
 DAY = 24 * 3600
 STICKY = {
@@ -61,9 +62,81 @@ def test_without_the_switch_nothing_is_there(client):
     assert client.post("/api/auth/demo").status_code == 404
 
 
-def test_the_switch_does_not_go_with_jira():
-    with pytest.raises(ValidationError, match="TIKO_TRACKER"):
-        Settings(tiko_demo=True, tiko_tracker="jira")
+T_ANN = "-".join(["ann", "token", "for", "tests"])
+JIRA_URL = "https://jira.example.com"
+
+
+@pytest.fixture
+def jira_app():
+    """Demo visitors on an instance whose people work with Jira."""
+    fake = FakeJira()
+    fake.tokens = {T_ANN: {"DEV-1"}}
+    settings = Settings(
+        db_path=":memory:",
+        tiko_demo=True,
+        tiko_tracker="jira",
+        jira_base_url=JIRA_URL,
+        tiko_secret_key="test-secret-key",
+    )
+    return create_app(settings, jira_transport=httpx.MockTransport(fake))
+
+
+def resolve(client: TestClient, ref: str):
+    return client.post("/api/tasks/resolve", json={"ref": ref})
+
+
+def test_a_visitor_works_on_the_demo_tasks_next_to_a_tracker(jira_app):
+    ann = visitor(jira_app)
+    settings = ann.get("/api/settings").json()
+    assert settings["provider"] == "demo" and settings["locked"] == []
+    assert settings["jira"] == {"base_url": None, "token_state": "none"}
+    assert ann.get("/api/me/tracker").json() == {
+        "provider": "demo",
+        "base_url": None,
+        "token_state": "none",
+    }
+    assert JIRA_URL not in ann.get("/api/settings").text
+    assert resolve(ann, "DEMO-1").json()["task"]["source"] == "demo"
+    assert not resolve(ann, "DEV-1").is_success
+    board_id = welcome(ann)
+    assert ann.get(f"/api/boards/{board_id}").json()["default_source"] == "demo"
+    sources = ann.post(f"/api/boards/{board_id}/refresh").json()["sources"]
+    assert [source["id"] for source in sources] == ["demo"]
+
+
+def test_a_visitor_cannot_reach_the_tracker(jira_app):
+    ann = visitor(jira_app)
+    assert ann.put("/api/me/tracker", json={"token": T_ANN}).status_code == 403
+    for body in ({}, {"token": T_ANN}, {"base_url": "https://internal.example", "token": "x"}):
+        assert ann.post("/api/settings/jira/test", json=body).status_code == 403
+
+
+def test_after_sign_up_the_person_connects_their_tracker(jira_app):
+    ann = visitor(jira_app)
+    board_id = welcome(ann)
+    sign_up(ann)
+    assert ann.get("/api/settings").json()["jira"]["base_url"] == JIRA_URL
+    assert ann.put("/api/me/tracker", json={"token": T_ANN}).json()["token_state"] == "set"
+    assert resolve(ann, "DEV-1").json()["task"]["source"] == "jira"
+    # The cards of the demo days name their tracker, so they stay what they were.
+    assert ann.get(f"/api/boards/{board_id}").json()["default_source"] == "jira"
+    tasks = ann.post(f"/api/boards/{board_id}/refresh").json()["tasks"]
+    assert tasks and {task["source"] for task in tasks.values()} == {"demo"}
+    assert all(task["state"] == "ok" for task in tasks.values())
+    # The address the server calls is the admin's to pick.
+    other = {"base_url": "https://internal.example", "token": T_ANN}
+    assert ann.post("/api/settings/jira/test", json=other).status_code == 403
+    assert ann.post("/api/settings/jira/test", json={}).json()["ok"]
+
+
+def notes(client: TestClient) -> str:
+    return client.get(f"/api/boards/{welcome(client)}").text
+
+
+def test_only_a_visitor_gets_the_demo_note(app):
+    assert "This is a demo" in notes(visitor(app))
+    admin = signed_in(app)
+    assert "This is a demo" not in notes(admin) and "Connect your tracker" in notes(admin)
 
 
 def test_one_request_makes_a_person_with_a_board_they_can_edit(app):
@@ -79,7 +152,6 @@ def test_one_request_makes_a_person_with_a_board_they_can_edit(app):
     boards = client.get("/api/boards").json()["boards"]
     assert [board["name"] for board in boards] == ["Welcome to tiko"]
     edit(client, boards[0]["id"])
-    assert client.get("/api/settings").json()["locked"] == ["provider"]
 
 
 def test_a_session_in_hand_makes_nobody(app):
@@ -173,11 +245,12 @@ def test_what_a_demo_visitor_is_refused(app):
     assert ann.get(f"/api/boards/{board_id}/members").json()["public"] is False
 
 
-def test_a_demo_instance_has_no_everyone_role_and_keeps_no_tokens(app):
+def test_a_demo_instance_has_no_everyone_role(app):
     admin = signed_in(app)
     board_id = admin.post("/api/boards", json={"name": "Roadmap"}).json()["id"]
     assert admin.put(f"/api/boards/{board_id}/everyone", json={"role": "viewer"}).status_code == 403
-    assert admin.put("/api/me/tracker", json={"token": "secret"}).status_code == 403
+    # Taking it away is allowed: the board may have been shared before the demo was turned on.
+    assert admin.put(f"/api/boards/{board_id}/everyone", json={"role": None}).status_code == 204
     # An admin still publishes a board, as on any instance.
     assert admin.put(f"/api/boards/{board_id}/public", json={"public": True}).json()["public"]
 
@@ -193,6 +266,36 @@ def test_three_boards_with_the_welcome_board(app):
     admin = signed_in(app)
     for name in ("One", "Two", "Three", "Four"):
         assert admin.post("/api/boards", json={"name": name}).status_code == 201
+
+
+def test_the_board_limit_of_the_instance_holds_members_and_not_admins():
+    app = create_app(Settings(db_path=":memory:", tiko_demo=True, tiko_board_limit=2))
+    ann = visitor(app)
+    sign_up(ann)
+    welcome(ann)
+    assert ann.post("/api/boards", json={"name": "Second"}).status_code == 201
+    response = ann.post("/api/boards", json={"name": "Third"})
+    assert response.json()["error"]["code"] == "board_limit"
+    # A visitor keeps the three of the demo whatever the instance allows its people.
+    bob = visitor(app, "203.0.113.2")
+    welcome(bob)
+    for name in ("Second", "Third"):
+        assert bob.post("/api/boards", json={"name": name}).status_code == 201
+    assert bob.post("/api/boards", json={"name": "Fourth"}).status_code == 409
+    admin = signed_in(app)
+    for name in ("One", "Two", "Three"):
+        board_id = admin.post("/api/boards", json={"name": name}).json()["id"]
+    # A board handed over would be a third for Ann.
+    transfer = admin.post(f"/api/boards/{board_id}/transfer", json={"user_id": me(ann)["id"]})
+    assert transfer.json()["error"]["code"] == "board_limit"
+
+
+def test_a_variable_left_empty_means_its_default(monkeypatch):
+    for name in ("TIKO_BOARD_LIMIT", "TIKO_TRACKER", "TIKO_DEMO"):
+        monkeypatch.setenv(name, "")
+    settings = Settings(_env_file=None)
+    assert settings.tiko_board_limit is None and settings.tiko_tracker is None
+    assert settings.tiko_demo is False
 
 
 def test_an_ordinary_instance_has_no_board_limit(client):
@@ -451,7 +554,7 @@ def test_sign_up_is_for_demo_visitors_only(app, client):
     assert sign_up(TestClient(client.app)).status_code == 404
 
 
-def test_after_sign_up_sharing_and_the_public_link_work_and_three_boards_stay(app):
+def test_after_sign_up_sharing_and_the_public_link_work_and_the_three_boards_go(app):
     ann, bob = visitor(app), visitor(app, "203.0.113.2")
     sign_up(ann)
     sign_up(bob, "bob")
@@ -465,9 +568,8 @@ def test_after_sign_up_sharing_and_the_public_link_work_and_three_boards_stay(ap
     link = ann.put(f"/api/boards/{board_id}/public", json={"public": True}).json()
     assert TestClient(app).get(f"/api/public/{link['public_token']}").status_code == 200
     assert ann.put("/api/me/password", json={"current": LONG, "new": LONG + "!"}).is_success
-    for name in ("Second", "Third"):
+    for name in ("Second", "Third", "Fourth"):
         assert ann.post("/api/boards", json={"name": name}).status_code == 201
-    assert ann.post("/api/boards", json={"name": "Fourth"}).status_code == 409
 
 
 def test_the_cleanup_leaves_a_signed_up_person_until_90_days_without_a_sign_in(app):
@@ -540,3 +642,20 @@ def test_a_reset_link_counts_as_a_sign_in_for_the_90_days(app):
     assert users.delete_unused_members(demo.iso(time.time() - 88 * DAY)) == ([], [])
     assert app.state.visitors.cleanup(time.time() + 2 * DAY) == 0
     assert fresh.get("/api/boards").status_code == 200
+
+
+def test_the_directory_takes_so_many_searches_a_minute(app):
+    ann = visitor(app)
+    sign_up(ann)
+    for _ in range(demo.LOOKUPS):
+        assert ann.get("/api/people/directory?q=bob").status_code == 200
+    busy = ann.get("/api/people/directory?q=bob")
+    assert busy.status_code == 429 and busy.headers["retry-after"]
+    # An empty search finds nobody and costs nothing; another person is not held up.
+    assert ann.get("/api/people/directory").status_code == 200
+    assert signed_in(app).get("/api/people/directory?q=ann").json()["people"]
+
+
+def test_an_ordinary_instance_does_not_count_searches(client):
+    for _ in range(demo.LOOKUPS + 5):
+        assert client.get("/api/people/directory?q=adm").status_code == 200

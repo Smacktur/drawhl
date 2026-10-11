@@ -11,6 +11,8 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 | `TIKO_SECRET_KEY` | Encrypts tracker tokens at rest; needed only to connect a tracker (`openssl rand -base64 32`) | unset |
 | `TIKO_TRACKER` | Tracker for everyone: `demo` or `jira`. Set, Settings → Task source shows it read-only | set in Settings |
 | `JIRA_BASE_URL` | Jira URL for everyone, like `https://jira.example.com`; a wrong URL stops the start. Each person still adds their own token | set in Settings |
+| `TIKO_DEMO` | `1` lets anyone start without an account as a demo visitor on the demo tasks, and sign up to stay. See [Running a demo](../demo/) | off |
+| `TIKO_BOARD_LIMIT` | Boards a person may own, admins and demo visitors aside | no limit |
 | `GITHUB_TOKEN` | Read-only GitHub token that raises the request limit for public issues from 60 to 5000 an hour, so GitHub cards update at the board's pace. See [GitHub Issues](../github-issues/) | unset |
 | `TIKO_DEMO` | `1` makes the instance a public demo: anyone starts without an account on the demo tasks. See [Running a demo](../demo/) | off |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |

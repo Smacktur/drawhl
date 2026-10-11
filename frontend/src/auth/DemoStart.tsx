@@ -13,14 +13,8 @@ function message(error: Error) {
   return error.message
 }
 
-/** The first screen of a demo instance: one button to a board of your own, sign-in behind a link. */
-export function DemoStart({
-  onStarted,
-  onSignIn,
-}: {
-  onStarted: () => void
-  onSignIn: () => void
-}) {
+/** The demo page: one button to a board of your own, the sign-in form a link away. */
+export function DemoStart({ onStarted }: { onStarted: () => void }) {
   const start = useMutation({ mutationFn: startDemo, onSuccess: onStarted })
   return (
     <div className="absolute top-1/2 left-1/2 flex w-80 -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3 text-center">
@@ -39,8 +33,8 @@ export function DemoStart({
       {start.isError && <p className="text-destructive text-sm">{message(start.error)}</p>}
       <p className="text-muted-foreground mt-2 text-[13px]">
         Already have an account?{' '}
-        <Button variant="link" className="h-auto p-0 text-[13px]" onClick={onSignIn}>
-          Sign in
+        <Button asChild variant="link" className="h-auto p-0 text-[13px]">
+          <a href="/">Sign in</a>
         </Button>
       </p>
     </div>

@@ -1,22 +1,23 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 
 from app.api import deps
 from app.api.deps import (
+    AccountsDep,
     CanEdit,
     CanView,
     CurrentPerson,
     IsOwner,
     MembersDep,
     NotDemoVisitor,
-    NotOnDemo,
 )
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
 from app.domain.demo import check_board_limit
+from app.domain.errors import BoardLimit
 from app.domain.members import Member, ShareRole
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo, TaskProvider
 from app.domain.public import PublicLinks
@@ -29,6 +30,7 @@ router = APIRouter(prefix="/boards", tags=["boards"])
 Boards = Annotated[BoardRepo, Depends(deps.boards)]
 Snapshots = Annotated[SnapshotRepo, Depends(deps.snapshots)]
 Live = Annotated[LiveBoards, Depends(deps.live)]
+Tracker = Annotated[str, Depends(deps.tracker)]
 
 
 class BoardIn(BaseModel):
@@ -87,22 +89,16 @@ class PublicOut(BaseModel):
 
 
 @router.get("")
-def list_boards(
-    person: CurrentPerson, boards: Boards, demo: Annotated[bool, Depends(deps.is_demo)]
-) -> BoardList:
-    mine, others = service.list_boards(person, boards, datetime.now(UTC), demo)
+def list_boards(person: CurrentPerson, boards: Boards) -> BoardList:
+    mine, others = service.list_boards(person, boards, datetime.now(UTC))
     return BoardList(boards=mine, all=others)
 
 
 @router.post("", status_code=201)
 def create_board(
-    body: BoardIn,
-    person: CurrentPerson,
-    boards: Boards,
-    demo: Annotated[bool, Depends(deps.is_demo)],
+    body: BoardIn, person: CurrentPerson, boards: Boards, request: Request
 ) -> BoardSummary:
-    if demo:
-        check_board_limit(person, boards)
+    check_board_limit(person, boards, request.app.state.board_limit)
     return service.create_board(person, body.name, boards)
 
 
@@ -113,9 +109,9 @@ def get_board(
     person: CurrentPerson,
     boards: Boards,
     snapshots: Snapshots,
-    settings: Annotated[SettingsService, Depends(deps.settings)],
+    tracker: Tracker,
 ) -> BoardView:
-    return service.get_board(person, role, board_id, boards, snapshots, settings.provider())
+    return service.get_board(person, role, board_id, boards, snapshots, tracker)
 
 
 @router.put("/{board_id}")
@@ -143,6 +139,7 @@ def refresh_board(
     boards: Boards,
     snapshots: Snapshots,
     settings: Annotated[SettingsService, Depends(deps.settings)],
+    tracker: Tracker,
     providers: Annotated[dict[str, TaskProvider], Depends(deps.providers)],
     refresher: Annotated[RefreshService, Depends(deps.refresher)],
     owner: Annotated[str, Depends(deps.owner)],
@@ -153,7 +150,7 @@ def refresh_board(
         boards,
         snapshots,
         providers,
-        settings.provider(),
+        tracker,
         owner,
     )
     return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
@@ -189,10 +186,13 @@ def unshare_board(board_id: str, user_id: str, _: IsOwner, members: MembersDep) 
     return Response(status_code=204)
 
 
-@router.put("/{board_id}/everyone", status_code=204, dependencies=[NotOnDemo])
+@router.put("/{board_id}/everyone", status_code=204)
 def share_with_everyone(
-    board_id: str, body: EveryoneIn, _: IsOwner, members: MembersDep
+    board_id: str, body: EveryoneIn, _: IsOwner, members: MembersDep, request: Request
 ) -> Response:
+    # Taking the role away stays open: a board shared before the demo was turned on can be closed.
+    if body.role is not None:
+        deps.not_on_demo(request)
     members.set_everyone(board_id, body.role)
     return Response(status_code=204)
 
@@ -209,6 +209,19 @@ def set_public_link(
 
 
 @router.post("/{board_id}/transfer", status_code=204, dependencies=[NotDemoVisitor])
-def transfer_board(board_id: str, body: TransferIn, _: IsOwner, members: MembersDep) -> Response:
+def transfer_board(
+    board_id: str,
+    body: TransferIn,
+    _: IsOwner,
+    members: MembersDep,
+    accounts: AccountsDep,
+    boards: Boards,
+    request: Request,
+) -> Response:
+    try:
+        # A board handed over counts against the new owner like one they made.
+        check_board_limit(accounts.get(body.user_id), boards, request.app.state.board_limit)
+    except BoardLimit as exc:
+        raise BoardLimit("This person already holds as many boards as an account can.") from exc
     members.transfer(board_id, body.user_id)
     return Response(status_code=204)

@@ -1,6 +1,6 @@
 # Feature Specification: GitHub Issues
 
-**Feature Branch**: `014-github-issues`
+**Feature Branch**: `015-github-issues`
 
 **Created**: 2026-10-11
 
@@ -122,7 +122,7 @@ A person enters their GitHub token in Settings → My tracker, next to their Jir
 - **FR-005**: Reads without a personal token go through one shared reader for the instance: one request per repository per poll, paced to stay inside the limit GitHub reports, with its answers shared by everyone.
 - **FR-006**: `GITHUB_TOKEN` in the environment is used by the shared reader. A repository GitHub marks private is never served through it.
 - **FR-007**: A limit, an outage and an unreachable network map to tracker errors that the refresh backoff understands for any source. The error codes of Jira do not change.
-- **FR-008**: `Task` gains `labels` (name and color) and `rows` (label and value), both empty for the other sources. The contract change is written in `specs/014-github-issues/contracts/` before the code.
+- **FR-008**: `Task` gains `labels` (name and color) and `rows` (label and value), both empty for the other sources. The contract change is written in `specs/015-github-issues/contracts/` before the code.
 - **FR-009**: The web registry of sources gains `github` with a mark per theme. `THIRD_PARTY.md` and `TRADEMARKS.md` list the mark and its terms.
 - **FR-010**: A personal GitHub token is stored per person like the Jira token, encrypted, and is only ever sent to api.github.com.
 - **FR-011**: A guest route reads GitHub tasks through the shared reader only. What it cannot read is answered as `private`.
