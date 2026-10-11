@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import {
   getTracker,
   removeTrackerToken,
@@ -11,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toastError } from '@/lib/toast'
 import { SectionHeader } from '@/settings/sections/Section'
 
 const HINT = {
@@ -36,9 +38,17 @@ function TokenForm({ tracker }: { tracker: Tracker }) {
     onSuccess: (next) => {
       setToken('')
       changed(next)
+      toast.success('Token saved')
     },
   })
-  const remove = useMutation({ mutationFn: removeTrackerToken, onSuccess: () => changed() })
+  const remove = useMutation({
+    mutationFn: removeTrackerToken,
+    onSuccess: () => {
+      changed()
+      toast.success('Token removed')
+    },
+    onError: toastError,
+  })
   const test = useMutation({
     mutationFn: () => testJira(token.trim() ? { token: token.trim() } : {}),
   })
@@ -46,7 +56,6 @@ function TokenForm({ tracker }: { tracker: Tracker }) {
     event.preventDefault()
     save.mutate()
   }
-  const error = save.error ?? remove.error
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
@@ -67,7 +76,7 @@ function TokenForm({ tracker }: { tracker: Tracker }) {
           {HINT[tracker.token_state]} It stays on the server and is never shown again.
         </p>
       </div>
-      {error && <p className="text-destructive text-[13px]">{error.message}</p>}
+      {save.isError && <p className="text-destructive text-[13px]">{save.error.message}</p>}
       {test.isError && <p className="text-destructive text-[13px]">{test.error.message}</p>}
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" size="sm" disabled={save.isPending || !token.trim()}>

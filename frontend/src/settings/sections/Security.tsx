@@ -1,9 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { changePassword, signOutEverywhere, type Me } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toastError } from '@/lib/toast'
 import { Group, SectionHeader } from '@/settings/sections/Section'
 
 function PasswordForm({ username }: { username: string }) {
@@ -14,6 +16,7 @@ function PasswordForm({ username }: { username: string }) {
     onSuccess: () => {
       setCurrent('')
       setNext('')
+      toast.success('Password changed')
     },
   })
   const submit = (event: FormEvent) => {
@@ -53,13 +56,10 @@ function PasswordForm({ username }: { username: string }) {
         </p>
       </div>
       {change.isError && <p className="text-destructive text-[13px]">{change.error.message}</p>}
-      <div className="flex items-center gap-2">
+      <div>
         <Button type="submit" size="sm" disabled={change.isPending}>
           Change password
         </Button>
-        {change.isSuccess && (
-          <span className="text-muted-foreground text-[13px]">Password changed.</span>
-        )}
       </div>
     </form>
   )
@@ -70,6 +70,7 @@ export function Security({ me }: { me: Me }) {
   const everywhere = useMutation({
     mutationFn: signOutEverywhere,
     onSuccess: () => window.location.reload(),
+    onError: toastError,
   })
   return (
     <div className="flex flex-col gap-5">
@@ -90,9 +91,6 @@ export function Security({ me }: { me: Me }) {
             Sign out everywhere
           </Button>
         </div>
-        {everywhere.isError && (
-          <p className="text-destructive text-[13px]">{everywhere.error.message}</p>
-        )}
       </Group>
     </div>
   )

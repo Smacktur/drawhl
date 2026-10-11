@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSettings, saveSettings } from '@/api/settings'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { toastError } from '@/lib/toast'
 import { Group, SectionHeader } from '@/settings/sections/Section'
 
 export function Sharing() {
@@ -10,6 +11,7 @@ export function Sharing() {
   const save = useMutation({
     mutationFn: (allowed: boolean) => saveSettings({ public_links: allowed }),
     onSuccess: (saved) => queryClient.setQueryData(['settings'], saved),
+    onError: toastError,
   })
   return (
     <div className="flex flex-col gap-5">
@@ -28,7 +30,6 @@ export function Sharing() {
           Anyone with a board's link can view it without signing in. Tasks from your tracker show
           only their key. Switching this off stops every public link at once.
         </p>
-        {save.isError && <p className="text-destructive text-[13px]">{save.error.message}</p>}
       </Group>
     </div>
   )

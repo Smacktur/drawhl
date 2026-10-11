@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Copy, Ellipsis, UserPlus } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import type { Me } from '@/api/auth'
 import {
   changePerson,
@@ -22,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { toastError } from '@/lib/toast'
 import { Group, SectionHeader } from '@/settings/sections/Section'
 import { formatDue } from '@/timers/time'
 
@@ -86,6 +88,12 @@ function PersonRow({
   const refresh = () => queryClient.invalidateQueries({ queryKey: PEOPLE })
   const change = useMutation({
     mutationFn: (body: Parameters<typeof changePerson>[1]) => changePerson(person.id, body),
+    onSuccess: (_, body) => {
+      if (body.role)
+        toast.success(`${person.name} is now ${body.role === 'admin' ? 'an admin' : 'a member'}`)
+      else toast.success(`${person.name} ${body.disabled ? 'disabled' : 'enabled'}`)
+    },
+    onError: toastError,
     onSettled: refresh,
   })
   const reset = useMutation({
@@ -94,52 +102,49 @@ function PersonRow({
       onLink(link)
       void refresh()
     },
+    onError: toastError,
   })
-  const error = change.error ?? reset.error
   return (
-    <li className="flex flex-col gap-1 py-2.5">
-      <div className="flex items-center gap-3">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className={person.disabled ? 'text-muted-foreground truncate' : 'truncate'}>
-            <span className="font-medium">{person.name}</span>
-            {person.id === me.id && <span className="text-muted-foreground"> (you)</span>}
-          </span>
-          <span className="text-muted-foreground truncate text-[12px]">
-            {person.username} · {lastSeen(person)}
-          </span>
-        </div>
-        {person.disabled && <Badge variant="outline">Disabled</Badge>}
-        {person.role === 'admin' && <Badge variant="secondary">Admin</Badge>}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            {/* Pulled out by its inner padding, so the dots line up with the Invite button. */}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="-mr-1.5"
-              aria-label={`Actions for ${person.name}`}
-            >
-              <Ellipsis strokeWidth={1.75} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onSelect={() => change.mutate({ role: person.role === 'admin' ? 'member' : 'admin' })}
-            >
-              {person.role === 'admin' ? 'Make member' : 'Make admin'}
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => reset.mutate()}>Reset password</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant={person.disabled ? 'default' : 'destructive'}
-              onSelect={() => change.mutate({ disabled: !person.disabled })}
-            >
-              {person.disabled ? 'Enable' : 'Disable'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <li className="flex items-center gap-3 py-2.5">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className={person.disabled ? 'text-muted-foreground truncate' : 'truncate'}>
+          <span className="font-medium">{person.name}</span>
+          {person.id === me.id && <span className="text-muted-foreground"> (you)</span>}
+        </span>
+        <span className="text-muted-foreground truncate text-[12px]">
+          {person.username} · {lastSeen(person)}
+        </span>
       </div>
-      {error && <p className="text-destructive text-[13px]">{error.message}</p>}
+      {person.disabled && <Badge variant="outline">Disabled</Badge>}
+      {person.role === 'admin' && <Badge variant="secondary">Admin</Badge>}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          {/* Pulled out by its inner padding, so the dots line up with the Invite button. */}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="-mr-1.5"
+            aria-label={`Actions for ${person.name}`}
+          >
+            <Ellipsis strokeWidth={1.75} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onSelect={() => change.mutate({ role: person.role === 'admin' ? 'member' : 'admin' })}
+          >
+            {person.role === 'admin' ? 'Make member' : 'Make admin'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => reset.mutate()}>Reset password</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant={person.disabled ? 'default' : 'destructive'}
+            onSelect={() => change.mutate({ disabled: !person.disabled })}
+          >
+            {person.disabled ? 'Enable' : 'Disable'}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </li>
   )
 }
@@ -148,6 +153,8 @@ function InviteRow({ invite }: { invite: Invite }) {
   const queryClient = useQueryClient()
   const revoke = useMutation({
     mutationFn: () => revokeInvite(invite.id),
+    onSuccess: () => toast.success('Link revoked'),
+    onError: toastError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: PEOPLE }),
   })
   const what =
@@ -183,6 +190,7 @@ export function People({ me }: { me: Me }) {
       setLink(created)
       void queryClient.invalidateQueries({ queryKey: PEOPLE })
     },
+    onError: toastError,
   })
   return (
     <div className="flex flex-col gap-5">
@@ -206,7 +214,6 @@ export function People({ me }: { me: Me }) {
           </DropdownMenu>
         }
       />
-      {invite.isError && <p className="text-destructive text-[13px]">{invite.error.message}</p>}
       {link && <LinkBox link={link} onDone={() => setLink(null)} />}
       {people.isPending && <p className="text-muted-foreground">Loading…</p>}
       {people.isError && (

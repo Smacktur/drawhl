@@ -57,7 +57,8 @@ import { SelectedByContext, withPresence } from '@/live/PresenceRing'
 import { PresenceLayer } from '@/live/PresenceLayer'
 import { getAuthStatus } from '@/api/auth'
 import { useLiveBoard, type LiveStatus } from '@/live/useLiveBoard'
-import { setNotice } from '@/live/notice'
+import { toast } from 'sonner'
+import { ERROR_MS } from '@/lib/toast'
 import { readViewport, saveViewport } from '@/live/viewport'
 import type { AppEdge, AppNode, JiraCardNode as JiraCardNodeType, TimerData } from '@/canvas/types'
 import { newId } from '@/lib/id'
@@ -103,8 +104,6 @@ const MIN_ARROW = 16
 
 // Leaves room for the top bar, the focus capsule and the toolbar over the board.
 const FIT_NEW_BOARD = { padding: 0.16, maxZoom: 1 }
-// Long enough to read a few failed keys.
-const PASTE_ERROR_MS = 8000
 const viewportCenter = () => ({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
 const NEW_NODES = {
@@ -298,13 +297,6 @@ export function BoardCanvas({
     )
   }
 
-  const [pasteError, setPasteError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!pasteError) return
-    const timeout = setTimeout(() => setPasteError(null), PASTE_ERROR_MS)
-    return () => clearTimeout(timeout)
-  }, [pasteError])
-
   // Native clipboard events rather than shortcuts: only they can read and write the
   // system clipboard. Both step aside for text fields, dialogs and selected page text.
   const clipboard = useRef<Record<'copy' | 'paste', (event: ClipboardEvent) => void>>(null)
@@ -332,7 +324,10 @@ export function BoardCanvas({
           void resolveAll(paste.refs).then(({ tasks: found, failed }) => {
             if (found.length > 0) addCards(found, screen)
             if (failed.length > 0)
-              setPasteError(failed.map((f) => `${f.ref}: ${f.message}`).join('\n'))
+              toast.error('Not added', {
+                description: failed.map((f) => `${f.ref}: ${f.message}`).join('\n'),
+                duration: ERROR_MS,
+              })
           })
         } else if (paste.kind === 'text') {
           addPastedNote(paste.text, screen)
@@ -752,13 +747,6 @@ export function BoardCanvas({
             onJump={jumpTo}
             onSelect={selectNodes}
           />
-          {pasteError && (
-            <Alert variant="destructive" className="absolute top-16 right-4 z-10 w-80">
-              <AlertDescription className="whitespace-pre-line">
-                {`Not added:\n${pasteError}`}
-              </AlertDescription>
-            </Alert>
-          )}
           {liveNotice && (
             <Alert
               variant={live.status === 'unsaved' ? 'destructive' : 'default'}
@@ -803,7 +791,9 @@ export default function Canvas({ boardId }: { boardId: string }) {
   // The board is gone for this person: the app moves on to another one and says why.
   const lost = accessChanged && board.isError
   useEffect(() => {
-    if (lost) setNotice('You no longer have access to this board.')
+    // The id keeps it to one toast when the effect runs twice.
+    if (lost)
+      toast('You no longer have access to this board.', { id: 'board-lost', duration: ERROR_MS })
   }, [lost])
 
   if (board.isPending) return <Skeleton className="absolute inset-0" />
