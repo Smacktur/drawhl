@@ -3,12 +3,20 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { SignIn } from '@/auth/SignIn'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  window.history.replaceState(null, '', '/')
+})
 
-function show(demo: boolean, reply: () => Response = () => new Response(null, { status: 204 })) {
+function show(
+  demo: boolean,
+  reply: () => Response = () => new Response(null, { status: 204 }),
+  path = demo ? '/demo' : '',
+) {
   const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => reply())
   vi.stubGlobal('fetch', fetchMock)
   const onSignedIn = vi.fn()
+  if (path) window.history.replaceState(null, '', path)
   render(
     <QueryClientProvider client={new QueryClient()}>
       <SignIn demo={demo} onSignedIn={onSignedIn} />
@@ -20,10 +28,22 @@ function show(demo: boolean, reply: () => Response = () => new Response(null, { 
 test('an ordinary instance opens on the sign-in form', () => {
   show(false)
   expect(screen.getByLabelText('Username')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'Try the demo' })).toBeNull()
+  expect(screen.queryByText('Try the demo')).toBeNull()
 })
 
-test('a demo opens on one button and starts a board with it', async () => {
+test('an ordinary instance has no demo page', () => {
+  show(false, undefined, '/demo')
+  expect(screen.getByLabelText('Username')).toBeInTheDocument()
+  expect(screen.queryByText('Try the demo')).toBeNull()
+})
+
+test('an instance with a demo opens on the sign-in form with a link to it', () => {
+  show(true, undefined, '/')
+  expect(screen.getByLabelText('Username')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Try the demo' })).toHaveAttribute('href', '/demo')
+})
+
+test('the demo page has one button and starts a board with it', async () => {
   const { fetchMock, onSignedIn } = show(true)
   expect(screen.queryByLabelText('Username')).toBeNull()
   expect(screen.getByText(/No account needed/)).toBeInTheDocument()
@@ -33,13 +53,12 @@ test('a demo opens on one button and starts a board with it', async () => {
     '/api/auth/demo',
     expect.objectContaining({ method: 'POST' }),
   )
+  expect(window.location.pathname).toBe('/')
 })
 
-test('the sign-in form of a demo is behind a link', () => {
+test('the demo page links to the sign-in form', () => {
   show(true)
-  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
-  expect(screen.getByLabelText('Username')).toBeInTheDocument()
-  expect(screen.getByLabelText('Password')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/')
 })
 
 test('a full demo and a busy address say when to come back', async () => {
