@@ -260,13 +260,13 @@ def _summary(row: BoardRow, role: BoardRole) -> BoardSummary:
 
 
 def list_boards(
-    person: Person, boards: BoardRepo, now: datetime
+    person: Person, boards: BoardRepo, now: datetime, demo: bool = False
 ) -> tuple[list[BoardSummary], list[BoardSummary]]:
     """The person's boards by last change, and for admins every other board.
 
     A person gets their own welcome board on their first read.
     """
-    doc = BoardDoc.model_validate(welcome_doc(now))
+    doc = BoardDoc.model_validate(welcome_doc(now, demo))
     boards.create_welcome(person.id, WELCOME_NAME, doc)
     mine: list[BoardSummary] = []
     others: list[BoardSummary] = []

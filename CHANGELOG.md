@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. See "Running a demo" in the guide.
+- Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. A visitor who likes it presses "Sign up to keep it" and stays as a regular member with the same boards; an account nobody signs in to for 90 days is deleted. See "Running a demo" in the guide.
 
 ### Fixed
 

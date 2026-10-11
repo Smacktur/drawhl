@@ -86,8 +86,10 @@ class PublicOut(BaseModel):
 
 
 @router.get("")
-def list_boards(person: CurrentPerson, boards: Boards) -> BoardList:
-    mine, others = service.list_boards(person, boards, datetime.now(UTC))
+def list_boards(
+    person: CurrentPerson, boards: Boards, demo: Annotated[bool, Depends(deps.is_demo)]
+) -> BoardList:
+    mine, others = service.list_boards(person, boards, datetime.now(UTC), demo)
     return BoardList(boards=mine, all=others)
 
 

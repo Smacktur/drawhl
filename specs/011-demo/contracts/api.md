@@ -33,6 +33,8 @@ Me gains demo_expires_at: string | null    (set for a demo visitor, null for eve
 - The person keeps their id, their boards, their task statuses and the current session; other sessions of the person stay too.
 - A person who is not a demo visitor, and a request without a session, get 404 `not_found`.
 
+A person who is not an admin and has not signed in for 90 days is deleted with their boards, on a demo instance only. Signing up counts as a sign-in.
+
 A demo visitor whose expiry has passed is signed out: every route answers them 401 `auth_required`, and their sockets close as for an ended session.
 
 ## Refused to a demo visitor

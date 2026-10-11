@@ -1,3 +1,5 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
 
 const DAY_MS = 24 * 3600 * 1000
@@ -10,13 +12,20 @@ export function demoDaysLeft(expiresAt: string, now = Date.now()): string {
 
 /** Tells a demo visitor that their boards are temporary. */
 export function DemoMark({ expiresAt }: { expiresAt: string }) {
+  const queryClient = useQueryClient()
+  // The visitor may have signed up in another tab: coming back to this one asks who they are now.
+  useEffect(() => {
+    const refresh = () => void queryClient.invalidateQueries({ queryKey: ['auth'] })
+    window.addEventListener('focus', refresh)
+    return () => window.removeEventListener('focus', refresh)
+  }, [queryClient])
   return (
     <Badge
       variant="outline"
       className="text-muted-foreground mx-1"
-      title="Each visit starts the count again."
+      title="Your boards are kept this long after your last visit."
     >
-      Demo · kept for {demoDaysLeft(expiresAt)}
+      Demo · {demoDaysLeft(expiresAt)}
     </Badge>
   )
 }
