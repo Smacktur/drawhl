@@ -104,6 +104,7 @@ class Invites:
         if invite.kind == "reset":
             user_id = invite.user_id or ""
             self._accounts.set_password(user_id, password)
+            self._accounts.came_back(user_id)
             return self._sessions.start(user_id, now)
         try:
             person = self._accounts.create(

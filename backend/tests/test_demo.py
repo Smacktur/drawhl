@@ -516,3 +516,27 @@ def test_the_welcome_board_of_a_demo_does_not_send_people_to_connect_a_tracker(a
     assert "This is a demo" in notes(visitor(app))
     assert "Connect your tracker" not in notes(visitor(app, "203.0.113.2"))
     assert "Connect your tracker" in notes(client)
+
+
+def test_a_reset_link_counts_as_a_sign_in_for_the_90_days(app):
+    ann = visitor(app)
+    edit(ann, welcome(ann))
+    sign_up(ann)
+    ann_id = me(ann)["id"]
+    admin = signed_in(app)
+    users = app.state.accounts._users
+    db = app.state.boards._db
+    with db.transaction() as conn:
+        conn.execute(
+            "UPDATE users SET last_sign_in_at = ? WHERE id = ?",
+            (demo.iso(time.time() - 89 * DAY), ann_id),
+        )
+    url = admin.post(f"/api/people/{ann_id}/reset").json()["url"]
+    fresh = TestClient(app)
+    accepted = fresh.post(
+        f"/api/invites/{url.split('=', 1)[1]}/accept", json={"password": LONG + "2"}
+    )
+    assert accepted.status_code == 204
+    assert users.delete_unused_members(demo.iso(time.time() - 88 * DAY)) == ([], [])
+    assert app.state.visitors.cleanup(time.time() + 2 * DAY) == 0
+    assert fresh.get("/api/boards").status_code == 200

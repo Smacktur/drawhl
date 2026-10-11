@@ -127,6 +127,9 @@ test('a demo visitor sees the demo mark, no Share, and is asked before signing o
   vi.stubGlobal('fetch', fetch)
   renderBar()
   expect(await screen.findByText('Demo · 7 days')).toBeInTheDocument()
+  const asked = fetch.mock.calls.length
+  fireEvent(window, new Event('focus'))
+  await waitFor(() => expect(fetch.mock.calls.length).toBeGreaterThan(asked))
   expect(screen.queryByRole('button', { name: 'Share' })).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Sign up to keep it' }))
   expect(
