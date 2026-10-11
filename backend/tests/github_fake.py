@@ -21,6 +21,7 @@ def issue(number: int, repo: str = REPO, **fields) -> dict:
         "state_reason": None,
         "labels": [],
         "assignee": {"login": "alex-rivera"},
+        "user": {"login": "sam-lee"},
         "updated_at": f"2026-10-01T09:00:{number % 60:02d}Z",
         "html_url": f"https://github.com/{repo}/{kind}/{number}",
         "repository_url": f"https://api.github.com/repos/{repo}",

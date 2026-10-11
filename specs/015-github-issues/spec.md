@@ -39,7 +39,7 @@ tiko reads Jira Data Center only, and the people who will see the launch sit on 
    | issue closed as duplicate | Duplicate | done |
 
 6. **An open issue takes its status from a label** when it has one of the well-known names, compared without case: `planned`, `todo`, `to do`, `backlog` (new); `in progress`, `in-progress`, `wip`, `doing`, `in review` (indeterminate); `shipped`, `done`, `released` (done). The status name is the label's name. A closed issue ignores labels. The list is built in; a list per board or per instance is not part of this spec.
-7. **Labels show as chips in the mini-card**, in their own colors, never on the card: a board of colored labels would shout. The mini-card also gains extra rows (label and value); GitHub fills one, "Repository". These are the two shared places of spec 013, decision 3.
+7. **Labels show as chips in the mini-card**, in their own colors, never on the card: a board of colored labels would shout. The mini-card also gains extra rows (label and value); GitHub fills one, "Author" (asked for by the owner on 2026-10-11, who also dropped a "Repository" row: the full key in the mini-card already names the repository). These are the two shared places of spec 013, decision 3.
 8. **A task is added by its link or its key.** A github.com issue or pull request link, or `owner/repo#number`, typed into the card tool, the Gantt add form or pasted on the board, becomes a GitHub card on any instance. Anything else goes to the instance's tracker, as today.
 9. **The board's refresh pace stays one for every tracker; the GitHub source paces itself inside it.** A board asks every 30 seconds as before, and the source answers from memory until a repository is due. How often a repository is due follows from the request budget GitHub reports: 60 an hour per address without a token, 5000 with one. The budget is spread over the repositories in turn, the longest-waiting first, so a busy instance gets older data, never a burst of requests and a used-up limit. Without a token that means every few minutes and the sync list says so; once a token is there the same rule gives the board's pace back with nothing to switch.
 10. **What is read without a personal token is public**, so a guest of a public board sees it in full. A task that only a personal token can read shows a guest its key only, as a Jira task does.
@@ -70,9 +70,9 @@ A person on a fresh instance with no tracker connected copies a link to an issue
 9. **Given** `GITHUB_TOKEN` in the environment, **Then** GitHub tasks refresh at the board's pace, and a private repository this token can read still answers "not found".
 10. **Given** an instance with no Jira, **Then** the card tool, the context menu, the shortcuts list and the command palette say "Task card", not "Jira card".
 
-### User Story 2 - Labels and the repository in the mini-card (Priority: P2)
+### User Story 2 - Labels and the author in the mini-card (Priority: P2)
 
-A person opens a GitHub card. The mini-card shows the assignee, the updated time, a "Repository" row and the issue's labels as small chips in their GitHub colors. The button reads "Open in GitHub". A Jira card's mini-card is unchanged.
+A person opens a GitHub card. The mini-card shows the assignee, the updated time, the author and the issue's labels as small chips in their GitHub colors. The button reads "Open in GitHub". A Jira card's mini-card is unchanged.
 
 **Why this priority**: labels are how GitHub projects sort their work; the card stays quiet without them, the mini-card is where they belong.
 
@@ -81,7 +81,7 @@ A person opens a GitHub card. The mini-card shows the assignee, the updated time
 **Acceptance Scenarios**:
 
 1. **Given** a GitHub task with labels, **Then** the mini-card lists them as chips with the label's name and color, readable in both themes.
-2. **Given** a GitHub task, **Then** the mini-card has a "Repository" row with `owner/repo` and no "Priority" row.
+2. **Given** a GitHub task, **Then** the mini-card has an "Author" row with who opened it and no "Priority" row.
 3. **Given** a task with several assignees, **Then** the mini-card shows the first one.
 4. **Given** a task of another source, **Then** its mini-card has no chips and no extra rows.
 

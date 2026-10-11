@@ -428,3 +428,34 @@ def test_a_guest_is_told_when_github_fails(app_client, fake):
     assert states["github"]["error"]["code"] == "tracker_rate_limited"
     assert states["github"]["error"]["retry_after"] > 0
     assert body["tasks"][f"github:{REPO}#1"]["state"] == "private"
+
+
+def test_labels_and_the_author_ride_with_the_task():
+    labels = [{"name": "bug", "color": "D73A4A"}, {"name": " docs ", "color": "nope"}, "plain"]
+    task = to_task(f"{REPO}#5", issue(5, labels=labels))
+    assert [(label.name, label.color) for label in task.labels] == [
+        ("bug", "d73a4a"),
+        ("docs", ""),
+        ("plain", ""),
+    ]
+    assert [(row.label, row.value) for row in task.rows] == [("Author", "sam-lee")]
+    assert to_task(f"{REPO}#5", issue(5, user=None)).rows == []
+
+
+def test_tasks_of_other_trackers_and_old_cached_ones_have_no_chips_or_rows(app_client):
+    from app.domain.tasks import Task
+
+    demo = app_client.post("/api/tasks/resolve", json={"ref": "DEMO-1"}).json()["task"]
+    assert (demo["labels"], demo["rows"]) == ([], [])
+    old = Task.model_validate({"source": "jira", "key": "DEV-1", "url": "", "fetched_at": "x"})
+    assert (old.labels, old.rows) == ([], [])
+
+
+def test_a_guest_gets_no_labels_of_a_task_it_cannot_read(app_client, fake):
+    fake.repos["octo-org/secret"] = {1: issue(1, "octo-org/secret", labels=[{"name": "x"}])}
+    fake.private.add("octo-org/secret")
+    board_id = board_with(app_client, "octo-org/secret#1")
+    link = app_client.put(f"/api/boards/{board_id}/public", json={"public": True}).json()
+    task = TestClient(app_client.app).get(f"/api/public/{link['public_token']}").json()["tasks"]
+    assert task["github:octo-org/secret#1"]["labels"] == []
+    assert task["github:octo-org/secret#1"]["rows"] == []

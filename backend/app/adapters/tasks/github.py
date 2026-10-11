@@ -1,4 +1,5 @@
 import math
+import re
 import threading
 import time
 from collections.abc import Callable
@@ -15,7 +16,7 @@ from app.domain.errors import (
     TrackerUnreachable,
     ValidationFailed,
 )
-from app.domain.tasks import GITHUB, StatusCategory, Task, now_iso
+from app.domain.tasks import GITHUB, StatusCategory, Task, TaskLabel, TaskRow, now_iso
 
 API_URL = "https://api.github.com"
 WEB_URL = "https://github.com"
@@ -71,8 +72,23 @@ def _status(issue: dict) -> tuple[str, StatusCategory]:
     return "Open", "new"
 
 
+_HEX = re.compile(r"^[0-9a-fA-F]{6}$")
+
+
+def _labels(issue: dict) -> list[TaskLabel]:
+    labels = []
+    for label in issue.get("labels") or []:
+        name = label.get("name") if isinstance(label, dict) else label
+        color = label.get("color") if isinstance(label, dict) else None
+        if isinstance(name, str) and name.strip():
+            hexed = color if isinstance(color, str) and _HEX.match(color) else ""
+            labels.append(TaskLabel(name=name.strip(), color=hexed.lower()))
+    return labels
+
+
 def to_task(key: str, issue: dict) -> Task:
     status_name, category = _status(issue)
+    author = (issue.get("user") or {}).get("login")
     return Task(
         source=GITHUB,
         key=key,
@@ -84,6 +100,8 @@ def to_task(key: str, issue: dict) -> Task:
         updated=issue.get("updated_at"),
         url=issue["html_url"],
         fetched_at=now_iso(),
+        labels=_labels(issue),
+        rows=[TaskRow(label="Author", value=author)] if author else [],
     )
 
 

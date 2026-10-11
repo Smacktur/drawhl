@@ -59,7 +59,8 @@
     "demo-visitor",
     "demo-entry",
     "toasts",
-    "github-issues"
+    "github-issues",
+    "github-labels"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -145,7 +146,8 @@
     "G3_toasts": "approved",
     "G1_github-issues": "approved",
     "G2_github-issues": "approved",
-    "G3_github-issues": "approved"
+    "G3_github-issues": "approved",
+    "G3_github-labels": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -204,6 +206,8 @@
     "2026-10-11 G2 GitHub Issues: owner approved spec 015: label statuses built in, GitHub always on, slices in the drafted order, any public task on the demo. Owner asked that requests be spread in turn inside GitHub's limit instead of sent at once: the board keeps its 30 s pace and the source asks each repository when its share of the budget comes up. \"Jira card\" becomes \"Task card\" in the texts; the stored node type jira_card is renamed in its own slice after this spec, with a backup first. Sign-in with GitHub is a later spec and will fill the same per-person token.",
     "2026-10-11 GitHub Issues: slice github-issues built on feat/github-issues, awaits G3: a public issue or pull request is a live card on any instance by its link or owner/repo#number; statuses from state and well-known labels; one shared reader per instance asks each repository in turn inside GitHub's limit (60 an hour without a token, GITHUB_TOKEN for 5000), never serves a private repository; tracker-neutral error bases under the Jira errors; \"Task card\" in place of \"Jira card\". Checked against the real GitHub on the compose stack with a scratch board, both themes and a guest. Left for slice github-labels: the mini-card still shows an empty Priority row for a GitHub task.",
     "2026-10-11 GitHub Issues: slice github-issues approved at G3 after the owner checked issues and pull requests on the stand. The owner did not see how to use owner/repo#number: the card tool's hint now names that form. Next: slice github-labels.",
-    "2026-10-11 GitHub Issues: the spec is 015 (014 went to demo-visitor while it was drafted). Feature stays on the spec in work, slices github-labels and github-token are next."
+    "2026-10-11 GitHub Issues: the spec is 015 (014 went to demo-visitor while it was drafted). Feature stays on the spec in work, slices github-labels and github-token are next.",
+    "2026-10-11 GitHub Issues: slice github-issues merged (PR 114) after a review that found a real leak: a repository made private was still served through the server token; visibility is now asked before every read. Slice github-labels built on feat/github-labels, awaits G3: the mini-card shows labels as chips in their GitHub colors, and, at the owner's request, the Author row (a Repository row was dropped at G3: the full key already names the repository); a task without a priority has no Priority row. Task gained labels and rows, empty for the other trackers.",
+    "2026-10-11 GitHub Issues: slice github-labels approved at G3 after the owner's look at the mini-card on the stand. Left in spec 015: slice github-token (a personal token and private repositories)."
   ]
 }

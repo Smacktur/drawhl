@@ -163,3 +163,42 @@ test('a GitHub card shows the short key, its kind and the full key in the mini-c
   expect(screen.getByText('octo-org/widgets#12')).toBeTruthy()
   expect(screen.getByRole('link', { name: /Open in GitHub/ })).toBeTruthy()
 })
+
+test('the mini-card of a GitHub task shows labels as chips and the author', () => {
+  const issue: Task = {
+    ...task,
+    source: 'github',
+    key: 'octo-org/widgets#12',
+    priority_name: null,
+    labels: [
+      { name: 'bug', color: 'd73a4a' },
+      { name: 'good first issue', color: 'fef2c0' },
+      { name: 'plain', color: '' },
+    ],
+    rows: [{ label: 'Author', value: 'sam-lee' }],
+  }
+  renderCard(
+    { key: 'octo-org/widgets#12', source: 'github', collapsed: true },
+    { 'github:octo-org/widgets#12': issue },
+  )
+  const key = screen.getByText('widgets#12')
+  fireEvent.pointerDown(key, { clientX: 10, clientY: 10 })
+  fireEvent.click(key, { clientX: 10, clientY: 10 })
+  const chips = screen.getByRole('list', { name: 'Labels' })
+  expect(chips.children).toHaveLength(3)
+  // Dark labels get white text, light ones black; a label without a color stays neutral.
+  expect((screen.getByText('bug') as HTMLElement).style.color).toBe('rgb(255, 255, 255)')
+  expect((screen.getByText('good first issue') as HTMLElement).style.color).toBe('rgb(0, 0, 0)')
+  expect((screen.getByText('plain') as HTMLElement).style.color).toBe('')
+  expect(screen.getByText('sam-lee')).toBeTruthy()
+  expect(screen.queryByText('Priority')).toBeNull()
+})
+
+test('the mini-card of a task without labels or extra rows is as before', () => {
+  renderCard({ key: 'DEMO-1', collapsed: true }, { 'DEMO-1': task })
+  const key = screen.getByText('DEMO-1')
+  fireEvent.pointerDown(key, { clientX: 10, clientY: 10 })
+  fireEvent.click(key, { clientX: 10, clientY: 10 })
+  expect(screen.getByText('Priority')).toBeTruthy()
+  expect(screen.queryByRole('list', { name: 'Labels' })).toBeNull()
+})
