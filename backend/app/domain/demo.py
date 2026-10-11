@@ -94,8 +94,9 @@ class DemoVisitors:
 
     def looked_up(self, person: Person, now: float) -> None:
         """Counts a search of the people directory against the person who asks."""
-        self._lookups.check(person.id, now)
-        self._lookups.fail(person.id, now)
+        # A visitor finds nobody, so there is nothing to count, and no entry outlives them.
+        if person.demo_expires_at is None:
+            self._lookups.spend(person.id, now)
 
     def sign_up(self, person: Person, name: str, username: str, password: str) -> Person:
         """Makes a demo visitor a regular member: same person, same boards, same session."""

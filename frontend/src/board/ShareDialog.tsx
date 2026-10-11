@@ -383,11 +383,14 @@ export function ShareDialog({
                       value={everyoneRole}
                       onValueChange={(choice) => everyone.mutate(choice as EveryoneChoice)}
                     >
-                      {(Object.keys(EVERYONE) as EveryoneChoice[]).map((choice) => (
-                        <DropdownMenuRadioItem key={choice} value={choice}>
-                          {EVERYONE[choice]}
-                        </DropdownMenuRadioItem>
-                      ))}
+                      {(Object.keys(EVERYONE) as EveryoneChoice[])
+                        // A role given before the demo was turned on can only be taken away.
+                        .filter((choice) => !demo || choice === 'none' || choice === everyoneRole)
+                        .map((choice) => (
+                          <DropdownMenuRadioItem key={choice} value={choice}>
+                            {EVERYONE[choice]}
+                          </DropdownMenuRadioItem>
+                        ))}
                     </DropdownMenuRadioGroup>
                   </RoleMenu>
                 ) : (

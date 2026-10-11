@@ -13,7 +13,6 @@ from app.api.deps import (
     IsOwner,
     MembersDep,
     NotDemoVisitor,
-    NotOnDemo,
 )
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
@@ -187,10 +186,13 @@ def unshare_board(board_id: str, user_id: str, _: IsOwner, members: MembersDep) 
     return Response(status_code=204)
 
 
-@router.put("/{board_id}/everyone", status_code=204, dependencies=[NotOnDemo])
+@router.put("/{board_id}/everyone", status_code=204)
 def share_with_everyone(
-    board_id: str, body: EveryoneIn, _: IsOwner, members: MembersDep
+    board_id: str, body: EveryoneIn, _: IsOwner, members: MembersDep, request: Request
 ) -> Response:
+    # Taking the role away stays open: a board shared before the demo was turned on can be closed.
+    if body.role is not None:
+        deps.not_on_demo(request)
     members.set_everyone(board_id, body.role)
     return Response(status_code=204)
 

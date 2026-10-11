@@ -249,6 +249,8 @@ def test_a_demo_instance_has_no_everyone_role(app):
     admin = signed_in(app)
     board_id = admin.post("/api/boards", json={"name": "Roadmap"}).json()["id"]
     assert admin.put(f"/api/boards/{board_id}/everyone", json={"role": "viewer"}).status_code == 403
+    # Taking it away is allowed: the board may have been shared before the demo was turned on.
+    assert admin.put(f"/api/boards/{board_id}/everyone", json={"role": None}).status_code == 204
     # An admin still publishes a board, as on any instance.
     assert admin.put(f"/api/boards/{board_id}/public", json={"public": True}).json()["public"]
 

@@ -27,7 +27,9 @@ Changes to the contract of [spec 011](../../011-demo/contracts/api.md). Errors u
 
 ## Added after the slices
 
-`GET /people/directory` with a non-empty `q` on an instance with `TIKO_DEMO=1`: more than 20 a minute from one person answer 429 `too_many_attempts` with `Retry-After`.
+`GET /people/directory` with a non-empty `q` on an instance with `TIKO_DEMO=1`: more than 20 a minute from one person answer 429 `too_many_attempts` with `Retry-After`. A demo visitor's searches find nobody and are not counted.
+
+`PUT /boards/{id}/everyone` with `role: null` is open on such an instance, so a role given before the demo was turned on can be taken away; any other role answers 403 as before.
 
 ## Not changed
 
