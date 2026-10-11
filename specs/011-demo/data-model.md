@@ -48,6 +48,8 @@ For every `users` row with `demo_expires_at` in the past, in one transaction:
 
 A demo visitor cannot share, so a board they own never has another member.
 
+The same cleanup deletes, in the same way, everyone but admins whose `last_sign_in_at` (or `created_at`, when they never signed in) is more than 90 days old. Sign-up sets `last_sign_in_at`. A session lasts 30 days, so anyone who uses their account signs in well inside the 90.
+
 ## Demo task statuses
 
 `demo_statuses` holds only what a person changed: one row per changed task. A task with no row has its built-in status. Used on a demo instance only; on an ordinary instance the demo provider keeps its one shared set in memory, as before.

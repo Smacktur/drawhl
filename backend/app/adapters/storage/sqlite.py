@@ -498,6 +498,30 @@ class SqliteUserRepo:
             )
         return cursor.rowcount == 1
 
+    def sign_up_demo(self, user_id: str, username: str, name: str, password_hash: str) -> bool:
+        try:
+            with self._db.transaction() as conn:
+                # Only a row that still has an expiry: the cleanup or a second sign-up got there
+                # first otherwise.
+                cursor = conn.execute(
+                    "UPDATE users SET username = ?, name = ?, password_hash = ?,"
+                    " demo_expires_at = NULL, last_sign_in_at = ?"
+                    " WHERE id = ? AND demo_expires_at IS NOT NULL",
+                    (username, name, password_hash, now_iso(), user_id),
+                )
+        except sqlite3.IntegrityError as error:
+            raise UsernameTaken("This username is taken.") from error
+        return cursor.rowcount == 1
+
+    def delete_unused_members(self, before: str) -> _Gone:
+        with self._db.transaction() as conn:
+            rows = conn.execute(
+                "SELECT id FROM users WHERE demo_expires_at IS NULL AND role != 'admin'"
+                " AND COALESCE(last_sign_in_at, created_at) <= ?",
+                (before,),
+            ).fetchall()
+            return [row["id"] for row in rows], _delete_people(conn, [row["id"] for row in rows])
+
     def demo_alive(self, now: str) -> int:
         with self._db.transaction() as conn:
             return conn.execute(

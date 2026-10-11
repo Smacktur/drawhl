@@ -126,8 +126,16 @@ test('a demo visitor sees the demo mark, no Share, and is asked before signing o
   )
   vi.stubGlobal('fetch', fetch)
   renderBar()
-  expect(await screen.findByText('Demo · kept for 7 days')).toBeInTheDocument()
+  expect(await screen.findByText('Demo · 7 days')).toBeInTheDocument()
+  const asked = fetch.mock.calls.length
+  fireEvent(window, new Event('focus'))
+  await waitFor(() => expect(fetch.mock.calls.length).toBeGreaterThan(asked))
   expect(screen.queryByRole('button', { name: 'Share' })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Sign up to keep it' }))
+  expect(
+    await screen.findByRole('dialog', { name: 'Sign up to keep your boards' }),
+  ).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
   fireEvent.keyDown(screen.getByRole('button', { name: 'Main menu' }), { key: 'Enter' })
   expect(await screen.findByText('Demo visitor')).toBeInTheDocument()
   expect(screen.queryByText('~0a1b2c3d4e5f')).toBeNull()

@@ -164,6 +164,10 @@ class Accounts:
         self._users.touch_sign_in(person.id)
         return self._sessions.start(person.id, now)
 
+    def came_back(self, user_id: str) -> None:
+        """Counts as a sign-in: the person proved who they are by a link instead of a password."""
+        self._users.touch_sign_in(user_id)
+
     def update(self, person: Person, name: str | None, username: str | None) -> Person:
         changed = person.model_copy(
             update={

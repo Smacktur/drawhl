@@ -388,3 +388,155 @@ def demo_doc():
     from app.domain.boards import BoardDoc
 
     return BoardDoc()
+
+
+LONG = "long-enough-password"
+
+
+def sign_up(client: TestClient, username: str = "ann", password: str = LONG):
+    body = {"name": "Ann Lee", "username": username, "password": password}
+    return client.post("/api/auth/signup", json=body)
+
+
+def test_sign_up_keeps_the_person_their_boards_and_the_session(app):
+    ann = visitor(app)
+    before_id = me(ann)["id"]
+    first = welcome(ann)
+    edit(ann, first)
+    second = ann.post("/api/boards", json={"name": "Plan"}).json()["id"]
+    ann.put("/api/demo/tasks/DEMO-1/status", json={"status": "Done"})
+    before = [ann.get(f"/api/boards/{board}").json() for board in (first, second)]
+
+    response = sign_up(ann)
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": before_id,
+        "username": "ann",
+        "name": "Ann Lee",
+        "role": "member",
+        "demo_expires_at": None,
+    }
+    assert me(ann)["demo_expires_at"] is None
+    after = [ann.get(f"/api/boards/{board}").json() for board in (first, second)]
+    for was, now in zip(before, after, strict=True):
+        assert (now["id"], now["version"], now["doc"]) == (was["id"], was["version"], was["doc"])
+        assert now["owner"]["name"] == "Ann Lee"
+
+    elsewhere = signed_in(app, "ann", LONG)
+    assert {b["id"] for b in elsewhere.get("/api/boards").json()["boards"]} == {first, second}
+    task = elsewhere.post("/api/tasks/resolve", json={"ref": "DEMO-1"}).json()["task"]
+    assert task["status_name"] == "Done"
+
+
+def test_sign_up_errors_leave_a_demo_visitor(app):
+    ann = visitor(app)
+    for username, password, status, code in [
+        ("admin", LONG, 409, "username_taken"),
+        ("ann", "short", 422, "weak_password"),
+        ("a b", LONG, 422, "validation_failed"),
+    ]:
+        response = sign_up(ann, username, password)
+        assert (response.status_code, response.json()["error"]["code"]) == (status, code)
+        assert me(ann)["demo_expires_at"]
+
+
+def test_sign_up_is_for_demo_visitors_only(app, client):
+    assert sign_up(TestClient(app)).status_code == 404
+    assert sign_up(signed_in(app)).status_code == 404
+    ann = visitor(app)
+    assert sign_up(ann).status_code == 200
+    assert sign_up(ann, "ann2").status_code == 404
+    # Without the switch the route is not there, with or without a session.
+    assert sign_up(client).status_code == 404
+    assert sign_up(TestClient(client.app)).status_code == 404
+
+
+def test_after_sign_up_sharing_and_the_public_link_work_and_three_boards_stay(app):
+    ann, bob = visitor(app), visitor(app, "203.0.113.2")
+    sign_up(ann)
+    sign_up(bob, "bob")
+    board_id = welcome(ann)
+    found = ann.get("/api/people/directory?q=bob").json()["people"]
+    assert [p["username"] for p in found] == ["bob"]
+    assert ann.get("/api/people/directory?q=bo").json() == {"people": []}
+    share = ann.put(f"/api/boards/{board_id}/members/{found[0]['id']}", json={"role": "viewer"})
+    assert share.status_code == 200
+    assert board_id in [b["id"] for b in bob.get("/api/boards").json()["boards"]]
+    link = ann.put(f"/api/boards/{board_id}/public", json={"public": True}).json()
+    assert TestClient(app).get(f"/api/public/{link['public_token']}").status_code == 200
+    assert ann.put("/api/me/password", json={"current": LONG, "new": LONG + "!"}).is_success
+    for name in ("Second", "Third"):
+        assert ann.post("/api/boards", json={"name": name}).status_code == 201
+    assert ann.post("/api/boards", json={"name": "Fourth"}).status_code == 409
+
+
+def test_the_cleanup_leaves_a_signed_up_person_until_90_days_without_a_sign_in(app):
+    ann = visitor(app)
+    board_id = welcome(ann)
+    edit(ann, board_id)
+    sign_up(ann)
+    ann_id = me(ann)["id"]
+    token = ann.put(f"/api/boards/{board_id}/public", json={"public": True}).json()["public_token"]
+    admin = signed_in(app)
+    visitors = app.state.visitors
+
+    assert visitors.cleanup(time.time() + 8 * DAY) == 0
+    assert visitors.cleanup(time.time() + 89 * DAY) == 0
+    assert ann.get("/api/boards").status_code == 200
+
+    assert visitors.cleanup(time.time() + 91 * DAY) == 1
+    assert ann.get("/api/boards").status_code == 401
+    assert TestClient(app).get(f"/api/public/{token}").status_code == 404
+    left = rows(app)
+    assert ann_id not in left and board_id not in left
+    # Admins stay whatever their last sign-in.
+    assert admin.get("/api/boards").status_code == 200
+
+
+def test_sign_up_wins_a_race_with_a_touch_and_loses_one_with_the_cleanup(app):
+    ann = visitor(app)
+    ann_id = me(ann)["id"]
+    sign_up(ann)
+    # A touch that was on its way when the sign-up landed does not bring the expiry back.
+    assert demo.touch(app.state.accounts._users, ann_id, time.time()) is None
+    assert me(ann)["demo_expires_at"] is None
+
+    bob = visitor(app, "203.0.113.2")
+    person = app.state.accounts.get(me(bob)["id"])
+    app.state.visitors.cleanup(time.time() + 8 * DAY)
+    with pytest.raises(demo.NotFound):
+        app.state.visitors.sign_up(person, "Bob", "bob", LONG)
+
+
+def test_the_welcome_board_of_a_demo_does_not_send_people_to_connect_a_tracker(app, client):
+    def notes(who: TestClient) -> str:
+        board = who.get(f"/api/boards/{welcome(who)}").json()
+        return " ".join(n["data"].get("text", "") for n in board["doc"]["nodes"])
+
+    assert "This is a demo" in notes(visitor(app))
+    assert "Connect your tracker" not in notes(visitor(app, "203.0.113.2"))
+    assert "Connect your tracker" in notes(client)
+
+
+def test_a_reset_link_counts_as_a_sign_in_for_the_90_days(app):
+    ann = visitor(app)
+    edit(ann, welcome(ann))
+    sign_up(ann)
+    ann_id = me(ann)["id"]
+    admin = signed_in(app)
+    users = app.state.accounts._users
+    db = app.state.boards._db
+    with db.transaction() as conn:
+        conn.execute(
+            "UPDATE users SET last_sign_in_at = ? WHERE id = ?",
+            (demo.iso(time.time() - 89 * DAY), ann_id),
+        )
+    url = admin.post(f"/api/people/{ann_id}/reset").json()["url"]
+    fresh = TestClient(app)
+    accepted = fresh.post(
+        f"/api/invites/{url.split('=', 1)[1]}/accept", json={"password": LONG + "2"}
+    )
+    assert accepted.status_code == 204
+    assert users.delete_unused_members(demo.iso(time.time() - 88 * DAY)) == ([], [])
+    assert app.state.visitors.cleanup(time.time() + 2 * DAY) == 0
+    assert fresh.get("/api/boards").status_code == 200

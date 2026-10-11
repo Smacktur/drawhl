@@ -787,6 +787,8 @@ export default function Canvas({ boardId }: { boardId: string }) {
     setAccessChanged(true)
     void queryClient.invalidateQueries({ queryKey: ['board', boardId] })
     void queryClient.invalidateQueries({ queryKey: ['boards'] })
+    // The account itself may be what changed: a role, or a demo visitor who signed up in another tab.
+    void queryClient.invalidateQueries({ queryKey: ['auth'] })
   }, [queryClient, boardId])
 
   // The board is gone for this person: the app moves on to another one and says why.

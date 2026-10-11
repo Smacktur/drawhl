@@ -258,6 +258,16 @@ class UserRepo(Protocol):
         """Moves a demo visitor's expiry; False for anyone who is not a demo visitor."""
         ...
 
+    def sign_up_demo(self, user_id: str, username: str, name: str, password_hash: str) -> bool:
+        """Turns a demo visitor into a regular member in place; False when they are not a demo
+        visitor any more. Raises UsernameTaken."""
+        ...
+
+    def delete_unused_members(self, before: str) -> tuple[list[str], list[str]]:
+        """Deletes everyone but admins and demo visitors who last signed in before this time,
+        with their boards; returns the ids of the people and of the boards that went."""
+        ...
+
     def demo_alive(self, now: str) -> int: ...
 
     def delete_expired_demo(self, now: str, untouched: str) -> tuple[list[str], list[str]]:

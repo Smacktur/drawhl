@@ -81,6 +81,22 @@ def start_demo(request: Request) -> Response:
     return signed_in(request, visitors.create(_address(request), time.time()))
 
 
+class SignUpRequest(BaseModel):
+    name: str = Field(max_length=200)
+    username: str = Field(max_length=64)
+    password: str = Field(max_length=1024)
+
+
+@router.post("/signup")
+def sign_up(body: SignUpRequest, request: Request) -> dict:
+    """A demo visitor picks a name and a password and stays; for nobody else."""
+    visitors: DemoVisitors | None = request.app.state.visitors
+    person: Person | None = getattr(request.state, "person", None)
+    if visitors is None or person is None or not person.demo_expires_at:
+        raise NotFound("not found")
+    return me(visitors.sign_up(person, body.name, body.username, body.password), True)
+
+
 @router.post("/logout", status_code=204)
 def logout(request: Request, sessions: SessionsDep) -> Response:
     if token := request.cookies.get(COOKIE):

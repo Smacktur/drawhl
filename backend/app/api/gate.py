@@ -17,6 +17,7 @@ OPEN_PATHS = {
     "/api/auth/logout",
     # Answers 404 unless the instance is a demo.
     "/api/auth/demo",
+    "/api/auth/signup",
 }
 INVITES = "/api/invites/"
 # Boards shown by their public link; the routes there only read.
