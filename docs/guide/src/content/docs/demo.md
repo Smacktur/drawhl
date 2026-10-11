@@ -3,7 +3,9 @@ title: Running a demo
 description: Let anyone try your tiko instance in one click, without an account, and stay on it when they sign up.
 ---
 
-A demo is an ordinary tiko instance started with `TIKO_DEMO=1`. Its first screen offers "Try the demo" instead of the sign-in form. One click gives the visitor a board of their own with the demo tasks, and nobody else sees it.
+A demo is an ordinary tiko instance started with `TIKO_DEMO=1`. The demo then lives at `/demo`: a page with one button, "Try the demo". One click gives the visitor a board of their own with the demo tasks, and nobody else sees it. Opening the page makes nobody; the button does, so link previews and crawlers leave no accounts behind.
+
+The first screen of the instance stays the sign-in form, with a "Try the demo" link under it. Send people who come to look straight to `https://your-tiko/demo`.
 
 ```sh
 # .env
@@ -49,6 +51,6 @@ A visitor who changed nothing is deleted an hour after their last request, and i
 
 - Publish the web port only. The API reads the visitor's address from a header that the web container sets; whoever reaches the API port directly can set it themselves. `compose.release.yml` already keeps the API port inside.
 - Put tiko behind a proxy on the same host or private network. The web container believes forwarded addresses only from private networks, so the address limit counts real visitors.
-- Admins are not limited and still sign in from "Already have an account? Sign in". They see people who signed up, not visitors, and their list of other people's boards leaves visitors' boards out.
+- Admins are not limited and sign in on the first screen like everyone with an account. They see people who signed up, not visitors, and their list of other people's boards leaves visitors' boards out.
 - Anyone who signs up can test a tracker token against the address the instance is set to. Only an admin can point that test at another address.
 - A demo collects what visitors put on their boards. Publish a privacy notice and terms with it.

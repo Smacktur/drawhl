@@ -19,8 +19,6 @@ function message(error: Error) {
 }
 
 export function SignIn({ onSignedIn, demo = false }: { onSignedIn: () => void; demo?: boolean }) {
-  // A demo opens on its one button; the form is for those who already signed up.
-  const [formShown, setFormShown] = useState(!demo)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const login = useMutation({ mutationFn: signIn, onSuccess: onSignedIn })
@@ -28,8 +26,14 @@ export function SignIn({ onSignedIn, demo = false }: { onSignedIn: () => void; d
     event.preventDefault()
     if (username && password) login.mutate({ username: username.trim(), password })
   }
-  if (!formShown) {
-    return <DemoStart onStarted={onSignedIn} onSignIn={() => setFormShown(true)} />
+  // The demo button has an address of its own; everything else is the sign-in form.
+  if (demo && /^\/demo\/?$/.test(window.location.pathname)) {
+    const started = () => {
+      // The board opens at the root, so a reload does not land on the button again.
+      window.history.replaceState(null, '', '/')
+      onSignedIn()
+    }
+    return <DemoStart onStarted={started} />
   }
   return (
     <form
@@ -69,6 +73,14 @@ export function SignIn({ onSignedIn, demo = false }: { onSignedIn: () => void; d
         Sign in
       </Button>
       {login.isError && <p className="text-destructive text-sm">{message(login.error)}</p>}
+      {demo && (
+        <p className="text-muted-foreground mt-2 text-center text-[13px]">
+          Just looking?{' '}
+          <Button asChild variant="link" className="h-auto p-0 text-[13px]">
+            <a href="/demo">Try the demo</a>
+          </Button>
+        </p>
+      )}
     </form>
   )
 }

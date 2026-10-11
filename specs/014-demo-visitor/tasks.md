@@ -26,5 +26,5 @@ description: "Task list for Demo visitor"
 
 ## Phase 2: Slice `feat/demo-entry` — the demo at its own address (US2)
 
-- [ ] T008 [US2] The first screen of an open instance: the sign-in form with a link to `/demo`; `/demo` with the button; nginx serves the page. Tests
-- [ ] T009 [US2] Guide, `DESIGN.md`, `CHANGELOG.md`; check on the compose stack in both themes
+- [x] T008 [US2] The first screen of an open instance: the sign-in form with a link to `/demo`; `/demo` with the button; nginx serves the page. Tests
+- [x] T009 [US2] Guide, `DESIGN.md`, `CHANGELOG.md`; checked on the compose stack in the light theme (the root, `/demo`, the button)
