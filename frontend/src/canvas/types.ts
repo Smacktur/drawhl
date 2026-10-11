@@ -1,6 +1,7 @@
 import type { Edge, Node } from '@xyflow/react'
 
-export type JiraCardData = { key: string; collapsed?: boolean }
+// `source` is the tracker of `key`; cards saved before trackers could be mixed have none.
+export type JiraCardData = { key: string; source?: string; collapsed?: boolean }
 export type JiraCardNode = Node<JiraCardData, 'jira_card'>
 
 export type FrameData = { title: string }
@@ -28,7 +29,7 @@ export type TimerData = {
   snoozedUntil?: string
   repeat?: TimerRepeat
   /** A status timer: goes off when the task leaves `status`; `changedTo` is set when it does. */
-  watch?: { key: string; status: string; changedTo?: string }
+  watch?: { key: string; source?: string; status: string; changedTo?: string }
   done?: boolean
 }
 // A reminder; its parent, when it is not a frame, is the element it is attached to.

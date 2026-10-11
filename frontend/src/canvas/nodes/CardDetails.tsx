@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { relativeTime } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
+import { sourceName } from '@/sources/registry'
 
 type Props = {
   task: Task
@@ -56,7 +57,7 @@ export function CardDetails({ task, collapsed, onToggleCollapsed }: Props) {
         <Button variant="outline" size="sm" asChild>
           <a href={task.url} target="_blank" rel="noreferrer">
             <ExternalLink strokeWidth={1.75} />
-            Open in Jira
+            Open in {sourceName(task.source)}
           </a>
         </Button>
       </div>

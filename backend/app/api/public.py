@@ -7,11 +7,12 @@ from pydantic import BaseModel
 from app.api import deps
 from app.api.boards import RefreshOut
 from app.api.live import serve
-from app.domain.boards import task_keys
+from app.domain.boards import task_refs
 from app.domain.errors import NotFound, TooManyAttempts
 from app.domain.live import ACCESS_CHANGED, ROOM_FULL
 from app.domain.ports import BoardRepo
-from app.domain.public import PublicBoard, PublicLinks, private_tasks, public_board
+from app.domain.public import PublicBoard, PublicLinks, guest_tasks, public_board
+from app.domain.refresh import SourceStatus
 from app.domain.settings import SettingsService
 from app.domain.tasks import now_iso
 
@@ -40,11 +41,14 @@ def get_public_board(
     token: str, request: Request, links: Links, boards: Boards, settings: Settings
 ) -> PublicBoard:
     board_id, *_ = links.find(token)
-    # Only the demo tasks belong to no person; anything else was fetched with someone's token.
-    owner = _statuses_of(request, board_id, boards)
-    shared = request.app.state.snapshots.scoped(owner) if settings.provider() == "demo" else None
+    demo = request.app.state.demo.scoped(_statuses_of(request, board_id, boards))
     return public_board(
-        board_id, boards, shared, settings.base_url(), settings.refresh_interval_s()
+        board_id,
+        boards,
+        demo,
+        settings.provider(),
+        settings.base_url(),
+        settings.refresh_interval_s(),
     )
 
 
@@ -59,23 +63,18 @@ def refresh_public_board(
     token: str, request: Request, links: Links, boards: Boards, settings: Settings
 ) -> RefreshOut:
     board_id, *_ = links.find(token)
-    state = request.app.state
-    if settings.provider() == "demo":
-        owner = _statuses_of(request, board_id, boards)
-        tasks, sources = state.refresher.refresh(
-            board_id,
-            settings.refresh_interval_s(),
-            boards,
-            state.snapshots.scoped(owner),
-            state.demo.scoped(owner),
-            owner,
-        )
-        return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
     record = boards.get(board_id)
     if record is None:
         raise NotFound("board not found")
-    tasks = {task.key: task for task in private_tasks(task_keys(record.doc), settings.base_url())}
-    return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=[])
+    demo = request.app.state.demo.scoped(_statuses_of(request, board_id, boards))
+    refs = task_refs(record.doc, settings.provider())
+    tasks = guest_tasks(refs, demo, settings.base_url())
+    # Nothing is polled with anyone's token, so only the demo tasks have a sync to report.
+    synced = any(task.source == demo.source_id for task in tasks.values())
+    sources = [
+        SourceStatus(id=demo.source_id, name=demo.source_name, state="ok", synced_at=now_iso())
+    ]
+    return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources if synced else [])
 
 
 @router.websocket("/{token}/live")

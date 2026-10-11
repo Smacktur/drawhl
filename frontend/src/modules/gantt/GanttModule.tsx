@@ -2,7 +2,7 @@ import { useReactFlow, type XYPosition } from '@xyflow/react'
 import { CalendarRange, Diamond, Plus } from 'lucide-react'
 import { useContext, useRef, useState, type FormEvent, type PointerEvent } from 'react'
 import type { Task } from '@/api/tasks'
-import { TasksContext } from '@/canvas/tasks-context'
+import { taskRef, TasksContext } from '@/canvas/tasks-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,6 +31,7 @@ import {
   pxPerDay,
   range,
   ROW_HEIGHT,
+  rowTask,
   updateRow,
   withSpan,
   type Row,
@@ -96,6 +97,10 @@ function HeaderRow({ cells, pxPerDay, top }: { cells: Cell[]; pxPerDay: number; 
 
 export function GanttModule({ content, width, selected, onChange, host }: Props) {
   const tasks = useContext(TasksContext)
+  const taskOf = (row: Row) => {
+    const task = rowTask(row)
+    return task && tasks[taskRef(task)]
+  }
   const [fresh, setFresh] = useState<string | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
   const [wire, setWire] = useState<{ from: Point; to: Point } | null>(null)
@@ -139,12 +144,13 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
     onChange(
       addRows(
         content,
-        list.map((task) => makeRow(content, { key: task.key })),
+        list.map((task) => makeRow(content, { key: task.key, source: task.source })),
       ),
     )
   }
   const eject = (row: Row, screen: XYPosition) => {
-    if (row.key) host.ejectCard(row.key, screen)
+    const task = rowTask(row)
+    if (task) host.ejectCard(task, screen)
     else host.ejectNote(row.title, screen)
     onChange(liftRemove(content, row.id))
   }
@@ -187,8 +193,8 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
             row={row}
             depth={depth}
             hasChildren={hasChildren}
-            task={row.key ? tasks[row.key] : undefined}
-            url={row.key ? tasks[row.key]?.url : undefined}
+            task={taskOf(row)}
+            url={taskOf(row)?.url}
             fresh={row.id === fresh}
             onTitle={(title) => onChange(updateRow(content, row.id, (r) => ({ ...r, title })))}
             onRemove={() => onChange(liftRemove(content, row.id))}
@@ -247,8 +253,8 @@ export function GanttModule({ content, width, selected, onChange, host }: Props)
               summary={hasChildren}
               range={span}
               pxPerDay={scale}
-              label={row.key ? `${row.key} ${tasks[row.key]?.summary ?? ''}` : row.title}
-              task={row.key ? tasks[row.key] : undefined}
+              label={row.key ? `${row.key} ${taskOf(row)?.summary ?? ''}` : row.title}
+              task={taskOf(row)}
               onSpan={(next) =>
                 hasChildren
                   ? onParentSpan(row, next)

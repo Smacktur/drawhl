@@ -16,7 +16,7 @@ from app.domain.errors import NotFound, ValidationFailed
 from app.domain.members import BoardRole, ShareRole, effective_role, granted_role
 from app.domain.modules import KIND_PATTERN, module_keys, validate_module
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo
-from app.domain.tasks import KEY_RE, Task
+from app.domain.tasks import KEY_RE, SOURCE_PATTERN, Task, task_ref
 from app.domain.welcome import WELCOME_NAME, welcome_doc
 
 MAX_NODES = 2000
@@ -36,6 +36,8 @@ class Position(_Strict):
 
 class JiraCardData(_Strict):
     key: str
+    # The tracker of `key`; absent on cards saved before trackers could be mixed.
+    source: str | None = Field(default=None, pattern=SOURCE_PATTERN)
     collapsed: bool = False
 
     @field_validator("key")
@@ -116,6 +118,7 @@ class AnchorNode(_NodeBase):
 
 class TimerWatch(_Strict):
     key: str
+    source: str | None = Field(default=None, pattern=SOURCE_PATTERN)
     status: str = Field(max_length=200)
     changedTo: str | None = Field(default=None, max_length=200)  # noqa: N815
 
@@ -209,7 +212,10 @@ class BoardView(BoardSummary):
     version: int
     # Plain dict so optional xyflow fields stay absent instead of coming back as null.
     doc: dict[str, Any]
+    # By ref, `source:key`.
     tasks: dict[str, Task]
+    # The tracker of a card that names none.
+    default_source: str
 
 
 def check_doc(doc: BoardDoc) -> None:
@@ -236,15 +242,16 @@ def check_doc(doc: BoardDoc) -> None:
             raise ValidationFailed(f"edge {edge.id} points at a missing node")
 
 
-def task_keys(doc: BoardDoc) -> list[str]:
-    """Keys of every live task on the board: cards and tasks inside modules."""
-    keys: set[str] = set()
+def task_refs(doc: BoardDoc, default_source: str) -> list[str]:
+    """Refs of every live task on the board: cards and tasks inside modules. A task that
+    names no source belongs to `default_source`, the tracker the instance is set to."""
+    tasks: set[tuple[str | None, str]] = set()
     for node in doc.nodes:
         if isinstance(node, JiraCardNode):
-            keys.add(node.data.key)
+            tasks.add((node.data.source, node.data.key))
         elif isinstance(node, ModuleNode):
-            keys |= module_keys(node.data.kind, node.data.content)
-    return sorted(keys)
+            tasks |= module_keys(node.data.kind, node.data.content)
+    return sorted({task_ref(source or default_source, key) for source, key in tasks})
 
 
 def _summary(row: BoardRow, role: BoardRole) -> BoardSummary:
@@ -296,12 +303,17 @@ def create_board(person: Person, name: str, boards: BoardRepo) -> BoardSummary:
 
 
 def get_board(
-    person: Person, role: BoardRole, board_id: str, boards: BoardRepo, snapshots: SnapshotRepo
+    person: Person,
+    role: BoardRole,
+    board_id: str,
+    boards: BoardRepo,
+    snapshots: SnapshotRepo,
+    default_source: str,
 ) -> BoardView:
     record = boards.get(board_id)
     if record is None:
         raise NotFound("board not found")
-    tasks = snapshots.get_many(task_keys(record.doc))
+    tasks = snapshots.get_many(task_refs(record.doc, default_source))
     info = summary(person, board_id, boards)
     return BoardView(
         **info.model_dump(exclude={"my_role"}),
@@ -309,6 +321,7 @@ def get_board(
         version=record.version,
         doc=record.doc.model_dump(exclude_none=True),
         tasks=tasks,
+        default_source=default_source,
     )
 
 

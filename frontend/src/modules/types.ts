@@ -3,13 +3,14 @@ import type { LucideIcon } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { z } from 'zod'
 import type { Task } from '@/api/tasks'
+import type { TaskLink } from '@/canvas/tasks-context'
 
 /** What the board does for a module: things that reach outside the module's own content. */
 export type ModuleHost = {
   /** Makes freshly resolved tasks show live data before the next refresh. */
   addTasks: (tasks: Task[]) => void
   /** Puts a card for the task on the board at a screen point. */
-  ejectCard: (key: string, screen: XYPosition) => void
+  ejectCard: (task: TaskLink, screen: XYPosition) => void
   /** Puts a sticky note with the text on the board at a screen point. */
   ejectNote: (text: string, screen: XYPosition) => void
 }
@@ -36,8 +37,8 @@ export type ModuleDef<C> = {
   minHeight?: (content: C) => number
   defaults: () => C
   schema: z.ZodType<C>
-  /** Live task keys inside the content, refreshed with the board's cards. */
-  keys: (content: C) => string[]
+  /** Live tasks inside the content, refreshed with the board's cards. */
+  keys: (content: C) => TaskLink[]
   View: ComponentType<ModuleViewProps<C>>
   /** Controls shown above the module while it is selected. */
   Controls?: ComponentType<ModuleViewProps<C>>
@@ -45,13 +46,13 @@ export type ModuleDef<C> = {
    * Takes in a card dropped at a point of the body (module coordinates, below the header).
    * Null leaves the card on the board.
    */
-  acceptCard?: (content: C, key: string, at: XYPosition, width: number) => C | null
+  acceptCard?: (content: C, task: TaskLink, at: XYPosition, width: number) => C | null
   /** Texts inside the content that board search finds; a jump goes to the module. */
   searchable?: (content: C) => ModuleText[]
 }
 
 /** A text inside a module; `key` is a live task whose summary is searched too. */
-export type ModuleText = { kind: 'row' | 'milestone'; key?: string; text: string }
+export type ModuleText = { kind: 'row' | 'milestone'; key?: string; source?: string; text: string }
 
 /** Keeps each definition typed against its own content while the list stays uniform. */
 export function defineModule<C>(def: ModuleDef<C>): ModuleDef<unknown> {

@@ -3,7 +3,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.domain.tasks import KEY_RE
+from app.domain.tasks import KEY_RE, SOURCE_PATTERN
 
 MAX_RANGE_DAYS = 1096
 MAX_DEPTH = 5
@@ -19,6 +19,8 @@ class _Strict(BaseModel):
 class Row(_Strict):
     id: ItemId
     key: str | None = None
+    # The tracker of `key`; absent on rows saved before trackers could be mixed.
+    source: str | None = Field(default=None, pattern=SOURCE_PATTERN)
     title: Title = ""
     start: date
     end: date
@@ -108,5 +110,5 @@ def _unique(label: str, ids: list[str]) -> None:
         seen.add(item_id)
 
 
-def task_keys(content: GanttContent) -> set[str]:
-    return {row.key for row in content.rows if row.key}
+def task_keys(content: GanttContent) -> set[tuple[str | None, str]]:
+    return {(row.source, row.key) for row in content.rows if row.key}

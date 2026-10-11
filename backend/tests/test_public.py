@@ -42,9 +42,17 @@ def test_guest_reads_a_public_board(client):
 
     token = publish(client, board_id)
     body = anyone.get(f"/api/public/{token}").json()
-    assert set(body) == {"name", "updated_at", "version", "doc", "tasks", "refresh_interval_s"}
+    assert set(body) == {
+        "name",
+        "updated_at",
+        "version",
+        "doc",
+        "tasks",
+        "default_source",
+        "refresh_interval_s",
+    }
     assert body["name"] == "Roadmap" and body["doc"]["nodes"][0]["data"]["key"] == "DEMO-1"
-    assert body["tasks"]["DEMO-1"]["summary"] == summary
+    assert body["tasks"]["demo:DEMO-1"]["summary"] == summary
     assert anyone.get(f"/api/public/{token}/version").json() == {
         "version": body["version"],
         "updated_at": body["updated_at"],
@@ -58,7 +66,7 @@ def test_guest_sees_demo_status_changes(client):
     token = publish(client, board_with(client, "DEMO-1"))
     client.put("/api/demo/tasks/DEMO-1/status", json={"status": "Done"})
     refreshed = guest(client).post(f"/api/public/{token}/refresh").json()
-    assert refreshed["tasks"]["DEMO-1"]["status_name"] == "Done"
+    assert refreshed["tasks"]["demo:DEMO-1"]["status_name"] == "Done"
 
 
 def test_link_turned_off_is_gone_for_good(client):
@@ -169,7 +177,9 @@ def test_guest_gets_only_keys_of_tracker_tasks(jira_client):
     jira_client.put("/api/settings", json={"provider": "jira", "jira": JIRA})
     task = jira_client.post("/api/tasks/resolve", json={"ref": "DEV-1"}).json()["task"]
     board_id = board_with(jira_client, "DEV-1")
-    assert jira_client.post(f"/api/boards/{board_id}/refresh").json()["tasks"]["DEV-1"]["summary"]
+    assert jira_client.post(f"/api/boards/{board_id}/refresh").json()["tasks"]["jira:DEV-1"][
+        "summary"
+    ]
     token = publish(jira_client, board_id)
     anyone = guest(jira_client)
     private = {
@@ -188,7 +198,7 @@ def test_guest_gets_only_keys_of_tracker_tasks(jira_client):
         anyone.get(f"/api/public/{token}"),
         anyone.post(f"/api/public/{token}/refresh"),
     ):
-        shown = response.json()["tasks"]["DEV-1"]
+        shown = response.json()["tasks"]["jira:DEV-1"]
         assert {**shown, "fetched_at": ""} == {**private, "fetched_at": ""}
         assert task["summary"] not in response.text and TOKEN not in response.text
     assert anyone.post(f"/api/public/{token}/refresh").json()["sources"] == []
@@ -265,3 +275,25 @@ def test_a_public_link_is_not_written_to_the_server_log(client, caplog):
         )
     assert "s3cr3t" not in caplog.text
     assert "/api/public/***/live" in caplog.text
+
+
+def test_guest_of_a_mixed_board_sees_demo_tasks_only(jira_client):
+    """A demo task belongs to no person and shows in full; a Jira task stays a key."""
+    jira_client.put("/api/settings", json={"provider": "jira", "jira": JIRA})
+    secret = jira_client.post("/api/tasks/resolve", json={"ref": "DEV-1"}).json()["task"]
+    board_id = jira_client.post("/api/boards", json={"name": "Roadmap"}).json()["id"]
+    demo_card = card("DEMO-1") | {"id": "demo", "data": {"key": "DEMO-1", "source": "demo"}}
+    doc = {"nodes": [card("DEV-1"), demo_card], "edges": []}
+    assert jira_client.put(f"/api/boards/{board_id}", json={"version": 1, "doc": doc}).is_success
+    token = publish(jira_client, board_id)
+    anyone = guest(jira_client)
+    for response in (
+        anyone.get(f"/api/public/{token}"),
+        anyone.post(f"/api/public/{token}/refresh"),
+    ):
+        tasks = response.json()["tasks"]
+        assert tasks["jira:DEV-1"]["state"] == "private"
+        assert tasks["demo:DEMO-1"]["state"] == "ok" and tasks["demo:DEMO-1"]["summary"]
+        assert secret["summary"] not in response.text and TOKEN not in response.text
+    sources = anyone.post(f"/api/public/{token}/refresh").json()["sources"]
+    assert [source["id"] for source in sources] == ["demo"]

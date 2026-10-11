@@ -242,7 +242,7 @@ class SqliteBoardRepo:
 
 
 class SqliteSnapshotRepo:
-    """Task snapshots of one owner: a person for their own token, "" for the demo tasks."""
+    """Task snapshots of one person."""
 
     def __init__(self, db: Database, owner: str = "") -> None:
         self._db = db
@@ -251,25 +251,29 @@ class SqliteSnapshotRepo:
     def scoped(self, owner: str) -> "SqliteSnapshotRepo":
         return SqliteSnapshotRepo(self._db, owner)
 
-    def get_many(self, keys: list[str]) -> dict[str, Task]:
-        if not keys:
+    def get_many(self, refs: list[str]) -> dict[str, Task]:
+        if not refs:
             return {}
-        marks = ",".join("?" * len(keys))
+        marks = ",".join("?" * len(refs))
         with self._db.transaction() as conn:
             rows = conn.execute(
-                f"SELECT data FROM task_snapshots_v2 WHERE user_id = ? AND key IN ({marks})",
-                [self._owner, *keys],
+                "SELECT data FROM task_snapshots_v3"
+                f" WHERE user_id = ? AND source || ':' || key IN ({marks})",
+                [self._owner, *refs],
             ).fetchall()
         tasks = [Task.model_validate_json(row["data"]) for row in rows]
-        return {task.key: task for task in tasks}
+        return {task.ref: task for task in tasks}
 
     def put_many(self, tasks: list[Task]) -> None:
         with self._db.transaction() as conn:
             conn.executemany(
-                "INSERT INTO task_snapshots_v2 (user_id, key, state, data, fetched_at)"
-                " VALUES (?, ?, ?, ?, ?) ON CONFLICT (user_id, key) DO UPDATE SET"
+                "INSERT INTO task_snapshots_v3 (user_id, source, key, state, data, fetched_at)"
+                " VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (user_id, source, key) DO UPDATE SET"
                 " state = excluded.state, data = excluded.data, fetched_at = excluded.fetched_at",
-                [(self._owner, t.key, t.state, t.model_dump_json(), t.fetched_at) for t in tasks],
+                [
+                    (self._owner, t.source, t.key, t.state, t.model_dump_json(), t.fetched_at)
+                    for t in tasks
+                ],
             )
 
 
@@ -316,14 +320,7 @@ class SqliteCredentialRepo:
                 "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'task_snapshots'"
             ).fetchone()
             if legacy:
-                # Demo tasks are the same for everyone; anything else was fetched with the token.
-                conn.execute(
-                    "INSERT OR IGNORE INTO task_snapshots_v2"
-                    " (user_id, key, state, data, fetched_at)"
-                    " SELECT CASE WHEN key LIKE 'DEMO-%' THEN '' ELSE ? END,"
-                    " key, state, data, fetched_at FROM task_snapshots",
-                    (user_id,),
-                )
+                # Its rows name no tracker; the cache fills again on the first refresh.
                 conn.execute("DROP TABLE task_snapshots")
 
 
@@ -389,7 +386,7 @@ def _delete_people(conn: sqlite3.Connection, user_ids: list[str]) -> list[str]:
             "board_members",
             "sessions",
             "user_credentials",
-            "task_snapshots_v2",
+            "task_snapshots_v3",
             "demo_statuses",
             "invites",
         ):

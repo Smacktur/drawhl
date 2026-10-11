@@ -9,6 +9,7 @@ const publicBoardSchema = z.object({
   version: z.number(),
   doc: docSchema,
   tasks: z.record(z.string(), taskSchema),
+  default_source: z.string(),
   refresh_interval_s: z.number(),
 })
 

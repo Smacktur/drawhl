@@ -19,6 +19,8 @@ tiko reads tasks from your tracker and never changes them. Each person connects 
 
 The demo tasks need no keys or accounts, so a fresh install has something to show.
 
+Demo tasks keep working after you connect a tracker: the welcome board stays live next to your own cards. Every task belongs to its tracker, so the same key in two trackers is two different tasks, and the sync indicator lists each tracker on its own row.
+
 ## Add a tracker
 
 tiko talks to trackers through one provider interface, so a new tracker does not touch the board. That makes a provider a good first contribution: see [Architecture](../architecture/) for the interface and [CONTRIBUTING.md](https://github.com/tiko-run/tiko/blob/main/CONTRIBUTING.md) for the setup.

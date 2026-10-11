@@ -27,37 +27,44 @@ def is_demo(request: Request) -> bool:
     return request.app.state.visitors is not None
 
 
-def _owner(request: Request) -> str:
-    """Whose task cache a request reads: the person's for Jira and on a demo instance, the
-    shared one for demo tasks anywhere else."""
-    if request.app.state.settings.provider() != "jira" and not is_demo(request):
-        return ""
-    return current_person(request).id
+def _statuses_owner(request: Request) -> str:
+    """Whose demo task statuses a request reads: the person's own on a demo instance, the
+    ones everyone shares anywhere else."""
+    return current_person(request).id if is_demo(request) else ""
 
 
 def snapshots(request: Request) -> SnapshotRepo:
-    return request.app.state.snapshots.scoped(_owner(request))
+    """The person's own task cache: what one token can see never reaches another person."""
+    return request.app.state.snapshots.scoped(current_person(request).id)
 
 
 def settings(request: Request) -> SettingsService:
     return request.app.state.settings
 
 
-def provider(request: Request) -> TaskProvider:
-    """The demo tasks, or Jira with the signed-in person's own token."""
+def providers(request: Request) -> dict[str, TaskProvider]:
+    """Every tracker this request can read, by source id: the demo tasks always, and Jira
+    with the signed-in person's own token when the instance is set to it."""
     state = request.app.state
-    if state.settings.provider() != "jira":
-        return state.demo.scoped(_owner(request))
+    demo_tasks: TaskProvider = state.demo.scoped(_statuses_owner(request))
+    found = {demo_tasks.source_id: demo_tasks}
     settings: SettingsService = state.settings
-    try:
-        creds = settings.jira_credentials(current_person(request).id)
-    except JiraNotConfigured as exc:
-        return NoTokenProvider(settings.base_url(), exc)
-    return state.jira(creds)
+    if settings.provider() == "jira":
+        try:
+            jira = state.jira(settings.jira_credentials(current_person(request).id))
+        except JiraNotConfigured as exc:
+            jira = NoTokenProvider(settings.base_url(), exc)
+        found[jira.source_id] = jira
+    return found
+
+
+def provider(request: Request) -> TaskProvider:
+    """The tracker the instance is set to; a typed key or a query goes to it."""
+    return providers(request)[request.app.state.settings.provider()]
 
 
 def owner(request: Request) -> str:
-    return _owner(request)
+    return current_person(request).id
 
 
 def refresher(request: Request) -> RefreshService:
@@ -65,7 +72,7 @@ def refresher(request: Request) -> RefreshService:
 
 
 def demo(request: Request) -> DemoTasks:
-    return request.app.state.demo.scoped(_owner(request))
+    return request.app.state.demo.scoped(_statuses_owner(request))
 
 
 def accounts(request: Request) -> Accounts:

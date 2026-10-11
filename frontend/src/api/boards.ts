@@ -55,7 +55,10 @@ export type DocNode = z.infer<typeof docNodeSchema>
 const boardSchema = summarySchema.extend({
   version: z.number(),
   doc: docSchema,
+  // By ref, `source:key`.
   tasks: z.record(z.string(), taskSchema),
+  // The tracker of a card that names none.
+  default_source: z.string(),
 })
 
 export type Board = z.infer<typeof boardSchema>

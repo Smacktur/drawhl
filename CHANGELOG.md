@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. See "Running a demo" in the guide.
+- Demo tasks stay live on an instance connected to Jira: the welcome board keeps its titles and statuses next to your Jira cards, and the sync list shows each tracker on its own row. A task now belongs to its tracker, so the same key in two trackers is two tasks.
 
 ### Fixed
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Task } from '@/api/tasks'
+import { taskRef } from '@/canvas/tasks-context'
 import type { AppNode, TimerData, TimerNode } from '@/canvas/types'
 import { chime, primeAudio } from '@/focus/alerts'
 import { alertKey, markNotified, notifyTimer, wasNotified } from './alerts'
@@ -88,7 +89,7 @@ export function useTimers(nodes: AppNode[], { tasks, onOpen, onChange }: Options
   useEffect(() => {
     for (const node of nodes) {
       if (node.type !== 'timer' || !node.data.watch) continue
-      const task = tasks[node.data.watch.key]
+      const task = tasks[taskRef(node.data.watch)]
       if (checkStatus(node.data, task, Date.now())) {
         onChange(node.id, (data) => checkStatus(data, task, Date.now()) ?? data)
       }

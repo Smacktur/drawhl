@@ -14,7 +14,8 @@ KIND_PATTERN = r"^[a-z][a-z0-9_]{0,39}$"
 @dataclass(frozen=True)
 class ModuleKind:
     content: type[BaseModel]
-    keys: Callable[[Any], set[str]]
+    # Each task as its source, None when the row does not name one, and its key.
+    keys: Callable[[Any], set[tuple[str | None, str]]]
 
 
 MODULES: dict[str, ModuleKind] = {
@@ -39,7 +40,7 @@ def validate_module(kind: str, content: dict[str, Any]) -> dict[str, Any]:
     return model.model_dump(mode="json", exclude_none=True)
 
 
-def module_keys(kind: str, content: dict[str, Any]) -> set[str]:
+def module_keys(kind: str, content: dict[str, Any]) -> set[tuple[str | None, str]]:
     module = MODULES.get(kind)
     if module is None:
         return set()

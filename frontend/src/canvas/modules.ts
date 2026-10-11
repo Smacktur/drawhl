@@ -42,7 +42,7 @@ export function absorbCards(nodes: AppNode[], droppedIds: string[]) {
     const parsed = def?.schema.safeParse(contents.get(target.id) ?? target.data.content)
     if (!def?.acceptCard || !parsed?.success) continue
     const at = { x: center.x - target.position.x, y: center.y - target.position.y - MODULE_HEADER }
-    const next = def.acceptCard(parsed.data, card.data.key, at, size(target).width)
+    const next = def.acceptCard(parsed.data, card.data, at, size(target).width)
     if (next === null) continue
     contents.set(target.id, next)
     absorbed.add(card.id)

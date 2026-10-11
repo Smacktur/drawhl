@@ -95,7 +95,7 @@ def welcome_doc(now: datetime) -> dict[str, Any]:
                 "type": "jira_card",
                 "parentId": sprint,
                 "position": {"x": _PAD + (i % 2) * _CELL_W, "y": _TITLE + (i // 2) * _CELL_H},
-                "data": {"key": key, "collapsed": key == _CARDS[-1]},
+                "data": {"key": key, "source": "demo", "collapsed": key == _CARDS[-1]},
             }
         )
         if key == "DEMO-2":
@@ -133,10 +133,17 @@ def welcome_doc(now: datetime) -> dict[str, Any]:
                     "end": day(42),
                     "scale": "week",
                     "rows": [
-                        {"id": epic, "key": "DEMO-4", "start": day(-3), "end": day(16)},
+                        {
+                            "id": epic,
+                            "key": "DEMO-4",
+                            "source": "demo",
+                            "start": day(-3),
+                            "end": day(16),
+                        },
                         {
                             "id": crash,
                             "key": "DEMO-7",
+                            "source": "demo",
                             "start": day(-3),
                             "end": day(4),
                             "parent": epic,
@@ -144,6 +151,7 @@ def welcome_doc(now: datetime) -> dict[str, Any]:
                         {
                             "id": story,
                             "key": "DEMO-1",
+                            "source": "demo",
                             "start": day(5),
                             "end": day(12),
                             "parent": epic,

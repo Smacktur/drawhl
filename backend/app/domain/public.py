@@ -7,10 +7,10 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.domain.boards import task_keys
+from app.domain.boards import task_refs
 from app.domain.errors import Forbidden, NotFound, TooManyAttempts
-from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo
-from app.domain.tasks import Task, now_iso
+from app.domain.ports import BoardRepo, LiveBoards, TaskProvider
+from app.domain.tasks import Task, now_iso, split_ref
 
 # Guests of one link share this budget, so one link going viral cannot starve the instance.
 # The API sits behind proxies and cannot tell guests apart by address.
@@ -27,6 +27,7 @@ class PublicBoard(BaseModel):
     version: int
     doc: dict[str, Any]
     tasks: dict[str, Task]
+    default_source: str
     refresh_interval_s: int
 
 
@@ -109,36 +110,47 @@ class PublicLinks:
         return found is not None and found[0] == board_id
 
 
-def private_tasks(keys: list[str], base_url: str | None) -> list[Task]:
-    """What a guest gets for tasks that are read with a person's token: the key and its link."""
+def guest_tasks(refs: list[str], demo: TaskProvider, base_url: str | None) -> dict[str, Task]:
+    """What a guest gets, by ref. Only the demo tasks belong to no person and show in full;
+    a task read with a person's token is its key and its link, nothing else."""
     url = f"{base_url}/browse/" if base_url else ""
-    return [
-        Task(key=key, state="private", url=f"{url}{key}" if url else "", fetched_at=now_iso())
-        for key in keys
-    ]
+    demo_keys: list[str] = []
+    tasks: list[Task] = []
+    for ref in refs:
+        source, key = split_ref(ref)
+        if source == demo.source_id:
+            demo_keys.append(key)
+        else:
+            tasks.append(
+                Task(
+                    source=source,
+                    key=key,
+                    state="private",
+                    url=f"{url}{key}" if url else "",
+                    fetched_at=now_iso(),
+                )
+            )
+    tasks += demo.poll(demo_keys) if demo_keys else []
+    return {task.ref: task for task in tasks}
 
 
 def public_board(
     board_id: str,
     boards: BoardRepo,
-    shared: SnapshotRepo | None,
+    demo: TaskProvider,
+    default_source: str,
     base_url: str | None,
     refresh_interval_s: int,
 ) -> PublicBoard:
-    """`shared` is the task cache that belongs to no person; None when tasks need a token."""
     record = boards.get(board_id)
     if record is None:
         raise NotFound("board not found")
-    keys = task_keys(record.doc)
-    if shared is None:
-        tasks = {task.key: task for task in private_tasks(keys, base_url)}
-    else:
-        tasks = shared.get_many(keys)
     return PublicBoard(
         name=record.name,
         updated_at=record.updated_at,
         version=record.version,
         doc=record.doc.model_dump(exclude_none=True),
-        tasks=tasks,
+        tasks=guest_tasks(task_refs(record.doc, default_source), demo, base_url),
+        default_source=default_source,
         refresh_interval_s=refresh_interval_s,
     )

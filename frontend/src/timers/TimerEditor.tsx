@@ -3,6 +3,7 @@ import { useId, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import type { TaskLink } from '@/canvas/tasks-context'
 import type { TimerData } from '@/canvas/types'
 import { notifyPermission } from '@/focus/alerts'
 import { cn } from '@/lib/utils'
@@ -27,7 +28,7 @@ type Props = {
   /** The element the timer is attached to, as the timer names it. */
   holder?: string
   /** The Jira card the timer is attached to and its current status, when it is loaded. */
-  task?: { key: string; status: string }
+  task?: TaskLink & { status: string }
   onChange: (data: TimerData) => void
   onDelete: () => void
 }
@@ -112,7 +113,7 @@ export function TimerEditor({ data, holder, task, onChange, onDelete }: Props) {
             : `Goes off ${formatDue(at)} · in ${formatLeftLong(at - now)}${series}.`
 
   const setMode = (mode: 'time' | 'status') => {
-    if (mode === 'status' && task) onChange(watchStatus(data, task.key, task.status))
+    if (mode === 'status' && task) onChange(watchStatus(data, task, task.status))
     if (mode === 'time' && watch) onChange(setDue(data, now + DEFAULT_MS))
   }
 

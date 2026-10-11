@@ -42,6 +42,7 @@ test('lastSynced picks the newest tracker sync', () => {
 })
 
 const task = (key: string, status: string, fetched_at: string): Task => ({
+  source: 'demo',
   key,
   state: 'ok',
   summary: '',

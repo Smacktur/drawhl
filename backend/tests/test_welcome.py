@@ -11,7 +11,8 @@ from app.adapters.storage.sqlite import (
 )
 from app.adapters.tasks.demo import DemoTaskProvider
 from app.domain.accounts import Person
-from app.domain.boards import BoardDoc, check_doc, list_boards, task_keys
+from app.domain.boards import BoardDoc, check_doc, list_boards, task_refs
+from app.domain.tasks import split_ref
 from app.domain.upgrade import adopt_orphans
 from app.domain.welcome import WELCOME_NAME, welcome_doc
 
@@ -30,7 +31,10 @@ def test_welcome_doc_is_a_valid_board_with_every_kind():
 def test_welcome_doc_uses_only_demo_tasks():
     doc = BoardDoc.model_validate(welcome_doc(NOW))
     demo = DemoTaskProvider()
-    for key in task_keys(doc):
+    # Whatever tracker the instance is set to, the welcome tasks stay demo tasks.
+    for ref in task_refs(doc, "jira"):
+        source, key = split_ref(ref)
+        assert source == "demo"
         assert demo.resolve(key).key == key
 
 

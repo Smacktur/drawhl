@@ -24,6 +24,7 @@ beforeAll(() => {
 })
 
 const task: Task = {
+  source: 'demo',
   key: 'DEMO-1',
   state: 'ok',
   summary: 'Rotate the staging certificates',
@@ -129,7 +130,7 @@ test('a row dragged out of the module goes back to the board', () => {
   fireEvent.pointerDown(label, { clientX: 10, clientY: 10, pointerId: 1 })
   fireEvent.pointerMove(label, { clientX: 2000, clientY: 2000, pointerId: 1 })
   fireEvent.pointerUp(label, { clientX: 2000, clientY: 2000, pointerId: 1 })
-  expect(host.ejectCard).toHaveBeenCalledWith('DEMO-1', { x: 2000, y: 2000 })
+  expect(host.ejectCard).toHaveBeenCalledWith({ key: 'DEMO-1' }, { x: 2000, y: 2000 })
   expect(rows().map((r) => r.id)).toEqual(['b'])
 })
 

@@ -4,6 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { isJql, Toolbar } from '@/canvas/Toolbar'
 
 const task = {
+  source: 'demo',
   key: 'DEMO-1',
   state: 'ok',
   summary: 'Rotate the staging certificates',

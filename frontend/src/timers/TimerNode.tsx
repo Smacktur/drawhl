@@ -1,10 +1,10 @@
 import { useOnViewportChange, useReactFlow, useStore, type NodeProps } from '@xyflow/react'
 import { AlarmClock, BellRing, Check, Eye, Repeat } from 'lucide-react'
-import { memo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { memo, useContext, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { takeFresh } from '@/canvas/editing'
-import { useTask } from '@/canvas/tasks-context'
-import type { TimerData, TimerNode as TimerNodeType } from '@/canvas/types'
+import { taskRef, TasksContext } from '@/canvas/tasks-context'
+import type { JiraCardData, TimerData, TimerNode as TimerNodeType } from '@/canvas/types'
 import { cn } from '@/lib/utils'
 import { holderLabel } from './attach'
 import { useNow } from './clock'
@@ -44,12 +44,12 @@ function TimerNodeView({ id, data, parentId, selected, dragging }: NodeProps<Tim
     const parent = parentId ? s.nodeLookup.get(parentId) : undefined
     return parent && holderLabel(parent)
   })
-  // Only a Jira card's key is a holder label without spaces.
-  const cardKey = useStore((s) => {
+  // The ref of the card the timer sits on: a string, so the store hands back a stable value.
+  const cardRef = useStore((s) => {
     const parent = parentId ? s.nodeLookup.get(parentId) : undefined
-    return parent?.type === 'jira_card' ? (parent.data as { key: string }).key : ''
+    return parent?.type === 'jira_card' ? taskRef(parent.data as JiraCardData) : ''
   })
-  const task = useTask(cardKey)
+  const task = useContext(TasksContext)[cardRef]
   const flashing = useFlashing(id)
   const [open, setOpen] = useState(() => takeFresh(id))
   const pressedAt = useRef<{ x: number; y: number } | null>(null)
@@ -114,7 +114,11 @@ function TimerNodeView({ id, data, parentId, selected, dragging }: NodeProps<Tim
         <TimerEditor
           data={data}
           holder={holder}
-          task={task?.state === 'ok' ? { key: task.key, status: task.status_name } : undefined}
+          task={
+            task?.state === 'ok'
+              ? { key: task.key, source: task.source, status: task.status_name }
+              : undefined
+          }
           onChange={(next) => updateNodeData(id, next, { replace: true })}
           onDelete={() => void deleteElements({ nodes: [{ id }] })}
         />

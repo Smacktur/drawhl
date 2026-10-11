@@ -1,7 +1,7 @@
 {
   "profile": "oss",
   "phase": "build",
-  "feature": "specs/011-demo",
+  "feature": "specs/013-task-sources",
   "slices_done": [
     "card-on-board",
     "jira-dc-connection",
@@ -52,7 +52,8 @@
     "reconnect",
     "public-link",
     "public-live",
-    "demo-sandbox"
+    "demo-sandbox",
+    "task-sources"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -125,7 +126,10 @@
     "G3_public-link": "approved",
     "G3_public-live": "approved",
     "G2_demo": "approved",
-    "G3_demo-sandbox": "approved"
+    "G3_demo-sandbox": "approved",
+    "G1_task-sources": "approved",
+    "G2_task-sources": "approved",
+    "G3_task-sources": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -167,6 +171,10 @@
     "2026-10-11 realtime: T029 done, spec 009 has no open task: v2026.10.14 passes WebSockets on Railway (template) and on Render (Blueprint), both deployed by the owner and checked under the admin's login. The nginx worker fix and the password steps in the guide (PR 103) are not released yet.",
     "2026-10-11 demo: spec 011 taken off the shelf and completed with plan, data model, contract and tasks in 2 slices (demo-sandbox, demo-signup); awaits G2. Owner's answers: a demo visitor cannot turn on a public link, a signed-up person can; personal demo task statuses ship in slice 1; three boards per person on a demo instance, for a visitor and after sign-up. Found while planning: nginx does not pass the client address to the API, and the board list reads every board; both are tasks of slice 1.",
     "2026-10-11 G2 demo: owner approved spec 011 with both slices; three boards per person with the welcome board counted, a first screen led by \"Try the demo\". Against bots: an account that changed nothing lives an hour and is evicted at the cap of 500, IPv6 counted by /64. Open before slice demo-signup: whether signed-up accounts unused for long are deleted.",
-    "2026-10-11 demo: slice demo-sandbox approved at G3 (PR 105): TIKO_DEMO, a first screen led by \"Try the demo\", a temporary member per visitor with three boards and their own task statuses, deleted 7 days after the last request (an hour when nothing was changed), eviction at the cap of 500. The people directory answers a whole username only on a demo instance (T013, done early: it showed a visitor the admin). Owner's answer for slice demo-signup: a signed-up account unused for 90 days is deleted. Not checked: a forged forwarded address from outside, needs a Linux host. The welcome board's note about connecting a tracker is wrong on a demo."
+    "2026-10-11 demo: slice demo-sandbox approved at G3 (PR 105): TIKO_DEMO, a first screen led by \"Try the demo\", a temporary member per visitor with three boards and their own task statuses, deleted 7 days after the last request (an hour when nothing was changed), eviction at the cap of 500. The people directory answers a whole username only on a demo instance (T013, done early: it showed a visitor the admin). Owner's answer for slice demo-signup: a signed-up account unused for 90 days is deleted. Not checked: a forged forwarded address from outside, needs a Linux host. The welcome board's note about connecting a tracker is wrong on a demo.",
+    "2026-10-11 G1 task sources: owner wants many trackers at once on one instance and one board, and a tracker logo on tasks once a board mixes trackers; a brand-colored border was turned down (the border means selection). Spec 013 drafted in 2 slices (task-sources, source-mark), awaits G2 with three open questions: the Jira logo's terms, marks in official colors, the cache rebuilt on upgrade. GitHub Issues is the spec after it; Settings, the add-card form and the Gantt form for several trackers come later. Slice demo-signup of spec 011 is still open.",
+    "2026-10-11 G2 task sources: owner approved spec 013 with marks in official colors, the Jira mark on its official terms and the cache rebuilt on upgrade, and asked to keep a checklist of the places still tied to one tracker (Settings, add card, context menu, Gantt form, paste, search, commands, timers, copy, API); it is in the spec's Out of scope.",
+    "2026-10-11 task sources: slice task-sources built on feat/task-sources, awaits G3: a task carries its source, task maps and the cache are keyed by ref, refresh polls each tracker of the board on its own, demo tasks stay live on a Jira instance, card texts name the task's tracker. Migration 011 carries each person's cache over instead of rebuilding it: the check on a real instance had Jira unreachable and a rebuilt cache left every card empty. Stored board documents are untouched; the web app finds a task that names no tracker by its bare key. Left: slice source-mark.",
+    "2026-10-11 task sources: slice task-sources approved at G3 after the owner checked it on a real board: old cards from the carried-over cache, the mini-card, the sync list, adding and copying cards. Next: slice source-mark, with the Jira mark in its official blue and the demo source named \"the demo tracker\"."
   ]
 }

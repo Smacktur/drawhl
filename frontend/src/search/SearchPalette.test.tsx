@@ -21,6 +21,7 @@ const card = (id: string, key: string): AppNode => ({
   data: { key },
 })
 const task = (key: string, summary: string, assignee: string): Task => ({
+  source: 'demo',
   key,
   state: 'ok',
   summary,

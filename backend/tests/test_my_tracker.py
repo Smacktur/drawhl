@@ -59,7 +59,7 @@ def shared_board(ann: TestClient) -> str:
 
 def states(client: TestClient, board_id: str) -> dict[str, str]:
     tasks = client.post(f"/api/boards/{board_id}/refresh").json()["tasks"]
-    return {key: task["state"] for key, task in tasks.items()}
+    return {task["key"]: task["state"] for task in tasks.values()}
 
 
 def test_each_person_sees_what_their_own_token_allows(team):
@@ -72,7 +72,7 @@ def test_each_person_sees_what_their_own_token_allows(team):
     for name in ("bob", "carl"):
         response = people[name].get(f"/api/boards/{board_id}")
         assert HIDDEN not in response.text
-        assert response.json()["tasks"]["DEV-2"]["summary"] == ""
+        assert response.json()["tasks"]["jira:DEV-2"]["summary"] == ""
 
 
 def test_no_route_hands_out_another_persons_task_data(team):
@@ -124,7 +124,7 @@ def test_only_admins_change_the_instance_settings(team):
     assert people["ann"].get("/api/settings").json()["provider"] == "jira"
 
 
-def test_upgrade_moves_the_instance_token_and_cache_to_the_admin(tmp_path):
+def test_upgrade_moves_the_instance_token_to_the_admin(tmp_path):
     path = str(tmp_path / "app.db")
     db = Database(path)
     conn = sqlite3.connect(path)
@@ -138,10 +138,12 @@ def test_upgrade_moves_the_instance_token_and_cache_to_the_admin(tmp_path):
     credentials.adopt_instance_token("admin")
     credentials.adopt_instance_token("admin")
     assert credentials.get("admin", "jira") == ("sealed", "https://jira.example.com")
-    rows = conn.execute("SELECT user_id, key FROM task_snapshots_v2 ORDER BY key").fetchall()
-    assert rows == [("", "DEMO-1"), ("admin", "DEV-7")]
+    # The old cache names no tracker: it is dropped and fills again on the first refresh.
+    tables = conn.execute("SELECT name FROM sqlite_master WHERE name LIKE 'task_snapshots%'")
+    assert tables.fetchall() == [("task_snapshots_v3",)]
+    assert conn.execute("SELECT COUNT(*) FROM task_snapshots_v3").fetchone() == (0,)
     assert conn.execute("SELECT key FROM settings WHERE key = 'jira_token_enc'").fetchall() == []
-    assert SqliteSnapshotRepo(db).scoped("bob").get_many(["DEV-7"]) == {}
+    assert SqliteSnapshotRepo(db).scoped("bob").get_many(["jira:DEV-7"]) == {}
 
 
 def test_no_task_data_travels_through_the_live_socket(team):
