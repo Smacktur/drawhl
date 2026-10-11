@@ -13,20 +13,27 @@ type Props = {
   onToggleCollapsed: () => void
 }
 
-/** Black or white, whichever reads on the label's own color (the rule GitHub uses). */
+/** White on the label's own color while it reads (WCAG AA, 4.5:1), black otherwise. */
 function textOn(hex: string) {
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16))
-  return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#000' : '#fff'
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const channel = parseInt(hex.slice(i, i + 2), 16) / 255
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  })
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+  // Contrast with white is 1.05 / (L + 0.05). Past AA black always has the higher contrast.
+  return 1.05 / (luminance + 0.05) >= 4.5 ? '#fff' : '#000'
 }
 
 function LabelChip({ name, color }: { name: string; color: string }) {
   return (
     <li
       className={cn(
-        'rounded-full border border-black/10 px-1.5 text-[11px] leading-4 font-medium dark:border-white/15',
+        'max-w-full truncate rounded-full border border-black/10 px-1.5 text-[11px] leading-4 font-medium dark:border-white/15',
         !color && 'bg-muted text-muted-foreground',
       )}
       style={color ? { backgroundColor: `#${color}`, color: textOn(color) } : undefined}
+      // A long label is cut to the mini-card's width; the full name is on hover.
+      title={name}
     >
       {name}
     </li>

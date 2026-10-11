@@ -174,6 +174,8 @@ test('the mini-card of a GitHub task shows labels as chips and the author', () =
       { name: 'bug', color: 'd73a4a' },
       { name: 'good first issue', color: 'fef2c0' },
       { name: 'plain', color: '' },
+      { name: 'blue', color: '0088ff' },
+      { name: 'violet', color: '5319e7' },
     ],
     rows: [{ label: 'Author', value: 'sam-lee' }],
   }
@@ -185,11 +187,16 @@ test('the mini-card of a GitHub task shows labels as chips and the author', () =
   fireEvent.pointerDown(key, { clientX: 10, clientY: 10 })
   fireEvent.click(key, { clientX: 10, clientY: 10 })
   const chips = screen.getByRole('list', { name: 'Labels' })
-  expect(chips.children).toHaveLength(3)
+  expect(chips.children).toHaveLength(5)
   // Dark labels get white text, light ones black; a label without a color stays neutral.
   expect((screen.getByText('bug') as HTMLElement).style.color).toBe('rgb(255, 255, 255)')
   expect((screen.getByText('good first issue') as HTMLElement).style.color).toBe('rgb(0, 0, 0)')
   expect((screen.getByText('plain') as HTMLElement).style.color).toBe('')
+  // White only while it reads: a mid blue takes black text, violet takes white.
+  expect((screen.getByText('blue') as HTMLElement).style.color).toBe('rgb(0, 0, 0)')
+  expect((screen.getByText('violet') as HTMLElement).style.color).toBe('rgb(255, 255, 255)')
+  expect(screen.getByText('bug').getAttribute('title')).toBe('bug')
+  expect(screen.getByText('bug').className).toContain('truncate')
   expect(screen.getByText('sam-lee')).toBeTruthy()
   expect(screen.queryByText('Priority')).toBeNull()
 })
