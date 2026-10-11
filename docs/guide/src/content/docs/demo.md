@@ -1,43 +1,47 @@
 ---
 title: Running a demo
-description: Turn a tiko instance into a public demo where anyone starts in one click, without an account.
+description: Let anyone try your tiko instance in one click, without an account, and stay on it when they sign up.
 ---
 
-A demo is an ordinary tiko instance started with `TIKO_DEMO=1`. Its first screen offers "Try the demo" instead of the sign-in form. One click gives the visitor a board of their own with the sample tasks, and nobody else sees it.
+A demo is an ordinary tiko instance started with `TIKO_DEMO=1`. Its first screen offers "Try the demo" instead of the sign-in form. One click gives the visitor a board of their own with the demo tasks, and nobody else sees it.
 
 ```sh
 # .env
 TIKO_DEMO=1
 ```
 
-The instance then runs on the demo tasks only. `TIKO_DEMO=1` together with `TIKO_TRACKER=jira` stops the start, and nobody can store a tracker token.
+The switch does not touch the tracker. The instance can run on the demo tasks alone, or be [connected to Jira](../jira-data-center/) for the people who have an account. A visitor works on the demo tasks either way and is not shown the tracker's address.
 
 ## What a visitor gets
 
 - A temporary account made by the button: no username, no password, a session cookie in their browser.
 - The welcome board and up to three boards in all.
+- The demo tasks: `DEMO-1` to `DEMO-12`, whatever tracker the instance is connected to.
 - Their own task statuses: a status one visitor changes stays as it was for everyone else.
 - Seven days. Each visit starts the count again; after seven days away the visitor and their boards are deleted.
 
-A visitor cannot share a board, turn on a public link, change a name or a password, or reach Settings → Security and My tracker. A visitor who signs out, or clears cookies, cannot open their boards again.
+A visitor cannot share a board, turn on a public link, change a name or a password, store a tracker token, or reach Settings → Security and My tracker. A visitor who signs out, or clears cookies, cannot open their boards again.
 
 ## Signing up
 
-The top bar shows "Demo · 7 days", the time the boards are still kept. "Sign up to keep it" next to it asks for a name, a username and a password. The visitor becomes a regular member on the spot: the same boards, the same task statuses, the same session, and no seven-day clock. From then on they sign in from any device, share boards and turn on public links. The limit of three boards stays.
+The top bar shows "Demo · 7 days", the time the boards are still kept. "Sign up to keep it" next to it asks for a name, a username and a password. The visitor becomes a regular member on the spot: the same boards, the same task statuses, the same session, and no seven-day clock. From then on they sign in from any device, share boards and turn on public links. If the instance is connected to a tracker, they add their own token in Settings → My tracker and put its tasks next to the demo cards they already have.
 
-On a demo instance the share picker finds a person by their whole username only, so strangers are not listed to each other.
+How many boards a person with an account may own is up to you: set `TIKO_BOARD_LIMIT`, for example `TIKO_BOARD_LIMIT=3` to keep the visitor's three. Without it there is no limit after sign-up. Admins are never limited.
+
+On an instance with `TIKO_DEMO=1` the share picker finds a person by their whole username only, so strangers are not listed to each other. For the same reason a board cannot be shared with "Everyone in tiko", and each person has their own statuses of the demo tasks.
 
 There is no mail on a demo, so a forgotten password cannot be reset by the person; an admin can make a reset link in Settings → People. An account that nobody signed in to for 90 days is deleted with its boards. Admins are never deleted.
 
 ## Limits
 
-They are fixed, not settings:
+All but the last are fixed:
 
 | Limit | Value |
 |---|---|
 | New visitors from one address | 5 an hour; an IPv6 /64 network counts as one address |
 | Visitors on the instance | 500 |
-| Boards per person, admins aside | 3 |
+| Boards per visitor | 3 |
+| Boards per person with an account, admins aside | `TIKO_BOARD_LIMIT`, no limit when empty |
 
 A visitor who changed nothing is deleted an hour after their last request, and is the first to give up their place when the instance is full. A script that only presses the button therefore cannot keep people out: "The demo is full" shows only when 500 visitors have real work on a board.
 
@@ -46,4 +50,5 @@ A visitor who changed nothing is deleted an hour after their last request, and i
 - Publish the web port only. The API reads the visitor's address from a header that the web container sets; whoever reaches the API port directly can set it themselves. `compose.release.yml` already keeps the API port inside.
 - Put tiko behind a proxy on the same host or private network. The web container believes forwarded addresses only from private networks, so the address limit counts real visitors.
 - Admins are not limited and still sign in from "Already have an account? Sign in". They see people who signed up, not visitors, and their list of other people's boards leaves visitors' boards out.
+- Anyone who signs up can test a tracker token against the address the instance is set to. Only an admin can point that test at another address.
 - A demo collects what visitors put on their boards. Publish a privacy notice and terms with it.

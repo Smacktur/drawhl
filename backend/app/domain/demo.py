@@ -47,9 +47,13 @@ def touch(users: UserRepo, user_id: str, now: float) -> str | None:
     return until if users.touch_demo(user_id, until) else None
 
 
-def check_board_limit(person: Person, boards: BoardRepo) -> None:
-    if person.role != "admin" and boards.owned(person.id) >= MAX_BOARDS:
-        raise BoardLimit(f"A demo account holds {MAX_BOARDS} boards. Delete one to make another.")
+def check_board_limit(person: Person, boards: BoardRepo, member_limit: int | None) -> None:
+    """A demo visitor holds MAX_BOARDS, anyone else what the instance allows; admins any number."""
+    if person.role == "admin":
+        return
+    limit = MAX_BOARDS if person.demo_expires_at else member_limit
+    if limit is not None and boards.owned(person.id) >= limit:
+        raise BoardLimit(f"An account here holds {limit} boards. Delete one to make another.")
 
 
 class DemoVisitors:

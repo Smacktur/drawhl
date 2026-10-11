@@ -10,7 +10,7 @@ from app.domain.ports import BoardRepo, DemoTasks, LiveBoards, SnapshotRepo, Tas
 from app.domain.public import PublicLinks
 from app.domain.refresh import RefreshService
 from app.domain.sessions import Sessions
-from app.domain.settings import SettingsService
+from app.domain.settings import Provider, SettingsService
 from app.domain.tasks import NoTokenProvider
 
 
@@ -23,8 +23,17 @@ def live(request: Request) -> LiveBoards:
 
 
 def is_demo(request: Request) -> bool:
-    """Whether the instance is a public demo (TIKO_DEMO)."""
+    """Whether the instance takes demo visitors (TIKO_DEMO), so strangers share it."""
     return request.app.state.visitors is not None
+
+
+def is_visitor(request: Request) -> bool:
+    return current_person(request).demo_expires_at is not None
+
+
+def tracker(request: Request) -> Provider:
+    """The request's tracker: the demo tasks for a visitor, the instance's for everyone else."""
+    return "demo" if is_visitor(request) else request.app.state.settings.provider()
 
 
 def _statuses_owner(request: Request) -> str:
@@ -44,12 +53,13 @@ def settings(request: Request) -> SettingsService:
 
 def providers(request: Request) -> dict[str, TaskProvider]:
     """Every tracker this request can read, by source id: the demo tasks always, and Jira
-    with the signed-in person's own token when the instance is set to it."""
+    with the signed-in person's own token when the instance is set to it. A demo visitor
+    has no token and reads the demo tasks only."""
     state = request.app.state
     demo_tasks: TaskProvider = state.demo.scoped(_statuses_owner(request))
     found = {demo_tasks.source_id: demo_tasks}
     settings: SettingsService = state.settings
-    if settings.provider() == "jira":
+    if tracker(request) == "jira":
         try:
             jira = state.jira(settings.jira_credentials(current_person(request).id))
         except JiraNotConfigured as exc:
@@ -59,8 +69,8 @@ def providers(request: Request) -> dict[str, TaskProvider]:
 
 
 def provider(request: Request) -> TaskProvider:
-    """The tracker the instance is set to; a typed key or a query goes to it."""
-    return providers(request)[request.app.state.settings.provider()]
+    """The tracker of this request; a typed key or a query goes to it."""
+    return providers(request)[tracker(request)]
 
 
 def owner(request: Request) -> str:
@@ -96,14 +106,14 @@ def current_admin(request: Request) -> Person:
 
 
 def not_demo_visitor(request: Request) -> None:
-    """Sharing and account changes wait until a demo visitor signs up."""
-    if current_person(request).demo_expires_at:
+    """Sharing, account changes and a tracker of their own wait until a demo visitor signs up."""
+    if is_visitor(request):
         raise Forbidden("Sign up to do this.")
 
 
 def not_on_demo(request: Request) -> None:
     if is_demo(request):
-        raise Forbidden("This is switched off on the demo.")
+        raise Forbidden("This is switched off where anyone can sign up.")
 
 
 def members(request: Request) -> Members:
