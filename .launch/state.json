@@ -56,7 +56,8 @@
     "demo-signup",
     "task-sources",
     "source-mark",
-    "demo-visitor"
+    "demo-visitor",
+    "demo-entry"
   ],
   "gates": {
     "G1_scope": "approved",
@@ -136,7 +137,8 @@
     "G3_task-sources": "approved",
     "G3_source-mark": "approved",
     "G1_demo-visitor": "approved",
-    "G3_demo-visitor": "approved"
+    "G3_demo-visitor": "approved",
+    "G3_demo-entry": "approved"
   },
   "notes": [
     "2026-10-05 legal: self-hosted, no data collected by the project; MIT, make licenses green, README Privacy section. Privacy Policy and Terms only for a public demo.",
@@ -188,6 +190,7 @@
     "2026-10-11 task sources: slice source-mark built on feat/source-mark, awaits G3: the Jira icon from Atlassian's own @atlaskit/logo package (blue tile, one file for both themes), the tiko emblem for demo tasks, a neutral icon for an unknown tracker; marks on cards and Gantt task rows only on a board that mixes trackers, always in the mini-card button and the sync list. PR 108 landed slice task-sources; its review found that an old Gantt row and the same task with a source could be planned twice, fixed there; the smoke script was moved to refs after CI caught it.",
     "2026-10-11 task sources: slice source-mark approved at G3 after the owner checked it next to a live Jira: marks appear on a work board once a demo card is pasted in, a card copied between boards keeps its tracker. Spec 013 has no open task. Next: a GitHub Issues provider as its own spec, with the spec's Out of scope list as the checklist of places still tied to one tracker.",
     "2026-10-11 G1 demo visitor: owner decided that the limits of a demo belong to the visitor and the instance keeps its tracker; the whole-username directory and the 90 days stay for everyone on such an instance, boards per person become a setting (TIKO_BOARD_LIMIT). Owner told the agent to build without waiting for G2. Spec 014 in 2 slices (demo-visitor, demo-entry). Slice demo-visitor built, awaits G3: checked on the compose stack with TIKO_DEMO=1 and Jira set, through the API only; the web app did not change. Found on the way: the Jira test route let any signed-in person, a demo visitor included, make the server call an address of their choice; now a visitor has no call and only an admin picks the address.",
-    "2026-10-11 demo visitor: slice demo-visitor approved at G3 and merged (PR 110); review found three things, fixed: an empty TIKO_BOARD_LIMIT= stopped the start (so did the empty TIKO_TRACKER= of .env.example on main), a transfer went past the board limit, a long docstring. Slice demo-entry built, awaits G3: the first screen of an instance with TIKO_DEMO=1 is the sign-in form with a link, /demo holds the button; checked on the compose stack in the light theme only."
+    "2026-10-11 demo visitor: slice demo-visitor approved at G3 and merged (PR 110); review found three things, fixed: an empty TIKO_BOARD_LIMIT= stopped the start (so did the empty TIKO_TRACKER= of .env.example on main), a transfer went past the board limit, a long docstring. Slice demo-entry built, awaits G3: the first screen of an instance with TIKO_DEMO=1 is the sign-in form with a link, /demo holds the button; checked on the compose stack in the light theme only.",
+    "2026-10-11 demo visitor: slice demo-entry approved at G3 after the owner's check on the stand (PR 111); spec 014 done."
   ]
 }
