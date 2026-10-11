@@ -87,6 +87,12 @@ try:
     )
     check(status == 200 and body["task"]["key"] == "DEMO-2", "resolve by link")
 
+    # A GitHub key goes to the GitHub source on any instance. The answer depends on the
+    # network and on GitHub's limit, so only the routing is checked: never "not a key".
+    status, body = call("POST", f"{API}/api/tasks/resolve", {"ref": "octo-org/widgets#1"})
+    routed = status == 200 or body["error"]["code"] != "invalid_ref"
+    check(routed, "a GitHub key reaches the GitHub source")
+
     doc = {
         "nodes": [
             {

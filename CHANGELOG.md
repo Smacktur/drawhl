@@ -6,9 +6,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- GitHub Issues: an issue or a pull request of a public repository becomes a live card on any tiko, with no token and no setup. Paste its link on the board, or type the link or `owner/repo#12` into the card tool. The status follows GitHub (Open, Draft, Merged, Closed, Not planned), and an open issue with a label like `planned`, `in progress` or `shipped` shows that label as its status. Without a token cards update every few minutes inside GitHub's limit of 60 requests an hour; `GITHUB_TOKEN` in the environment brings back the board's pace. See "GitHub Issues" in the guide.
 - Demo mode: `TIKO_DEMO=1` turns an instance into a public demo. "Try the demo" gives anyone a board of their own without an account, with their own task statuses, kept for 7 days after their last visit. Limits hold off abuse: 5 new visitors an hour per address, 500 on the instance, 3 boards each. A visitor who likes it presses "Sign up to keep it" and stays as a regular member with the same boards; an account nobody signs in to for 90 days is deleted. See "Running a demo" in the guide.
 - Tracker logos: on a board that mixes trackers every card and Gantt row starts with the logo of its tracker, so you see at a glance where a task comes from. A board with one tracker looks as before. The mini-card and the sync list always show the logo.
 - Demo tasks stay live on an instance connected to Jira: the welcome board keeps its titles and statuses next to your Jira cards, and the sync list shows each tracker on its own row. A task now belongs to its tracker, so the same key in two trackers is two tasks.
+
+### Changed
+
+- The card tool is called "Task card" instead of "Jira card" in the toolbar, the context menu, the shortcuts list and the command palette.
 
 ### Fixed
 

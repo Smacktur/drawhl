@@ -1,3 +1,5 @@
+import githubMarkDark from '@/sources/marks/github-dark.svg'
+import githubMark from '@/sources/marks/github.svg'
 import jiraMark from '@/sources/marks/jira.svg'
 
 type Source = {
@@ -5,11 +7,14 @@ type Source = {
   name: string
   /** The tracker's own logo file, shown as it is and never recolored; the demo has none. */
   mark?: string
+  /** The owner's own file for dark backgrounds, when one file does not suit both themes. */
+  markDark?: string
 }
 
 /** The trackers tiko reads tasks from, as the web app names and marks them. */
 const SOURCES: Record<string, Source> = {
   jira: { name: 'Jira', mark: jiraMark },
+  github: { name: 'GitHub', mark: githubMark, markDark: githubMarkDark },
   demo: { name: 'the demo tracker' },
 }
 
@@ -18,7 +23,12 @@ export function sourceName(id: string) {
 }
 
 export function sourceMark(id: string) {
-  return SOURCES[id]?.mark
+  return Object.hasOwn(SOURCES, id) ? SOURCES[id] : undefined
+}
+
+/** The key as a card shows it: a GitHub task without its owner, `repo#12`. */
+export function shortKey(source: string | undefined, key: string) {
+  return source === 'github' ? key.slice(key.indexOf('/') + 1) : key
 }
 
 /** Whether this version knows the tracker; a board from a newer tiko may name one it does not. */

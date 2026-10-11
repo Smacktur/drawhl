@@ -10,10 +10,10 @@ from pydantic import BaseModel
 from app.domain.boards import task_refs
 from app.domain.errors import (
     DomainError,
-    JiraRateLimited,
-    JiraUnavailable,
-    JiraUnreachable,
     NotFound,
+    TrackerRateLimited,
+    TrackerUnavailable,
+    TrackerUnreachable,
 )
 from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
 from app.domain.tasks import Task, now_iso, split_ref
@@ -35,6 +35,8 @@ class SourceStatus(BaseModel):
     state: Literal["ok", "error"]
     synced_at: str | None
     error: SourceError | None = None
+    # What a person should know about this tracker's sync while it works.
+    note: str | None = None
 
 
 @dataclass
@@ -101,6 +103,7 @@ class RefreshService:
                         state="error" if source.error else "ok",
                         synced_at=source.synced_at,
                         error=source.error,
+                        note=provider.source_note,
                     )
                 )
         snapshots.put_many(tasks)
@@ -120,11 +123,11 @@ class RefreshService:
             source.error = SourceError(code=exc.code, message=exc.message)
             # Only an overloaded tracker is spared; auth, config and network errors retry at
             # the normal pace, so a fixed token or a VPN coming back shows up on the next tick.
-            if isinstance(exc, JiraUnavailable | JiraRateLimited) and not isinstance(
-                exc, JiraUnreachable
+            if isinstance(exc, TrackerUnavailable | TrackerRateLimited) and not isinstance(
+                exc, TrackerUnreachable
             ):
                 source.fails += 1
-                retry_after = exc.retry_after if isinstance(exc, JiraRateLimited) else 0
+                retry_after = exc.retry_after if isinstance(exc, TrackerRateLimited) else 0
                 wait = min(MAX_BACKOFF_S, max(retry_after, interval_s * 2**source.fails))
                 source.backoff_until = now + wait
                 source.error.retry_after = wait

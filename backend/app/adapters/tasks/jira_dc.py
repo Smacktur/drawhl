@@ -85,6 +85,7 @@ class JiraDcProvider:
 
     source_id = SOURCE_ID
     source_name = "Jira Data Center"
+    source_note = None
 
     def __init__(self, credentials: Callable[[], JiraCredentials], client: httpx.Client) -> None:
         self._credentials = credentials

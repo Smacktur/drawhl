@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.api import deps
 from app.domain.ports import SnapshotRepo, TaskProvider
+from app.domain.settings import SettingsService
 from app.domain.tasks import MAX_SEARCH, Task, resolve_task, search_tasks
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -42,7 +43,8 @@ def search(
 @router.post("/resolve")
 def resolve(
     body: ResolveIn,
-    provider: Annotated[TaskProvider, Depends(deps.provider)],
+    providers: Annotated[dict[str, TaskProvider], Depends(deps.providers)],
+    settings: Annotated[SettingsService, Depends(deps.settings)],
     snapshots: Annotated[SnapshotRepo, Depends(deps.snapshots)],
 ) -> ResolveOut:
-    return ResolveOut(task=resolve_task(body.ref, provider, snapshots))
+    return ResolveOut(task=resolve_task(body.ref, providers, settings.provider(), snapshots))

@@ -40,3 +40,11 @@ test('on a mixed board a task that names no tracker gets the mark of the instanc
   expect(screen.getByRole('img', { name: 'Jira' })).toBeTruthy()
   expect(screen.getByRole('img', { name: 'Demo task' })).toBeTruthy()
 })
+
+test('GitHub has a mark for each theme, shown by the theme and never recolored', () => {
+  render(<SourceMark source="github" />)
+  const [light, dark] = screen.getAllByRole('img', { name: 'GitHub' })
+  expect(light.getAttribute('src')).not.toBe(dark.getAttribute('src'))
+  expect(light.className).toContain('dark:hidden')
+  expect(dark.className).toContain('dark:inline-block')
+})

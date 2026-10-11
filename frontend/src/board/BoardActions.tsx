@@ -77,8 +77,8 @@ export function DeleteBoardDialog({ board, onOpenChange }: DeleteProps) {
         <DialogHeader>
           <DialogTitle>Delete board?</DialogTitle>
           <DialogDescription>
-            "{board?.name}" and everything on it will be deleted. Tasks stay in Jira. A copy remains
-            in the latest backup, if one was made.
+            "{board?.name}" and everything on it will be deleted. Tasks stay in their tracker. A
+            copy remains in the latest backup, if one was made.
           </DialogDescription>
         </DialogHeader>
         {remove.isError && <p className="text-destructive text-sm">{remove.error.message}</p>}

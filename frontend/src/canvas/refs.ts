@@ -1,7 +1,7 @@
 import { resolveTask, type Task } from '@/api/tasks'
 
 export const MAX_REFS = 50
-// Each key is one Jira request; a few at a time stays clear of rate limits.
+// Each key is one request to the tracker; a few at a time stays clear of rate limits.
 const CONCURRENCY = 4
 
 export type Resolved = {
@@ -11,10 +11,16 @@ export type Resolved = {
   total?: number
 }
 
-export const REF_RE = /^([A-Za-z][A-Za-z0-9_]+-\d+|https?:\/\/\S+)$/
+const JIRA_KEY = '[A-Za-z][A-Za-z0-9_]+-\\d+'
+const GITHUB_REPO = '[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+'
+const GITHUB_KEY = `${GITHUB_REPO}#[1-9]\\d*`
+
+export const REF_RE = new RegExp(`^(${JIRA_KEY}|${GITHUB_KEY}|https?://\\S+)$`)
 // Only a key or a link to a task page counts on paste, so other links stay text.
-const TASK_REF_RE =
-  /^([A-Za-z][A-Za-z0-9_]+-\d+|https?:\/\/\S+\/browse\/[A-Za-z][A-Za-z0-9_]+-\d+\/?)$/
+const TASK_REF_RE = new RegExp(
+  `^(${JIRA_KEY}|${GITHUB_KEY}|https?://\\S+/browse/${JIRA_KEY}/?` +
+    `|https?://(www\\.)?github\\.com/${GITHUB_REPO}/(issues|pull)/[1-9]\\d*([/?#]\\S*)?)$`,
+)
 
 export function splitRefs(input: string) {
   return [...new Set(input.split(/[\s,;]+/).filter(Boolean))]

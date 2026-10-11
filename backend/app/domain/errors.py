@@ -56,19 +56,35 @@ class JiraUnauthorized(DomainError):
     code = "jira_unauthorized"
 
 
-class JiraRateLimited(DomainError):
-    code = "jira_rate_limited"
+class TrackerRateLimited(DomainError):
+    code = "tracker_rate_limited"
 
     def __init__(self, message: str, retry_after: int) -> None:
         super().__init__(message)
         self.retry_after = retry_after
 
 
-class JiraUnavailable(DependencyUnavailable):
+class TrackerUnavailable(DependencyUnavailable):
+    code = "tracker_unavailable"
+
+
+class TrackerUnreachable(TrackerUnavailable):
+    """No answer at all (network, VPN, timeout): nothing reached the tracker, so no backoff."""
+
+
+class TooManyRepositories(DomainError):
+    code = "too_many_repositories"
+
+
+class JiraRateLimited(TrackerRateLimited):
+    code = "jira_rate_limited"
+
+
+class JiraUnavailable(TrackerUnavailable):
     code = "jira_unavailable"
 
 
-class JiraUnreachable(JiraUnavailable):
+class JiraUnreachable(JiraUnavailable, TrackerUnreachable):
     """No answer at all (network, VPN, timeout): nothing reached Jira, so no backoff."""
 
 

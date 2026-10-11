@@ -19,6 +19,7 @@
 | lucide-react | ISC | Icons |
 | Octicons `mark-github` (inlined SVG path) | MIT | GitHub icon in the About panel |
 | Jira icon (`frontend/src/sources/marks/jira.svg`, from `@atlaskit/logo` 23.3.1) | Apache-2.0 for the file; the mark is a trademark of Atlassian, used unchanged under its [trademark guidelines](https://www.atlassian.com/legal/trademark) | Marks tasks that come from Jira |
+| GitHub mark (`frontend/src/sources/marks/github.svg` and `github-dark.svg`, the `mark-github` icon of GitHub's Octicons) | MIT for the files; the mark is a trademark of GitHub, used unchanged in black and in white under its [logo policy](https://docs.github.com/en/site-policy/other-site-policies/github-logo-policy) | Marks tasks that come from GitHub |
 | React Flow (@xyflow/react) | MIT | Infinite canvas, nodes and edges |
 | Yjs, y-websocket, y-protocols, lib0 | MIT | Shared document (CRDT) of a live board in the browser and its WebSocket sync |
 | IBM Plex Sans (@fontsource-variable/ibm-plex-sans) | OFL-1.1 | UI font; outlined in the logo and covers in `brand/` |
@@ -40,6 +41,7 @@ Full list with versions: lock files (`backend/uv.lock`, `frontend/package-lock.j
 | Model / API | Provider | How it is used |
 |---|---|---|
 | Jira Data Center REST API v2 | the user's own Jira instance | Reads issue fields with the user's personal access token |
+| GitHub REST API | github.com | Reads issues and pull requests of public repositories, without a token or with the server's read-only `GITHUB_TOKEN` |
 
 ## Data
 

@@ -21,6 +21,18 @@ describe('pastedRefs', () => {
     ])
   })
 
+  it('takes GitHub issue and pull request links and keys', () => {
+    const refs = [
+      'https://github.com/octo-org/widgets/issues/12',
+      'https://github.com/octo-org/widgets/pull/7/files',
+      'https://github.com/octo-org/widgets/issues/12#issuecomment-1',
+      'octo-org/widgets#3',
+    ]
+    expect(pastedRefs(refs.join('\n'))).toEqual(refs)
+    expect(pastedRefs('https://github.com/octo-org/widgets')).toBeNull()
+    expect(pastedRefs('https://github.com/octo-org/widgets/discussions/5')).toBeNull()
+  })
+
   it('leaves text with other words or other links alone', () => {
     expect(pastedRefs('Fix DEMO-1 today')).toBeNull()
     expect(pastedRefs('https://example.com/docs/setup')).toBeNull()

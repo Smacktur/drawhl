@@ -55,7 +55,7 @@ tiko puts the same tasks on an infinite canvas and keeps them current. What make
 - **Your tracker stays in charge.** tiko reads tasks and never edits them. Each person connects their own token and sees only what their tracker access allows.
 - **It is yours.** Self-hosted, one SQLite file, no telemetry.
 
-Works with Jira Data Center and Server today. Jira Cloud, Linear, Plane and others are planned: [all trackers](https://docs.tiko.run/trackers/).
+Works with Jira Data Center and Server and with public GitHub issues today. Jira Cloud, Linear, Plane and others are planned: [all trackers](https://docs.tiko.run/trackers/).
 
 ## What you can do
 

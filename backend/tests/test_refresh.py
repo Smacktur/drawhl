@@ -28,6 +28,7 @@ class Flaky:
     base_host = "jira.example.com"
     source_id = "jira"
     source_name = "Jira Data Center"
+    source_note = None
 
     def __init__(self, *errors: Exception) -> None:
         self.errors = list(errors)

@@ -1,4 +1,13 @@
-import { Bookmark, Bug, CircleCheck, Layers, ListTree, SquareCheck } from 'lucide-react'
+import {
+  Bookmark,
+  Bug,
+  CircleCheck,
+  CircleDot,
+  GitPullRequest,
+  Layers,
+  ListTree,
+  SquareCheck,
+} from 'lucide-react'
 import type { Task } from '@/api/tasks'
 import { cn } from '@/lib/utils'
 
@@ -9,6 +18,8 @@ const TYPE_ICONS = {
   epic: Layers,
   'sub-task': ListTree,
   subtask: ListTree,
+  issue: CircleDot,
+  'pull request': GitPullRequest,
 }
 
 export function TypeIcon({ typeName }: { typeName: string }) {

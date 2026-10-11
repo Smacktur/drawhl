@@ -1,9 +1,9 @@
 from datetime import date
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.domain.tasks import KEY_RE, SOURCE_PATTERN
+from app.domain.tasks import SOURCE_PATTERN, valid_key
 
 MAX_RANGE_DAYS = 1096
 MAX_DEPTH = 5
@@ -27,15 +27,10 @@ class Row(_Strict):
     parent: str | None = Field(default=None, max_length=40)
     collapsed: bool = False
 
-    @field_validator("key")
-    @classmethod
-    def _key(cls, value: str | None) -> str | None:
-        if value is not None and not KEY_RE.match(value):
-            raise ValueError("invalid issue key")
-        return value
-
     @model_validator(mode="after")
     def _dates(self) -> Self:
+        if self.key is not None and not valid_key(self.source, self.key):
+            raise ValueError("invalid issue key")
         if self.end < self.start:
             raise ValueError(f"row {self.id} ends before it starts")
         return self

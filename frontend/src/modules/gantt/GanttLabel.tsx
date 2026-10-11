@@ -15,7 +15,7 @@ import type { Task } from '@/api/tasks'
 import { TypeIcon } from '@/canvas/nodes/TaskBits'
 import { ROW_HEIGHT, type Row } from '@/modules/gantt/rows'
 import { cn } from '@/lib/utils'
-import { sourceName } from '@/sources/registry'
+import { shortKey, sourceName } from '@/sources/registry'
 import { BoardSourceMark } from '@/sources/SourceMark'
 
 // A press that moves further than this starts a row drag.
@@ -149,7 +149,9 @@ export function GanttLabel({
         >
           <BoardSourceMark source={task?.source ?? row.source} />
           {task && task.state !== 'private' && <TypeIcon typeName={task.type_name} />}
-          <span className={cn('shrink-0 font-medium', done && 'line-through')}>{row.key}</span>
+          <span className={cn('shrink-0 font-medium', done && 'line-through')}>
+            {shortKey(task?.source ?? row.source, row.key)}
+          </span>
           <span className="truncate" title={task?.summary}>
             {task?.state === 'not_found'
               ? 'not found'

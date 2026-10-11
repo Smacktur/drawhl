@@ -65,6 +65,7 @@ class DemoTaskProvider:
     base_host = DEMO_HOST
     source_id = "demo"
     source_name = "Demo tasks"
+    source_note = None
 
     def __init__(self, statuses: DemoStatusRepo | None = None, owner: str = "") -> None:
         self._seed = {

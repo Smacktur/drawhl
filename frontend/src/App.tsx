@@ -155,7 +155,7 @@ export default function App() {
       )}
       {mine?.length === 0 && !current && (
         <div className="absolute top-1/2 left-1/2 flex w-96 -translate-x-1/2 -translate-y-1/2 flex-col gap-3">
-          <p className="text-[14px]">Create a board to start placing Jira tasks on it.</p>
+          <p className="text-[14px]">Create a board to start placing tasks on it.</p>
           <NewBoardForm onCreated={setBoardId} autoFocus />
         </div>
       )}
