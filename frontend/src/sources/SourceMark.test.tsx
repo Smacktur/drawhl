@@ -13,10 +13,12 @@ test('demo tasks carry the tiko emblem, an unknown tracker a neutral icon', () =
     <>
       <SourceMark source="demo" />
       <SourceMark source="elsewhere" />
+      <SourceMark source="constructor" />
     </>,
   )
   expect(screen.getByRole('img', { name: 'Demo task' })).toBeTruthy()
-  expect(screen.getByLabelText('Unknown tracker')).toBeTruthy()
+  // A tracker named like a built-in property is still an unknown one.
+  expect(screen.getAllByLabelText('Unknown tracker')).toHaveLength(2)
 })
 
 test('a board with one tracker shows no marks', () => {

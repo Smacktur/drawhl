@@ -23,5 +23,5 @@ export function sourceMark(id: string) {
 
 /** Whether this version knows the tracker; a board from a newer tiko may name one it does not. */
 export function isKnownSource(id: string) {
-  return id in SOURCES
+  return Object.hasOwn(SOURCES, id)
 }
