@@ -12,7 +12,7 @@ What we plan next, roughly in order. To ask for something sooner or suggest what
 
 ## More trackers
 
-- Jira Cloud, GitHub Issues, Linear, Plane, Todoist, TickTick, Windshift. The current list is in [Task trackers](../trackers/).
+- Jira Cloud, private GitHub repositories, Linear, Plane, Todoist, TickTick, Windshift. The current list is in [Task trackers](../trackers/).
 
 ## Hosting
 

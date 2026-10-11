@@ -14,7 +14,6 @@ Everything works without a `.env` file. To override defaults, copy [`.env.exampl
 | `TIKO_DEMO` | `1` lets anyone start without an account as a demo visitor on the demo tasks, and sign up to stay. See [Running a demo](../demo/) | off |
 | `TIKO_BOARD_LIMIT` | Boards a person may own, admins and demo visitors aside | no limit |
 | `GITHUB_TOKEN` | Read-only GitHub token that raises the request limit for public issues from 60 to 5000 an hour, so GitHub cards update at the board's pace. See [GitHub Issues](../github-issues/) | unset |
-| `TIKO_DEMO` | `1` makes the instance a public demo: anyone starts without an account on the demo tasks. See [Running a demo](../demo/) | off |
 | `JIRA_TLS_VERIFY` | Verify Jira's TLS certificate; `false` skips the check | `true` |
 | `JIRA_CA_BUNDLE` | Path inside the container to a CA bundle for a corporate certificate authority | unset |
 | `LOG_LEVEL` | Log level | `info` |

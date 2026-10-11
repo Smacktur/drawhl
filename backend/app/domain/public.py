@@ -112,22 +112,25 @@ class PublicLinks:
 
 def guest_tasks(
     refs: list[str], open_sources: dict[str, TaskProvider], base_url: str | None
-) -> dict[str, Task]:
-    """What a guest gets, by ref. Tasks of the open sources (the demo, public GitHub) belong
-    to no person and show in full; a task read with a person's token, or one an open source
-    cannot read right now, is its key and its link, nothing else."""
+) -> tuple[dict[str, Task], dict[str, DomainError]]:
+    """What a guest gets, by ref, and the open sources that failed, by source id."""
+    # Tasks of the open sources (the demo, public GitHub) belong to no person and show in
+    # full; a task read with a person's token, or one an open source cannot read right now,
+    # is its key and its link, nothing else.
     url = f"{base_url}/browse/" if base_url else ""
     keys: dict[str, list[str]] = {}
     for ref in refs:
         source, key = split_ref(ref)
         keys.setdefault(source, []).append(key)
     tasks: dict[str, Task] = {}
+    failed: dict[str, DomainError] = {}
     for source, source_keys in keys.items():
         provider = open_sources.get(source)
+        found: list[Task] = []
         try:
             found = provider.poll(source_keys) if provider else []
-        except DomainError:
-            found = []
+        except DomainError as exc:
+            failed[source] = exc
         tasks |= {task.ref: task for task in found if task.state == "ok"}
         for key in source_keys:
             ref = task_ref(source, key)
@@ -136,7 +139,7 @@ def guest_tasks(
                 tasks[ref] = Task(
                     source=source, key=key, state="private", url=link, fetched_at=now_iso()
                 )
-    return tasks
+    return tasks, failed
 
 
 def public_board(
@@ -155,7 +158,7 @@ def public_board(
         updated_at=record.updated_at,
         version=record.version,
         doc=record.doc.model_dump(exclude_none=True),
-        tasks=guest_tasks(task_refs(record.doc, default_source), open_sources, base_url),
+        tasks=guest_tasks(task_refs(record.doc, default_source), open_sources, base_url)[0],
         default_source=default_source,
         refresh_interval_s=refresh_interval_s,
     )

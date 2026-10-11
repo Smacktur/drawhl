@@ -8,11 +8,11 @@ from app.api import deps
 from app.api.boards import RefreshOut
 from app.api.live import serve
 from app.domain.boards import task_refs
-from app.domain.errors import NotFound, TooManyAttempts
+from app.domain.errors import DomainError, NotFound, TooManyAttempts
 from app.domain.live import ACCESS_CHANGED, ROOM_FULL
 from app.domain.ports import BoardRepo, TaskProvider
 from app.domain.public import PublicBoard, PublicLinks, guest_tasks, public_board
-from app.domain.refresh import SourceStatus
+from app.domain.refresh import SourceError, SourceStatus
 from app.domain.settings import SettingsService
 from app.domain.tasks import now_iso
 
@@ -33,6 +33,12 @@ def _open_sources(request: Request, board_id: str, boards: BoardRepo) -> dict[st
     demo: TaskProvider = state.demo.scoped(owner)
     github: TaskProvider = state.github
     return {demo.source_id: demo, github.source_id: github}
+
+
+def _error(exc: DomainError) -> SourceError:
+    return SourceError(
+        code=exc.code, message=exc.message, retry_after=getattr(exc, "retry_after", None)
+    )
 
 
 class VersionOut(BaseModel):
@@ -71,7 +77,7 @@ def refresh_public_board(
     if record is None:
         raise NotFound("board not found")
     open_sources = _open_sources(request, board_id, boards)
-    tasks = guest_tasks(
+    tasks, failed = guest_tasks(
         task_refs(record.doc, settings.provider()), open_sources, settings.base_url()
     )
     # Nothing is polled with anyone's token, so only the open sources have a sync to report.
@@ -80,12 +86,13 @@ def refresh_public_board(
         SourceStatus(
             id=source,
             name=provider.source_name,
-            state="ok",
-            synced_at=now_iso(),
+            state="error" if source in failed else "ok",
+            synced_at=None if source in failed else now_iso(),
+            error=_error(failed[source]) if source in failed else None,
             note=provider.source_note,
         )
         for source, provider in open_sources.items()
-        if source in read
+        if source in read or source in failed
     ]
     return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
 

@@ -206,17 +206,64 @@ def test_a_long_list_of_due_repositories_is_spread_over_refreshes(fake, clock):
     assert len(github.poll(keys)) == 25
 
 
-def test_tasks_the_page_does_not_reach_are_read_one_by_one(fake, clock):
-    fake.repos[REPO] = {
-        n: issue(n, updated_at=f"2026-10-01T09:{n // 60:02d}:{n % 60:02d}Z") for n in range(1, 151)
+def many(count: int) -> dict[int, dict]:
+    return {
+        n: issue(n, updated_at=f"2026-10-01T09:{n // 60:02d}:{n % 60:02d}Z")
+        for n in range(1, count + 1)
     }
+
+
+def test_tasks_the_page_does_not_reach_are_read_one_by_one(fake, clock):
+    fake.repos[REPO] = many(150)
     github = reader(fake, clock)
     # The page holds the 100 newest; 1, 2, 3 and 4 are older and wait their turn, three a turn.
     keys = [f"{REPO}#{n}" for n in (1, 2, 3, 4, 150)]
     assert {t.key for t in github.poll(keys)} == {f"{REPO}#{n}" for n in (1, 2, 3, 150)}
     assert len(fake.requests) == 4
-    clock.now += 80
+    # The three extra reads are paid for: the next turn waits four shares of the limit.
+    clock.now += 290
+    github.poll(keys)
+    assert len(fake.requests) == 4
+    clock.now += 20
     assert len(github.poll(keys)) == 5
+
+
+def test_reads_one_by_one_stay_inside_the_hourly_limit(fake, clock):
+    fake.repos[REPO] = many(150)
+    github = reader(fake, clock)
+    keys = [f"{REPO}#{n}" for n in range(1, 46)]
+    for _ in range(120):
+        github.poll(keys)
+        clock.now += 30
+    assert len(fake.requests) <= 60 * (1 - 0.2) + 4
+    assert len(github.poll(keys)) > 30
+
+
+def test_repositories_of_closed_boards_do_not_slow_the_rest(fake, clock):
+    for n in range(20):
+        fake.repos[f"octo-org/repo-{n}"] = {1: issue(1, f"octo-org/repo-{n}")}
+    github = reader(fake, clock)
+    github.poll([f"octo-org/repo-{n}#1" for n in range(20)])
+    clock.now += 3700
+    github.poll([f"{REPO}#1"])
+    asked = len(fake.requests)
+    # One repository is left, so it is due every 75 seconds again.
+    clock.now += 80
+    github.poll([f"{REPO}#1"])
+    assert len(fake.requests) == asked + 1
+
+
+def test_a_deleted_task_the_list_does_not_reach_is_found_out(fake, clock):
+    fake.repos[REPO] = many(150)
+    github = reader(fake, clock)
+    assert github.poll([f"{REPO}#1"])[0].state == "ok"
+    del fake.repos[REPO][1]
+    clock.now += 1800
+    assert github.poll([f"{REPO}#1"])[0].state == "ok"
+    for _ in range(12):
+        clock.now += 1800
+        github.poll([f"{REPO}#1"])
+    assert github.poll([f"{REPO}#1"])[0].state == "not_found"
 
 
 def test_unchanged_repository_costs_nothing_with_a_token(fake, clock):
@@ -237,6 +284,21 @@ def test_the_server_token_never_opens_a_private_repository(fake, clock):
         github.resolve(f"{REPO}#1")
     assert [t.state for t in github.poll([f"{REPO}#1"])] == ["not_found"]
     assert f"/repos/{REPO}/issues" not in fake.paths()
+
+
+def test_a_repository_made_private_stops_being_served_at_once(fake, clock):
+    fake.limit = fake.remaining = 5000
+    github = reader(fake, clock, TOKEN)
+    assert github.poll([f"{REPO}#1"])[0].summary == "Title of #1"
+    fake.private.add(REPO)
+    clock.now += 60
+    hidden = github.poll([f"{REPO}#1"])[0]
+    assert (hidden.state, hidden.summary) == ("not_found", "")
+    with pytest.raises(TaskNotFound):
+        github.resolve(f"{REPO}#2")
+    fake.private.clear()
+    clock.now += 60
+    assert github.poll([f"{REPO}#1"])[0].state == "ok"
 
 
 def test_a_used_up_limit_waits_for_the_reset_without_asking(fake, clock):
@@ -354,3 +416,15 @@ def test_a_guest_sees_public_github_tasks_in_full(app_client, fake):
     assert (hidden["state"], hidden["summary"]) == ("private", "")
     body = guest.post(f"/api/public/{token}/refresh").json()
     assert [s["id"] for s in body["sources"]] == ["github"]
+
+
+def test_a_guest_is_told_when_github_fails(app_client, fake):
+    board_id = board_with(app_client, f"{REPO}#1", "DEMO-1")
+    link = app_client.put(f"/api/boards/{board_id}/public", json={"public": True}).json()
+    fake.remaining = 0
+    body = TestClient(app_client.app).post(f"/api/public/{link['public_token']}/refresh").json()
+    states = {s["id"]: s for s in body["sources"]}
+    assert states["demo"]["state"] == "ok"
+    assert states["github"]["error"]["code"] == "tracker_rate_limited"
+    assert states["github"]["error"]["retry_after"] > 0
+    assert body["tasks"][f"github:{REPO}#1"]["state"] == "private"

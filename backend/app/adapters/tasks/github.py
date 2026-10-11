@@ -28,6 +28,9 @@ MIN_POLL_S = 30
 # A repository no board asked about for this long is forgotten.
 IDLE_S = 3600
 MAX_REPOS = 500
+# A task the list of its repository does not reach is read again this often: a deleted issue
+# changes nothing in that list.
+RECHECK_S = 6 * 3600
 # A long list of due repositories is spread over several refreshes.
 REPOS_PER_POLL = 10
 DEFAULT_RETRY_AFTER_S = 60
@@ -102,6 +105,8 @@ class GitHubApi:
         self._token = token
         self._clock = clock
         self.limit = LIMIT_WITH_TOKEN if token else LIMIT_WITHOUT_TOKEN
+        # Requests that counted against the limit.
+        self.spent = 0
         self._blocked_until = 0.0
 
     @property
@@ -131,6 +136,9 @@ class GitHubApi:
         if reported.isdigit() and int(reported) > 0:
             self.limit = int(reported)
         status = response.status_code
+        # GitHub does not count an unchanged answer to a request that carries a token.
+        if not (status == 304 and self._token):
+            self.spent += 1
         used_up = response.headers.get("x-ratelimit-remaining") == "0"
         retry_after = response.headers.get("retry-after", "")
         if status == 429 or (status == 403 and (used_up or retry_after)):
@@ -177,6 +185,10 @@ class _Repo:
     since: str = ""
     # None until known. A private repository is never served: its reader is shared by everyone.
     hidden: bool | None = None
+    visibility_etag: str | None = None
+    # Whether the last list held the whole repository.
+    covered: bool = False
+    read_at: dict[int, float] = field(default_factory=dict)
     wanted: set[int] = field(default_factory=set)
     # None for a number GitHub does not have.
     tasks: dict[int, Task | None] = field(default_factory=dict)
@@ -185,12 +197,11 @@ class _Repo:
 
 
 class SharedGitHub:
-    """Public issues and pull requests, read once for everyone on the instance.
+    """Public issues and pull requests, read once for everyone on the instance."""
 
-    A board asks on every refresh and is answered from memory; GitHub is asked only for a
-    repository whose turn has come. The hourly limit is spread over the tracked repositories,
-    the longest-waiting first, so more repositories mean older data and never a burst.
-    """
+    # A board asks on every refresh and is answered from memory; GitHub is asked only for a
+    # repository whose turn has come. The hourly limit is spread over the tracked repositories,
+    # the longest-waiting first, so more repositories mean older data and never a burst.
 
     source_id = GITHUB
     source_name = "GitHub"
@@ -208,32 +219,54 @@ class SharedGitHub:
     def source_note(self) -> str | None:
         return None if self._api.has_token else "Updates every few minutes without a token"
 
+    def _slot(self) -> float:
+        """Seconds one request takes out of the hourly limit, less the reserve."""
+        return 3600 / (self._api.limit * (1 - RESERVE))
+
+    def _turn_cost(self) -> int:
+        # With a token every turn also asks whether the repository is still public.
+        return 2 if self._api.has_token else 1
+
     def _interval(self) -> float:
-        return max(MIN_POLL_S, len(self._repos) * 3600 / (self._api.limit * (1 - RESERVE)))
+        return max(MIN_POLL_S, len(self._repos) * self._turn_cost() * self._slot())
+
+    def _forget(self, now: float) -> None:
+        # Repositories of closed or deleted boards must not slow the ones still watched.
+        for key in [k for k, r in self._repos.items() if now - r.asked_at > IDLE_S]:
+            del self._repos[key]
 
     def _track(self, name: str, now: float) -> _Repo | None:
         repo = self._repos.get(name.lower())
         if repo is None:
             if len(self._repos) >= MAX_REPOS:
-                idle = [k for k, r in self._repos.items() if now - r.asked_at > IDLE_S]
-                for key in idle:
-                    del self._repos[key]
-                if len(self._repos) >= MAX_REPOS:
-                    return None
+                return None
             repo = self._repos[name.lower()] = _Repo(name=name, asked_at=now)
         repo.asked_at = now
         return repo
 
     def _visible(self, repo: _Repo) -> bool:
-        if repo.hidden is None:
+        was_hidden = repo.hidden
+        if not self._api.has_token:
             # Without a token GitHub itself answers 404 for a private repository.
-            hidden = False
-            if self._api.has_token:
-                response = self._api.get(f"/repos/{repo.name}")
-                hidden = response.status_code != 200 or bool(
-                    _json(response, dict).get("private", True)
+            repo.hidden = False
+        else:
+            # Asked before every read: a repository made private must stop being served at
+            # once, and the token may still open it.
+            response = self._api.get(f"/repos/{repo.name}", etag=repo.visibility_etag)
+            if response.status_code != 304:
+                public = response.status_code == 200 and not _json(response, dict).get(
+                    "private", True
                 )
-            repo.hidden = hidden
+                repo.hidden = not public
+                repo.visibility_etag = response.headers.get("etag") if public else None
+        if repo.hidden:
+            repo.tasks = dict.fromkeys(repo.wanted)
+            repo.stale.clear()
+            repo.etag = None
+            repo.since = ""
+        elif was_hidden:
+            repo.tasks.clear()
+            repo.stale = set(repo.wanted)
         return not repo.hidden
 
     def _single(self, repo: _Repo, number: int) -> Task | None:
@@ -245,12 +278,12 @@ class SharedGitHub:
         if response.status_code != 200:
             raise TrackerUnavailable(f"GitHub returned {response.status_code}")
         task = repo.tasks[number] = _task(f"{repo.name}#{number}", _json(response, dict))
+        repo.read_at[number] = self._clock()
         return task
 
     def _refresh(self, repo: _Repo, now: float) -> None:
+        spent = self._api.spent
         if not self._visible(repo):
-            repo.tasks = dict.fromkeys(repo.wanted)
-            repo.stale.clear()
             repo.polled_at = now
             return
         response = self._api.get(
@@ -268,10 +301,12 @@ class SharedGitHub:
                 number = issue.get("number")
                 if number in repo.wanted:
                     repo.tasks[number] = _task(f"{repo.name}#{number}", issue)
+                    repo.read_at[number] = now
                     listed.add(number)
             repo.stale -= listed
             rest = repo.wanted - listed
-            if len(page) < PAGE:
+            repo.covered = len(page) < PAGE
+            if repo.covered:
                 # The whole repository fits the page: what is not on it does not exist.
                 for number in rest:
                     repo.tasks[number] = None
@@ -283,9 +318,17 @@ class SharedGitHub:
             repo.etag = response.headers.get("etag")
         elif response.status_code != 304:
             raise TrackerUnavailable(f"GitHub returned {response.status_code}")
+        if not repo.covered:
+            repo.stale |= {
+                number
+                for number, read_at in repo.read_at.items()
+                if number in repo.wanted and now - read_at > RECHECK_S
+            }
         for number in sorted(repo.stale)[: self._singles_per_turn]:
             self._single(repo, number)
-        repo.polled_at = now
+        # Reads beyond the turn's share push the next turn back, so the hour stays in budget.
+        extra = max(0, self._api.spent - spent - self._turn_cost())
+        repo.polled_at = now + extra * self._slot()
 
     def _answer(self, key: str) -> Task | None:
         name, number = _split(key)
@@ -305,10 +348,10 @@ class SharedGitHub:
         return task.model_copy(update={"key": key})
 
     def poll(self, keys: list[str]) -> list[Task]:
-        """Tasks from memory, after asking GitHub about the repositories that are due. A task
-        not read yet is left out and comes with a later poll."""
+        """Tasks from memory; one not read yet is left out and comes with a later poll."""
         with self._lock:
             now = self._clock()
+            self._forget(now)
             asked: dict[str, _Repo] = {}
             for key in keys:
                 name, number = _split(key)
@@ -331,7 +374,9 @@ class SharedGitHub:
     def resolve(self, key: str) -> Task:
         with self._lock:
             name, number = _split(key)
-            repo = self._track(name, self._clock())
+            now = self._clock()
+            self._forget(now)
+            repo = self._track(name, now)
             if repo is None:
                 raise TooManyRepositories(
                     "This tiko already follows as many GitHub repositories as it can."

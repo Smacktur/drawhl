@@ -69,6 +69,10 @@ class FakeGitHub:
         issues = self.repos[name]
         if pattern is _REPO:
             body: dict | list = {"full_name": name, "private": name in self.private}
+            etag = f'"{name}-{name in self.private}"'
+            if request.headers.get("if-none-match") == etag:
+                return httpx.Response(304, headers=self._headers())
+            return httpx.Response(200, json=body, headers=self._headers() | {"etag": etag})
         elif pattern is _ISSUE:
             if int(match.group(2)) not in issues:
                 return httpx.Response(404, json={"message": "Not Found"}, headers=self._headers())
