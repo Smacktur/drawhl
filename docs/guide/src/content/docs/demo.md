@@ -30,7 +30,7 @@ The top bar shows "Demo · 7 days", the time the boards are still kept. "Sign up
 
 How many boards a person with an account may own is up to you: set `TIKO_BOARD_LIMIT`, for example `TIKO_BOARD_LIMIT=3` to keep the visitor's three. Without it there is no limit after sign-up. Admins are never limited.
 
-On an instance with `TIKO_DEMO=1` the share picker finds a person by their whole username only, so strangers are not listed to each other. For the same reason a board cannot be shared with "Everyone in tiko", and each person has their own statuses of the demo tasks.
+On an instance with `TIKO_DEMO=1` the share picker finds a person by their whole username only, so strangers are not listed to each other. A person can run 20 such searches a minute, so usernames cannot be gone through by guessing. For the same reason Share has no "Everyone in tiko", and each person has their own statuses of the demo tasks.
 
 There is no mail on a demo, so a forgotten password cannot be reset by the person; an admin can make a reset link in Settings → People. An account that nobody signed in to for 90 days is deleted with its boards. Admins are never deleted.
 
@@ -43,6 +43,7 @@ All but the last are fixed:
 | New visitors from one address | 5 an hour; an IPv6 /64 network counts as one address |
 | Visitors on the instance | 500 |
 | Boards per visitor | 3 |
+| Searches for a person in Share | 20 a minute per person |
 | Boards per person with an account, admins aside | `TIKO_BOARD_LIMIT`, no limit when empty |
 
 A visitor who changed nothing is deleted an hour after their last request, and is the first to give up their place when the instance is full. A script that only presses the button therefore cannot keep people out: "The demo is full" shows only when 500 visitors have real work on a board.

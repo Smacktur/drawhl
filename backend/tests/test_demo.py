@@ -640,3 +640,20 @@ def test_a_reset_link_counts_as_a_sign_in_for_the_90_days(app):
     assert users.delete_unused_members(demo.iso(time.time() - 88 * DAY)) == ([], [])
     assert app.state.visitors.cleanup(time.time() + 2 * DAY) == 0
     assert fresh.get("/api/boards").status_code == 200
+
+
+def test_the_directory_takes_so_many_searches_a_minute(app):
+    ann = visitor(app)
+    sign_up(ann)
+    for _ in range(demo.LOOKUPS):
+        assert ann.get("/api/people/directory?q=bob").status_code == 200
+    busy = ann.get("/api/people/directory?q=bob")
+    assert busy.status_code == 429 and busy.headers["retry-after"]
+    # An empty search finds nobody and costs nothing; another person is not held up.
+    assert ann.get("/api/people/directory").status_code == 200
+    assert signed_in(app).get("/api/people/directory?q=ann").json()["people"]
+
+
+def test_an_ordinary_instance_does_not_count_searches(client):
+    for _ in range(demo.LOOKUPS + 5):
+        assert client.get("/api/people/directory?q=adm").status_code == 200

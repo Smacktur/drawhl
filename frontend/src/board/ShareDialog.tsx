@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronDown, Copy, Globe, Users } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { getAuthStatus } from '@/api/auth'
 import {
   findPeople,
   listMembers,
@@ -137,19 +138,29 @@ function MemberRow({
   )
 }
 
+const SEARCH_DELAY_MS = 250
+
 function AddPeople({
   boardId,
   members,
+  exact,
   onError,
 }: {
   boardId: string
   members: Member[]
+  /** Strangers share the instance: a person is found by their whole username only. */
+  exact: boolean
   onError: (error: Error) => void
 }) {
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
   const [role, setRole] = useState<ShareRole>('editor')
-  const term = query.trim()
+  const [term, setTerm] = useState('')
+  // One search per pause in typing, not per letter.
+  useEffect(() => {
+    const timer = setTimeout(() => setTerm(query.trim()), SEARCH_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [query])
   const found = useQuery({
     queryKey: ['directory', term],
     // Keeps the last matches on screen while the next letter's search runs, so nothing flickers.
@@ -173,7 +184,7 @@ function AddPeople({
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Add people by name or username"
+          placeholder={exact ? 'Add a person by their username' : 'Add people by name or username'}
           aria-label="Add people"
           autoComplete="off"
           spellCheck={false}
@@ -185,6 +196,9 @@ function AddPeople({
           </DropdownMenuRadioGroup>
         </RoleMenu>
       </div>
+      {term && found.isError && (
+        <p className="text-destructive text-[13px]">{found.error.message}</p>
+      )}
       {term && found.isSuccess && (
         <ul className="rounded-md border p-1" aria-label="Matching people">
           {matches.length === 0 && (
@@ -312,6 +326,7 @@ export function ShareDialog({
     onError,
   })
   const everyoneRole: EveryoneChoice = members.data?.everyone_role ?? 'none'
+  const demo = useQuery({ queryKey: ['auth'], queryFn: getAuthStatus }).data?.demo ?? false
   return (
     <Dialog
       open={open}
@@ -331,7 +346,12 @@ export function ShareDialog({
           </DialogDescription>
         </DialogHeader>
         {manage && members.data && (
-          <AddPeople boardId={board.id} members={members.data.members} onError={onError} />
+          <AddPeople
+            boardId={board.id}
+            members={members.data.members}
+            exact={demo}
+            onError={onError}
+          />
         )}
         {members.isError && <p className="text-destructive text-[13px]">{members.error.message}</p>}
         {members.data && (
@@ -345,33 +365,38 @@ export function ShareDialog({
                 onError={onError}
               />
             ))}
-            <li className="flex items-center gap-3 border-t py-2">
-              <span className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full">
-                <Users className="text-muted-foreground size-4" strokeWidth={1.75} />
-              </span>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="font-medium">Everyone in tiko</span>
-                <span className="text-muted-foreground text-[12px]">
-                  Anyone who can sign in to this tiko
+            {/* Where anyone can sign up "everyone" would be strangers; the server refuses it. */}
+            {!(demo && everyoneRole === 'none') && (
+              <li className="flex items-center gap-3 border-t py-2">
+                <span className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full">
+                  <Users className="text-muted-foreground size-4" strokeWidth={1.75} />
                 </span>
-              </div>
-              {manage ? (
-                <RoleMenu label={EVERYONE[everyoneRole]}>
-                  <DropdownMenuRadioGroup
-                    value={everyoneRole}
-                    onValueChange={(choice) => everyone.mutate(choice as EveryoneChoice)}
-                  >
-                    {(Object.keys(EVERYONE) as EveryoneChoice[]).map((choice) => (
-                      <DropdownMenuRadioItem key={choice} value={choice}>
-                        {EVERYONE[choice]}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </RoleMenu>
-              ) : (
-                <span className="text-muted-foreground text-[13px]">{EVERYONE[everyoneRole]}</span>
-              )}
-            </li>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-medium">Everyone in tiko</span>
+                  <span className="text-muted-foreground text-[12px]">
+                    Anyone who can sign in to this tiko
+                  </span>
+                </div>
+                {manage ? (
+                  <RoleMenu label={EVERYONE[everyoneRole]}>
+                    <DropdownMenuRadioGroup
+                      value={everyoneRole}
+                      onValueChange={(choice) => everyone.mutate(choice as EveryoneChoice)}
+                    >
+                      {(Object.keys(EVERYONE) as EveryoneChoice[]).map((choice) => (
+                        <DropdownMenuRadioItem key={choice} value={choice}>
+                          {EVERYONE[choice]}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </RoleMenu>
+                ) : (
+                  <span className="text-muted-foreground text-[13px]">
+                    {EVERYONE[everyoneRole]}
+                  </span>
+                )}
+              </li>
+            )}
           </ul>
         )}
         {members.data && (

@@ -25,6 +25,10 @@ Changes to the contract of [spec 011](../../011-demo/contracts/api.md). Errors u
 | `POST /boards/{id}/transfer` | a new owner who is not an admin and already owns as many boards as allowed: 409 `board_limit` |
 | `POST /settings/jira/test` | a `base_url` in the request from a person who is not an admin: 403 `forbidden`. Without it the route tests the instance's address as before |
 
+## Added after the slices
+
+`GET /people/directory` with a non-empty `q` on an instance with `TIKO_DEMO=1`: more than 20 a minute from one person answer 429 `too_many_attempts` with `Retry-After`.
+
 ## Not changed
 
 `PUT /boards/{id}/everyone`, `GET /people/directory`, the 90 days and the personal demo task statuses stay as spec 011 has them for an instance with `TIKO_DEMO=1`.

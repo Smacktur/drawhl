@@ -12,7 +12,13 @@ export function Profile({ me }: { me: Me }) {
   const [username, setUsername] = useState(me.username)
   const save = useMutation({
     mutationFn: () => updateMe({ name: name.trim(), username: username.trim() }),
-    onSuccess: (saved) => queryClient.setQueryData(['auth'], { signed_in: true, me: saved }),
+    // The rest of the answer, like the demo mark of the instance, stays as it was.
+    onSuccess: (saved) =>
+      queryClient.setQueryData(['auth'], (old: object | undefined) => ({
+        ...old,
+        signed_in: true,
+        me: saved,
+      })),
   })
   const submit = (event: FormEvent) => {
     event.preventDefault()
