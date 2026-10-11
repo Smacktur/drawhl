@@ -1,3 +1,4 @@
+import threading
 import time
 
 import httpx
@@ -5,8 +6,12 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
+from app.adapters.storage import sqlite
+from app.api.gate import COOKIE
 from app.config import Settings
+from app.domain import boards as board_service
 from app.domain import demo
+from app.domain.errors import BoardLimit
 from app.main import create_app
 from tests.conftest import signed_in
 from tests.jira_fake import FakeJira
@@ -45,6 +50,37 @@ def welcome(client: TestClient) -> str:
 def edit(client: TestClient, board_id: str) -> None:
     body = {"version": 1, "doc": {"nodes": [STICKY], "edges": []}}
     assert client.put(f"/api/boards/{board_id}", json=body).is_success
+
+
+def together(count: int, work) -> list:
+    """Runs `work(index)` on `count` threads that start at once; returns results and errors."""
+    start, results = threading.Barrier(count), []
+
+    def run(index: int) -> None:
+        start.wait()
+        try:
+            results.append(work(index))
+        except Exception as error:
+            results.append(error)
+
+    threads = [threading.Thread(target=run, args=(index,)) for index in range(count)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    return results
+
+
+def slow_add(app, monkeypatch) -> None:
+    """Makes adding a person slow, so requests that start together overlap for sure."""
+    users = app.state.visitors._users
+    add = users.add
+
+    def slow(person, password_hash):
+        time.sleep(0.05)
+        add(person, password_hash)
+
+    monkeypatch.setattr(users, "add", slow)
 
 
 def rows(app) -> str:
@@ -255,6 +291,29 @@ def test_a_demo_instance_has_no_everyone_role(app):
     assert admin.put(f"/api/boards/{board_id}/public", json={"public": True}).json()["public"]
 
 
+def test_a_board_shared_with_everyone_before_the_demo_stays_closed_to_visitors(app):
+    admin = signed_in(app)
+    board_id = admin.post("/api/boards", json={"name": "Roadmap"}).json()["id"]
+    # As it was left by an instance that became a demo later.
+    app.state.members.set_everyone(board_id, "editor")
+    ann = visitor(app)
+    assert board_id not in [b["id"] for b in ann.get("/api/boards").json()["boards"]]
+    assert ann.get(f"/api/boards/{board_id}").status_code == 404
+    assert sign_up(ann).status_code == 200
+    assert ann.get(f"/api/boards/{board_id}").status_code == 200
+
+
+def test_boards_made_at_once_stay_within_the_limit(app):
+    ann = visitor(app)
+    person = app.state.accounts.get(me(ann)["id"])
+    boards = app.state.boards
+    made = together(
+        8, lambda index: board_service.create_board(person, f"Board {index}", boards, 3)
+    )
+    assert sum(isinstance(result, BoardLimit) for result in made) == 5
+    assert boards.owned(person.id) == 3
+
+
 def test_three_boards_with_the_welcome_board(app):
     ann = visitor(app)
     welcome(ann)
@@ -315,6 +374,23 @@ def test_five_demos_an_hour_from_one_address(app):
     signed_in(app)
 
 
+def test_demos_asked_for_at_once_stay_within_the_address_limit(app, monkeypatch):
+    slow_add(app, monkeypatch)
+    now = time.time()
+    made = together(8, lambda _: app.state.visitors.create("203.0.113.1", now))
+    assert sum(isinstance(result, str) for result in made) == demo.PER_ADDRESS
+
+
+def test_demos_asked_for_at_once_stay_within_the_instance_limit(app, monkeypatch):
+    monkeypatch.setattr(demo, "MAX_ALIVE", 2)
+    edit(ann := visitor(app), welcome(ann))
+    slow_add(app, monkeypatch)
+    now = time.time()
+    together(4, lambda index: app.state.visitors.create(f"198.51.100.{index}", now))
+    # Each newcomer takes the place of the one before, who changed nothing yet.
+    assert app.state.visitors._users.demo_alive(demo.iso(now)) == 2
+
+
 def test_an_ipv6_network_counts_as_one_address():
     assert demo.address_key("2001:db8:1:2:aaaa::1") == demo.address_key("2001:db8:1:2:bbbb::9")
     assert demo.address_key("2001:db8:1:2::1") != demo.address_key("2001:db8:1:3::1")
@@ -371,6 +447,36 @@ def test_a_visitor_who_changed_nothing_goes_within_the_hour(app):
     assert app.state.visitors.cleanup(time.time() + 2 * 3600) == 1
     assert idle.get("/api/boards").status_code == 401
     assert busy.get("/api/boards").status_code == 200
+
+
+def test_a_status_or_a_new_board_name_is_a_change_worth_keeping(app, monkeypatch):
+    monkeypatch.setattr(demo, "MAX_ALIVE", 2)
+    ann, bob = visitor(app), visitor(app, "203.0.113.2")
+    assert ann.put("/api/demo/tasks/DEMO-1/status", json={"status": "Done"}).is_success
+    board_id = welcome(bob)
+    # The clock counts whole seconds, and nobody renames a board in the second it was made.
+    monkeypatch.setattr(sqlite, "now_iso", lambda: demo.iso(time.time() + 60))
+    assert bob.patch(f"/api/boards/{board_id}", json={"name": "Mine"}).is_success
+
+    assert app.state.visitors.cleanup(time.time() + 2 * 3600) == 0
+    response = TestClient(app).post("/api/auth/demo", headers={"x-real-ip": "203.0.113.3"})
+    assert response.json()["error"]["code"] == "demo_full"
+    assert ann.get("/api/boards").status_code == 200
+    assert bob.get("/api/boards").status_code == 200
+
+
+def test_a_visitor_deleted_between_the_read_and_the_touch_is_signed_out(app, monkeypatch):
+    ann = visitor(app)
+    sessions, users = app.state.sessions, app.state.visitors._users
+    touch = sessions._touch_demo
+
+    def late(user_id: str, now: float):
+        # The cleanup lands after the session was read and before the expiry moves.
+        users.evict_untouched_demo()
+        return touch(user_id, now)
+
+    monkeypatch.setattr(sessions, "_touch_demo", late)
+    assert sessions.resolve(ann.cookies[COOKIE], time.time() + 120) is None
 
 
 def test_an_expired_visitor_is_refused_before_the_cleanup(app, monkeypatch):

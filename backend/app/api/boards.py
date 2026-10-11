@@ -16,7 +16,7 @@ from app.api.deps import (
 )
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
-from app.domain.demo import check_board_limit
+from app.domain.demo import board_limit
 from app.domain.errors import BoardLimit
 from app.domain.members import Member, ShareRole
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo, TaskProvider
@@ -98,8 +98,8 @@ def list_boards(person: CurrentPerson, boards: Boards) -> BoardList:
 def create_board(
     body: BoardIn, person: CurrentPerson, boards: Boards, request: Request
 ) -> BoardSummary:
-    check_board_limit(person, boards, request.app.state.board_limit)
-    return service.create_board(person, body.name, boards)
+    limit = board_limit(person, request.app.state.board_limit)
+    return service.create_board(person, body.name, boards, limit)
 
 
 @router.get("/{board_id}")
@@ -218,10 +218,9 @@ def transfer_board(
     boards: Boards,
     request: Request,
 ) -> Response:
-    try:
-        # A board handed over counts against the new owner like one they made.
-        check_board_limit(accounts.get(body.user_id), boards, request.app.state.board_limit)
-    except BoardLimit as exc:
-        raise BoardLimit("This person already holds as many boards as an account can.") from exc
+    # A board handed over counts against the new owner like one they made.
+    limit = board_limit(accounts.get(body.user_id), request.app.state.board_limit)
+    if limit is not None and boards.owned(body.user_id) >= limit:
+        raise BoardLimit("This person already holds as many boards as an account can.")
     members.transfer(board_id, body.user_id)
     return Response(status_code=204)

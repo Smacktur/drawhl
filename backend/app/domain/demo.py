@@ -1,5 +1,6 @@
 import ipaddress
 import secrets
+import threading
 import uuid
 
 from app.domain.accounts import (
@@ -10,8 +11,8 @@ from app.domain.accounts import (
     check_username,
     hash_password,
 )
-from app.domain.errors import BoardLimit, DemoFull, NotFound
-from app.domain.ports import BoardRepo, LiveBoards, UserRepo
+from app.domain.errors import DemoFull, NotFound
+from app.domain.ports import LiveBoards, UserRepo
 from app.domain.sessions import Sessions, iso
 
 VISITOR_TTL_S = 7 * 24 * 3600
@@ -50,13 +51,11 @@ def touch(users: UserRepo, user_id: str, now: float) -> str | None:
     return until if users.touch_demo(user_id, until) else None
 
 
-def check_board_limit(person: Person, boards: BoardRepo, member_limit: int | None) -> None:
+def board_limit(person: Person, member_limit: int | None) -> int | None:
     """A demo visitor holds MAX_BOARDS, anyone else what the instance allows; admins any number."""
     if person.role == "admin":
-        return
-    limit = MAX_BOARDS if person.demo_expires_at else member_limit
-    if limit is not None and boards.owned(person.id) >= limit:
-        raise BoardLimit(f"An account here holds {limit} boards. Delete one to make another.")
+        return None
+    return MAX_BOARDS if person.demo_expires_at else member_limit
 
 
 class DemoVisitors:
@@ -70,26 +69,29 @@ class DemoVisitors:
             PER_ADDRESS, PER_ADDRESS_WINDOW_S, "Too many demos from this address, try again later."
         )
         self._lookups = Limiter(LOOKUPS, LOOKUPS_WINDOW_S, "Too many searches, try again later.")
+        self._creating = threading.Lock()
 
     def create(self, address: str, now: float) -> str:
         """Makes a demo visitor and returns the token of their session."""
         key = address_key(address)
-        self._per_address.check(key, now)
-        if self._users.demo_alive(iso(now)) >= MAX_ALIVE:
-            gone = self._users.evict_untouched_demo()
-            if not gone[0]:
-                raise DemoFull("The demo is full right now. Try again later.")
-            self._forget(*gone)
-        person = Person(
-            id=uuid.uuid4().hex,
-            # "~" is outside the username rule: nobody can pick this name or sign in with it.
-            username=f"~{secrets.token_hex(6)}",
-            name=VISITOR_NAME,
-            role="member",
-            demo_expires_at=iso(now + VISITOR_TTL_S),
-        )
-        self._users.add(person, NO_PASSWORD)
-        self._per_address.fail(key, now)
+        # One at a time: requests that arrive together would all pass the same two checks.
+        with self._creating:
+            self._per_address.check(key, now)
+            if self._users.demo_alive(iso(now)) >= MAX_ALIVE:
+                gone = self._users.evict_untouched_demo()
+                if not gone[0]:
+                    raise DemoFull("The demo is full right now. Try again later.")
+                self._forget(*gone)
+            person = Person(
+                id=uuid.uuid4().hex,
+                # "~" is outside the username rule: nobody can pick this name or sign in with it.
+                username=f"~{secrets.token_hex(6)}",
+                name=VISITOR_NAME,
+                role="member",
+                demo_expires_at=iso(now + VISITOR_TTL_S),
+            )
+            self._users.add(person, NO_PASSWORD)
+            self._per_address.fail(key, now)
         return self._sessions.start(person.id, now)
 
     def looked_up(self, person: Person, now: float) -> None:

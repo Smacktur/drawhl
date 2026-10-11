@@ -91,8 +91,17 @@ class SqliteBoardRepo:
             ).fetchall()
         return [BoardRow(**dict(row)) for row in rows]
 
-    def create(self, name: str, doc: BoardDoc, owner_id: str) -> str:
+    def create(
+        self, name: str, doc: BoardDoc, owner_id: str, limit: int | None = None
+    ) -> str | None:
         with self._db.transaction() as conn:
+            if limit is not None:
+                owned = conn.execute(
+                    "SELECT COUNT(*) FROM board_members WHERE user_id = ? AND role = 'owner'",
+                    (owner_id,),
+                ).fetchone()[0]
+                if owned >= limit:
+                    return None
             return self._insert(conn, name, doc, owner_id)
 
     def create_welcome(self, user_id: str, name: str, doc: BoardDoc) -> str | None:
@@ -347,12 +356,15 @@ class SqliteSettingsRepo:
 
 
 _PERSON = "u.id, u.username, u.name, u.role, u.disabled_at, u.demo_expires_at"
-# A demo visitor who changed nothing: at most the welcome board, as it was made.
+# A demo visitor who changed nothing: at most the welcome board, as it was made, and no task
+# status of their own. A rename leaves the version alone, so the time of the last change counts.
 _UNTOUCHED = (
     "NOT EXISTS (SELECT 1 FROM board_members m JOIN boards b ON b.id = m.board_id"
-    " WHERE m.user_id = users.id AND m.role = 'owner' AND b.version > 1)"
+    " WHERE m.user_id = users.id AND m.role = 'owner'"
+    " AND (b.version > 1 OR b.updated_at > b.created_at))"
     " AND (SELECT COUNT(*) FROM board_members m"
     " WHERE m.user_id = users.id AND m.role = 'owner') <= 1"
+    " AND NOT EXISTS (SELECT 1 FROM demo_statuses s WHERE s.user_id = users.id)"
 )
 
 

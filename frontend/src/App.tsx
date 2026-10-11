@@ -99,7 +99,13 @@ export default function App() {
   }, [current])
 
   useEffect(() => {
-    const signedOut = () => queryClient.setQueryData(['auth'], { signed_in: false, me: null })
+    // Keeps what the answer says about the instance, like the demo switch.
+    const signedOut = () =>
+      queryClient.setQueryData(['auth'], (was: object | undefined) => ({
+        ...was,
+        signed_in: false,
+        me: null,
+      }))
     window.addEventListener(AUTH_REQUIRED_EVENT, signedOut)
     return () => window.removeEventListener(AUTH_REQUIRED_EVENT, signedOut)
   }, [queryClient])
