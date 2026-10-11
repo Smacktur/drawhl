@@ -282,7 +282,18 @@ def test_the_board_limit_of_the_instance_holds_members_and_not_admins():
     assert bob.post("/api/boards", json={"name": "Fourth"}).status_code == 409
     admin = signed_in(app)
     for name in ("One", "Two", "Three"):
-        assert admin.post("/api/boards", json={"name": name}).status_code == 201
+        board_id = admin.post("/api/boards", json={"name": name}).json()["id"]
+    # A board handed over would be a third for Ann.
+    transfer = admin.post(f"/api/boards/{board_id}/transfer", json={"user_id": me(ann)["id"]})
+    assert transfer.json()["error"]["code"] == "board_limit"
+
+
+def test_a_variable_left_empty_means_its_default(monkeypatch):
+    for name in ("TIKO_BOARD_LIMIT", "TIKO_TRACKER", "TIKO_DEMO"):
+        monkeypatch.setenv(name, "")
+    settings = Settings(_env_file=None)
+    assert settings.tiko_board_limit is None and settings.tiko_tracker is None
+    assert settings.tiko_demo is False
 
 
 def test_an_ordinary_instance_has_no_board_limit(client):

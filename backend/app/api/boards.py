@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from app.api import deps
 from app.api.deps import (
+    AccountsDep,
     CanEdit,
     CanView,
     CurrentPerson,
@@ -17,6 +18,7 @@ from app.api.deps import (
 from app.domain import boards as service
 from app.domain.boards import BoardDoc, BoardName, BoardSummary, BoardView
 from app.domain.demo import check_board_limit
+from app.domain.errors import BoardLimit
 from app.domain.members import Member, ShareRole
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo, TaskProvider
 from app.domain.public import PublicLinks
@@ -205,6 +207,19 @@ def set_public_link(
 
 
 @router.post("/{board_id}/transfer", status_code=204, dependencies=[NotDemoVisitor])
-def transfer_board(board_id: str, body: TransferIn, _: IsOwner, members: MembersDep) -> Response:
+def transfer_board(
+    board_id: str,
+    body: TransferIn,
+    _: IsOwner,
+    members: MembersDep,
+    accounts: AccountsDep,
+    boards: Boards,
+    request: Request,
+) -> Response:
+    try:
+        # A board handed over counts against the new owner like one they made.
+        check_board_limit(accounts.get(body.user_id), boards, request.app.state.board_limit)
+    except BoardLimit as exc:
+        raise BoardLimit("This person already holds as many boards as an account can.") from exc
     members.transfer(board_id, body.user_id)
     return Response(status_code=204)

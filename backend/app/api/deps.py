@@ -32,8 +32,7 @@ def is_visitor(request: Request) -> bool:
 
 
 def tracker(request: Request) -> Provider:
-    """The tracker a request works with: the demo tasks for a demo visitor, the one the
-    instance is set to for everyone else."""
+    """The request's tracker: the demo tasks for a visitor, the instance's for everyone else."""
     return "demo" if is_visitor(request) else request.app.state.settings.provider()
 
 
