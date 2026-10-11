@@ -14,6 +14,9 @@ const settings = {
 }
 const admin = { id: 'u1', username: 'admin', name: 'Admin', role: 'admin' }
 
+// jsdom lacks pointer capture, which a toast takes when pressed.
+Element.prototype.setPointerCapture ??= () => {}
+
 afterEach(() => {
   act(() => openSettings(null))
   vi.unstubAllGlobals()
@@ -57,7 +60,11 @@ test('opens on Profile and renames me', async () => {
   expect(screen.getByRole('button', { name: 'Save profile' })).toBeDisabled()
   fireEvent.change(name, { target: { value: 'Ann ' } })
   fireEvent.click(screen.getByRole('button', { name: 'Save profile' }))
-  expect(await screen.findByText('Profile saved')).toBeInTheDocument()
+  const saved = await screen.findByText('Profile saved')
+  // A toast sits outside the window; a press on it is not a press past the window.
+  fireEvent.pointerDown(saved)
+  fireEvent.click(saved)
+  expect(screen.getByRole('dialog')).toBeInTheDocument()
   expect(callTo(fetchMock, '/api/me')).toEqual({
     method: 'PATCH',
     body: { name: 'Ann', username: 'admin' },
