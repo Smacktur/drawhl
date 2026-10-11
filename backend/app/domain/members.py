@@ -31,7 +31,10 @@ def effective_role(
     person: Person, member: BoardRole | None, everyone: ShareRole | None
 ) -> BoardRole | None:
     """The granted role, except that admins act as owner on every board."""
-    return "owner" if person.role == "admin" else granted_role(member, everyone)
+    if person.role == "admin":
+        return "owner"
+    # "Everyone" means people with an account; a demo visitor is anyone who pressed a button.
+    return granted_role(member, None if person.demo_expires_at else everyone)
 
 
 def role_on(repo: MemberRepo, person: Person, board_id: str) -> BoardRole | None:

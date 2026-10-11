@@ -97,3 +97,17 @@ test('drops back to the sign-in screen when the session is gone', async () => {
   })
   expect(await screen.findByLabelText('Password')).toBeInTheDocument()
 })
+
+test('keeps the way into the demo when a visitor is signed out', async () => {
+  mockFetch(
+    200,
+    { boards: [], all: [] },
+    { '/api/auth/status': { status: 200, body: { signed_in: true, me: null, demo: true } } },
+  )
+  renderApp()
+  await screen.findByText(/Create a board/)
+  act(() => {
+    window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT))
+  })
+  expect(await screen.findByRole('link', { name: 'Try the demo' })).toBeInTheDocument()
+})

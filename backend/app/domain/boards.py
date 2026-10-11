@@ -11,7 +11,7 @@ from pydantic import (
 )
 
 from app.domain.accounts import Person
-from app.domain.errors import NotFound, ValidationFailed
+from app.domain.errors import BoardLimit, NotFound, ValidationFailed
 from app.domain.members import BoardRole, ShareRole, effective_role, granted_role
 from app.domain.modules import KIND_PATTERN, module_keys, validate_module
 from app.domain.ports import BoardRepo, LiveBoards, SnapshotRepo
@@ -295,8 +295,14 @@ def summary(person: Person, board_id: str, boards: BoardRepo) -> BoardSummary:
     return _summary(row, role)
 
 
-def create_board(person: Person, name: str, boards: BoardRepo) -> BoardSummary:
-    return summary(person, boards.create(name, BoardDoc(), person.id), boards)
+def create_board(
+    person: Person, name: str, boards: BoardRepo, limit: int | None = None
+) -> BoardSummary:
+    """Raises BoardLimit when the person already owns `limit` boards."""
+    board_id = boards.create(name, BoardDoc(), person.id, limit)
+    if board_id is None:
+        raise BoardLimit(f"An account here holds {limit} boards. Delete one to make another.")
+    return summary(person, board_id, boards)
 
 
 def get_board(

@@ -59,8 +59,10 @@ class BoardRepo(Protocol):
 
     def owner(self, board_id: str) -> str | None: ...
 
-    def create(self, name: str, doc: BoardDoc, owner_id: str) -> str:
-        """Returns the new board's id."""
+    def create(
+        self, name: str, doc: BoardDoc, owner_id: str, limit: int | None = None
+    ) -> str | None:
+        """Returns the new board's id; None when the owner already holds `limit` boards."""
         ...
 
     def create_welcome(self, user_id: str, name: str, doc: BoardDoc) -> str | None:

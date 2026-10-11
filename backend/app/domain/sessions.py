@@ -67,7 +67,7 @@ class Sessions:
             with self._lock:
                 self._cache.pop(key, None)
             return None
-        person = self._touch(found[0], now)
+        person = self._touch(key, found[0], now)
         if person is None:
             with self._lock:
                 self._cache.pop(key, None)
@@ -79,7 +79,7 @@ class Sessions:
     def _alive(self, person: Person, now: float) -> bool:
         return person.demo_expires_at is None or _ts(person.demo_expires_at) > now
 
-    def _touch(self, person: Person, now: float) -> Person | None:
+    def _touch(self, key: str, person: Person, now: float) -> Person | None:
         """A demo visitor who is still in time, with the expiry moved on; anyone else as is."""
         if person.demo_expires_at is None:
             return person
@@ -92,7 +92,10 @@ class Sessions:
         if fresh:
             return person
         expires = self._touch_demo(person.id, now)
-        # None: they signed up between the read and the touch.
+        if expires is None:
+            # They signed up or were deleted between the read and the touch: the session tells.
+            again = self._repo.get(key)
+            return again[0] if again else None
         return person.model_copy(update={"demo_expires_at": expires})
 
     def end(self, token: str) -> None:

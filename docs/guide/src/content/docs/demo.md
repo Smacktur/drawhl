@@ -54,5 +54,5 @@ A visitor who changed nothing is deleted an hour after their last request, and i
 - Put tiko behind a proxy on the same host or private network. The web container believes forwarded addresses only from private networks, so the address limit counts real visitors.
 - Admins are not limited and sign in on the first screen like everyone with an account. They see people who signed up, not visitors, and their list of other people's boards leaves visitors' boards out.
 - Anyone who signs up can test a tracker token against the address the instance is set to. Only an admin can point that test at another address.
-- Turning the demo on does not undo "Everyone in tiko" on boards shared that way before: everyone who signs up will see them. Their owners can still set it to "No access" in Share.
+- Turning the demo on does not undo "Everyone in tiko" on boards shared that way before: visitors do not see them, everyone who signs up will. Their owners can still set it to "No access" in Share.
 - A demo collects what visitors put on their boards. Publish a privacy notice and terms with it.
