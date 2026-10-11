@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.domain.boards import BoardDoc, check_doc, task_keys
+from app.domain.boards import BoardDoc, check_doc, task_refs
 from app.domain.errors import ValidationFailed
 
 
@@ -35,14 +35,14 @@ def test_valid_doc_passes_and_lists_unique_keys():
         [{"id": "e", "source": "a", "target": "b"}],
     )
     check_doc(board)
-    assert task_keys(board) == ["DEV-1", "DEV-2"]
+    assert task_refs(board, "jira") == ["jira:DEV-1", "jira:DEV-2"]
 
 
 def test_arrow_can_end_at_an_anchor():
     anchor = {"id": "p", "type": "anchor", "position": {"x": 5, "y": 5}, "data": {}}
     board = doc([card("a", "DEV-1"), anchor], [{"id": "e", "source": "a", "target": "p"}])
     check_doc(board)
-    assert task_keys(board) == ["DEV-1"]
+    assert task_refs(board, "jira") == ["jira:DEV-1"]
 
 
 def timer(node_id, parent=None, **data):
@@ -65,7 +65,7 @@ def test_timer_attaches_to_an_element_even_inside_a_frame():
         ]
     )
     check_doc(board)
-    assert task_keys(board) == ["DEV-1"]
+    assert task_refs(board, "jira") == ["jira:DEV-1"]
 
 
 @pytest.mark.parametrize(
@@ -122,3 +122,22 @@ def test_schema_limits():
                 }
             ]
         )
+
+
+def test_a_task_belongs_to_its_source_or_to_the_instance_tracker():
+    named = card("a", "DEV-1")
+    named["data"]["source"] = "demo"
+    board = doc([named, card("b", "DEV-1"), card("c", "DEV-2")])
+    assert task_refs(board, "jira") == ["demo:DEV-1", "jira:DEV-1", "jira:DEV-2"]
+
+
+def test_a_document_without_sources_is_stored_as_it_came():
+    board = doc([card("a", "DEV-1")])
+    assert "source" not in board.model_dump(exclude_none=True)["nodes"][0]["data"]
+
+
+def test_a_malformed_source_is_refused():
+    bad = card("a", "DEV-1")
+    bad["data"]["source"] = "Jira:1"
+    with pytest.raises(ValidationError):
+        doc([bad])

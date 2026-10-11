@@ -51,6 +51,7 @@ class SaveOut(BaseModel):
 
 
 class RefreshOut(BaseModel):
+    # By ref, `source:key`.
     tasks: dict[str, Task]
     fetched_at: str
     sources: list[SourceStatus]
@@ -107,9 +108,14 @@ def create_board(
 
 @router.get("/{board_id}")
 def get_board(
-    board_id: str, role: CanView, person: CurrentPerson, boards: Boards, snapshots: Snapshots
+    board_id: str,
+    role: CanView,
+    person: CurrentPerson,
+    boards: Boards,
+    snapshots: Snapshots,
+    settings: Annotated[SettingsService, Depends(deps.settings)],
 ) -> BoardView:
-    return service.get_board(person, role, board_id, boards, snapshots)
+    return service.get_board(person, role, board_id, boards, snapshots, settings.provider())
 
 
 @router.put("/{board_id}")
@@ -137,12 +143,18 @@ def refresh_board(
     boards: Boards,
     snapshots: Snapshots,
     settings: Annotated[SettingsService, Depends(deps.settings)],
-    provider: Annotated[TaskProvider, Depends(deps.provider)],
+    providers: Annotated[dict[str, TaskProvider], Depends(deps.providers)],
     refresher: Annotated[RefreshService, Depends(deps.refresher)],
     owner: Annotated[str, Depends(deps.owner)],
 ) -> RefreshOut:
     tasks, sources = refresher.refresh(
-        board_id, settings.refresh_interval_s(), boards, snapshots, provider, owner
+        board_id,
+        settings.refresh_interval_s(),
+        boards,
+        snapshots,
+        providers,
+        settings.provider(),
+        owner,
     )
     return RefreshOut(tasks=tasks, fetched_at=now_iso(), sources=sources)
 

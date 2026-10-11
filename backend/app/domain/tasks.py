@@ -11,10 +11,24 @@ from app.domain.ports import SnapshotRepo, TaskProvider
 KEY_RE = re.compile(r"^[A-Z][A-Z0-9_]+-\d+$")
 _BROWSE_RE = re.compile(r"/browse/([A-Za-z][A-Za-z0-9_]+-\d+)/?$")
 
+SOURCE_PATTERN = r"^[a-z][a-z0-9_]{0,39}$"
+
 StatusCategory = Literal["new", "indeterminate", "done"]
 
 
+def task_ref(source: str, key: str) -> str:
+    """What identifies a task: two trackers may use the same key."""
+    return f"{source}:{key}"
+
+
+def split_ref(ref: str) -> tuple[str, str]:
+    source, _, key = ref.partition(":")
+    return source, key
+
+
 class Task(BaseModel):
+    # The tracker the task comes from, a provider's `source_id`.
+    source: str
     key: str
     # not_found also covers a task the person's own token may not see: Jira hides both alike.
     # private: a guest of a public board sees the key only.
@@ -28,6 +42,10 @@ class Task(BaseModel):
     updated: str | None = None
     url: str
     fetched_at: str
+
+    @property
+    def ref(self) -> str:
+        return task_ref(self.source, self.key)
 
 
 def now_iso() -> str:
@@ -88,7 +106,13 @@ class NoTokenProvider:
     def poll(self, keys: list[str]) -> list[Task]:
         url = f"{self._base_url}/browse/" if self._base_url else ""
         return [
-            Task(key=key, state="no_token", url=f"{url}{key}" if url else "", fetched_at=now_iso())
+            Task(
+                source=self.source_id,
+                key=key,
+                state="no_token",
+                url=f"{url}{key}" if url else "",
+                fetched_at=now_iso(),
+            )
             for key in keys
         ]
 

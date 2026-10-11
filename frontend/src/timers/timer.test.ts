@@ -80,7 +80,7 @@ describe('status timer', () => {
     ({ key: 'DEMO-1', state, status_name }) as Task
 
   it('waits while the status is the same or the task is missing', () => {
-    const timer = watchStatus(newTimer(NOW), 'DEMO-1', 'In Review')
+    const timer = watchStatus(newTimer(NOW), { key: 'DEMO-1' }, 'In Review')
     expect(timerState(timer, NOW)).toBe('watching')
     expect(checkStatus(timer, task('In Review'), NOW)).toBeNull()
     expect(checkStatus(timer, task('Done', 'not_found'), NOW)).toBeNull()
@@ -89,7 +89,7 @@ describe('status timer', () => {
   })
 
   it('goes off once on a new status and keeps it', () => {
-    const timer = watchStatus(newTimer(NOW), 'DEMO-1', 'In Review')
+    const timer = watchStatus(newTimer(NOW), { key: 'DEMO-1' }, 'In Review')
     const fired = checkStatus(timer, task('Done'), NOW)!
     expect(timerState(fired, NOW)).toBe('fired')
     expect(describeWatch(fired.watch!)).toBe('DEMO-1 moved to Done')
@@ -98,7 +98,7 @@ describe('status timer', () => {
   })
 
   it('keeps the board polling in the background only while one waits', () => {
-    const waiting = watchStatus(newTimer(NOW), 'DEMO-1', 'In Review')
+    const waiting = watchStatus(newTimer(NOW), { key: 'DEMO-1' }, 'In Review')
     const node = (data: object) => ({ type: 'timer', data })
     expect(waitsForStatus([node(newTimer(NOW))])).toBe(false)
     expect(waitsForStatus([node(newTimer(NOW)), node(waiting)])).toBe(true)
@@ -107,7 +107,7 @@ describe('status timer', () => {
   })
 
   it('a time set later turns it back into a clock timer', () => {
-    const timer = setDue(watchStatus(newTimer(NOW), 'DEMO-1', 'In Review'), NOW + MIN)
+    const timer = setDue(watchStatus(newTimer(NOW), { key: 'DEMO-1' }, 'In Review'), NOW + MIN)
     expect(timer).not.toHaveProperty('watch')
   })
 })

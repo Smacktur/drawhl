@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.domain.boards import BoardDoc, check_doc, task_keys
+from app.domain.boards import BoardDoc, check_doc, task_refs
 from app.domain.errors import ValidationFailed
 from app.domain.modules import validate_module
 
@@ -72,11 +72,11 @@ def test_module_cannot_be_nested_or_a_parent():
         check_doc(doc([module("m"), card]))
 
 
-def test_task_keys_include_module_rows():
+def test_task_refs_include_module_rows():
     rows = [
         {"id": "r1", "key": "DEV-3", "start": "2026-10-01", "end": "2026-10-02"},
         {"id": "r2", "title": "Plain", "start": "2026-10-01", "end": "2026-10-02"},
     ]
     card = {"id": "c", "type": "jira_card", "position": {"x": 0, "y": 0}, "data": {"key": "DEV-1"}}
     board = doc([card, module("m", content=GANTT | {"rows": rows}), module("u", "x", {"rows": 1})])
-    assert task_keys(board) == ["DEV-1", "DEV-3"]
+    assert task_refs(board, "jira") == ["jira:DEV-1", "jira:DEV-3"]

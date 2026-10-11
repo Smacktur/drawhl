@@ -8,6 +8,7 @@ import { CardDetails } from '@/canvas/nodes/CardDetails'
 import { Handles } from '@/canvas/nodes/Handles'
 import { StatusLozenge, TypeIcon } from '@/canvas/nodes/TaskBits'
 import { openSettings } from '@/settings/store'
+import { sourceName } from '@/sources/registry'
 
 // Long titles are cut so the status lozenge after them always stays visible.
 const SUMMARY_LIMIT = 120
@@ -19,7 +20,7 @@ function clip(text: string) {
 }
 
 function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
-  const task = useTask(data.key)
+  const task = useTask(data)
   const { updateNodeData } = useReactFlow()
   const [open, setOpen] = useState(false)
   const pressedAt = useRef<{ x: number; y: number } | null>(null)
@@ -97,7 +98,7 @@ function JiraCardNodeView({ id, data, selected }: NodeProps<JiraCardNodeType>) {
               className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
               onClick={() => openSettings('tracker')}
             >
-              Connect your Jira token to see this task
+              Connect your {sourceName(task.source)} token to see this task
             </button>
           )}
           {task && !missing && (

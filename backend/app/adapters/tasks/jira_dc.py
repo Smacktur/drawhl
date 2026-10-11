@@ -20,6 +20,7 @@ from app.domain.tasks import StatusCategory, Task, now_iso
 
 FIELDS = ["summary", "status", "issuetype", "assignee", "priority", "updated"]
 SEARCH_CHUNK = 500
+SOURCE_ID = "jira"
 _KEY_IN_ERROR = re.compile(r"'([A-Z][A-Z0-9_]+-\d+)'")
 DEFAULT_RETRY_AFTER_S = 60
 # The vocabulary is a few hundred KB and changes only when an admin adds a field.
@@ -42,6 +43,7 @@ def to_task(base_url: str, issue: dict) -> Task:
     status = fields.get("status") or {}
     category = (status.get("statusCategory") or {}).get("key", "new")
     return Task(
+        source=SOURCE_ID,
         key=issue["key"],
         summary=fields.get("summary") or "",
         status_name=status.get("name") or "",
@@ -81,7 +83,7 @@ def _task(base_url: str, issue: dict) -> Task:
 class JiraDcProvider:
     """Jira Data Center REST v2 with a personal access token (Bearer)."""
 
-    source_id = "jira"
+    source_id = SOURCE_ID
     source_name = "Jira Data Center"
 
     def __init__(self, credentials: Callable[[], JiraCredentials], client: httpx.Client) -> None:
@@ -234,7 +236,11 @@ class JiraDcProvider:
         return [
             found.get(key)
             or Task(
-                key=key, state="not_found", url=f"{base_url}/browse/{key}", fetched_at=now_iso()
+                source=SOURCE_ID,
+                key=key,
+                state="not_found",
+                url=f"{base_url}/browse/{key}",
+                fetched_at=now_iso(),
             )
             for key in keys
         ]

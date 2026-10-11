@@ -50,12 +50,24 @@ describe('rows', () => {
 describe('card drop', () => {
   it('becomes a row at the drop day, between the rows it fell on', () => {
     const at = { x: base.labelWidth + 95, y: HEADER + ROW_HEIGHT }
-    const next = acceptCard(base, 'DEMO-7', at, WIDTH)!
+    const next = acceptCard(base, { key: 'DEMO-7' }, at, WIDTH)!
     expect(next.rows.map((r) => r.key ?? r.id)).toEqual(['DEMO-1', 'DEMO-7', 'b'])
     expect(next.rows[1]).toMatchObject({ start: '2026-10-10', end: '2026-10-16' })
   })
 
   it('is refused for a task already on the chart', () => {
-    expect(acceptCard(base, 'DEMO-1', { x: 300, y: 60 }, WIDTH)).toBeNull()
+    expect(acceptCard(base, { key: 'DEMO-1' }, { x: 300, y: 60 }, WIDTH)).toBeNull()
+  })
+
+  it('is refused for a task an older row plans without naming its tracker', () => {
+    const card = { key: 'DEMO-1', source: 'jira' }
+    expect(acceptCard(base, card, { x: 300, y: 60 }, WIDTH)).toBeNull()
+    expect(addRows(base, [{ ...row('c', 'DEMO-1'), source: 'jira' }]).rows).toHaveLength(2)
+  })
+
+  it('takes the same key from another tracker next to a row that names its own', () => {
+    const named = { ...base, rows: [{ ...row('a', 'DEMO-1'), source: 'jira' }] }
+    const next = acceptCard(named, { key: 'DEMO-1', source: 'demo' }, { x: 300, y: 60 }, WIDTH)
+    expect(next?.rows.map((r) => r.source).sort()).toEqual(['demo', 'jira'])
   })
 })

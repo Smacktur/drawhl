@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.domain.boards import task_keys
+from app.domain.boards import task_refs
 from app.domain.errors import (
     DomainError,
     JiraRateLimited,
@@ -16,7 +16,7 @@ from app.domain.errors import (
     NotFound,
 )
 from app.domain.ports import BoardRepo, SnapshotRepo, TaskProvider
-from app.domain.tasks import Task, now_iso
+from app.domain.tasks import Task, now_iso, split_ref
 
 MAX_BACKOFF_S = 300
 
@@ -67,27 +67,44 @@ class RefreshService:
         interval_s: int,
         boards: BoardRepo,
         snapshots: SnapshotRepo,
-        provider: TaskProvider,
+        providers: dict[str, TaskProvider],
+        default_source: str,
         owner: str = "",
     ) -> tuple[dict[str, Task], list[SourceStatus]]:
-        """Polls with the provider of `owner`; each person's tracker errors and backoff are
-        their own, since each uses their own token."""
+        """Polls each tracker of the board once with the providers of `owner`; each person's
+        tracker errors and backoff are their own, since each uses their own token. A failing
+        tracker leaves the others alone. Tasks come back by ref."""
         record = boards.get(board_id)
         if record is None:
             raise NotFound("board not found")
-        keys = task_keys(record.doc)
+        keys: dict[str, list[str]] = {}
+        for ref in task_refs(record.doc, default_source):
+            source_id, key = split_ref(ref)
+            keys.setdefault(source_id, []).append(key)
+        # The instance's own tracker is reported even while the board has none of its tasks.
+        keys.setdefault(default_source, [])
+        tasks: list[Task] = []
+        statuses: list[SourceStatus] = []
         with self._lock:
-            source = self._sources.setdefault(f"{provider.source_id}:{owner}", _Source())
-            tasks = self._poll(source, keys, interval_s, provider) if keys else []
-            status = SourceStatus(
-                id=provider.source_id,
-                name=provider.source_name,
-                state="error" if source.error else "ok",
-                synced_at=source.synced_at,
-                error=source.error,
-            )
+            for source_id, source_keys in keys.items():
+                provider = providers.get(source_id)
+                if provider is None:
+                    tasks += _unknown(source_id, source_keys)
+                    continue
+                source = self._sources.setdefault(f"{source_id}:{owner}", _Source())
+                if source_keys:
+                    tasks += self._poll(source, source_keys, interval_s, provider)
+                statuses.append(
+                    SourceStatus(
+                        id=source_id,
+                        name=provider.source_name,
+                        state="error" if source.error else "ok",
+                        synced_at=source.synced_at,
+                        error=source.error,
+                    )
+                )
         snapshots.put_many(tasks)
-        return {task.key: task for task in tasks}, [status]
+        return {task.ref: task for task in tasks}, statuses
 
     def _poll(
         self, source: _Source, keys: list[str], interval_s: int, provider: TaskProvider
@@ -116,3 +133,11 @@ class RefreshService:
         source.error = None
         source.synced_at = now_iso()
         return tasks
+
+
+def _unknown(source_id: str, keys: list[str]) -> list[Task]:
+    """Tasks of a tracker this instance does not read, as on a board from elsewhere."""
+    return [
+        Task(source=source_id, key=key, state="not_found", url="", fetched_at=now_iso())
+        for key in keys
+    ]

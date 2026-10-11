@@ -42,7 +42,7 @@ import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import { ModuleNode } from '@/canvas/nodes/ModuleNode'
 import { StickyNode } from '@/canvas/nodes/StickyNode'
 import { TextNode } from '@/canvas/nodes/TextNode'
-import { TasksContext } from '@/canvas/tasks-context'
+import { indexTasks, taskRef, TasksContext } from '@/canvas/tasks-context'
 import { Toolbar, type Tool } from '@/canvas/Toolbar'
 import { RefreshIndicator } from '@/board/RefreshIndicator'
 import { lastFetched, lastSynced, newest } from '@/board/refresh-timing'
@@ -148,8 +148,8 @@ export function BoardCanvas({
   const [menuTarget, setMenuTarget] = useState<MenuTarget | null>(null)
   const refresh = useRefresh(board.id, { background: !guest && waitsForStatus(nodes), guest })
   const tasks = useMemo(
-    () => newest([board.tasks, added, refresh.data?.tasks ?? {}]),
-    [board.tasks, added, refresh.data],
+    () => indexTasks(newest([board.tasks, added, refresh.data?.tasks ?? {}]), board.default_source),
+    [board.tasks, board.default_source, added, refresh.data],
   )
   const flow = useReactFlow<AppNode, AppEdge>()
   const { screenToFlowPosition, deleteElements, getNodes, getEdges } = flow
@@ -222,7 +222,10 @@ export function BoardCanvas({
   // One card goes to the point or cascades from the viewport center; several form a grid there.
   const addCards = useCallback(
     (list: Task[], at?: XYPosition) => {
-      setAdded((current) => ({ ...current, ...Object.fromEntries(list.map((t) => [t.key, t])) }))
+      setAdded((current) => ({
+        ...current,
+        ...Object.fromEntries(list.map((t) => [taskRef(t), t])),
+      }))
       setNodes((current) => {
         const center = screenToFlowPosition(at ?? viewportCenter())
         const step = current.length % 5
@@ -238,7 +241,7 @@ export function BoardCanvas({
           id: newId(),
           type: 'jira_card',
           position: positions[i],
-          data: { key: task.key, collapsed: false },
+          data: { key: task.key, source: task.source, collapsed: false },
         }))
         return reparent(
           [...current, ...fresh],
@@ -425,13 +428,16 @@ export function BoardCanvas({
   const moduleHost = useMemo<ModuleHost>(
     () => ({
       addTasks: (list) =>
-        setAdded((current) => ({ ...current, ...Object.fromEntries(list.map((t) => [t.key, t])) })),
-      ejectCard: (key, screen) => {
+        setAdded((current) => ({
+          ...current,
+          ...Object.fromEntries(list.map((t) => [taskRef(t), t])),
+        })),
+      ejectCard: (task, screen) => {
         const node: AppNode = {
           id: newId(),
           type: 'jira_card',
           position: screenToFlowPosition(screen),
-          data: { key, collapsed: false },
+          data: { ...task, collapsed: false },
         }
         setNodes((current) => reparent([...current, node], [node.id]))
       },

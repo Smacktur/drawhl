@@ -1,4 +1,5 @@
 import type { Task } from '@/api/tasks'
+import { taskRef } from '@/canvas/tasks-context'
 import type { AppNode, FrameData, ModuleData } from '@/canvas/types'
 import { findModule } from '@/modules/registry'
 import { holderLabel } from '@/timers/attach'
@@ -93,7 +94,7 @@ export function buildIndex(nodes: AppNode[], tasks: Record<string, Task>): Entry
         push({ ...base, kind: 'frame', text: node.data.title || UNTITLED_FRAME })
         break
       case 'jira_card': {
-        const task = tasks[node.data.key]
+        const task = tasks[taskRef(node.data)]
         const live = task?.state === 'ok' ? task : undefined
         push({
           ...base,
@@ -148,7 +149,7 @@ function pushModule(
   const parsed = def?.searchable && def.schema.safeParse(data.content)
   if (!def?.searchable || !parsed?.success) return
   def.searchable(parsed.data).forEach((item, i) => {
-    const task = item.key ? tasks[item.key] : undefined
+    const task = item.key ? tasks[taskRef({ key: item.key, source: item.source })] : undefined
     const text = task?.state === 'ok' ? task.summary : item.text
     if (!text.trim() && !item.key) return
     push({

@@ -15,6 +15,7 @@ import type { Task } from '@/api/tasks'
 import { TypeIcon } from '@/canvas/nodes/TaskBits'
 import { ROW_HEIGHT, type Row } from '@/modules/gantt/rows'
 import { cn } from '@/lib/utils'
+import { sourceName } from '@/sources/registry'
 
 // A press that moves further than this starts a row drag.
 const DRAG_SLOP = 4
@@ -151,7 +152,7 @@ export function GanttLabel({
             {task?.state === 'not_found'
               ? 'not found'
               : task?.state === 'no_token'
-                ? 'connect your Jira token'
+                ? `connect your ${sourceName(task.source)} token`
                 : task?.summary}
           </span>
         </span>

@@ -322,9 +322,9 @@ def test_task_statuses_are_each_persons_own(app):
     found = bob.post("/api/tasks/search", json={"jql": '"DEMO-1"'}).json()["tasks"]
     assert found[0]["status_name"] == "In Progress"
     board = ann.post(f"/api/boards/{welcome(ann)}/refresh").json()
-    assert board["tasks"]["DEMO-1"]["status_name"] == "Done"
+    assert board["tasks"]["demo:DEMO-1"]["status_name"] == "Done"
     board = bob.post(f"/api/boards/{welcome(bob)}/refresh").json()
-    assert board["tasks"]["DEMO-1"]["status_name"] == "In Progress"
+    assert board["tasks"]["demo:DEMO-1"]["status_name"] == "In Progress"
 
 
 def test_a_guest_sees_the_statuses_of_the_boards_owner(app):
@@ -337,8 +337,8 @@ def test_a_guest_sees_the_statuses_of_the_boards_owner(app):
     ]
     guest = TestClient(app)
     tasks = guest.post(f"/api/public/{token}/refresh").json()["tasks"]
-    assert tasks["DEMO-1"]["status_name"] == "Done"
-    assert guest.get(f"/api/public/{token}").json()["tasks"]["DEMO-1"]["status_name"] == "Done"
+    assert tasks["demo:DEMO-1"]["status_name"] == "Done"
+    assert guest.get(f"/api/public/{token}").json()["tasks"]["demo:DEMO-1"]["status_name"] == "Done"
 
 
 def test_statuses_survive_a_restart(tmp_path):

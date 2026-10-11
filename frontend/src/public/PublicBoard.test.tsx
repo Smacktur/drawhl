@@ -53,6 +53,7 @@ function board(version: number, nodes: string[]) {
     version,
     doc: { nodes: nodes.map(sticky), edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
     tasks: {},
+    default_source: 'demo',
     refresh_interval_s: 30,
   }
 }

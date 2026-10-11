@@ -64,7 +64,8 @@ def test_board_round_trip(client):
     body = client.get(f"/api/boards/{board['id']}").json()
     assert body["doc"] == DOC
     assert body["version"] == 2
-    assert set(body["tasks"]) == {"DEMO-1", "DEMO-2"}
+    assert set(body["tasks"]) == {"demo:DEMO-1", "demo:DEMO-2"}
+    assert body["default_source"] == "demo"
 
 
 def test_stale_version_conflicts(client):
@@ -198,7 +199,7 @@ def test_modules_round_trip_with_their_tasks(client):
 
     body = client.get(f"/api/boards/{board['id']}").json()
     assert body["doc"] == doc
-    assert set(body["tasks"]) == {"DEMO-3"}
+    assert set(body["tasks"]) == {"demo:DEMO-3"}
 
 
 def test_invalid_module_content_rejected(client):

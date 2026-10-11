@@ -1,4 +1,5 @@
 import type { XYPosition } from '@xyflow/react'
+import type { TaskLink } from '@/canvas/tasks-context'
 import type { GanttContent } from '@/modules/gantt/schema'
 import { dayAt, formatDay, newSpan, parseDay, rangeDays, type Span } from '@/modules/gantt/timeline'
 import { insertRow, visibleRows } from '@/modules/gantt/tree'
@@ -35,9 +36,23 @@ export function withSpan(row: Row, span: Span): Row {
   return { ...row, start: formatDay(span.start), end: formatDay(span.end) }
 }
 
+/** The task a row plans; undefined for a plain row. */
+export function rowTask(row: Row): TaskLink | undefined {
+  if (!row.key) return undefined
+  return { key: row.key, ...(row.source && { source: row.source }) }
+}
+
+// A row saved before trackers could be mixed names none and stands for the instance's own,
+// so it counts as planned whichever tracker the same key comes with.
+function planned(content: GanttContent, task: TaskLink) {
+  return content.rows.some(
+    (r) => r.key === task.key && (!r.source || !task.source || r.source === task.source),
+  )
+}
+
 export function makeRow(
   content: GanttContent,
-  fields: { key?: string; title?: string },
+  fields: { key?: string; source?: string; title?: string },
   at?: number,
 ) {
   const span = newSpan(range(content), at)
@@ -46,9 +61,13 @@ export function makeRow(
 
 /** Adds rows at the end, skipping tasks already planned here, up to the row limit. */
 export function addRows(content: GanttContent, rows: Row[]): GanttContent {
-  const keys = new Set(content.rows.map((r) => r.key).filter(Boolean))
-  const fresh = rows.filter((r) => !r.key || !keys.has(r.key))
-  return { ...content, rows: [...content.rows, ...fresh].slice(0, MAX_ROWS) }
+  let next = content
+  for (const row of rows) {
+    const task = rowTask(row)
+    // Checked against the rows added so far, so one task is not added twice in one go.
+    if (!task || !planned(next, task)) next = { ...next, rows: [...next.rows, row] }
+  }
+  return { ...next, rows: next.rows.slice(0, MAX_ROWS) }
 }
 
 export function updateRow(content: GanttContent, id: string, change: (row: Row) => Row) {
@@ -58,11 +77,11 @@ export function updateRow(content: GanttContent, id: string, change: (row: Row) 
 /** A card dropped on the body becomes a row at the drop day and between the rows it fell on. */
 export function acceptCard(
   content: GanttContent,
-  key: string,
+  task: TaskLink,
   at: XYPosition,
   width: number,
 ): GanttContent | null {
-  if (content.rows.length >= MAX_ROWS || content.rows.some((r) => r.key === key)) return null
+  if (content.rows.length >= MAX_ROWS || planned(content, task)) return null
   const day =
     at.x >= content.labelWidth
       ? dayAt(at.x - content.labelWidth, range(content), pxPerDay(content, width))
@@ -71,5 +90,5 @@ export function acceptCard(
   const visible = visibleRows(content.rows)
   const slot = Math.min(Math.max(Math.round((at.y - HEADER) / ROW_HEIGHT), 0), visible.length)
   const before = visible[slot]?.row.id ?? null
-  return insertRow(content, makeRow(content, { key }, day), before, visible[slot - 1]?.depth ?? 0)
+  return insertRow(content, makeRow(content, task, day), before, visible[slot - 1]?.depth ?? 0)
 }

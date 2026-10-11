@@ -1,6 +1,7 @@
 import type { XYPosition } from '@xyflow/react'
 import type { Task } from '@/api/tasks'
 import { absolute } from '@/canvas/frames'
+import { taskRef, type TaskLink } from '@/canvas/tasks-context'
 import type { AppEdge, AppNode } from '@/canvas/types'
 import { newId } from '@/lib/id'
 import { findModule } from '@/modules/registry'
@@ -58,7 +59,7 @@ export function copySelection(
       const { parentId: _frame, ...rest } = node
       return persistent({ ...rest, position: absolute(node, byId) } as AppNode)
     })
-  const cards = copied.flatMap(taskKeys)
+  const cards = copied.flatMap(taskLinks).flatMap((link) => tasks[taskRef(link)] ?? [])
   return {
     nodes: copied,
     edges: edges
@@ -70,12 +71,12 @@ export function copySelection(
         ...(sourceHandle && { sourceHandle }),
         ...(targetHandle && { targetHandle }),
       })),
-    tasks: Object.fromEntries(cards.filter((key) => tasks[key]).map((key) => [key, tasks[key]])),
+    tasks: Object.fromEntries(cards.map((task) => [taskRef(task), task])),
   }
 }
 
-function taskKeys(node: AppNode): string[] {
-  if (node.type === 'jira_card') return [node.data.key]
+function taskLinks(node: AppNode): TaskLink[] {
+  if (node.type === 'jira_card') return [node.data]
   if (node.type !== 'module') return []
   const def = findModule(node.data.kind)
   const parsed = def?.schema.safeParse(node.data.content)

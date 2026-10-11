@@ -179,10 +179,12 @@ class CredentialRepo(Protocol):
 
 class SnapshotRepo(Protocol):
     def scoped(self, owner: str) -> SnapshotRepo:
-        """The snapshots of one person ("" for the demo tasks everyone shares)."""
+        """The snapshots of one person."""
         ...
 
-    def get_many(self, keys: list[str]) -> dict[str, Task]: ...
+    def get_many(self, refs: list[str]) -> dict[str, Task]:
+        """The cached tasks among these refs, by ref."""
+        ...
 
     def put_many(self, tasks: list[Task]) -> None: ...
 

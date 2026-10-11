@@ -1,4 +1,5 @@
 import type { Task } from '@/api/tasks'
+import type { TaskLink } from '@/canvas/tasks-context'
 import type { TimerData, TimerRepeat } from '@/canvas/types'
 
 export const SOON_MS = 5 * 60_000
@@ -49,9 +50,10 @@ export function setRepeat(data: TimerData, repeat: TimerRepeat | undefined): Tim
 }
 
 /** A timer that goes off when the task leaves its current status. */
-export function watchStatus(data: TimerData, key: string, status: string): TimerData {
+export function watchStatus(data: TimerData, task: TaskLink, status: string): TimerData {
   const { snoozedUntil: _snooze, done: _done, repeat: _repeat, ...rest } = data
-  return { ...rest, dueAt: null, watch: { key, status } }
+  const { key, source } = task
+  return { ...rest, dueAt: null, watch: { key, ...(source && { source }), status } }
 }
 
 /** The status timer goes off now if the board sees the task in another status. */

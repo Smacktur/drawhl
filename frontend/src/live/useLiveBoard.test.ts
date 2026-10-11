@@ -72,6 +72,7 @@ const board: Board = {
   version: 3,
   doc: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
   tasks: {},
+  default_source: 'demo',
 }
 const me = { id: 'u1', name: 'Admin' }
 const sticky = (id: string): AppNode =>

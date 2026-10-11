@@ -21,7 +21,7 @@ def test_search_limit_and_snapshots(client):
         "edges": [],
     }
     client.put(f"/api/boards/{board['id']}", json={"version": 1, "doc": doc})
-    assert "DEMO-1" in client.get(f"/api/boards/{board['id']}").json()["tasks"]
+    assert "demo:DEMO-1" in client.get(f"/api/boards/{board['id']}").json()["tasks"]
 
 
 def test_search_errors(client):

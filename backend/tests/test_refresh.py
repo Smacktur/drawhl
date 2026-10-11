@@ -38,7 +38,7 @@ class Flaky:
         self.calls += 1
         if self.errors:
             raise self.errors.pop(0)
-        return self.demo.poll(keys)
+        return [task.model_copy(update={"source": self.source_id}) for task in self.demo.poll(keys)]
 
 
 @pytest.fixture
@@ -60,7 +60,9 @@ class Clock:
 
 def poll(service, repos, provider, board_id=None):
     default_id, boards, snapshots = repos
-    tasks, (status,) = service.refresh(board_id or default_id, 30, boards, snapshots, provider)
+    tasks, (status,) = service.refresh(
+        board_id or default_id, 30, boards, snapshots, {"jira": provider}, "jira"
+    )
     return tasks, status
 
 
@@ -68,11 +70,11 @@ def test_one_poll_stores_snapshots(repos):
     _, _, snapshots = repos
     provider = Flaky()
     tasks, status = poll(RefreshService(), repos, provider)
-    assert set(tasks) == {"DEMO-1", "DEMO-2"}
+    assert set(tasks) == {"jira:DEMO-1", "jira:DEMO-2"}
     assert provider.calls == 1
     assert (status.id, status.state, status.error) == ("jira", "ok", None)
     assert status.synced_at
-    assert set(snapshots.get_many(["DEMO-1", "DEMO-2"])) == {"DEMO-1", "DEMO-2"}
+    assert set(snapshots.get_many(["jira:DEMO-1", "jira:DEMO-2"])) == {"jira:DEMO-1", "jira:DEMO-2"}
 
 
 def test_failure_is_a_source_status_not_an_exception(repos):
@@ -154,7 +156,7 @@ def test_failed_refresh_keeps_last_snapshot(repos):
     service = RefreshService(Clock())
     poll(service, repos, Flaky())
     poll(service, repos, Flaky(JiraUnavailable("down")))
-    assert set(snapshots.get_many(["DEMO-1"])) == {"DEMO-1"}
+    assert set(snapshots.get_many(["jira:DEMO-1"])) == {"jira:DEMO-1"}
 
 
 def test_missing_board(repos):
@@ -180,3 +182,50 @@ def test_empty_board_reports_the_last_known_state(repos):
     poll(service, repos, Flaky(JiraUnreachable("down")))
     _, status = poll(service, repos, provider, board_id=empty)
     assert status.state == "error"
+
+
+def mixed_board(repos):
+    """A card of the instance's tracker, a demo card with the same key, and one of a tracker
+    this instance does not read."""
+    _, boards, _ = repos
+    cards = [("a", None), ("b", "demo"), ("c", "elsewhere")]
+    doc = {
+        "nodes": [
+            {
+                "id": node_id,
+                "type": "jira_card",
+                "position": {"x": 0, "y": 0},
+                "data": {"key": "DEMO-1"} | ({"source": source} if source else {}),
+            }
+            for node_id, source in cards
+        ]
+    }
+    board_id = boards.create("mixed", BoardDoc(), "owner")
+    boards.save(board_id, 1, BoardDoc.model_validate(doc))
+    return board_id
+
+
+def test_each_tracker_of_the_board_is_polled_once(repos):
+    _, boards, snapshots = repos
+    jira, demo = Flaky(), DemoTaskProvider()
+    tasks, statuses = RefreshService().refresh(
+        mixed_board(repos), 30, boards, snapshots, {"jira": jira, "demo": demo}, "jira"
+    )
+    assert {ref: task.state for ref, task in tasks.items()} == {
+        "jira:DEMO-1": "ok",
+        "demo:DEMO-1": "ok",
+        "elsewhere:DEMO-1": "not_found",
+    }
+    assert jira.calls == 1
+    assert sorted(status.id for status in statuses) == ["demo", "jira"]
+
+
+def test_a_failing_tracker_leaves_the_others_alone(repos):
+    """SC-003."""
+    _, boards, snapshots = repos
+    providers = {"jira": Flaky(JiraUnavailable("down")), "demo": DemoTaskProvider()}
+    tasks, statuses = RefreshService(Clock()).refresh(
+        mixed_board(repos), 30, boards, snapshots, providers, "jira"
+    )
+    assert "demo:DEMO-1" in tasks and "jira:DEMO-1" not in tasks
+    assert {status.id: status.state for status in statuses} == {"jira": "error", "demo": "ok"}

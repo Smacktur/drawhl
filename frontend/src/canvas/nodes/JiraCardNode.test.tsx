@@ -7,6 +7,7 @@ import { JiraCardNode } from '@/canvas/nodes/JiraCardNode'
 import type { JiraCardNode as JiraCardNodeType } from '@/canvas/types'
 
 const task: Task = {
+  source: 'jira',
   key: 'DEMO-1',
   state: 'ok',
   summary: 'Rotate the staging certificates',
@@ -116,4 +117,13 @@ test('a guest of a public board sees the key and its link, nothing else', () => 
   fireEvent.pointerDown(key)
   fireEvent.click(key)
   expect(screen.queryByRole('dialog')).toBeNull()
+})
+
+test('a card names the tracker its task comes from', () => {
+  const demo: Task = { ...task, source: 'demo' }
+  renderCard({ key: 'DEMO-1', source: 'demo', collapsed: true }, { 'demo:DEMO-1': demo })
+  const key = screen.getByText('DEMO-1')
+  fireEvent.pointerDown(key, { clientX: 10, clientY: 10 })
+  fireEvent.click(key, { clientX: 10, clientY: 10 })
+  expect(screen.getByRole('link', { name: /Open in the demo tracker/ })).toBeTruthy()
 })

@@ -7,6 +7,7 @@ import { words } from './match'
 import { viewFor } from './view'
 
 const task = (key: string, summary: string, extra: Partial<Task> = {}): Task => ({
+  source: 'demo',
   key,
   state: 'ok',
   summary,

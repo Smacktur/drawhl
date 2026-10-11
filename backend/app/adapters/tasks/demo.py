@@ -101,6 +101,7 @@ class DemoTaskProvider:
     def _task(self, key: str, tasks: dict[str, dict] | None = None) -> Task:
         fields = (tasks or self._tasks)[key]
         return Task(
+            source=self.source_id,
             key=key,
             status_category=_CATEGORY.get(fields["status_name"], "new"),
             url=f"https://{DEMO_HOST}/browse/{key}",
@@ -119,6 +120,7 @@ class DemoTaskProvider:
             self._task(key, tasks)
             if key in tasks
             else Task(
+                source=self.source_id,
                 key=key,
                 state="not_found",
                 url=f"https://{DEMO_HOST}/browse/{key}",

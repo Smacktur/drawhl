@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { fetchJson } from '@/api/client'
 
 export const taskSchema = z.object({
+  // The tracker the task comes from; with the key it makes the task's ref.
+  source: z.string(),
   key: z.string(),
   // private: on a public board a task from a tracker shows a guest its key only.
   state: z.enum(['ok', 'not_found', 'no_token', 'private']),
