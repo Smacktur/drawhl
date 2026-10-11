@@ -1,7 +1,9 @@
 .PHONY: help up down backup logs dev-api dev-web test lint fmt check smoke release clean-clone render-validate audit licenses
 
-API_URL ?= http://localhost:8000
-WEB_URL ?= http://localhost:3000
+# The ports of this checkout's stack: a worktree set up by scripts/worktree-setup.sh has its own.
+port = $(or $(shell sed -n 's/^$(1)=//p' .env 2>/dev/null | tail -n 1),$(2))
+API_URL ?= http://localhost:$(call port,TIKO_API_PORT,8000)
+WEB_URL ?= http://localhost:$(call port,TIKO_PORT,3000)
 
 help:  ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
