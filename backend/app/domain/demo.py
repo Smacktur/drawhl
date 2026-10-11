@@ -24,6 +24,9 @@ PER_ADDRESS_WINDOW_S = 3600.0
 MAX_ALIVE = 500
 MAX_BOARDS = 3
 CLEANUP_EVERY_S = 600
+# Enough to share a board with a team, too few to go through usernames by guessing.
+LOOKUPS = 20
+LOOKUPS_WINDOW_S = 60.0
 VISITOR_NAME = "Demo visitor"
 # No password hashes to this, so a demo visitor cannot sign in by password.
 NO_PASSWORD = "!"
@@ -66,6 +69,7 @@ class DemoVisitors:
         self._per_address = Limiter(
             PER_ADDRESS, PER_ADDRESS_WINDOW_S, "Too many demos from this address, try again later."
         )
+        self._lookups = Limiter(LOOKUPS, LOOKUPS_WINDOW_S, "Too many searches, try again later.")
 
     def create(self, address: str, now: float) -> str:
         """Makes a demo visitor and returns the token of their session."""
@@ -87,6 +91,12 @@ class DemoVisitors:
         self._users.add(person, NO_PASSWORD)
         self._per_address.fail(key, now)
         return self._sessions.start(person.id, now)
+
+    def looked_up(self, person: Person, now: float) -> None:
+        """Counts a search of the people directory against the person who asks."""
+        # A visitor finds nobody, so there is nothing to count, and no entry outlives them.
+        if person.demo_expires_at is None:
+            self._lookups.spend(person.id, now)
 
     def sign_up(self, person: Person, name: str, username: str, password: str) -> Person:
         """Makes a demo visitor a regular member: same person, same boards, same session."""

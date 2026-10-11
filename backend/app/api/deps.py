@@ -147,4 +147,3 @@ CanView = Annotated[BoardRole, board_role("viewer")]
 CanEdit = Annotated[BoardRole, board_role("editor")]
 IsOwner = Annotated[BoardRole, board_role("owner")]
 NotDemoVisitor = Depends(not_demo_visitor)
-NotOnDemo = Depends(not_on_demo)
