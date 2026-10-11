@@ -22,6 +22,7 @@ Changes to the contract of [spec 011](../../011-demo/contracts/api.md). Errors u
 | `GET /settings` | on an instance with `TIKO_DEMO=1` the tracker is what the admin or `TIKO_TRACKER` set; `provider` is in `locked` only when `TIKO_TRACKER` is set |
 | `PUT /me/tracker` | open to every person with an account on an instance with `TIKO_DEMO=1` |
 | `POST /boards` | a person who is not an admin and owns as many boards as allowed gets 409 `board_limit`, "An account here holds N boards. Delete one to make another." N is 3 for a demo visitor and `TIKO_BOARD_LIMIT` for anyone else; without the variable only visitors are limited |
+| `POST /boards/{id}/transfer` | a new owner who is not an admin and already owns as many boards as allowed: 409 `board_limit` |
 | `POST /settings/jira/test` | a `base_url` in the request from a person who is not an admin: 403 `forbidden`. Without it the route tests the instance's address as before |
 
 ## Not changed

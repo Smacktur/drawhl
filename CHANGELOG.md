@@ -13,6 +13,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- A variable left empty in `.env` means its default. An `.env` copied from `.env.example` stopped the start on the empty `TIKO_TRACKER=`.
 - "Test connection" checks the Jira address the instance is set to. Only an admin can test another address, so a member cannot make the server call a host of their choice.
 - Deploy to Render puts both services into a project named `tiko` with a `production` environment instead of leaving them ungrouped.
 - The web container starts as many nginx workers as it has CPUs to use. On Railway it started one per core of the host, 48 of them.
