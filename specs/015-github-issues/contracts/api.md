@@ -12,10 +12,10 @@ A GitHub task has the source `github` and a key `owner/repo#number`. `priority_n
  "assignee_name": "Alex Rivera", "priority_name": null, "updated": "2026-10-01T10:00:00+00:00",
  "url": "https://github.com/octo-org/widgets/issues/12", "fetched_at": "…",
  "labels": [{"name": "in progress", "color": "fbca04"}],
- "rows": [{"label": "Repository", "value": "octo-org/widgets"}]}
+ "rows": [{"label": "Author", "value": "sam-lee"}]}
 ```
 
-From slice 2 every task in every answer carries `labels` and `rows`; both are empty lists for the other sources. `color` is six hex digits without `#`.
+From slice 2 every task in every answer carries `labels` and `rows`; both are empty lists for the other sources. `color` is six hex digits without `#`, or empty when the tracker gives none.
 
 ## Changed routes
 

@@ -29,15 +29,15 @@ description: "Task list for GitHub Issues"
 - [x] T011 [US1] Checked on the compose stack against the real GitHub with no token, in both themes: issues and pull requests of `tiko-run/tiko` by link and by key show their kinds and statuses ("planned" and "in progress" from labels, Merged, Open), the mixed board carries the marks, the sync list has the GitHub row with its note, a guest of the public link sees the cards in full (SC-001, SC-006). The used-up limit, the pace over an hour and a changed issue are covered by the tests with a fake GitHub and a fake clock (SC-002, SC-003); a paste on the board was checked by its tests, not by hand. `make check` and `make smoke` green; no new dependency, so `make licenses` is unchanged
 - [x] T012 [US1] Guide page "GitHub Issues", `CHANGELOG.md`, `docs/brief.md`
 
-## Phase 2: Slice `feat/github-labels` — labels and the repository in the mini-card (US2)
+## Phase 2: Slice `feat/github-labels` — labels and the author in the mini-card (US2)
 
 **Goal**: the mini-card shows what only GitHub has.
 
-- [ ] T013 [US2] `Task.labels` and `Task.rows`; the GitHub adapter fills them; `api/tasks.ts` schema with empty defaults. Tests: an old cached task reads with empty lists
-- [ ] T014 [US2] `CardDetails`: chips and extra rows, no Priority row without a priority. Tests
-- [ ] T015 [US2] `DESIGN.md`: chips in the mini-card, the label color exception
-- [ ] T016 [US2] Check in both themes with light, dark and saturated label colors; a Jira mini-card against the previous release. `/ui-review`. `make check` green
-- [ ] T017 [US2] Guide, `CHANGELOG.md`
+- [x] T013 [US2] `Task.labels` and `Task.rows`; the GitHub adapter fills them; `api/tasks.ts` schema with empty defaults. Tests: an old cached task reads with empty lists
+- [x] T014 [US2] `CardDetails`: chips and extra rows, no Priority row without a priority. Tests
+- [x] T015 [US2] `DESIGN.md`: chips in the mini-card, the label color exception
+- [x] T016 [US2] Checked on the compose stack against the real GitHub in both themes: the mini-cards of `tiko-run/tiko` issues and a pull request show their labels as chips (pale, saturated yellow and violet with white text), the Author row and no Priority row. A mini-card of a task without labels is covered by its test, not compared by pixels with the previous release. `/ui-review` is not installed here and was not run. `make check` green
+- [x] T017 [US2] Guide, `CHANGELOG.md`
 
 ## Phase 3: Slice `feat/github-token` — private repositories (US3)
 

@@ -55,7 +55,7 @@ scripts/smoke.py                       a GitHub card against the mock
 | Branch | Story | Done when |
 |---|---|---|
 | `feat/github-issues` | US1 | on a compose stack with a mock GitHub and no token, a pasted issue link and a pull request link are live cards with statuses from state and labels; the sync list has a GitHub row; a guest sees them in full; a used-up limit leaves the other sources working; `make smoke` covers a GitHub card |
-| `feat/github-labels` | US2 | the mini-card of a labelled issue shows chips and the Repository row in both themes; a Jira mini-card matches the old screenshot |
+| `feat/github-labels` | US2 | the mini-card of a labelled issue shows chips and the Author row in both themes; a Jira mini-card matches the old screenshot |
 | `feat/github-token` | US3 | with a mock private repository: the token's owner sees the task, a person without a token sees the key and the hint, a guest sees the key; the byte test passes |
 
 ## Risks

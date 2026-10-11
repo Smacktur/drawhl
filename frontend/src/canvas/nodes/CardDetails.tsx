@@ -13,15 +13,45 @@ type Props = {
   onToggleCollapsed: () => void
 }
 
-/** Mini-card: who has the task, how urgent, when it last moved, and a way to Jira. */
+/** White on the label's own color while it reads (WCAG AA, 4.5:1), black otherwise. */
+function textOn(hex: string) {
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const channel = parseInt(hex.slice(i, i + 2), 16) / 255
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  })
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+  // Contrast with white is 1.05 / (L + 0.05). Past AA black always has the higher contrast.
+  return 1.05 / (luminance + 0.05) >= 4.5 ? '#fff' : '#000'
+}
+
+function LabelChip({ name, color }: { name: string; color: string }) {
+  return (
+    <li
+      className={cn(
+        'max-w-full truncate rounded-full border border-black/10 px-1.5 text-[11px] leading-4 font-medium dark:border-white/15',
+        !color && 'bg-muted text-muted-foreground',
+      )}
+      style={color ? { backgroundColor: `#${color}`, color: textOn(color) } : undefined}
+      // A long label is cut to the mini-card's width; the full name is on hover.
+      title={name}
+    >
+      {name}
+    </li>
+  )
+}
+
+/** Mini-card: who has the task, when it last moved, what its tracker adds, and a way there. */
 export function CardDetails({ task, collapsed, onToggleCollapsed }: Props) {
   const done = task.status_category === 'done'
   const updated = relativeTime(task.updated)
   const rows: [string, string | null][] = [
     ['Assignee', task.assignee_name ?? 'Unassigned'],
-    ['Priority', task.priority_name],
+    // A tracker without priorities gets no empty row.
+    ...(task.priority_name ? [['Priority', task.priority_name] as [string, string]] : []),
     ['Updated', updated],
+    ...(task.rows ?? []).map((row): [string, string] => [row.label, row.value]),
   ]
+  const labels = task.labels ?? []
 
   return (
     <div className="flex flex-col gap-2.5 text-[13px] leading-5">
@@ -50,6 +80,13 @@ export function CardDetails({ task, collapsed, onToggleCollapsed }: Props) {
           </div>
         ))}
       </dl>
+      {labels.length > 0 && (
+        <ul aria-label="Labels" className="flex flex-wrap gap-1">
+          {labels.map((label) => (
+            <LabelChip key={label.name} {...label} />
+          ))}
+        </ul>
+      )}
       <div className="flex items-center justify-between gap-2">
         <Button variant="ghost" size="sm" onClick={onToggleCollapsed}>
           {collapsed ? <Maximize2 strokeWidth={1.75} /> : <Minimize2 strokeWidth={1.75} />}

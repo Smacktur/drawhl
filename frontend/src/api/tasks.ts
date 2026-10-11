@@ -16,6 +16,9 @@ export const taskSchema = z.object({
   updated: z.string().nullable(),
   url: z.string(),
   fetched_at: z.string(),
+  // What only some trackers have, for the mini-card: chips and extra rows.
+  labels: z.array(z.object({ name: z.string(), color: z.string() })).optional(),
+  rows: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
 })
 
 export type Task = z.infer<typeof taskSchema>

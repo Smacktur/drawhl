@@ -9,7 +9,7 @@ Issues and pull requests of public repositories on github.com become live cards 
 
 Copy the link of an issue or a pull request and paste it on the board with `⌘V` (`Ctrl+V`), or pick the card tool (`C`) and type the link or `owner/repo#12`. Several at once work too.
 
-The card shows the kind (issue or pull request), the short key `repo#12`, the title and the status. The mini-card has the full key, the assignee and a link to GitHub. On a board that also has tasks of another tracker, GitHub cards carry the GitHub mark.
+The card shows the kind (issue or pull request), the short key `repo#12`, the title and the status. Click a card for the mini-card: the full key with the repository, the assignee, the author, the labels as chips in their GitHub colors, and a link to GitHub. On a board that also has tasks of another tracker, GitHub cards carry the GitHub mark.
 
 ## Statuses
 
@@ -48,6 +48,5 @@ A guest of a board's public link sees GitHub cards of public repositories in ful
 ## Not yet
 
 - Private repositories, with a personal token per person.
-- Labels in the mini-card.
 - Adding many issues by a search query.
 - GitHub Enterprise Server.

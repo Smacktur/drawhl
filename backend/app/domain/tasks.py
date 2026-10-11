@@ -34,6 +34,17 @@ def split_ref(ref: str) -> tuple[str, str]:
     return source, key
 
 
+class TaskLabel(BaseModel):
+    name: str
+    # Six hex digits without "#", or empty when the tracker gives none.
+    color: str = ""
+
+
+class TaskRow(BaseModel):
+    label: str
+    value: str
+
+
 class Task(BaseModel):
     # The tracker the task comes from, a provider's `source_id`.
     source: str
@@ -50,6 +61,9 @@ class Task(BaseModel):
     updated: str | None = None
     url: str
     fetched_at: str
+    # What only some trackers have, shown in the mini-card: chips and extra rows.
+    labels: list[TaskLabel] = []
+    rows: list[TaskRow] = []
 
     @property
     def ref(self) -> str:
