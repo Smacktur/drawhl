@@ -23,6 +23,12 @@ _NOTES = [
         "Delete this one any time.",
     ),
 ]
+# On a public demo nobody connects a tracker, and the board does not stay.
+_DEMO_NOTE = (
+    "pink",
+    "This is a demo: your boards are kept for 7 days. To put your own tracker's tasks on a "
+    "board, install tiko: tiko.run",
+)
 # Two columns of cards, filled row by row; the last one starts collapsed.
 _CARDS = ["DEMO-1", "DEMO-2", "DEMO-7", "DEMO-6", "DEMO-11", "DEMO-3"]
 
@@ -31,7 +37,7 @@ def _id() -> str:
     return uuid.uuid4().hex
 
 
-def welcome_doc(now: datetime) -> dict[str, Any]:
+def welcome_doc(now: datetime, demo: bool = False) -> dict[str, Any]:
     """The board a fresh install opens on: every kind of element, dated from `now`."""
     today = now.date()
     nodes: list[dict[str, Any]] = [
@@ -57,7 +63,7 @@ def welcome_doc(now: datetime) -> dict[str, Any]:
         }
     )
     notes = []
-    for i, (color, text) in enumerate(_NOTES):
+    for i, (color, text) in enumerate([*_NOTES[:-1], _DEMO_NOTE] if demo else _NOTES):
         note = _id()
         notes.append(note)
         nodes.append(
