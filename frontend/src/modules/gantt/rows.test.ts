@@ -58,4 +58,16 @@ describe('card drop', () => {
   it('is refused for a task already on the chart', () => {
     expect(acceptCard(base, { key: 'DEMO-1' }, { x: 300, y: 60 }, WIDTH)).toBeNull()
   })
+
+  it('is refused for a task an older row plans without naming its tracker', () => {
+    const card = { key: 'DEMO-1', source: 'jira' }
+    expect(acceptCard(base, card, { x: 300, y: 60 }, WIDTH)).toBeNull()
+    expect(addRows(base, [{ ...row('c', 'DEMO-1'), source: 'jira' }]).rows).toHaveLength(2)
+  })
+
+  it('takes the same key from another tracker next to a row that names its own', () => {
+    const named = { ...base, rows: [{ ...row('a', 'DEMO-1'), source: 'jira' }] }
+    const next = acceptCard(named, { key: 'DEMO-1', source: 'demo' }, { x: 300, y: 60 }, WIDTH)
+    expect(next?.rows.map((r) => r.source).sort()).toEqual(['demo', 'jira'])
+  })
 })

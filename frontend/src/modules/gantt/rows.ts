@@ -1,5 +1,5 @@
 import type { XYPosition } from '@xyflow/react'
-import { taskRef, type TaskLink } from '@/canvas/tasks-context'
+import type { TaskLink } from '@/canvas/tasks-context'
 import type { GanttContent } from '@/modules/gantt/schema'
 import { dayAt, formatDay, newSpan, parseDay, rangeDays, type Span } from '@/modules/gantt/timeline'
 import { insertRow, visibleRows } from '@/modules/gantt/tree'
@@ -42,9 +42,12 @@ export function rowTask(row: Row): TaskLink | undefined {
   return { key: row.key, ...(row.source && { source: row.source }) }
 }
 
-function rowRef(row: Row) {
-  const task = rowTask(row)
-  return task && taskRef(task)
+// A row saved before trackers could be mixed names none and stands for the instance's own,
+// so it counts as planned whichever tracker the same key comes with.
+function planned(content: GanttContent, task: TaskLink) {
+  return content.rows.some(
+    (r) => r.key === task.key && (!r.source || !task.source || r.source === task.source),
+  )
 }
 
 export function makeRow(
@@ -58,9 +61,13 @@ export function makeRow(
 
 /** Adds rows at the end, skipping tasks already planned here, up to the row limit. */
 export function addRows(content: GanttContent, rows: Row[]): GanttContent {
-  const planned = new Set(content.rows.map(rowRef).filter(Boolean))
-  const fresh = rows.filter((r) => !r.key || !planned.has(rowRef(r)))
-  return { ...content, rows: [...content.rows, ...fresh].slice(0, MAX_ROWS) }
+  let next = content
+  for (const row of rows) {
+    const task = rowTask(row)
+    // Checked against the rows added so far, so one task is not added twice in one go.
+    if (!task || !planned(next, task)) next = { ...next, rows: [...next.rows, row] }
+  }
+  return { ...next, rows: next.rows.slice(0, MAX_ROWS) }
 }
 
 export function updateRow(content: GanttContent, id: string, change: (row: Row) => Row) {
@@ -74,8 +81,7 @@ export function acceptCard(
   at: XYPosition,
   width: number,
 ): GanttContent | null {
-  if (content.rows.length >= MAX_ROWS || content.rows.some((r) => rowRef(r) === taskRef(task)))
-    return null
+  if (content.rows.length >= MAX_ROWS || planned(content, task)) return null
   const day =
     at.x >= content.labelWidth
       ? dayAt(at.x - content.labelWidth, range(content), pxPerDay(content, width))
